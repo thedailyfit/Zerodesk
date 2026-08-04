@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "start": "pnpm --filter @zerodesk/api start:prod",
+    "start:api": "node apps/api/dist/main.js",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
