@@ -9,8 +9,16 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+  try {
+    if (!isPublicRoute(request)) {
+      await auth.protect();
+    }
+  } catch (error) {
+    // If Clerk key is missing or unauthenticated on public route, allow navigation to sign-in
+    if (isPublicRoute(request)) {
+      return;
+    }
+    throw error;
   }
 });
 
