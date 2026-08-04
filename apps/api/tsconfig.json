@@ -18,8 +18,16 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@zerodesk/shared": ["../../packages/shared/dist/index"],
-      "@zerodesk/shared/*": ["../../packages/shared/dist/*"]
+      "@zerodesk/shared": [
+        "../../packages/shared/dist/index",
+        "../../packages/shared/src/index",
+        "../../node_modules/@zerodesk/shared"
+      ],
+      "@zerodesk/shared/*": [
+        "../../packages/shared/dist/*",
+        "../../packages/shared/src/*",
+        "../../node_modules/@zerodesk/shared/*"
+      ]
     }
   },
   "include": ["src/**/*"],

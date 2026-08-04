@@ -1,11 +1,11 @@
-export { Role, ROLE_HIERARCHY, Permission, ROLE_PERMISSIONS, hasPermission, hasMinRole } from './constants/roles.js';
-export type { RoleType, PermissionType } from './constants/roles.js';
+export { Role, ROLE_HIERARCHY, Permission, ROLE_PERMISSIONS, hasPermission, hasMinRole } from './constants/roles';
+export type { RoleType, PermissionType } from './constants/roles';
 
-export { Channel, CHANNEL_LABELS, CHANNEL_ICONS } from './constants/channels.js';
-export type { ChannelType } from './constants/channels.js';
+export { Channel, CHANNEL_LABELS, CHANNEL_ICONS } from './constants/channels';
+export type { ChannelType } from './constants/channels';
 
-export { Industry, INDUSTRY_CONFIG } from './constants/industries.js';
-export type { IndustryType } from './constants/industries.js';
+export { Industry, INDUSTRY_CONFIG } from './constants/industries';
+export type { IndustryType } from './constants/industries';
 
 export {
   ConversationStatus,
@@ -22,6 +22,6 @@ export {
   VoicePersonality,
   KnowledgeCategory,
   AnalyticsEventType,
-} from './constants/pipeline.js';
+} from './constants/pipeline';
 
-export type { Tenant, Customer, Conversation, Message, Lead, Appointment, KnowledgeDocument } from './types/index.js';
+export type { Tenant, Customer, Conversation, Message, Lead, Appointment, KnowledgeDocument } from './types/index';
