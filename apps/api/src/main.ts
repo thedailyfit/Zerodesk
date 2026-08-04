@@ -1,13 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
 
   // Security
   app.use(helmet());
@@ -15,7 +13,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: configService.get('CORS_ORIGINS', 'http://localhost:3000').split(','),
+    origin: '*',
     credentials: true,
   });
 
@@ -32,8 +30,8 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get('API_PORT', 4000);
-  await app.listen(port);
-  console.log(`🚀 ZeroDesk API running on http://localhost:${port}`);
+  const port = process.env.PORT || process.env.API_PORT || 4000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 ZeroDesk API running on http://0.0.0.0:${port}`);
 }
 bootstrap();
