@@ -1,7 +1,18 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { RoleType, hasMinRole } from '@zerodesk/shared';
+import { ROLES_KEY, RoleType } from '../decorators/roles.decorator';
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  SUPER_ADMIN: 100,
+  ORG_ADMIN: 80,
+  MANAGER: 60,
+  STAFF: 40,
+  VIEWER: 20,
+};
+
+function hasMinRole(userRole: string, requiredRole: string): boolean {
+  return (ROLE_HIERARCHY[userRole] ?? 0) >= (ROLE_HIERARCHY[requiredRole] ?? 0);
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
