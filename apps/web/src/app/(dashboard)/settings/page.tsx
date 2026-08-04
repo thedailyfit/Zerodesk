@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Building2, Clock, Globe, Palette, CreditCard, Shield, Bell, Key } from 'lucide-react';
+import { Building2, Clock, Globe, Palette, CreditCard, Shield, Bell, Key, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -9,6 +9,7 @@ const tabs = [
   { id: 'general', label: 'General', icon: Building2 },
   { id: 'hours', label: 'Working Hours', icon: Clock },
   { id: 'branding', label: 'Branding', icon: Palette },
+  { id: 'widget', label: 'Web Chatbot', icon: MessageSquare },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -112,7 +113,58 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab !== 'general' && activeTab !== 'hours' && activeTab !== 'branding' && (
+          {activeTab === 'widget' && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-[var(--color-text)]">Web Chatbot Widget</h2>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Copy and paste this code snippet into your website's <code className="bg-[var(--color-surface)] px-1 py-0.5 rounded">&lt;head&gt;</code> or <code className="bg-[var(--color-surface)] px-1 py-0.5 rounded">&lt;body&gt;</code> tag. The chatbot will automatically appear in the bottom right corner of your site.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-2">Embed Code</label>
+                  <div className="relative group">
+                    <pre className="bg-[#1a1b26] text-[#a9b1d6] p-4 rounded-lg overflow-x-auto text-sm font-mono border border-[var(--color-border)]">
+                      <code>{`<!-- ZeroDesk AI Chatbot -->
+<script 
+  src="https://cdn.zerodesk.com/widget.js" 
+  data-tenant-id="0a4b-uuid-for-glow-clinic" 
+  data-theme="light"
+  data-color="#8b5cf6"
+  defer>
+</script>`}</code>
+                    </pre>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(`<!-- ZeroDesk AI Chatbot -->\n<script \n  src="https://cdn.zerodesk.com/widget.js" \n  data-tenant-id="0a4b-uuid-for-glow-clinic" \n  data-theme="light"\n  data-color="#8b5cf6"\n  defer>\n</script>`)}
+                      className="absolute top-3 right-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      Copy Code
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">Widget Theme</label>
+                    <select className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all">
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="system">Auto (System)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">Widget Position</label>
+                    <select className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all">
+                      <option value="bottom-right">Bottom Right</option>
+                      <option value="bottom-left">Bottom Left</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'general' && activeTab !== 'hours' && activeTab !== 'branding' && activeTab !== 'widget' && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] flex items-center justify-center mb-3">
                 <Globe size={24} className="text-[var(--color-text-muted)]" />
