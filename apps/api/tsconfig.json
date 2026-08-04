@@ -16,7 +16,9 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@zerodesk/shared": ["../../packages/shared/src/index"],
+      "@zerodesk/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src/**/*"],
