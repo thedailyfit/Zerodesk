@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Building2, Clock, Globe, Palette, CreditCard, Shield, Bell, Key, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { ChatWidget } from '@/components/widget/chat-widget';
 
 const tabs = [
   { id: 'general', label: 'General', icon: Building2 },
@@ -114,54 +115,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'widget' && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-[var(--color-text)]">Web Chatbot Widget</h2>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Copy and paste this code snippet into your website's <code className="bg-[var(--color-surface)] px-1 py-0.5 rounded">&lt;head&gt;</code> or <code className="bg-[var(--color-surface)] px-1 py-0.5 rounded">&lt;body&gt;</code> tag. The chatbot will automatically appear in the bottom right corner of your site.
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-2">Embed Code</label>
-                  <div className="relative group">
-                    <pre className="bg-[#1a1b26] text-[#a9b1d6] p-4 rounded-lg overflow-x-auto text-sm font-mono border border-[var(--color-border)]">
-                      <code>{`<!-- ZeroDesk AI Chatbot -->
-<script 
-  src="https://cdn.zerodesk.com/widget.js" 
-  data-tenant-id="0a4b-uuid-for-glow-clinic" 
-  data-theme="light"
-  data-color="#8b5cf6"
-  defer>
-</script>`}</code>
-                    </pre>
-                    <button 
-                      onClick={() => navigator.clipboard.writeText(`<!-- ZeroDesk AI Chatbot -->\n<script \n  src="https://cdn.zerodesk.com/widget.js" \n  data-tenant-id="0a4b-uuid-for-glow-clinic" \n  data-theme="light"\n  data-color="#8b5cf6"\n  defer>\n</script>`)}
-                      className="absolute top-3 right-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      Copy Code
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">Widget Theme</label>
-                    <select className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all">
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                      <option value="system">Auto (System)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">Widget Position</label>
-                    <select className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all">
-                      <option value="bottom-right">Bottom Right</option>
-                      <option value="bottom-left">Bottom Left</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <WidgetSettingsView />
           )}
 
           {activeTab !== 'general' && activeTab !== 'hours' && activeTab !== 'branding' && activeTab !== 'widget' && (
@@ -178,3 +132,185 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+const TONE_OPTIONS = [
+  { id: 'empathetic', label: 'Empathetic & Caring', desc: 'Warm, compassionate tone ideal for clinics and healthcare.', icon: '❤️' },
+  { id: 'professional', label: 'Professional & Formal', desc: 'Polished, executive tone for corporate & law services.', icon: '💼' },
+  { id: 'friendly', label: 'Friendly & Casual', desc: 'Approachable, relaxed tone for local businesses & retail.', icon: '😊' },
+  { id: 'enthusiastic', label: 'Enthusiastic & Upbeat', desc: 'High-energy, exciting tone for fitness & events.', icon: '🌟' },
+  { id: 'direct', label: 'Direct & Concise', desc: 'Short, clear responses without fluff.', icon: '⚡' },
+  { id: 'humorous', label: 'Humorous & Witty', desc: 'Playful, light-hearted tone with subtle humor.', icon: '😄' },
+];
+
+function WidgetSettingsView() {
+  const [botName, setBotName] = useState('Glow AI Assistant');
+  const [primaryColor, setPrimaryColor] = useState('#8b5cf6');
+  const [selectedTone, setSelectedTone] = useState('empathetic');
+  const [copied, setCopied] = useState(false);
+
+  const embedCode = `<!-- ZeroDesk AI Chatbot -->
+<script 
+  src="https://zerodesk.up.railway.app/widget.js" 
+  data-tenant-id="glow-clinic-uuid" 
+  data-bot-name="${botName}"
+  data-tone="${selectedTone}"
+  data-color="${primaryColor}"
+  defer>
+</script>`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-[var(--color-text)] flex items-center gap-2">
+          <span>Web Chatbot Widget</span>
+          <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-medium">Live Customizer</span>
+        </h2>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">
+          Customize your AI chatbot's personality, branding, and name. Changes apply in real-time to your embedded website widget.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Form Controls */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Bot Name & Identity */}
+          <div className="space-y-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              Bot Identity & Name
+            </h3>
+            <div>
+              <label className="block text-xs text-[var(--color-text-muted)] mb-1.5 font-medium">Custom Assistant Name</label>
+              <input
+                type="text"
+                value={botName}
+                onChange={(e) => setBotName(e.target.value)}
+                placeholder="e.g. Glow Medical AI"
+                className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] font-medium transition-all"
+              />
+              <p className="text-[11px] text-[var(--color-text-muted)] mt-1">This name is shown at the top of the chat window to your website visitors.</p>
+            </div>
+          </div>
+
+          {/* Tone Selector (6 Modes) */}
+          <div className="space-y-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                AI Conversation Tone (Personality)
+              </h3>
+              <span className="text-xs text-purple-400 font-mono">6 Modes</span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {TONE_OPTIONS.map((tone) => {
+                const isSelected = selectedTone === tone.id;
+                return (
+                  <button
+                    key={tone.id}
+                    onClick={() => setSelectedTone(tone.id)}
+                    className={cn(
+                      "p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between group",
+                      isSelected
+                        ? "bg-purple-600/10 border-purple-500 text-white shadow-[var(--shadow-glow)]"
+                        : "bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)]"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-sm font-medium flex items-center gap-1.5">
+                        <span>{tone.icon}</span>
+                        {tone.label}
+                      </span>
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />}
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+                      {tone.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Brand Color Customizer */}
+          <div className="space-y-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Primary Theme Color
+            </h3>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-0"
+              />
+              <input
+                type="text"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-36 px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+              <div className="flex gap-2 ml-auto">
+                {['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'].map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setPrimaryColor(color)}
+                    className="w-6 h-6 rounded-full border border-white/20 transition-transform hover:scale-110"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Embed Code Snippet */}
+          <div className="space-y-3 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[var(--color-text)]">Website Embed Snippet</h3>
+              <button
+                onClick={handleCopy}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-medium transition-colors flex items-center gap-1.5"
+              >
+                {copied ? '✓ Copied!' : 'Copy Code'}
+              </button>
+            </div>
+            <pre className="bg-[#1a1b26] text-[#a9b1d6] p-4 rounded-lg overflow-x-auto text-xs font-mono border border-slate-800 leading-relaxed">
+              <code>{embedCode}</code>
+            </pre>
+          </div>
+        </div>
+
+        {/* Right Column: Live Interactive Chatbot Preview */}
+        <div className="lg:col-span-5 sticky top-6">
+          <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                Live Interactive Preview
+              </span>
+              <span className="text-[11px] text-[var(--color-text-muted)]">Test replies live!</span>
+            </div>
+            
+            {/* Embedded ChatWidget preview */}
+            <div className="rounded-xl overflow-hidden shadow-2xl border border-slate-800">
+              <ChatWidget
+                botName={botName}
+                primaryColor={primaryColor}
+                tone={selectedTone}
+                isPreview={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
