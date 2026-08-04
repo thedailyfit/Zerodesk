@@ -10,6 +10,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "rootDir": "./src",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
@@ -17,8 +18,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@zerodesk/shared": ["../../packages/shared/src/index"],
-      "@zerodesk/shared/*": ["../../packages/shared/src/*"]
+      "@zerodesk/shared": ["../../packages/shared/dist/index"],
+      "@zerodesk/shared/*": ["../../packages/shared/dist/*"]
     }
   },
   "include": ["src/**/*"],
