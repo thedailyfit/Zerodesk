@@ -19,14 +19,12 @@
     "paths": {
       "@/*": ["./src/*"],
       "@zerodesk/shared": [
-        "../../packages/shared/dist/index",
-        "../../packages/shared/src/index",
-        "../../node_modules/@zerodesk/shared"
+        "../../packages/shared/dist/index.d.ts",
+        "node_modules/@zerodesk/shared"
       ],
       "@zerodesk/shared/*": [
         "../../packages/shared/dist/*",
-        "../../packages/shared/src/*",
-        "../../node_modules/@zerodesk/shared/*"
+        "node_modules/@zerodesk/shared/*"
       ]
     }
   },
