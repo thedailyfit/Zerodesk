@@ -6,6 +6,19 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding ZeroDesk database...\n');
 
+  // Clean up existing demo data if present to ensure clean idempotent seed
+  try {
+    const existingTenant = await prisma.tenant.findUnique({
+      where: { clerkOrgId: 'org_demo_glowclinic' },
+    });
+    if (existingTenant) {
+      console.log('🧹 Cleaning previous demo seed data...');
+      await prisma.tenant.delete({ where: { id: existingTenant.id } });
+    }
+  } catch (e) {
+    // Ignore if tables don't exist yet
+  }
+
   // ============================================================
   // 1. Demo Tenant
   // ============================================================
