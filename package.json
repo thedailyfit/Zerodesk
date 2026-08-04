@@ -1,0 +1,25 @@
+{
+  "name": "zerodesk",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "db:generate": "pnpm --filter @zerodesk/api db:generate",
+    "db:migrate": "pnpm --filter @zerodesk/api db:migrate",
+    "db:push": "pnpm --filter @zerodesk/api db:push",
+    "db:seed": "pnpm --filter @zerodesk/api db:seed",
+    "db:studio": "pnpm --filter @zerodesk/api db:studio",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "prettier": "^3.4.0",
+    "@types/node": "^22.0.0"
+  }
+}
