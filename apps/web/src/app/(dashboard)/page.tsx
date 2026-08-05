@@ -157,7 +157,7 @@ export default function DashboardOverview() {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -166,21 +166,6 @@ export default function DashboardOverview() {
         >
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-6">Recent Activity</h2>
           <ActivityFeed />
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.8 }}
-          className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm flex items-center justify-center"
-        >
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">Ready to scale?</h3>
-            <p className="text-sm text-[var(--color-text-muted)] mb-4 max-w-sm">Upgrade to our Enterprise plan to unlock advanced AI models, custom integrations, and dedicated support.</p>
-            <button className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-lg transition-colors shadow-lg shadow-[var(--color-primary-200)] font-medium text-sm">
-              Upgrade Plan
-            </button>
-          </div>
         </motion.div>
       </div>
     </div>

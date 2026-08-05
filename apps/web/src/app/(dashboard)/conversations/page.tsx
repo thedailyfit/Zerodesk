@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Phone, MessageCircle, Globe, ArrowUpRight, Clock } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 
+import { Avatar3D } from '@/components/ui/avatar-3d';
+
 const conversations = [
   { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to book an appointment for skin treatment', aiSummary: 'Customer interested in laser treatment', sentiment: 'POSITIVE', duration: '4:32', time: new Date(Date.now() - 300000) },
   { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you share the price list for hair treatments?', aiSummary: 'Requested pricing for hair treatments', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
@@ -17,20 +19,20 @@ const conversations = [
 
 const channelConfig: Record<string, { icon: typeof Phone; label: string; color: string }> = {
   VOICE: { icon: Phone, label: 'Voice Call', color: 'text-blue-400' },
-  WHATSAPP: { icon: MessageCircle, label: 'WhatsApp', color: 'text-green-400' },
+  WHATSAPP: { icon: MessageCircle, label: 'WhatsApp', color: 'text-emerald-400' },
   WEB_CHAT: { icon: Globe, label: 'Web Chat', color: 'text-purple-400' },
 };
 
 const statusConfig: Record<string, { label: string; style: string }> = {
-  ACTIVE: { label: 'Active', style: 'bg-green-500/10 text-green-400 border-green-500/20' },
+  ACTIVE: { label: 'Active', style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   CLOSED: { label: 'Closed', style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
   TRANSFERRED: { label: 'Transferred', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
 };
 
-const sentimentConfig: Record<string, string> = {
-  POSITIVE: '😊',
-  NEUTRAL: '😐',
-  NEGATIVE: '😟',
+const sentimentStyle: Record<string, { label: string; style: string }> = {
+  POSITIVE: { label: 'Positive', style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  NEUTRAL: { label: 'Neutral', style: 'bg-slate-800 text-slate-400 border-slate-700' },
+  NEGATIVE: { label: 'Negative', style: 'bg-red-500/10 text-red-400 border-red-500/20' },
 };
 
 export default function ConversationsPage() {
@@ -98,17 +100,20 @@ export default function ConversationsPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <div className={cn("p-2 rounded-lg bg-[var(--color-surface)]", channel.color)}>
-                    <ChannelIcon size={18} />
-                  </div>
+                  <Avatar3D name={conv.customer} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-[var(--color-text)]">{conv.customer}</span>
-                      <span className="text-xs text-[var(--color-text-muted)]">{conv.phone}</span>
-                      <span className="text-sm">{sentimentConfig[conv.sentiment]}</span>
+                      <span className="font-bold text-sm text-[var(--color-text)]">{conv.customer}</span>
+                      <span className="text-xs text-[var(--color-text-muted)] font-mono">{conv.phone}</span>
+                      <span className={cn("px-2 py-0.5 text-[10px] rounded-full border font-medium", (sentimentStyle[conv.sentiment] || sentimentStyle.NEUTRAL).style)}>
+                        {(sentimentStyle[conv.sentiment] || sentimentStyle.NEUTRAL).label}
+                      </span>
                     </div>
-                    <p className="text-sm text-[var(--color-text-secondary)] mt-0.5 truncate">{conv.lastMessage}</p>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-1 italic">{conv.aiSummary}</p>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate font-medium">{conv.lastMessage}</p>
+                    <p className="text-[11px] text-purple-300 mt-1 italic flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                      {conv.aiSummary}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">

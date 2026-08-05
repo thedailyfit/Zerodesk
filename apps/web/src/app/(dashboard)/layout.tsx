@@ -26,7 +26,9 @@ import {
   ChevronLeft,
   FileText,
   Rocket,
-  Info
+  Info,
+  Receipt,
+  TrendingUp
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -38,6 +40,8 @@ const navItems = [
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'CRM', href: '/crm', icon: Target },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
+  { name: 'Invoices & Billing', href: '/invoices', icon: Receipt },
+  { name: 'Sales & Revenue', href: '/sales', icon: TrendingUp },
   { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen },
   { name: 'Templates', href: '/templates', icon: FileText },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },

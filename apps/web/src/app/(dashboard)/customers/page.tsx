@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Phone, MessageCircle, Globe, TrendingUp, TrendingDown, Minus, Upload, FileSpreadsheet, X, Check, Star } from 'lucide-react';
 import { cn, formatCurrency, timeAgo, getInitials } from '@/lib/utils';
+import { Avatar3D } from '@/components/ui/avatar-3d';
 
 interface CustomerItem {
   id: string;
@@ -194,9 +195,7 @@ export default function CustomersPage() {
                 >
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        {getInitials(customer.name)}
-                      </div>
+                      <Avatar3D name={customer.name} size="md" />
                       <div>
                         <div className="font-bold text-xs text-[var(--color-text)]">{customer.name}</div>
                         <div className="text-[11px] text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
