@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import posthog from 'posthog-js';
 
 interface AppointmentItem {
   id: string;
@@ -108,6 +109,10 @@ export default function AppointmentsPage() {
       confirmationSent: true,
     };
 
+    if (typeof window !== 'undefined' && posthog.isFeatureEnabled) {
+      posthog.capture('appointment_booked', { service, staff, source, priority });
+    }
+
     setAppointments([created, ...appointments]);
     setIsBookModalOpen(false);
     setCustomer('');
@@ -116,6 +121,9 @@ export default function AppointmentsPage() {
 
   const handleSendConfirmationRequest = (apptId: string) => {
     setConfirmationTriggeredId(apptId);
+    if (typeof window !== 'undefined' && posthog.isFeatureEnabled) {
+      posthog.capture('ai_confirmation_workflow_triggered', { apptId });
+    }
     
     // Simulate AI 2-Step Confirmation Workflow: WhatsApp -> Voice Call (10 mins later) -> Auto Confirmed
     setTimeout(() => {
