@@ -23,7 +23,10 @@ import {
   Moon,
   Search,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  FileText,
+  Rocket,
+  Info
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -36,11 +39,13 @@ const navItems = [
   { name: 'CRM', href: '/crm', icon: Target },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen },
+  { name: 'Templates', href: '/templates', icon: FileText },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Voice AI', href: '/voice', icon: Phone },
   { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle },
   { name: 'Staff', href: '/staff', icon: UserCog },
   { name: 'Automations', href: '/automations', icon: Workflow },
+  { name: 'Ready to Scale', href: '/scale', icon: Rocket },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -59,18 +64,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="flex flex-col h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)] relative z-20"
       >
-        <div className="p-4 flex items-center justify-between h-16">
+        <div className="p-4 flex items-center justify-between h-16 border-b border-[var(--color-border)]">
           {isSidebarOpen ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-bold text-xl tracking-tight text-[var(--color-primary)] flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center">
-                <span className="text-white text-xs">Z</span>
-              </div>
-              ZeroDesk
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-bold text-xl tracking-tight text-[var(--color-text)] flex items-center gap-2.5">
+              <svg className="w-7 h-7 text-cyan-400 shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" strokeDasharray="200 40" strokeLinecap="round" />
+                <path d="M32 50L45 63L68 37" stroke="#8b5cf6" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent font-extrabold tracking-wider">
+                ZERODESK
+              </span>
             </motion.div>
           ) : (
-            <div className="w-6 h-6 rounded bg-gradient-to-tr from-purple-600 to-indigo-500 mx-auto flex items-center justify-center">
-              <span className="text-white text-xs">Z</span>
-            </div>
+            <svg className="w-7 h-7 text-cyan-400 mx-auto shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" strokeDasharray="200 40" strokeLinecap="round" />
+              <path d="M32 50L45 63L68 37" stroke="#8b5cf6" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           )}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}

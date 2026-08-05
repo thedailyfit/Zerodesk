@@ -1,11 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Phone, MessageCircle, Calendar, Users, Clock, Target, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  Phone, 
+  MessageCircle, 
+  Calendar, 
+  Users, 
+  Clock, 
+  Target, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  Filter,
+  Calendar as CalIcon
+} from 'lucide-react';
+import { 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  CartesianGrid, 
+  Legend 
+} from 'recharts';
 import { cn, formatNumber, formatCurrency } from '@/lib/utils';
 
-const callData = [
+// Dynamic Multiplier based on timeframe selected
+const TIMEFRAME_MULTIPLIERS: Record<string, number> = {
+  '1D': 0.15,
+  '7D': 1,
+  '15D': 2.1,
+  '30D': 4.2,
+  '45D': 6.3,
+  '90D': 12.5,
+  'custom': 5.0,
+};
+
+const baseCallData = [
   { date: 'Mon', calls: 42, resolved: 38, missed: 4 },
   { date: 'Tue', calls: 55, resolved: 50, missed: 5 },
   { date: 'Wed', calls: 38, resolved: 35, missed: 3 },
@@ -15,89 +54,162 @@ const callData = [
   { date: 'Sun', calls: 25, resolved: 23, missed: 2 },
 ];
 
-const channelData = [
-  { name: 'Voice', value: 341, color: '#3b82f6' },
-  { name: 'WhatsApp', value: 528, color: '#22c55e' },
-  { name: 'Web Chat', value: 167, color: '#a855f7' },
-];
-
-const hourlyData = Array.from({ length: 12 }, (_, i) => ({
+const baseHourlyData = Array.from({ length: 12 }, (_, i) => ({
   hour: `${(i + 8).toString().padStart(2, '0')}:00`,
   calls: Math.floor(Math.random() * 15) + 2,
   messages: Math.floor(Math.random() * 25) + 5,
 }));
 
-const serviceData = [
-  { service: 'Laser Treatment', bookings: 45, revenue: 675000 },
-  { service: 'Hair Transplant', bookings: 12, revenue: 960000 },
-  { service: 'Chemical Peel', bookings: 38, revenue: 190000 },
-  { service: 'PRP Therapy', bookings: 22, revenue: 440000 },
-  { service: 'Consultation', bookings: 89, revenue: 44500 },
-];
-
-const kpis = [
-  { label: 'Total Calls', value: 341, change: 12.5, icon: Phone, color: 'text-blue-400' },
-  { label: 'Total Messages', value: 528, change: 8.3, icon: MessageCircle, color: 'text-green-400' },
-  { label: 'Appointments', value: 156, change: -3.2, icon: Calendar, color: 'text-purple-400' },
-  { label: 'New Leads', value: 89, change: 15.7, icon: Users, color: 'text-amber-400' },
-  { label: 'Avg Response', value: '1.2s', change: -18.5, icon: Clock, color: 'text-cyan-400' },
-  { label: 'Conversion Rate', value: '34%', change: 5.1, icon: Target, color: 'text-pink-400' },
-];
-
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
   return (
-    <div className="bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-lg p-3 shadow-lg">
-      <p className="text-xs text-[var(--color-text-muted)] mb-1">{label}</p>
+    <div className="bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-lg p-3 shadow-lg text-xs">
+      <p className="text-[var(--color-text-muted)] mb-1 font-semibold">{label}</p>
       {payload.map((entry: any) => (
-        <p key={entry.name} className="text-sm font-medium" style={{ color: entry.color }}>{entry.name}: {entry.value}</p>
+        <p key={entry.name} className="font-medium" style={{ color: entry.color }}>
+          {entry.name}: {entry.value}
+        </p>
       ))}
     </div>
   );
 };
 
 export default function AnalyticsPage() {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('7D');
+  const [customStartDate, setCustomStartDate] = useState('2026-07-01');
+  const [customEndDate, setCustomEndDate] = useState('2026-08-05');
+
+  const mult = TIMEFRAME_MULTIPLIERS[selectedTimeframe] || 1;
+
+  const kpis = [
+    { label: 'Total Calls', value: Math.round(341 * mult), change: 12.5, icon: Phone, color: 'text-blue-400' },
+    { label: 'Total Messages', value: Math.round(528 * mult), change: 8.3, icon: MessageCircle, color: 'text-emerald-400' },
+    { label: 'Appointments', value: Math.round(156 * mult), change: 4.8, icon: Calendar, color: 'text-purple-400' },
+    { label: 'New Leads', value: Math.round(89 * mult), change: 15.7, icon: Users, color: 'text-amber-400' },
+    { label: 'Avg Response', value: '1.2s', change: -18.5, icon: Clock, color: 'text-cyan-400' },
+    { label: 'Conversion Rate', value: '34%', change: 5.1, icon: Target, color: 'text-pink-400' },
+  ];
+
+  const channelData = [
+    { name: 'Voice', value: Math.round(341 * mult), color: '#3b82f6' },
+    { name: 'WhatsApp', value: Math.round(528 * mult), color: '#10b981' },
+    { name: 'Web Chat', value: Math.round(167 * mult), color: '#a855f7' },
+  ];
+
+  const scaledCallData = baseCallData.map(d => ({
+    ...d,
+    calls: Math.round(d.calls * (mult < 1 ? 1 : mult / 2)),
+    resolved: Math.round(d.resolved * (mult < 1 ? 1 : mult / 2)),
+    missed: Math.round(d.missed * (mult < 1 ? 1 : mult / 2)),
+  }));
+
+  const serviceData = [
+    { service: 'Laser Treatment', bookings: Math.round(45 * mult), revenue: Math.round(675000 * mult) },
+    { service: 'Hair Transplant', bookings: Math.round(12 * mult), revenue: Math.round(960000 * mult) },
+    { service: 'Chemical Peel', bookings: Math.round(38 * mult), revenue: Math.round(190000 * mult) },
+    { service: 'PRP Therapy', bookings: Math.round(22 * mult), revenue: Math.round(440000 * mult) },
+    { service: 'Consultation', bookings: Math.round(89 * mult), revenue: Math.round(44500 * mult) },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-[var(--color-text-muted)] text-sm mt-1">Performance insights across all channels</p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header & Timeframe Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Analytics & Performance Insights</h1>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">Multi-channel performance analytics up to 90 days retention.</p>
+        </div>
+
+        {/* Predefined Analytics Filters: 1D, 7D, 15D, 30D, 45D, 90D, Custom */}
+        <div className="flex flex-wrap items-center gap-1.5 bg-[var(--color-surface)] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-sm">
+          <span className="text-[11px] font-semibold text-[var(--color-text-muted)] px-2 uppercase tracking-wider">Timeframe:</span>
+          {['1D', '7D', '15D', '30D', '45D', '90D', 'custom'].map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setSelectedTimeframe(tf)}
+              className={cn(
+                "px-3 py-1.5 rounded-xl text-xs font-bold transition-all uppercase",
+                selectedTimeframe === tf
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)]"
+              )}
+            >
+              {tf === 'custom' ? 'Custom Range' : tf}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Custom Date Range Picker */}
+      {selectedTimeframe === 'custom' && (
+        <div className="p-4 bg-purple-950/20 border border-purple-500/30 rounded-2xl flex items-center gap-4 text-xs">
+          <CalIcon size={16} className="text-purple-400" />
+          <div className="flex items-center gap-2">
+            <span className="text-slate-300">Start Date:</span>
+            <input
+              type="date"
+              value={customStartDate}
+              onChange={(e) => setCustomStartDate(e.target.value)}
+              className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded text-white"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-300">End Date:</span>
+            <input
+              type="date"
+              value={customEndDate}
+              onChange={(e) => setCustomEndDate(e.target.value)}
+              className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded text-white"
+            />
+          </div>
+          <span className="text-purple-400 font-mono text-[11px]">Filtered: {customStartDate} to {customEndDate}</span>
+        </div>
+      )}
+
       {/* KPI Grid */}
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {kpis.map((kpi, i) => (
-          <motion.div key={kpi.label}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="p-3 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl"
+          <motion.div
+            key={kpi.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="p-3.5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
           >
             <div className="flex items-center justify-between">
               <kpi.icon size={16} className={kpi.color} />
-              <div className={cn("flex items-center gap-0.5 text-[10px]", kpi.change > 0 ? "text-green-400" : "text-red-400")}>
-                {kpi.change > 0 ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
+              <div className={cn("flex items-center gap-0.5 text-[10px] font-bold", kpi.change > 0 ? "text-emerald-400" : "text-red-400")}>
+                {kpi.change > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                 {Math.abs(kpi.change)}%
               </div>
             </div>
-            <p className="text-xl font-bold mt-2 text-[var(--color-text)]">{kpi.value}</p>
-            <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{kpi.label}</p>
+            <p className="text-2xl font-extrabold mt-2 text-[var(--color-text)] font-mono">{typeof kpi.value === 'number' ? formatNumber(kpi.value) : kpi.value}</p>
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 font-medium">{kpi.label}</p>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Call Volume Trend */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Call Volume — This Week</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
+        >
+          <h3 className="text-sm font-bold text-[var(--color-text)] mb-4 flex items-center justify-between">
+            <span>Call Volume Trend ({selectedTimeframe})</span>
+            <span className="text-xs text-purple-400 font-mono">Retained 90 Days</span>
+          </h3>
           <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={callData}>
+            <AreaChart data={scaledCallData}>
               <defs>
                 <linearGradient id="gradCalls" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradMissed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -105,16 +217,20 @@ export default function AnalyticsPage() {
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="calls" stroke="#7c3aed" fill="url(#gradCalls)" strokeWidth={2} name="Total Calls" />
+              <Area type="monotone" dataKey="calls" stroke="#8b5cf6" fill="url(#gradCalls)" strokeWidth={2} name="Total Calls" />
               <Area type="monotone" dataKey="missed" stroke="#ef4444" fill="url(#gradMissed)" strokeWidth={2} name="Missed" />
             </AreaChart>
           </ResponsiveContainer>
         </motion.div>
 
         {/* Channel Distribution */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Channel Distribution</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
+        >
+          <h3 className="text-sm font-bold text-[var(--color-text)] mb-4">Channel Distribution ({selectedTimeframe})</h3>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -124,44 +240,56 @@ export default function AnalyticsPage() {
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
-                <Legend formatter={(value) => <span className="text-xs text-[var(--color-text-secondary)]">{value}</span>} />
+                <Legend formatter={(value) => <span className="text-xs text-[var(--color-text-secondary)] font-medium">{value}</span>} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
         {/* Peak Hours */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Peak Hours — Today</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
+        >
+          <h3 className="text-sm font-bold text-[var(--color-text)] mb-4">Peak Activity Hours</h3>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={hourlyData}>
+            <BarChart data={baseHourlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
               <XAxis dataKey="hour" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="calls" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Calls" />
-              <Bar dataKey="messages" fill="#22c55e" radius={[4, 4, 0, 0]} name="Messages" />
+              <Bar dataKey="messages" fill="#10b981" radius={[4, 4, 0, 0]} name="Messages" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
 
         {/* Top Services */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Top Services — Revenue</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
+        >
+          <h3 className="text-sm font-bold text-[var(--color-text)] mb-4">Top Services Revenue ({selectedTimeframe})</h3>
           <div className="space-y-3">
             {serviceData.map((svc, i) => (
               <div key={svc.service} className="flex items-center gap-3">
-                <span className="text-xs text-[var(--color-text-muted)] w-4">{i + 1}</span>
+                <span className="text-xs text-[var(--color-text-muted)] font-bold w-4">{i + 1}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-[var(--color-text)]">{svc.service}</span>
-                    <span className="text-xs font-mono text-[var(--color-text-secondary)]">{formatCurrency(svc.revenue)}</span>
+                    <span className="text-xs font-bold text-[var(--color-text)]">{svc.service}</span>
+                    <span className="text-xs font-mono text-purple-300 font-bold">{formatCurrency(svc.revenue)}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(svc.revenue / 960000) * 100}%` }} transition={{ delay: 0.5 + i * 0.1, duration: 0.8 }}
-                      className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full" />
+                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (svc.revenue / Math.max(...serviceData.map(s => s.revenue))) * 100)}%` }}
+                      transition={{ delay: 0.3 + i * 0.05, duration: 0.6 }}
+                      className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                    />
                   </div>
                 </div>
               </div>

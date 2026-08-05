@@ -1,7 +1,27 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Phone, Mic, Volume2, Globe, Settings as SettingsIcon, PhoneIncoming, PhoneOutgoing, PhoneOff, Play, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Phone, 
+  Mic, 
+  Volume2, 
+  Globe, 
+  PhoneIncoming, 
+  PhoneOutgoing, 
+  PhoneOff, 
+  Play, 
+  Pause,
+  CheckCircle2, 
+  Power,
+  FileText,
+  X,
+  Search,
+  Check,
+  User,
+  Clock,
+  Sparkles
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const personalities = [
@@ -13,115 +33,365 @@ const personalities = [
   { id: 'doctor_assistant', label: 'Doctor Assistant', desc: 'Calm, reassuring, precise', icon: '🩺' },
 ];
 
-const recentCalls = [
-  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', type: 'inbound', duration: '4:32', status: 'completed', resolution: 'AI_RESOLVED', time: '14:30' },
-  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', type: 'outbound', duration: '2:15', status: 'completed', resolution: 'AI_RESOLVED', time: '13:45' },
-  { id: '3', customer: 'Unknown', phone: '+91 76543 21098', type: 'inbound', duration: '0:00', status: 'missed', resolution: null, time: '13:20' },
-  { id: '4', customer: 'Amit Patel', phone: '+91 65432 10987', type: 'inbound', duration: '6:12', status: 'transferred', resolution: 'HUMAN_RESOLVED', time: '12:10' },
+const INITIAL_CALLS = [
+  { 
+    id: '1', 
+    customer: 'Rajesh Kumar', 
+    phone: '+91 98765 43210', 
+    type: 'inbound', 
+    duration: '4:32', 
+    status: 'completed', 
+    resolution: 'AI_RESOLVED', 
+    time: '14:30 Today',
+    transcript: "AI: Hello Rajesh, welcome to Glow Skin Clinic! How can I help you today?\nRajesh: Hi, I wanted to ask about laser hair removal pricing and availability.\nAI: Of course! Our laser hair removal packages start at ₹3,000. Dr. Meenakshi has openings this Friday at 4 PM. Should I reserve that slot for you?\nRajesh: Yes please, book Friday 4 PM.\nAI: Perfect! I've confirmed your slot and sent details to your WhatsApp."
+  },
+  { 
+    id: '2', 
+    customer: 'Priya Sharma', 
+    phone: '+91 87654 32109', 
+    type: 'outbound', 
+    duration: '2:15', 
+    status: 'completed', 
+    resolution: 'AI_RESOLVED', 
+    time: '13:45 Today',
+    transcript: "AI: Hi Priya, this is Glow Clinic calling to remind you of your Chemical Peel session tomorrow at 11 AM.\nPriya: Thanks for calling! Is there any prep needed?\nAI: Please avoid heavy sun exposure and active serums tonight. See you tomorrow at 11 AM!"
+  },
+  { 
+    id: '3', 
+    customer: 'Ankit Rawat', 
+    phone: '+91 76543 21098', 
+    type: 'inbound', 
+    duration: '0:00', 
+    status: 'missed', 
+    resolution: 'MISSED', 
+    time: '13:20 Today',
+    transcript: "[Call Missed — Auto-triggered WhatsApp Follow-up sent to patient]"
+  },
+  { 
+    id: '4', 
+    customer: 'Amit Patel', 
+    phone: '+91 65432 10987', 
+    type: 'inbound', 
+    duration: '6:12', 
+    status: 'transferred', 
+    resolution: 'HUMAN_RESOLVED', 
+    time: '12:10 Today',
+    transcript: "AI: Hello Amit, welcome to Glow Clinic!\nAmit: I have severe skin allergies from a medication and need urgent doctor advice.\nAI: I understand completely. Let me immediately connect you to our senior dermatologist Dr. Meenakshi..."
+  },
+  { 
+    id: '5', 
+    customer: 'Sneha Reddy', 
+    phone: '+91 54321 09876', 
+    type: 'outbound', 
+    duration: '3:40', 
+    status: 'completed', 
+    resolution: 'AI_RESOLVED', 
+    time: 'Yesterday',
+    transcript: "AI: Hello Sneha! Checking in regarding your Full Body Package enquiry.\nSneha: Yes, can you send the treatment schedule?\nAI: Absolutely! Sent to your WhatsApp now."
+  }
 ];
 
 export default function VoicePage() {
-  const selectedPersonality = 'professional';
+  const [isVoiceActive, setIsVoiceActive] = useState(true);
+  const [selectedPersonality, setSelectedPersonality] = useState('doctor_assistant');
+  const [calls, setCalls] = useState(INITIAL_CALLS);
+  const [searchCall, setSearchCall] = useState('');
+  const [activeCallId, setActiveCallId] = useState<string | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  const filteredCalls = calls.filter(c => 
+    c.customer.toLowerCase().includes(searchCall.toLowerCase()) || 
+    c.phone.includes(searchCall)
+  );
+
+  const toggleAudioPlay = (id: string) => {
+    if (playingId === id) {
+      setPlayingId(null);
+    } else {
+      setPlayingId(id);
+      setTimeout(() => setPlayingId(null), 4000); // Simulate audio playback
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Voice AI</h1>
-        <p className="text-[var(--color-text-muted)] text-sm mt-1">Configure your AI receptionist voice agent</p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Voice AI Agent</h1>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">Autonomous phone call answering, appointment booking, and call history logs.</p>
+        </div>
+
+        {/* Master ON / OFF Switch */}
+        <div className="flex items-center gap-3 bg-[var(--color-surface)] p-2 rounded-xl border border-[var(--color-border)]">
+          <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider pl-2">
+            Voice Feature
+          </span>
+          <button
+            onClick={() => setIsVoiceActive(!isVoiceActive)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md",
+              isVoiceActive
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                : "bg-red-600 hover:bg-red-500 text-white"
+            )}
+          >
+            <Power size={14} />
+            <span>{isVoiceActive ? 'VOICE AI ON' : 'VOICE AI OFF'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Status Card */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="p-5 bg-gradient-to-r from-[var(--color-primary-50)] to-transparent border border-[var(--color-primary-200)] rounded-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
-              <Phone size={20} className="text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-[var(--color-text)]">Voice AI Active</p>
-              <p className="text-xs text-[var(--color-text-muted)]">Phone: +91 40 1234 5678 · Powered by Vapi</p>
-            </div>
+      {/* Master Status Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={cn(
+          "p-5 rounded-2xl border transition-all backdrop-blur-xl shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4",
+          isVoiceActive
+            ? "bg-gradient-to-r from-emerald-950/40 via-purple-950/20 to-slate-900 border-emerald-500/30"
+            : "bg-gradient-to-r from-red-950/40 via-slate-900 to-slate-900 border-red-500/30 opacity-80"
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-inner shrink-0",
+            isVoiceActive ? "bg-emerald-500 shadow-emerald-500/50" : "bg-red-500 shadow-red-500/50"
+          )}>
+            <Phone size={24} className={isVoiceActive ? "animate-bounce" : ""} />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-green-400">Online</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-lg text-white">ZeroDesk Voice Agent</h2>
+              <span className={cn(
+                "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border",
+                isVoiceActive
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              )}>
+                <span className={cn("w-2 h-2 rounded-full", isVoiceActive ? "bg-emerald-400 animate-ping" : "bg-red-400")} />
+                {isVoiceActive ? 'ACTIVE (ONLINE)' : 'INACTIVE (PAUSED)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1">
+              Dedicated Clinic Number: <span className="font-mono text-purple-300 font-semibold">+91 40 1234 5678</span> · Latency: <span className="text-emerald-400 font-mono">290ms</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-xs text-slate-300">
+          <div className="text-right border-r border-slate-800 pr-4">
+            <p className="text-slate-400">24h Calls</p>
+            <p className="text-base font-bold text-white">42</p>
+          </div>
+          <div className="text-right">
+            <p className="text-slate-400">Resolution Rate</p>
+            <p className="text-base font-bold text-emerald-400">95.2%</p>
           </div>
         </div>
       </motion.div>
 
+      {/* Voice Configurations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Voice Personality */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2"><Mic size={16} />Voice Personality</h3>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
+          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+            <Mic size={16} className="text-purple-400" />
+            Voice AI Personality Mode
+          </h3>
+          <div className="grid grid-cols-2 gap-2.5">
             {personalities.map((p) => (
-              <button key={p.id}
-                className={cn("p-3 rounded-lg border text-left transition-all",
+              <button
+                key={p.id}
+                onClick={() => setSelectedPersonality(p.id)}
+                className={cn(
+                  "p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group",
                   selectedPersonality === p.id
-                    ? "bg-[var(--color-primary-100)] border-[var(--color-primary)] text-[var(--color-text)]"
-                    : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-                )}>
-                <span className="text-lg">{p.icon}</span>
-                <p className="text-sm font-medium mt-1">{p.label}</p>
-                <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{p.desc}</p>
+                    ? "bg-purple-600/10 border-purple-500 text-white shadow-md"
+                    : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-purple-500/30"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xl">{p.icon}</span>
+                  {selectedPersonality === p.id && <Check size={14} className="text-purple-400" />}
+                </div>
+                <p className="text-sm font-semibold mt-2">{p.label}</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-snug">{p.desc}</p>
               </button>
             ))}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Languages */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2"><Globe size={16} />Languages</h3>
-          <div className="space-y-2">
+        {/* Languages & Greeting */}
+        <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl space-y-4">
+          <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+            <Globe size={16} className="text-cyan-400" />
+            Multilingual Voice Support
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
             {[
-              { code: 'en', name: 'English', enabled: true },
-              { code: 'hi', name: 'Hindi', enabled: true },
-              { code: 'te', name: 'Telugu', enabled: true },
-              { code: 'hinglish', name: 'Hinglish', enabled: false },
+              { name: 'English (US & India)', active: true },
+              { name: 'Hindi (हिंदी)', active: true },
+              { name: 'Telugu (తెలుగు)', active: true },
+              { name: 'Hinglish (Hybrid)', active: true },
             ].map((lang) => (
-              <div key={lang.code} className="flex items-center justify-between p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
-                <span className="text-sm text-[var(--color-text)]">{lang.name}</span>
-                <div className={cn("w-8 h-4 rounded-full transition-colors relative cursor-pointer", lang.enabled ? "bg-[var(--color-primary)]" : "bg-[var(--color-bg-tertiary)]")}>
-                  <div className={cn("w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all", lang.enabled ? "left-4.5" : "left-0.5")} />
-                </div>
+              <div key={lang.name} className="flex items-center justify-between p-2.5 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
+                <span>{lang.name}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
               </div>
             ))}
           </div>
 
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mt-6 mb-3 flex items-center gap-2"><Volume2 size={16} />Greeting Message</h3>
-          <textarea className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all" rows={3}
-            defaultValue="Hello! Welcome to Glow Skin Clinic. How can I help you today?" />
-        </motion.div>
+          <h3 className="text-sm font-semibold text-[var(--color-text)] pt-2 flex items-center gap-2">
+            <Volume2 size={16} className="text-amber-400" />
+            Active Voice Greeting Script
+          </h3>
+          <textarea
+            className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+            rows={3}
+            defaultValue="Hello! Welcome to Glow Skin Clinic. I am Dr. Meenakshi's AI assistant. How can I help you today?"
+          />
+        </div>
       </div>
 
-      {/* Recent Calls */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-        className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
-        <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Recent Voice Calls</h3>
-        <div className="space-y-2">
-          {recentCalls.map((call) => (
-            <div key={call.id} className="flex items-center justify-between p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors">
-              <div className="flex items-center gap-3">
-                {call.type === 'inbound' ? <PhoneIncoming size={16} className="text-blue-400" /> : <PhoneOutgoing size={16} className="text-green-400" />}
+      {/* Past Voice Call History */}
+      <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3">
+          <div>
+            <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
+              <span>Voice Calls Past History</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">
+                {filteredCalls.length} Logs
+              </span>
+            </h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Complete record of inbound & outbound phone calls handled by AI.</p>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <input
+              type="text"
+              placeholder="Search call logs..."
+              value={searchCall}
+              onChange={(e) => setSearchCall(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {filteredCalls.map((call) => (
+            <div
+              key={call.id}
+              className="flex items-center justify-between p-3.5 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] hover:border-purple-500/30 transition-all group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className={cn(
+                  "w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0",
+                  call.type === 'inbound' ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                )}>
+                  {call.type === 'inbound' ? <PhoneIncoming size={16} /> : <PhoneOutgoing size={16} />}
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-[var(--color-text)]">{call.customer}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{call.phone}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-[var(--color-text)]">{call.customer}</p>
+                    <span className="text-xs text-[var(--color-text-muted)] font-mono">{call.phone}</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-2 mt-0.5">
+                    <span className="capitalize">{call.type} Call</span>
+                    <span>•</span>
+                    <span>{call.time}</span>
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                {call.resolution === 'AI_RESOLVED' && <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle2 size={10} />AI Resolved</span>}
-                {call.status === 'missed' && <span className="text-[10px] text-red-400 flex items-center gap-1"><PhoneOff size={10} />Missed</span>}
-                <span className="text-xs text-[var(--color-text-muted)] font-mono">{call.duration}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{call.time}</span>
-                <button className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded"><Play size={12} className="text-[var(--color-text-muted)]" /></button>
+
+              <div className="flex items-center gap-3">
+                {call.resolution === 'AI_RESOLVED' && (
+                  <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
+                    <CheckCircle2 size={11} /> AI Resolved
+                  </span>
+                )}
+                {call.resolution === 'HUMAN_RESOLVED' && (
+                  <span className="text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
+                    <User size={11} /> Human Handed Off
+                  </span>
+                )}
+                {call.status === 'missed' && (
+                  <span className="text-[11px] bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
+                    <PhoneOff size={11} /> Missed Call
+                  </span>
+                )}
+
+                <span className="text-xs text-[var(--color-text-muted)] font-mono w-12 text-right">{call.duration}</span>
+
+                {/* Audio Player Button */}
+                <button
+                  onClick={() => toggleAudioPlay(call.id)}
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition-colors flex items-center gap-1"
+                >
+                  {playingId === call.id ? (
+                    <>
+                      <Pause size={12} className="text-amber-400 animate-pulse" />
+                      <span className="text-amber-400">Playing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={12} />
+                      <span>Audio</span>
+                    </>
+                  )}
+                </button>
+
+                {/* View Transcript Modal */}
+                <button
+                  onClick={() => setActiveCallId(call.id)}
+                  className="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs transition-colors flex items-center gap-1 border border-purple-500/30"
+                >
+                  <FileText size={12} />
+                  <span>Transcript</span>
+                </button>
               </div>
             </div>
           ))}
         </div>
-      </motion.div>
+      </div>
+
+      {/* Transcript Modal */}
+      <AnimatePresence>
+        {activeCallId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-base flex items-center gap-2">
+                  <FileText size={18} className="text-purple-400" />
+                  Call Transcript: {calls.find(c => c.id === activeCallId)?.customer}
+                </h3>
+                <button onClick={() => setActiveCallId(null)} className="text-slate-400 hover:text-white">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
+                {calls.find(c => c.id === activeCallId)?.transcript}
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => setActiveCallId(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-lg font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
