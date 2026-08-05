@@ -1,16 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redisService: RedisService,
+  ) {}
 
   /**
-   * Get real-time high-level KPIs for dashboard header.
+   * Get real-time high-level KPIs for dashboard header with Redis 10-min caching.
    */
   async getDashboardKPIs(tenantId: string) {
+    const cacheKey = `analytics:kpi:${tenantId}`;
+    const cachedData = await this.redisService.get(cacheKey);
+
+    if (cachedData) {
+      try {
+        return JSON.parse(cachedData);
+      } catch (e) {
+        // Cache parse error, fallback to DB
+      }
+    }
+
     const [totalCustomers, activeLeads, appointmentsToday, totalRevenue] = await Promise.all([
       this.prisma.customer.count({ where: { tenantId } }),
       this.prisma.lead.count({
@@ -34,12 +49,17 @@ export class AnalyticsService {
       }),
     ]);
 
-    return {
+    const result = {
       totalCustomers,
       activeLeads,
       appointmentsToday,
       totalRevenue: totalRevenue._sum.lifetimeValue?.toNumber() || 0,
     };
+
+    // Cache metrics for 10 minutes (600 seconds)
+    await this.redisService.set(cacheKey, JSON.stringify(result), 600);
+
+    return result;
   }
 
   /**

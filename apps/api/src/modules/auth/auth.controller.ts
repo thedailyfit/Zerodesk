@@ -1,16 +1,42 @@
-import { Controller, Post, Body, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UnauthorizedException, BadRequestException, RawBodyRequest, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { Webhook } from 'svix';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
-@Controller('auth')
+@ApiTags('Auth & Webhooks')
+@Controller('v1/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('webhook')
-  async handleWebhook(@Body() payload: any, @Headers('svix-signature') signature: string) {
-    if (!signature) {
-      throw new UnauthorizedException('Missing signature');
+  @ApiOperation({ summary: 'Handle Clerk Auth Webhook events (User/Org Sync)' })
+  async handleWebhook(
+    @Body() payload: any,
+    @Headers('svix-id') svixId: string,
+    @Headers('svix-timestamp') svixTimestamp: string,
+    @Headers('svix-signature') svixSignature: string,
+  ) {
+    const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+
+    // If secret is configured, verify signature using Svix
+    if (webhookSecret && webhookSecret !== 'whsec_xxx') {
+      if (!svixId || !svixTimestamp || !svixSignature) {
+        throw new UnauthorizedException('Missing Svix signature headers');
+      }
+
+      try {
+        const wh = new Webhook(webhookSecret);
+        const bodyStr = JSON.stringify(payload);
+        wh.verify(bodyStr, {
+          'svix-id': svixId,
+          'svix-timestamp': svixTimestamp,
+          'svix-signature': svixSignature,
+        });
+      } catch (err) {
+        throw new UnauthorizedException('Invalid Svix signature verification failed');
+      }
     }
-    // Verify svix signature here (omitted for brevity)
+
     return this.authService.processWebhook(payload);
   }
 }

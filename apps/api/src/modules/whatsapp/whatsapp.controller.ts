@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Body, Query, UseGuards } from '@nestjs/comm
 import { WhatsappService } from './whatsapp.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 
 @Controller('whatsapp')
@@ -14,6 +15,7 @@ export class WhatsappController {
   }
 
   @Post('webhook')
+  @UseGuards(IdempotencyGuard)
   async handleWebhook(@Body() payload: any) {
     return this.whatsappService.handleIncomingMessage(payload);
   }

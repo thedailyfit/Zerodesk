@@ -3,6 +3,7 @@ import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 
@@ -25,9 +26,9 @@ export class VoiceController {
 
   /**
    * Vapi webhook endpoint — receives all Vapi call events.
-   * This endpoint is NOT authenticated (Vapi sends webhooks directly).
    */
   @Post('webhook/vapi')
+  @UseGuards(IdempotencyGuard)
   async handleVapiWebhook(@Body() payload: any) {
     return this.voiceService.handleVapiWebhook(payload);
   }
@@ -36,6 +37,7 @@ export class VoiceController {
    * Retell AI webhook endpoint — receives all Retell call events.
    */
   @Post('webhook/retell')
+  @UseGuards(IdempotencyGuard)
   async handleRetellWebhook(@Body() payload: any) {
     return this.voiceService.handleRetellWebhook(payload);
   }
@@ -44,6 +46,7 @@ export class VoiceController {
    * Legacy unified webhook (auto-detects provider).
    */
   @Post('webhook')
+  @UseGuards(IdempotencyGuard)
   async handleWebhook(@Body() payload: any) {
     // Auto-detect provider by payload shape
     if (payload.message?.type || payload.message?.call) {

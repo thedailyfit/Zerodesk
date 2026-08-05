@@ -32,14 +32,30 @@ export class AiService {
     private eventEmitter: EventEmitter2,
   ) {
     this.openai = new OpenAI({
-      apiKey: this.configService.get('OPENAI_API_KEY'),
+      apiKey: this.configService.get('OPENAI_API_KEY') || 'sk-dummy-key',
     });
   }
 
   /**
+   * Generate vector embeddings for text chunks using OpenAI text-embedding-3-small.
+   */
+  async generateEmbedding(text: string): Promise<number[]> {
+    try {
+      const response = await this.openai.embeddings.create({
+        model: 'text-embedding-3-small',
+        input: text,
+        encoding_format: 'float',
+      });
+      return response.data[0].embedding;
+    } catch (error) {
+      this.logger.error(`Embedding generation failed: ${error}`);
+      // Fallback empty 1536-dim vector if offline / testing
+      return new Array(1536).fill(0);
+    }
+  }
+
+  /**
    * Generate an AI response for a customer message.
-   * Assembles full context (customer memory, KB, conversation history),
-   * sends to GPT, extracts any actions, and returns the response.
    */
   async generateResponse(
     tenantId: string,
@@ -49,13 +65,9 @@ export class AiService {
     conversationId?: string,
   ): Promise<AiResponse> {
     try {
-      // 1. Assemble full context (including RAG search with the incoming message)
       const context = await this.contextService.assembleContext(tenantId, customerId, message);
-
-      // 2. Build system prompt based on industry & tenant config
       const systemPrompt = this.promptService.getSystemPrompt(tenantId, context);
 
-      // 3. Get recent conversation messages for context continuity
       let conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
       if (conversationId) {
         const messages = await this.prisma.message.findMany({
@@ -64,12 +76,11 @@ export class AiService {
           take: 20,
         });
         conversationHistory = messages.reverse().map((m: any) => ({
-          role: m.role === 'CUSTOMER' ? 'user' as const : 'assistant' as const,
+          role: m.role === 'CUSTOMER' ? ('user' as const) : ('assistant' as const),
           content: m.content || '',
         }));
       }
 
-      // 4. Call OpenAI
       const completion = await this.openai.chat.completions.create({
         model: this.configService.get('AI_MODEL', 'gpt-4o-mini'),
         messages: [
@@ -93,12 +104,10 @@ export class AiService {
         confidence: parsed.confidence || 0.5,
       };
 
-      // 5. Execute extracted actions
       for (const action of result.actions) {
         this.eventEmitter.emit('ai.action', { tenantId, customerId, channel, action });
       }
 
-      // 6. Emit analytics event
       this.eventEmitter.emit('analytics.event', {
         tenantId,
         eventType: 'AI_RESPONSE',
@@ -132,9 +141,7 @@ export class AiService {
 
     if (messages.length === 0) return '';
 
-    const transcript = messages
-      .map((m: any) => `${m.role}: ${m.content}`)
-      .join('\n');
+    const transcript = messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
 
     try {
       const completion = await this.openai.chat.completions.create({
@@ -142,7 +149,8 @@ export class AiService {
         messages: [
           {
             role: 'system',
-            content: 'Summarize this conversation in 2-3 concise sentences. Focus on: what the customer wanted, what was resolved, and any follow-up needed.',
+            content:
+              'Summarize this conversation in 2-3 concise sentences. Focus on: what the customer wanted, what was resolved, and any follow-up needed.',
           },
           { role: 'user', content: transcript },
         ],
@@ -169,12 +177,12 @@ export class AiService {
 
     if (!customer) return 0;
 
-    let score = 10; // Base score
-    score += Math.min(customer.conversations.length * 5, 25); // Engagement
-    score += customer.appointments.length * 10; // Appointments
-    score += customer.lifetimeValue.toNumber() > 0 ? 15 : 0; // Revenue
+    let score = 10;
+    score += Math.min(customer.conversations.length * 5, 25);
+    score += customer.appointments.length * 10;
+    score += customer.lifetimeValue.toNumber() > 0 ? 15 : 0;
     score += customer.sentiment === 'POSITIVE' ? 10 : customer.sentiment === 'NEGATIVE' ? -10 : 0;
-    score += customer.email ? 5 : 0; // Contact completeness
+    score += customer.email ? 5 : 0;
     score += customer.name ? 5 : 0;
 
     return Math.min(Math.max(score, 0), 100);

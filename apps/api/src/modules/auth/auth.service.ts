@@ -9,7 +9,7 @@ export class AuthService {
 
   async processWebhook(payload: any) {
     const { type, data } = payload;
-    this.logger.log(`Processing Clerk webhook: ${type}`);
+    this.logger.log(`Processing Clerk webhook event: ${type}`);
 
     try {
       switch (type) {
@@ -21,35 +21,86 @@ export class AuthService {
         case 'user.updated':
           await this.syncUser(data);
           break;
+        case 'organizationMembership.created':
+        case 'organizationMembership.updated':
+          await this.syncOrgMembership(data);
+          break;
       }
       return { success: true };
     } catch (error) {
-      this.logger.error(`Error processing webhook ${type}:`, error);
+      this.logger.error(`Error processing webhook event ${type}:`, error);
       throw error;
     }
   }
 
   private async syncOrganization(data: any) {
+    const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
     await this.prisma.tenant.upsert({
       where: { clerkOrgId: data.id },
       update: {
         name: data.name,
-        slug: data.slug,
-        logoUrl: data.image_url,
+        slug: slug,
+        logoUrl: data.image_url || data.logo_url,
       },
       create: {
         clerkOrgId: data.id,
         name: data.name,
-        slug: data.slug,
-        industry: 'other',
-        logoUrl: data.image_url,
+        slug: slug,
+        industry: 'general',
+        logoUrl: data.image_url || data.logo_url,
       },
     });
+    this.logger.log(`Synced tenant organization: ${data.name} (${data.id})`);
   }
 
   private async syncUser(data: any) {
-    // Basic sync, assumes single tenant or primary tenant assignment elsewhere
-    // This will need tenant association logic based on clerk org membership
-    this.logger.debug('Syncing user', data.id);
+    const primaryEmail = data.email_addresses?.[0]?.email_address || '';
+    const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User';
+
+    let defaultTenant = await this.prisma.tenant.findFirst();
+    if (!defaultTenant) {
+      defaultTenant = await this.prisma.tenant.create({
+        data: {
+          clerkOrgId: 'org_default',
+          name: 'Default Workspace',
+          slug: 'default-workspace',
+          industry: 'general',
+        },
+      });
+    }
+
+    await this.prisma.user.upsert({
+      where: { clerkUserId: data.id },
+      update: {
+        email: primaryEmail,
+        name: name,
+        avatarUrl: data.image_url,
+      },
+      create: {
+        clerkUserId: data.id,
+        email: primaryEmail,
+        name: name,
+        role: 'ADMIN',
+        tenantId: defaultTenant.id,
+        avatarUrl: data.image_url,
+      },
+    });
+    this.logger.log(`Synced user: ${primaryEmail} (${data.id})`);
+  }
+
+  private async syncOrgMembership(data: any) {
+    const clerkOrgId = data.organization?.id;
+    const clerkUserId = data.public_user_data?.user_id || data.user_id;
+
+    if (!clerkOrgId || !clerkUserId) return;
+
+    const tenant = await this.prisma.tenant.findUnique({ where: { clerkOrgId } });
+    if (tenant) {
+      await this.prisma.user.updateMany({
+        where: { clerkUserId },
+        data: { tenantId: tenant.id },
+      });
+      this.logger.log(`Assigned user ${clerkUserId} to tenant ${tenant.name}`);
+    }
   }
 }
