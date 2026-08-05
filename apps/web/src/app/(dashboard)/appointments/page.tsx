@@ -109,7 +109,7 @@ export default function AppointmentsPage() {
       confirmationSent: true,
     };
 
-    if (typeof window !== 'undefined' && posthog.isFeatureEnabled) {
+    if (typeof window !== 'undefined') {
       posthog.capture('appointment_booked', { service, staff, source, priority });
     }
 
@@ -121,7 +121,7 @@ export default function AppointmentsPage() {
 
   const handleSendConfirmationRequest = (apptId: string) => {
     setConfirmationTriggeredId(apptId);
-    if (typeof window !== 'undefined' && posthog.isFeatureEnabled) {
+    if (typeof window !== 'undefined') {
       posthog.capture('ai_confirmation_workflow_triggered', { apptId });
     }
     
