@@ -20,4 +20,9 @@ export class HealthController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  @Get('sentry-debug')
+  getError() {
+    throw new Error('Sentry Backend Test Error!');
+  }
 }

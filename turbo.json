@@ -6,7 +6,8 @@
     "NEXT_PUBLIC_*",
     "CLERK_*",
     "POSTHOG_*",
-    "DATABASE_URL"
+    "DATABASE_URL",
+    "SENTRY_AUTH_TOKEN"
   ],
   "tasks": {
     "build": {
@@ -17,7 +18,8 @@
         "NEXT_PUBLIC_*",
         "CLERK_*",
         "POSTHOG_*",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "SENTRY_AUTH_TOKEN"
       ]
     },
     "dev": {

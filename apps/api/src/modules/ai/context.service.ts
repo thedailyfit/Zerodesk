@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RagService } from '../knowledge-base/rag.service';
 
 export interface CustomerContext {
   customer: {
@@ -41,13 +42,16 @@ export interface CustomerContext {
 export class ContextService {
   private readonly logger = new Logger(ContextService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private ragService: RagService,
+  ) {}
 
   /**
    * Assemble full customer context for AI response generation.
    * Pulls customer memory, recent conversations, appointments, leads, and tenant KB.
    */
-  async assembleContext(tenantId: string, customerId: string): Promise<CustomerContext> {
+  async assembleContext(tenantId: string, customerId: string, messageQuery?: string): Promise<CustomerContext> {
     try {
       // Fetch customer with all related data in parallel
       const [customer, conversations, appointments, leads] = await Promise.all([
@@ -119,7 +123,11 @@ export class ContextService {
           stageName: l.stage.name,
           value: l.value?.toNumber() || 0,
         })),
-        knowledgeContext: '', // Populated by RAG service at call time
+        knowledgeContext: messageQuery
+          ? this.ragService.buildKnowledgeContext(
+              await this.ragService.search(tenantId, messageQuery, 5),
+            )
+          : '',
       };
     } catch (error) {
       this.logger.error(`Failed to assemble context: ${error}`);

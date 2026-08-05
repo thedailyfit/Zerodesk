@@ -49,8 +49,8 @@ export class AiService {
     conversationId?: string,
   ): Promise<AiResponse> {
     try {
-      // 1. Assemble full context
-      const context = await this.contextService.assembleContext(tenantId, customerId);
+      // 1. Assemble full context (including RAG search with the incoming message)
+      const context = await this.contextService.assembleContext(tenantId, customerId, message);
 
       // 2. Build system prompt based on industry & tenant config
       const systemPrompt = this.promptService.getSystemPrompt(tenantId, context);

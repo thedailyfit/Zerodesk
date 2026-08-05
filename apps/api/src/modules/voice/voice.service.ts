@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RagService } from '../knowledge-base/rag.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 export type VoiceProvider = 'vapi' | 'retell';
 
@@ -25,6 +28,8 @@ export class VoiceService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
+    private ragService: RagService,
+    @InjectQueue('outbound-calls') private outboundQueue: Queue,
   ) {}
 
   /**
@@ -135,13 +140,17 @@ export class VoiceService {
     const voiceConfig = await this.getConfig(tenantConfig.id);
     const tenant = tenantConfig;
 
+    // Retrieve Knowledge Base RAG Context for this tenant
+    const kbSearchResults = await this.ragService.search(tenant.id, 'business services pricing hours policies FAQs', 5);
+    const kbContext = this.ragService.buildKnowledgeContext(kbSearchResults);
+
     return {
       assistant: {
         firstMessage: voiceConfig?.greeting || `Hello! Welcome to ${tenant.name}. How can I help you?`,
         model: {
           provider: 'openai',
           model: 'gpt-4o-mini',
-          systemMessage: this.buildVoiceSystemPrompt(tenant, voiceConfig),
+          systemMessage: this.buildVoiceSystemPrompt(tenant, voiceConfig, kbContext),
           functions: this.getVoiceFunctions(),
         },
         voice: {
@@ -297,15 +306,31 @@ export class VoiceService {
   // ========================================
 
   /**
-   * Initiate an outbound call via the tenant's configured provider.
+   * Enqueue an outbound call via BullMQ to enforce TCPA calling hours.
    */
   async initiateOutboundCall(tenantId: string, phoneNumber: string, purpose?: string) {
+    this.logger.log(`Enqueuing TCPA-compliant outbound call: ${tenantId} → ${phoneNumber}`);
+    const job = await this.outboundQueue.add('dispatch-call', {
+      tenantId,
+      phoneNumber,
+      purpose,
+    }, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+    });
+    return { status: 'queued', jobId: job.id };
+  }
+
+  /**
+   * Execute actual outbound call via Vapi or Retell after TCPA validation.
+   */
+  async executeOutboundCall(tenantId: string, phoneNumber: string, purpose?: string) {
     const voiceConfig = await this.getConfig(tenantId);
     const provider = voiceConfig?.settings
       ? (voiceConfig.settings as any).provider || 'vapi'
       : 'vapi';
 
-    this.logger.log(`Initiating ${provider} outbound call: ${tenantId} → ${phoneNumber}`);
+    this.logger.log(`Executing ${provider} outbound call: ${tenantId} → ${phoneNumber}`);
 
     if (provider === 'retell') {
       const retellApiKey = this.configService.get('RETELL_API_KEY');
@@ -371,11 +396,13 @@ export class VoiceService {
     return config?.tenant || null;
   }
 
-  private buildVoiceSystemPrompt(tenant: any, voiceConfig: any): string {
+  private buildVoiceSystemPrompt(tenant: any, voiceConfig: any, kbContext?: string): string {
     return `You are an AI receptionist for ${tenant?.name || 'our business'}.
 Industry: ${tenant?.industry || 'general'}
 Your role: Answer calls professionally, book appointments, provide pricing info, and handle customer queries.
 Personality: ${voiceConfig?.voicePersonality || 'professional'}
+
+${kbContext || ''}
 
 RULES:
 - Always be helpful and courteous
