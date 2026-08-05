@@ -15,6 +15,7 @@ import {
   CheckCheck,
   ChevronDown
 } from 'lucide-react';
+import posthog from 'posthog-js';
 
 export interface ChatWidgetProps {
   botName?: string;
@@ -89,6 +90,10 @@ export function ChatWidget({
     };
 
     setMessages(prev => [...prev, userMsg]);
+    posthog.capture('chat_message_sent', {
+      message_source: textToSend ? 'quick_prompt' : 'typed_message',
+      message_length: text.trim().length,
+    });
     if (!textToSend) setInputText('');
     setIsTyping(true);
 

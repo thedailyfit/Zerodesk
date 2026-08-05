@@ -20,6 +20,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import posthog from 'posthog-js';
 
 interface TemplateItem {
   id: string;
@@ -169,6 +170,11 @@ export default function TemplatesPage() {
     };
 
     setTemplates([created, ...templates]);
+    posthog.capture('template_created', {
+      channel,
+      template_category: category,
+      has_media_attachment: mediaAttachment !== 'NONE',
+    });
     setIsModalOpen(false);
     setTitle('');
     setSubject('');

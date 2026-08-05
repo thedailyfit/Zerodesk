@@ -19,6 +19,7 @@ import {
   Play
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import posthog from 'posthog-js';
 
 interface WorkflowItem {
   id: string;
@@ -52,6 +53,12 @@ export default function AutomationsPage() {
   const [description, setDescription] = useState('');
 
   const toggleWorkflow = (id: string) => {
+    const workflow = workflows.find((item) => item.id === id);
+    posthog.capture('automation_status_changed', {
+      trigger_type: workflow?.trigger,
+      new_status: workflow?.isActive ? 'paused' : 'active',
+      action_count: workflow?.actions,
+    });
     setWorkflows(prev => prev.map(w => w.id === id ? { ...w, isActive: !w.isActive } : w));
   };
 
@@ -72,6 +79,10 @@ export default function AutomationsPage() {
     };
 
     setWorkflows([created, ...workflows]);
+    posthog.capture('automation_created', {
+      trigger_type: trigger,
+      action_count: created.actions,
+    });
     setIsModalOpen(false);
     setName('');
     setDescription('');
