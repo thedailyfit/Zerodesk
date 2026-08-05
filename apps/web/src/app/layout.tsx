@@ -17,24 +17,28 @@ export const metadata: Metadata = {
   keywords: ['AI front desk', 'voice AI', 'WhatsApp automation', 'CRM', 'appointment booking'],
 };
 
+import { PostHogProvider } from '@/components/providers/posthog-provider';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.variable} font-sans antialiased`}>
-          <ThemeProvider defaultTheme="dark">
-            {children}
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-text)',
-                },
-              }}
-            />
-          </ThemeProvider>
+          <PostHogProvider>
+            <ThemeProvider defaultTheme="dark">
+              {children}
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  style: {
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    color: 'var(--color-text)',
+                  },
+                }}
+              />
+            </ThemeProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>
