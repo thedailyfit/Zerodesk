@@ -1,6 +1,7 @@
 # Multi-stage Dockerfile for NestJS API Monorepo
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Build Stage

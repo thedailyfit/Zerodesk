@@ -1,6 +1,7 @@
 import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
@@ -18,9 +19,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global prefix with root exclude
+  // Global prefix with root & docs exclude
   app.setGlobalPrefix('v1', {
-    exclude: ['/', 'health'],
+    exclude: ['/', 'health', 'docs', 'docs-json'],
   });
 
   // Validation
@@ -33,8 +34,19 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger Documentation Setup
+  const config = new DocumentBuilder()
+    .setTitle('ZeroDesk AI API')
+    .setDescription('Production Multi-Tenant AI Agent & CRM Platform API')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
   const port = process.env.PORT || process.env.API_PORT || 4000;
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 ZeroDesk API running on http://0.0.0.0:${port}`);
+  console.log(`📖 Swagger API Docs available at http://0.0.0.0:${port}/docs`);
 }
 bootstrap();
