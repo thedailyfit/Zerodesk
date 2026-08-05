@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Mail, Phone, User, X, Check, MoreHorizontal, Shield, Clock } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
+import posthog from 'posthog-js';
 
 interface StaffMember {
   id: string;
@@ -86,6 +87,10 @@ export default function StaffPage() {
     };
 
     setStaffList([...staffList, newMember]);
+    posthog.capture('staff_member_added', {
+      staff_role: newMember.userRole,
+      has_specialization: Boolean(specialization.trim()),
+    });
     setIsModalOpen(false);
     setName('');
     setRole('');

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import posthog from 'posthog-js';
 
 interface InvoiceItem {
   id: string;
@@ -93,6 +94,11 @@ export default function InvoicesPage() {
     };
 
     setInvoices([created, ...invoices]);
+    posthog.capture('invoice_created', {
+      total_amount: created.total,
+      tax_amount: created.tax,
+      payment_status: created.status,
+    });
     setIsModalOpen(false);
     setCustomer('');
     setPhone('');
@@ -100,6 +106,12 @@ export default function InvoicesPage() {
   };
 
   const handleSendViaAi = (id: string) => {
+    const invoice = invoices.find((item) => item.id === id);
+    posthog.capture('invoice_sent_via_ai', {
+      total_amount: invoice?.total,
+      payment_status: invoice?.status,
+      previously_sent_via_ai: invoice?.sentViaAi,
+    });
     setSentAiId(id);
     setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, sentViaAi: true } : inv));
     setTimeout(() => setSentAiId(null), 3000);

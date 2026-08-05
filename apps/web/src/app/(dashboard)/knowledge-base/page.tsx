@@ -23,6 +23,7 @@ import {
   Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import posthog from 'posthog-js';
 
 interface DocumentItem {
   id: string;
@@ -91,23 +92,41 @@ export default function KnowledgeBasePage() {
     };
 
     setDocuments([created, ...documents]);
+    posthog.capture('knowledge_document_added', {
+      document_category: category,
+      chunk_count: created.chunks,
+    });
     setIsModalOpen(false);
     setTitle('');
     setContent('');
   };
 
   const handleToggleDoc = (id: string) => {
+    const document = documents.find((item) => item.id === id);
+    posthog.capture('knowledge_document_status_changed', {
+      document_category: document?.category,
+      new_status: document?.isActive ? 'inactive' : 'active',
+      chunk_count: document?.chunks,
+    });
     setDocuments(prev => prev.map(d => d.id === id ? { ...d, isActive: !d.isActive } : d));
   };
 
   const handleDeleteDoc = (id: string) => {
-    setDocuments(prev => prev.filter(d => d.id === id));
+    const document = documents.find((item) => item.id === id);
+    posthog.capture('knowledge_document_deleted', {
+      document_category: document?.category,
+      chunk_count: document?.chunks,
+    });
+    setDocuments(prev => prev.filter(d => d.id !== id));
   };
 
   const handleTestRagQuery = (e: React.FormEvent) => {
     e.preventDefault();
     if (!testQuery.trim()) return;
 
+    posthog.capture('rag_query_tested', {
+      query_length: testQuery.trim().length,
+    });
     setIsTestingRag(true);
     setRagOutput(null);
 

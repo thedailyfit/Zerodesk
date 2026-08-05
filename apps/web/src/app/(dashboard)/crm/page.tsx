@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, MoreHorizontal, X, Target, Check } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
+import posthog from 'posthog-js';
 
 interface LeadItem {
   id: string;
@@ -97,6 +98,12 @@ export default function CrmPage() {
       }
       return s;
     }));
+    posthog.capture('lead_created', {
+      pipeline_stage: targetStageSlug,
+      lead_source: source,
+      priority,
+      deal_value: newLead.value,
+    });
 
     setIsModalOpen(false);
     setTitle('');
