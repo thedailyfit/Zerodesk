@@ -1,7 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-
 export default function SentryTestPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-zinc-950 text-white gap-6">
@@ -12,19 +10,18 @@ export default function SentryTestPage() {
 
       <div className="flex gap-4">
         {/* Frontend Error */}
-        <Button 
-          variant="destructive"
+        <button 
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium"
           onClick={() => {
             throw new Error("Sentry Frontend Test Error!");
           }}
         >
           Trigger Frontend Error
-        </Button>
+        </button>
 
         {/* Backend Error */}
-        <Button 
-          variant="outline"
-          className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800"
+        <button 
+          className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 rounded font-medium"
           onClick={async () => {
             try {
               // Call the new backend test endpoint we just created
@@ -36,7 +33,7 @@ export default function SentryTestPage() {
           }}
         >
           Trigger Backend Error
-        </Button>
+        </button>
       </div>
     </div>
   );
