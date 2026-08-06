@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserButton, OrganizationSwitcher } from '@clerk/nextjs';
+import { UserButton, OrganizationSwitcher, useClerk } from '@clerk/nextjs';
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -15,7 +15,6 @@ import {
   BarChart3, 
   Phone, 
   MessageCircle, 
-  UserCog, 
   Workflow, 
   Settings,
   Bell,
@@ -26,15 +25,14 @@ import {
   ChevronLeft,
   FileText,
   Rocket,
-  Info,
   Receipt,
   TrendingUp,
-  Camera,
   CreditCard,
   CalendarDays,
   Clock,
   Shield,
-  ChevronDown
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -50,19 +48,19 @@ const navItems = [
   { name: 'Appointments', href: '/appointments', icon: Calendar, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Invoices & Billing', href: '/invoices', icon: Receipt, roles: ['ADMIN', 'SUPER_ADMIN'] },
   { name: 'Sales & Revenue', href: '/sales', icon: TrendingUp, roles: ['ADMIN', 'SUPER_ADMIN'] },
-  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
-  { name: 'Templates', href: '/templates', icon: FileText, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
+  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'SUPER_ADMIN'] },
+  { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'SUPER_ADMIN'] },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Voice AI', href: '/voice', icon: Phone, roles: ['ADMIN', 'SUPER_ADMIN'] },
   { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'SUPER_ADMIN'] },
-  { name: 'Staff', href: '/staff', icon: UserCog, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
+  { name: 'Teams', href: '/teams', icon: Users, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'SUPER_ADMIN'] },
   { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN', 'SUPER_ADMIN'] },
   
   { divider: true, name: 'CLINICAL', roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
-  { name: 'Easy Calendar', href: '/calendar', icon: CalendarDays, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
+  { name: 'Doctor Slots', href: '/calendar', icon: CalendarDays, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
+  { name: 'Staff Calendar', href: '/staff-calendar', icon: Calendar, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
-  { name: 'Photo Vault', href: '/photo-vault', icon: Camera, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['STAFF', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
   { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
 
@@ -71,6 +69,7 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { signOut } = useClerk();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCmdkOpen, setIsCmdkOpen] = useState(false);
   const [demoRole, setDemoRole] = useState<Role>('ADMIN');
@@ -203,6 +202,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className={cn("flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
             <UserButton appearance={{ elements: { rootBox: cn(!isSidebarOpen && "mx-auto") } }} />
+            {isSidebarOpen ? (
+              <button
+                onClick={() => signOut({ redirectUrl: '/' })}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
+              >
+                <LogOut size={14} />
+                <span>Logout</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => signOut({ redirectUrl: '/' })}
+                title="Logout"
+                className="p-1.5 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
+              >
+                <LogOut size={14} />
+              </button>
+            )}
           </div>
         </div>
       </motion.aside>

@@ -1,17 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
-  IndianRupee, 
-  Target, 
-  Award, 
-  Calendar, 
-  ArrowUpRight, 
-  ArrowDownRight,
   PieChart as PieIcon,
-  Users
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -21,10 +13,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  AreaChart, 
-  Area 
 } from 'recharts';
-import { cn, formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 const monthlyRevenue = [
   { month: 'June 2026', revenue: 1850000, target: 2000000, bookings: 142 },
@@ -38,13 +28,6 @@ const treatmentRevenue = [
   { service: 'PRP Therapy & Growth', revenue: 420000, share: '16.2%' },
   { service: 'Chemical Peels & Facials', revenue: 240000, share: '9.3%' },
   { service: 'Consultations & Meds', revenue: 130000, share: '5.2%' },
-];
-
-const staffLeaderboard = [
-  { name: 'Dr. Meenakshi Rao', role: 'Dermatologist', sales: 1120000, bookings: 78, avatar: 'female' },
-  { name: 'Dr. Arun Krishnan', role: 'Hair Specialist', sales: 980000, bookings: 45, avatar: 'male' },
-  { name: 'Kavita Menon', role: 'Therapist', sales: 320000, bookings: 52, avatar: 'female' },
-  { name: 'Rekha Pillai', role: 'Aesthetician', sales: 160000, bookings: 20, avatar: 'female' },
 ];
 
 export default function SalesPage() {
@@ -96,7 +79,7 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* 3 Months Revenue Comparison Chart */}
+      {/* 3 Months Revenue Comparison Chart & Treatment Share */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] shadow-md space-y-4">
           <div className="flex items-center justify-between">
@@ -130,7 +113,7 @@ export default function SalesPage() {
           </h3>
 
           <div className="space-y-3 pt-2">
-            {treatmentRevenue.map((item, i) => (
+            {treatmentRevenue.map((item) => (
               <div key={item.service} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-[var(--color-text)]">{item.service}</span>
@@ -145,38 +128,6 @@ export default function SalesPage() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Top Sales Staff Leaderboard */}
-      <div className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] shadow-xl space-y-4">
-        <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-          <Award size={18} className="text-amber-400" />
-          Top Performing Practitioners & Sales Staff (Last 90 Days)
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {staffLeaderboard.map((staff, idx) => (
-            <div
-              key={staff.name}
-              className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center gap-3.5"
-            >
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow">
-                  {staff.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[9px] flex items-center justify-center shadow">
-                  #{idx + 1}
-                </span>
-              </div>
-
-              <div>
-                <p className="font-bold text-xs text-[var(--color-text)]">{staff.name}</p>
-                <p className="text-[10px] text-[var(--color-text-muted)]">{staff.role}</p>
-                <p className="text-xs font-mono font-bold text-emerald-400 mt-1">{formatCurrency(staff.sales)}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
