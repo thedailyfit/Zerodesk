@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Command } from 'cmdk';
-import { Search, Calculator, Calendar, CreditCard, Settings, Smile, User } from 'lucide-react';
+import { Search, Calculator, Calendar, CreditCard, Settings, Smile, User, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
@@ -58,6 +58,10 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean, onOpenCh
               <Command.Item onSelect={() => { router.push('/customers'); onOpenChange(false); }} className="flex items-center gap-2 px-2 py-2 text-sm text-[var(--color-text)] rounded-md hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] cursor-pointer aria-selected:bg-[var(--color-surface)] aria-selected:text-[var(--color-primary)]">
                 <User size={16} />
                 Search Customers
+              </Command.Item>
+              <Command.Item onSelect={() => { router.push('/crm'); onOpenChange(false); }} className="flex items-center gap-2 px-2 py-2 text-sm text-[var(--color-text)] rounded-md hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] cursor-pointer aria-selected:bg-[var(--color-surface)] aria-selected:text-[var(--color-primary)]">
+                <Target size={16} />
+                Lead Management
               </Command.Item>
               <Command.Item onSelect={() => { router.push('/appointments'); onOpenChange(false); }} className="flex items-center gap-2 px-2 py-2 text-sm text-[var(--color-text)] rounded-md hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] cursor-pointer aria-selected:bg-[var(--color-surface)] aria-selected:text-[var(--color-primary)]">
                 <Calendar size={16} />

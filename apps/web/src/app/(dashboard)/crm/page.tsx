@@ -109,9 +109,9 @@ export default function CrmPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">CRM Pipeline</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Lead Management Pipeline</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Total pipeline value: <span className="font-mono text-purple-300 font-bold">{formatCurrency(totalValue)}</span>
+            Total deal pipeline value: <span className="font-mono text-purple-300 font-bold">{formatCurrency(totalValue)}</span>
           </p>
         </div>
         <button
@@ -204,7 +204,7 @@ export default function CrmPage() {
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-base flex items-center gap-2">
                   <Target size={18} className="text-purple-400" />
-                  Add New Pipeline Lead
+                  Add New Lead
                 </h3>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
                   <X size={18} />

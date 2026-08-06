@@ -81,11 +81,26 @@ export default function AppointmentsPage() {
   // Manual Walk-in Booking Form State
   const [customer, setCustomer] = useState('');
   const [phone, setPhone] = useState('');
-  const [service, setService] = useState('Laser Treatment Consultation');
-  const [staff, setStaff] = useState('Dr. Meenakshi');
+  const [service, setService] = useState('Laser Hair Removal');
+  const [isCustomService, setIsCustomService] = useState(false);
+  const [doctor, setDoctor] = useState('Dr. Meenakshi');
+  const [therapist, setTherapist] = useState('Kavita');
   const [date, setDate] = useState('2026-08-05');
   const [time, setTime] = useState('10:00');
   const [duration, setDuration] = useState('45');
+
+  const SERVICES = [
+    { name: 'Laser Hair Removal', duration: 45, price: 5000 },
+    { name: 'Chemical Peel', duration: 30, price: 3500 },
+    { name: 'PRP Therapy', duration: 60, price: 8000 },
+    { name: 'Botox Treatment', duration: 45, price: 12000 },
+    { name: 'Hair Transplant Consultation', duration: 30, price: 1500 },
+    { name: 'Full Body Massage', duration: 60, price: 4000 },
+    { name: 'Facial Treatment', duration: 45, price: 2500 },
+    { name: 'Mole/Skin Tag Removal', duration: 20, price: 3000 },
+    { name: 'Acne Scar Treatment', duration: 45, price: 6000 },
+    { name: 'General Consultation', duration: 20, price: 500 },
+  ];
   const [source, setSource] = useState<AppointmentItem['source']>('MANUAL');
   const [priority, setPriority] = useState<AppointmentItem['priority']>('HIGH');
 
@@ -99,7 +114,7 @@ export default function AppointmentsPage() {
       customer,
       phone: phone || '+91 98765 00000',
       service,
-      staff,
+      staff: `${doctor} ${therapist ? `& ${therapist}` : ''}`,
       scheduledAt,
       duration: parseInt(duration) || 30,
       status: 'CONFIRMED',
@@ -110,7 +125,7 @@ export default function AppointmentsPage() {
     };
 
     if (typeof window !== 'undefined') {
-      posthog.capture('appointment_booked', { service, staff, source, priority });
+      posthog.capture('appointment_booked', { service, doctor, therapist, source, priority });
     }
 
     setAppointments([created, ...appointments]);
@@ -405,27 +420,55 @@ export default function AppointmentsPage() {
                   <Sparkles size={14} />
                   AI 2-Step Auto Confirmation Workflow
                 </h4>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Triggers automated sequence: <strong>Step 1:</strong> Sends instant WhatsApp confirmation message ➡️ <strong>Step 2:</strong> Schedules a personalized Voice AI call in 10 mins if unconfirmed.
-                </p>
+                
+                {/* Visual Timeline */}
+                <div className="relative pl-4 space-y-4 my-4 before:absolute before:inset-y-0 before:left-1.5 before:w-0.5 before:bg-slate-700">
+                  <div className="relative z-10 flex items-start gap-3">
+                    <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-white">WhatsApp Confirmation Sent</p>
+                      <p className="text-[10px] text-slate-400">Timestamp: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                    </div>
+                  </div>
+                  <div className="relative z-10 flex items-start gap-3">
+                    <div className="w-3.5 h-3.5 bg-blue-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-white">Voice AI Follow-up</p>
+                      <p className="text-[10px] text-slate-400">10 min later</p>
+                    </div>
+                  </div>
+                  <div className="relative z-10 flex items-start gap-3">
+                    <div className="w-3.5 h-3.5 bg-purple-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-white">Auto Confirmed or Resend Offer</p>
+                      <p className="text-[10px] text-slate-400">30 min later</p>
+                    </div>
+                  </div>
+                </div>
 
-                <button
-                  onClick={() => handleSendConfirmationRequest(selectedAppt.id)}
-                  disabled={confirmationTriggeredId === selectedAppt.id}
-                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
-                >
-                  {confirmationTriggeredId === selectedAppt.id ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin" />
-                      <span>Sending AI WhatsApp & Scheduling Voice Call...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send size={14} />
-                      <span>Send Booking Confirmation Request (WhatsApp + Voice AI)</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSendConfirmationRequest(selectedAppt.id)}
+                    disabled={confirmationTriggeredId === selectedAppt.id}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+                  >
+                    {confirmationTriggeredId === selectedAppt.id ? (
+                      <>
+                        <RefreshCw size={14} className="animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={14} />
+                        <span>Send Confirmation</span>
+                      </>
+                    )}
+                  </button>
+                  <button className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md">
+                    <Sparkles size={14} />
+                    <span>Send Follow-up Offer</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-end pt-2 border-t border-slate-800">
@@ -474,7 +517,7 @@ export default function AppointmentsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">Phone Number</label>
                     <input
@@ -486,27 +529,67 @@ export default function AppointmentsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Assigned Staff / Doctor *</label>
-                    <input
-                      type="text"
-                      required
-                      value={staff}
-                      onChange={(e) => setStaff(e.target.value)}
-                      placeholder="e.g. Dr. Meenakshi / Rekha"
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Doctor *</label>
+                    <select
+                      value={doctor}
+                      onChange={(e) => setDoctor(e.target.value)}
                       className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white font-medium"
-                    />
+                    >
+                      <option value="Dr. Meenakshi">Dr. Meenakshi</option>
+                      <option value="Dr. Arun">Dr. Arun</option>
+                      <option value="Dr. Kavitha">Dr. Kavitha</option>
+                      <option value="Dr. Ramesh">Dr. Ramesh</option>
+                      <option value="">None</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Therapist *</label>
+                    <select
+                      value={therapist}
+                      onChange={(e) => setTherapist(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white font-medium"
+                    >
+                      <option value="Kavita">Kavita</option>
+                      <option value="Rekha">Rekha</option>
+                      <option value="Sunita">Sunita</option>
+                      <option value="Priya">Priya</option>
+                      <option value="">None</option>
+                    </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Treatment / Service *</label>
-                  <input
-                    type="text"
-                    required
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                  />
+                  <select
+                    value={isCustomService ? 'custom' : service}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setIsCustomService(true);
+                        setService('');
+                      } else {
+                        setIsCustomService(false);
+                        setService(e.target.value);
+                        const found = SERVICES.find(s => s.name === e.target.value);
+                        if (found) setDuration(found.duration.toString());
+                      }
+                    }}
+                    className="w-full px-3.5 py-2 mb-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                  >
+                    {SERVICES.map(s => (
+                      <option key={s.name} value={s.name}>{s.name} ({s.duration} min, ₹{s.price.toLocaleString()})</option>
+                    ))}
+                    <option value="custom">Custom Service (Manual Entry)</option>
+                  </select>
+                  {isCustomService && (
+                    <input
+                      type="text"
+                      required
+                      value={service}
+                      onChange={(e) => setService(e.target.value)}
+                      placeholder="Enter custom service"
+                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                    />
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
