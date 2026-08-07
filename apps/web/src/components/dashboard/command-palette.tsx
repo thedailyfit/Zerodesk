@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Command } from 'cmdk';
-import { Search, Calculator, Calendar, CreditCard, Settings, Smile, User, Target } from 'lucide-react';
+import { Search, Calendar, Settings, User, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 

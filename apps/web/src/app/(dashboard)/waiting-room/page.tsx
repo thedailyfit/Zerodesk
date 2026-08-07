@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Plus, Check } from 'lucide-react';
+import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 

@@ -26,6 +26,10 @@ export class TenantGuard implements CanActivate {
       where: { clerkUserId: request.user.clerkUserId },
     });
 
+    if (!user || user.tenantId !== tenant.id) {
+      throw new UnauthorizedException('User does not belong to this organization');
+    }
+
     request.tenantId = tenant.id;
     request.tenant = tenant;
     request.user = {

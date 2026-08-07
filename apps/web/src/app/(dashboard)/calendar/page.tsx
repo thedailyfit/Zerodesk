@@ -9,7 +9,6 @@ import {
   Filter, 
   Plus, 
   Clock, 
-  User, 
   Edit3, 
   Move, 
   X, 
@@ -18,10 +17,7 @@ import {
   Stethoscope,
   Scissors,
   HeartPulse,
-  RotateCcw,
-  CheckCircle2,
-  AlertCircle,
-  GripVertical
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -4,13 +4,14 @@ import { Webhook } from 'svix';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Auth & Webhooks')
-@Controller('v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('webhook')
   @ApiOperation({ summary: 'Handle Clerk Auth Webhook events (User/Org Sync)' })
   async handleWebhook(
+    @Req() req: any,
     @Body() payload: any,
     @Headers('svix-id') svixId: string,
     @Headers('svix-timestamp') svixTimestamp: string,
@@ -18,23 +19,24 @@ export class AuthController {
   ) {
     const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 
-    // If secret is configured, verify signature using Svix
-    if (webhookSecret && webhookSecret !== 'whsec_xxx') {
-      if (!svixId || !svixTimestamp || !svixSignature) {
-        throw new UnauthorizedException('Missing Svix signature headers');
-      }
+    if (!webhookSecret || webhookSecret === 'whsec_xxx') {
+      throw new UnauthorizedException('Webhook secret is not configured');
+    }
 
-      try {
-        const wh = new Webhook(webhookSecret);
-        const bodyStr = JSON.stringify(payload);
-        wh.verify(bodyStr, {
-          'svix-id': svixId,
-          'svix-timestamp': svixTimestamp,
-          'svix-signature': svixSignature,
-        });
-      } catch (err) {
-        throw new UnauthorizedException('Invalid Svix signature verification failed');
-      }
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      throw new UnauthorizedException('Missing Svix signature headers');
+    }
+
+    try {
+      const wh = new Webhook(webhookSecret);
+      const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+      wh.verify(bodyStr, {
+        'svix-id': svixId,
+        'svix-timestamp': svixTimestamp,
+        'svix-signature': svixSignature,
+      });
+    } catch (err) {
+      throw new UnauthorizedException('Invalid Svix signature verification failed');
     }
 
     return this.authService.processWebhook(payload);

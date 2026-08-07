@@ -3,25 +3,17 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar as CalIcon, 
-  Clock, 
   Users, 
   Coffee, 
   UserCheck, 
   UserX, 
   PhoneCall, 
   Building2, 
-  Filter, 
   Search, 
   ChevronLeft, 
   ChevronRight, 
   Sparkles,
-  Info,
-  ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  MoreVertical,
-  Plus
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

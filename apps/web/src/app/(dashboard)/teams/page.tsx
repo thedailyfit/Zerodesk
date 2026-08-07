@@ -8,17 +8,10 @@ import {
   Phone, 
   User, 
   X, 
-  Check, 
-  Shield, 
-  Clock, 
   Star, 
-  TrendingUp, 
   MessageSquare, 
   Search, 
-  Users, 
-  SlidersHorizontal,
-  Activity,
-  Award
+  Users
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 

@@ -19,7 +19,7 @@ const PATIENTS = [
 ];
 
 export default function PatientFilesPage() {
-  const { role, isManager, isAdmin, isSuperAdmin } = useRole();
+  const { isManager, isAdmin, isSuperAdmin } = useRole();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<typeof PATIENTS[0] | null>(null);
 

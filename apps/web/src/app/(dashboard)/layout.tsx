@@ -136,6 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             className="p-1 rounded-md hover:bg-[var(--color-surface)] text-[var(--color-text-muted)] transition-colors"
           >
             {isSidebarOpen ? <ChevronLeft size={18} /> : <Menu size={18} className="mx-auto" />}
@@ -205,6 +206,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {isSidebarOpen ? (
               <button
                 onClick={() => signOut({ redirectUrl: '/' })}
+                aria-label="Logout"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
               >
                 <LogOut size={14} />
@@ -214,6 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button
                 onClick={() => signOut({ redirectUrl: '/' })}
                 title="Logout"
+                aria-label="Logout"
                 className="p-1.5 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
               >
                 <LogOut size={14} />
@@ -277,11 +280,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <button 
               onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
               className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-full hover:bg-[var(--color-surface)] transition-colors"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-full hover:bg-[var(--color-surface)] transition-colors relative">
+            <button 
+              aria-label="Notifications"
+              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-full hover:bg-[var(--color-surface)] transition-colors relative"
+            >
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>

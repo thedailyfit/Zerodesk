@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MoreHorizontal, X, Target, Check } from 'lucide-react';
+import { Plus, MoreHorizontal, X, Target } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
 interface LeadItem {
