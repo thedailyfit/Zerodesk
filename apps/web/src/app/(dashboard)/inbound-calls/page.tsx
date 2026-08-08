@@ -138,8 +138,8 @@ export default function InboundCallsPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-[var(--color-surface)] p-4 rounded-2xl border border-[var(--color-border)]">
+      {/* Search & Post-Call Disposition Filter Tabs */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[var(--color-surface)] p-4 rounded-2xl border border-[var(--color-border)]">
         <div className="relative w-full sm:w-80">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
@@ -149,6 +149,28 @@ export default function InboundCallsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
           />
+        </div>
+
+        {/* Disposition Enum Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 text-xs">
+          <span className="text-slate-400 font-semibold flex items-center gap-1 shrink-0">
+            <Filter size={13} className="text-purple-400" /> Disposition:
+          </span>
+          {['ALL', 'AI_RESOLVED', 'HANDED_OFF_TO_HUMAN', 'MISSED_AUTO_WHATSAPP'].map((disp) => (
+            <button
+              key={disp}
+              onClick={() => {
+                if (disp === 'ALL') {
+                  setCalls(INBOUND_CALL_LOGS);
+                } else {
+                  setCalls(INBOUND_CALL_LOGS.filter(c => c.resolution === disp));
+                }
+              }}
+              className="px-3 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all shrink-0 bg-slate-900 border-slate-800 text-slate-300 hover:border-purple-500/50"
+            >
+              {disp === 'ALL' ? 'Show All' : disp.replace('_', ' ')}
+            </button>
+          ))}
         </div>
       </div>
 

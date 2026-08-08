@@ -22,7 +22,8 @@ import {
   Zap,
   Volume2,
   Wand2,
-  BookOpenCheck
+  BookOpenCheck,
+  Braces
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -216,6 +217,51 @@ CLINICAL BOUNDARIES:
               <div>
                 <span className="font-bold">Pro Tip for Hyderabad Clinics:</span> The backend dynamically appends live RAG pricing & open doctor slots from your <span className="font-semibold text-white underline">Company Knowledge Base</span> directly below this prompt on every call.
               </div>
+            </div>
+          </div>
+
+          {/* Input Variables & Personalization Manager (Idea 1) */}
+          <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Braces size={20} className="text-cyan-400" />
+                <h2 className="text-base font-bold text-[var(--color-text)]">Input Variables & Personalization Tokens</h2>
+              </div>
+              <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 font-semibold">
+                Runtime Context Injection
+              </span>
+            </div>
+
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Define dynamic variables passed to the Voice AI before a call starts (e.g. greeting caller by name, referencing past treatments).
+            </p>
+
+            <div className="space-y-3">
+              {[
+                { name: 'customer_name', defaultVal: 'Valued Guest', source: 'Caller ID / Telephony Metadata', active: true, desc: 'Used in dynamic greeting e.g. "Namaskaram {{customer_name}}"' },
+                { name: 'last_treatment_date', defaultVal: '30 days ago', source: 'CRM Patient File', active: true, desc: 'Used for win-back campaigns e.g. "It has been {{last_treatment_date}} since your laser session"' },
+                { name: 'assigned_doctor', defaultVal: 'Dr. Meenakshi', source: 'Clinic Schedule', active: true, desc: 'Prefills primary dermatologist for doctor slot bookings' },
+                { name: 'clinic_branch', defaultVal: 'Jubilee Hills Main', source: 'Phone Number Mapping', active: true, desc: 'Sets branch location and direction context' },
+              ].map((v) => (
+                <div key={v.name} className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                        {`{{${v.name}}}`}
+                      </span>
+                      <span className="text-slate-400">Default: <strong className="text-white">"{v.defaultVal}"</strong></span>
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)] font-sans">{v.desc}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-1 rounded">Source: {v.source}</span>
+                    <span className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      SENT TO LLM
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
