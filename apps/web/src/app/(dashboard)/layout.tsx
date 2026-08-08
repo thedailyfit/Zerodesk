@@ -45,58 +45,47 @@ import { cn } from '@/lib/utils';
 type Role = 'STAFF' | 'MANAGER' | 'ADMIN';
 
 const navItems = [
-// ---- STAFF sees these sections ----
+  // ===== TOP-LEVEL ITEMS (MANAGER & ADMIN) =====
+  { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Teams', href: '/teams', icon: Users, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Appointments', href: '/appointments', icon: Calendar, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['MANAGER', 'ADMIN'] },
 
-{ divider: true, name: 'CLINICAL', roles: ['STAFF', 'ADMIN'] },
-{ name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['STAFF', 'ADMIN'] },
-{ name: 'Doctor Slots', href: '/calendar', icon: CalendarDays, roles: ['STAFF', 'ADMIN'] },
-{ name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['STAFF', 'ADMIN'] },
+  // ===== SALES (MANAGER & ADMIN) =====
+  { divider: true, name: 'SALES', roles: ['MANAGER', 'ADMIN'] },
+  { name: "Today's Revenue", href: '/todays-revenue', icon: IndianRupee, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['MANAGER', 'ADMIN'] },
 
-{ divider: true, name: 'FRONTDESK', roles: ['STAFF', 'ADMIN'] },
-{ name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['STAFF', 'ADMIN'] },
-{ name: 'Invoices', href: '/invoices', icon: Receipt, roles: ['STAFF', 'ADMIN'] },
-{ name: 'Book Appointment', href: '/appointments', icon: Calendar, roles: ['STAFF', 'ADMIN'] },
-{ name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['STAFF', 'MANAGER', 'ADMIN'] },
-{ name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['STAFF', 'MANAGER', 'ADMIN'] },
+  // ===== CLINICAL (STAFF & ADMIN — no duplicates) =====
+  { divider: true, name: 'CLINICAL', roles: ['STAFF', 'ADMIN'] },
+  { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Doctor Slots', href: '/calendar', icon: CalendarDays, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Staff Calendar', href: '/staff-calendar', icon: Calendar, roles: ['ADMIN'] },
 
-// ---- MANAGER & ADMIN see these (Manager does NOT see Clinical/Frontdesk sections) ----
+  // ===== FRONTDESK (STAFF & ADMIN — no duplicates) =====
+  { divider: true, name: 'FRONTDESK', roles: ['STAFF', 'ADMIN'] },
+  { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Invoices', href: '/invoices', icon: Receipt, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Book Appointment', href: '/appointments', icon: Calendar, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['STAFF', 'ADMIN'] },
+  { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['STAFF'] },
 
-{ name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Teams', href: '/teams', icon: Users, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Appointments', href: '/appointments', icon: Calendar, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['MANAGER', 'ADMIN'] },
+  // ===== AUTOMATION & CHANNELS (MANAGER & ADMIN) =====
+  { name: 'Automations', href: '/automations', icon: Workflow, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Lead Management', href: '/crm', icon: Target, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['MANAGER', 'ADMIN'] },
+  { name: 'Voice AI', href: '/voice', icon: Phone, roles: ['ADMIN'] },
+  { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
-{ divider: true, name: 'SALES', roles: ['MANAGER', 'ADMIN'] },
-{ name: "Today's Revenue", href: '/todays-revenue', icon: IndianRupee, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['MANAGER', 'ADMIN'] },
-
-// ---- ADMIN-only Clinical section ----
-{ divider: true, name: 'CLINICAL', roles: ['ADMIN'] },
-{ name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN'] },
-{ name: 'Doctor Slots', href: '/calendar', icon: CalendarDays, roles: ['ADMIN'] },
-{ name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['ADMIN'] },
-{ name: 'Staff Calendar', href: '/staff-calendar', icon: Calendar, roles: ['ADMIN'] },
-
-// ---- ADMIN-only Frontdesk ----
-{ divider: true, name: 'FRONTDESK', roles: ['ADMIN'] },
-{ name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['ADMIN'] },
-{ name: 'Invoices', href: '/invoices', icon: Receipt, roles: ['ADMIN'] },
-{ name: 'Book Appointment', href: '/appointments', icon: Calendar, roles: ['ADMIN'] },
-{ name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN'] },
-
-// ---- Shared items for Manager & Admin ----
-{ name: 'Automations', href: '/automations', icon: Workflow, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Lead Management', href: '/crm', icon: Target, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['MANAGER', 'ADMIN'] },
-{ name: 'Voice AI', href: '/voice', icon: Phone, roles: ['ADMIN'] },
-{ name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
-
-{ divider: true, name: 'BACKEND AI', roles: ['ADMIN'] },
-{ name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
-{ name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
+  // ===== BACKEND AI (ADMIN only) =====
+  { divider: true, name: 'BACKEND AI', roles: ['ADMIN'] },
+  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
+  { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
 
 { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
 ];
