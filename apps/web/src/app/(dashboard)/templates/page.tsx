@@ -37,75 +37,96 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
   // Email Scripts & Templates
   {
     id: 'e1',
-    title: 'Appointment Confirmation & Pre-Treatment Care Email',
+    title: 'Appointment Confirmation & Pre-Procedure Care Email',
     category: 'Booking Confirmation',
     channel: 'EMAIL',
-    subject: 'Confirmed: Your {{service}} appointment at {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with {{staff_name}}.\n\nPre-treatment instructions:\n1. Avoid direct sun exposure 24 hours prior.\n2. Do not apply active chemical serums before the session.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Team',
+    subject: 'Confirmed: Your {{service}} session at {{business_name}}',
+    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-Treatment Dermatology Instructions:\n1. Avoid direct sun exposure, tanning, or wax treatments 48h prior.\n2. Discontinue active retinoids, AHA/BHA chemical exfoliants 3 days before.\n3. Arrive with clean skin free of makeup or heavy oils.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Clinical Team',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name', 'phone']
   },
   {
     id: 'e2',
-    title: 'Patient Invoice & Treatment Receipt Delivery Email',
+    title: 'Dermatology Invoice & Treatment Receipt Delivery Email',
     category: 'Billing & Receipt',
     channel: 'EMAIL',
     subject: 'Receipt & Invoice #{{invoice_no}} from {{business_name}}',
-    content: 'Hi {{customer_name}},\n\nThank you for visiting {{business_name}} today!\n\nAttached is your official receipt #{{invoice_no}} for {{service}}.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your invoice or treatment plan, feel free to reply.',
+    content: 'Dear {{customer_name}},\n\nThank you for visiting {{business_name}} today for your {{service}} session!\n\nAttached is your official treatment receipt #{{invoice_no}} detailing your procedure breakdown and doctor fee.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your post-care recovery or next PRP/Laser session, feel free to reply.',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'invoice_no', 'service', 'amount', 'date', 'business_name']
   },
   {
     id: 'e3',
-    title: '90-Day Patient Re-engagement & Win-Back Discount Offer',
+    title: '90-Day Skin Care Maintenance & Win-Back Discount Offer',
     category: 'Retention Marketing',
     channel: 'EMAIL',
-    subject: 'We miss you at {{business_name}}! Special 20% off inside 🎁',
-    content: 'Hello {{customer_name}},\n\nIt has been a while since your last {{service}} session with us!\n\nTo ensure your skin and hair treatment results stay optimal, we would love to welcome you back with an exclusive 20% discount on your next visit.\n\nUse Code: GLOW20 when booking online or via WhatsApp.\n\nBook your slot today!',
+    subject: 'Time for your skin touch-up at {{business_name}}? 20% Off Inside 🎁',
+    content: 'Hello {{customer_name}},\n\nIt has been 90 days since your last {{service}} session with us!\n\nTo ensure your skin glowing results stay optimal and maintain collagen stimulation from your Laser, Microneedling, or PRP treatment, we invite you back with an exclusive 20% discount.\n\nUse Code: DERMGLOW20 when booking online or via WhatsApp.\n\nBook your follow-up slot today!',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'business_name']
   },
+  {
+    id: 'e4',
+    title: 'Digital Skin Analysis Report & Personalized Roadmap Email',
+    category: 'Consultation Follow-up',
+    channel: 'EMAIL',
+    subject: 'Your Skin Analysis Report & Clinical Treatment Plan - {{business_name}}',
+    content: 'Dear {{customer_name}},\n\nThank you for undergoing a comprehensive clinical consultation with Dr. {{staff_name}} at {{business_name}}.\n\nBased on your skin barrier evaluation, acne scar grading, and pigmentation analysis, here is your recommended treatment roadmap:\n\nRecommended Clinical Procedures:\n- Primary Treatment: {{service}} (Recommended 4-6 sessions spaced 4 weeks apart)\n- Maintenance: Monthly HydraFacial & Light Chemical Peels\n\nDaily Homecare Regimen:\n- AM: Gentle Cleanser + Vitamin C Serum + Broad-Spectrum SPF 50+\n- PM: Barrier Repair Cream + Hydrating Niacinamide Serum\n\nAttached is your full PDF Skin Diagnostic Report. Reply or call {{phone}} to schedule session #1!',
+    mediaAttachment: 'PDF',
+    isPreinstalled: true,
+    variables: ['customer_name', 'service', 'staff_name', 'business_name', 'phone']
+  },
   // WhatsApp Templates
   {
     id: 'w1',
-    title: 'WhatsApp Appointment Reminder (24h Prior)',
+    title: 'WhatsApp Appointment & Pre-Care Reminder (24h Prior)',
     category: 'Reminders',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! 👋 This is a quick reminder for your upcoming {{service}} appointment tomorrow at {{appointment_time}} with {{staff_name}} at {{business_name}}.\n\nReply 1 to Confirm or 2 to Reschedule.',
+    content: 'Hi {{customer_name}}! 👋 Reminder: Your {{service}} session (Laser/PRP/Chemical Peel) is tomorrow at {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-care check: Stop using retinol/acid serums tonight & apply SPF tomorrow.\n\nReply 1 to Confirm or 2 to Reschedule.',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name']
   },
   {
     id: 'w2',
-    title: 'WhatsApp Post-Visit Feedback & Review Request',
+    title: 'WhatsApp Post-Visit Care Check & Review Request',
     category: 'Customer Feedback',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! Hope you enjoyed your {{service}} session today with {{staff_name}}. 🌟\n\nCould you take 30 seconds to share your experience? Your review helps us grow: {{review_link}}',
+    content: 'Hi {{customer_name}}! Hope your skin feels refreshed after your {{service}} session today with Dr. {{staff_name}} at {{business_name}}. 🌟\n\nPlease keep your skin hydrated and protected with SPF 50+.\n\nCould you take 30 seconds to rate your doctor experience? {{review_link}}',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
-    variables: ['customer_name', 'service', 'staff_name', 'review_link']
+    variables: ['customer_name', 'service', 'staff_name', 'business_name', 'review_link']
+  },
+  {
+    id: 'w3',
+    title: 'WhatsApp Post-Treatment Aftercare Instructions (Sun & Acid Guidelines)',
+    category: 'Post-Care Instructions',
+    channel: 'WHATSAPP',
+    content: 'Hi {{customer_name}}! 🌿 Key aftercare instructions for your {{service}} treatment today:\n\n1. ☀️ Sun Protection: Apply broad-spectrum SPF 50+ every 3 hours.\n2. 🧼 Avoid Harsh Actives: No AHAs, BHAs, Retin-A, or scrubs for 5-7 days.\n3. 🧴 Barrier Care: Apply gentle, fragrance-free moisturizer twice daily.\n4. 🚫 Avoid Gym & Saunas: No heavy sweating or hot showers for 24-48 hours.\n\nContact {{business_name}} if you experience excessive erythema or swelling!',
+    mediaAttachment: 'IMAGE',
+    isPreinstalled: true,
+    variables: ['customer_name', 'service', 'business_name']
   },
   // Voice AI Call Scripts
   {
     id: 'v1',
-    title: 'Voice AI Short Cold Outreach & New Lead Follow-up',
+    title: 'Voice AI Consultation Lead Outreach - Laser & PRP Inquiries',
     category: 'Lead Outreach',
     channel: 'VOICE',
-    content: 'Agent: "Hello {{customer_name}}, this is {{bot_name}} calling from {{business_name}}. I noticed you inquired about our {{service}} packages recently. Do you have 2 minutes so I can share our exclusive package pricing for this week?"',
+    content: 'Agent: "Hello {{customer_name}}, this is {{bot_name}} calling from {{business_name}}. I noticed you inquired about our {{service}} treatments (Laser Hair Removal / PRP / Botox / Chemical Peels). Do you have 2 minutes to discuss your skin goals and reserve an in-person consultation with our senior dermatologist?"',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'bot_name', 'business_name', 'service']
   },
   {
     id: 'v2',
-    title: 'Voice AI 10-Min Post-WhatsApp Appointment Confirmation Call',
+    title: 'Voice AI 10-Min Pre-Procedure Booking & Skin Prep Confirmation Call',
     category: 'Booking Confirmation',
     channel: 'VOICE',
-    content: 'Agent: "Hi {{customer_name}}, I am calling from {{business_name}} to confirm your appointment for {{service}} today at {{appointment_time}}. Should I lock in your booking with {{staff_name}} now?"',
+    content: 'Agent: "Hi {{customer_name}}, I am calling from {{business_name}} to confirm your {{service}} procedure today at {{appointment_time}} with Dr. {{staff_name}}. Please ensure you haven\'t applied active retinol or chemical acids in the last 48 hours. Should I confirm your slot now?"',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'business_name', 'service', 'appointment_time', 'staff_name']

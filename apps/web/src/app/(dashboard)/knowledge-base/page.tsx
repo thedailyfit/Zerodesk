@@ -35,12 +35,78 @@ interface DocumentItem {
 }
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
-  { id: '1', title: 'Laser Hair Removal - Complete Treatment SOP', category: 'SOP', content: 'Our diode laser treatment protocol requires 48h patch test and pre-treatment cooling...', chunks: 8, isActive: true, updatedAt: '2026-08-01' },
-  { id: '2', title: 'Pricing & Treatment Packages 2026', category: 'PRICING', content: 'Consultation: ₹500, Laser (Small Area): ₹3,000, Full Body Package: ₹45,000...', chunks: 12, isActive: true, updatedAt: '2026-08-02' },
-  { id: '3', title: 'Working Hours & Holiday Schedule', category: 'FAQ', content: 'Monday to Saturday: 10 AM - 8 PM, Sunday: Closed...', chunks: 3, isActive: true, updatedAt: '2026-07-28' },
-  { id: '4', title: 'Objection Handling & Sales Call Scripts', category: 'SCRIPTS', content: 'When customer mentions competitor pricing: Highlight our 15-year medical expertise...', chunks: 9, isActive: true, updatedAt: '2026-08-03' },
-  { id: '5', title: 'Restricted Topics & Medication Advice Guidelines', category: 'RESTRICTED_GUIDELINES', content: 'STRICT RULE: Do not diagnose prescription antibiotics on phone. Direct patient to in-person consultation.', chunks: 5, isActive: true, updatedAt: '2026-08-04' },
-  { id: '6', title: 'PRP Hair Therapy Service Guide', category: 'SERVICE', content: 'PRP (Platelet-Rich Plasma) therapy stimulates hair growth via blood plasma centrifugation...', chunks: 7, isActive: true, updatedAt: '2026-08-02' },
+  { 
+    id: '1', 
+    title: 'Laser Hair Removal - Diode Laser SOP 2026', 
+    category: 'SOP', 
+    content: 'Standard operating protocol for 810nm Diode Laser treatment. Requires mandatory Fitzpatrick scale skin assessment and 48-hour patch test prior to full session. Apply chilled ultrasonic cooling gel evenly. Post-care: Avoid sun exposure for 72 hours, apply SPF 50+ broad-spectrum sunscreen daily, avoid hot showers for 24 hours.', 
+    chunks: 8, 
+    isActive: true, 
+    updatedAt: '2026-08-01' 
+  },
+  { 
+    id: '2', 
+    title: 'Chemical Peel Treatment Protocol - Glycolic & TCA', 
+    category: 'SOP', 
+    content: 'Step-by-step protocol for Glycolic Acid (30-70%) and TCA peels. Pre-peel prep with degreasing solution. Monitor frost formation during TCA application. Contraindications: active herpes simplex, recent isotretinoin use, open wounds. Mandatory neutralization procedure using sodium bicarbonate solution at maximum 3-5 minutes.', 
+    chunks: 10, 
+    isActive: true, 
+    updatedAt: '2026-08-02' 
+  },
+  { 
+    id: '3', 
+    title: 'Skin Clinic Pricing & Treatment Menu 2026', 
+    category: 'PRICING', 
+    content: 'Detailed Indian pricing: Consultation ₹500, Laser Hair Removal (Small Area) ₹3,000, Laser Full Body ₹45,000, PRP Therapy ₹8,000, Chemical Peel ₹2,500, Botox per unit ₹350, Dermal Fillers (1ml) ₹15,000, Microneedling ₹4,000, HydraFacial ₹3,500, Mole Removal ₹2,000.', 
+    chunks: 14, 
+    isActive: true, 
+    updatedAt: '2026-08-03' 
+  },
+  { 
+    id: '4', 
+    title: 'Botox & Dermal Filler Consent & Safety Guidelines', 
+    category: 'RESTRICTED_GUIDELINES', 
+    content: 'STRICT RULE: Never prescribe neurotoxins or dermal fillers over the phone. Requires in-person dermatologist consultation, mandatory allergy history check, and 2-week follow-up required to assess symmetry.', 
+    chunks: 6, 
+    isActive: true, 
+    updatedAt: '2026-08-04' 
+  },
+  { 
+    id: '5', 
+    title: 'Patient Objection Handling & Sales Scripts', 
+    category: 'SCRIPTS', 
+    content: 'Handle price objections by highlighting US-FDA approved diode lasers and dermatologist expertise vs low-cost salons. Address treatment fear with topical numbing & cooling tech. Set clear result timeline expectations (6-8 sessions for laser, 3-4 sessions for PRP).', 
+    chunks: 9, 
+    isActive: true, 
+    updatedAt: '2026-08-04' 
+  },
+  { 
+    id: '6', 
+    title: 'Dermatology FAQ - Common Patient Questions', 
+    category: 'FAQ', 
+    content: 'Q: How many laser sessions needed? A: 6-8 sessions spaced 4 weeks apart. Q: Is PRP painful? A: Minimal discomfort with topical numbing spray. Q: Chemical peel downtime? A: Light flaking for 3-5 days. Q: Botox duration? A: 4-6 months. Q: When to see results? Instant glow with HydraFacial; 4-6 weeks for collagen synthesis with microneedling.', 
+    chunks: 11, 
+    isActive: true, 
+    updatedAt: '2026-08-05' 
+  },
+  { 
+    id: '7', 
+    title: 'Acne & Scar Treatment Roadmap', 
+    category: 'SERVICE', 
+    content: 'Complete acne treatment journey: In-depth consultation & skin analysis -> Active acne control with salicylic peels -> Scar assessment (boxcar, icepick, rolling) -> Microneedling & laser resurfacing -> Maintenance skin barrier program.', 
+    chunks: 8, 
+    isActive: true, 
+    updatedAt: '2026-08-05' 
+  },
+  { 
+    id: '8', 
+    title: 'Hair Loss & PRP Therapy Complete Guide', 
+    category: 'SERVICE', 
+    content: 'PRP process: Blood draw, double centrifugation, scalp micro-injections of autologous growth factors. Expected results timeline: Hair fall drop in 30 days, density increase by session 3. Maintenance schedule: 4 monthly sessions then bi-annual maintenance. Combination therapies: Minoxidil/Finasteride.', 
+    chunks: 9, 
+    isActive: true, 
+    updatedAt: '2026-08-06' 
+  },
 ];
 
 const categoryConfig: Record<string, { color: string; label: string }> = {
@@ -112,7 +178,7 @@ export default function KnowledgeBasePage() {
     setRagOutput(null);
 
     setTimeout(() => {
-      setRagOutput(`[RAG Match: Chunks 1 & 2] Based on uploaded SOP & Pricing sheets: Our Laser Hair removal package is ₹3,000 for small areas. Patch test is required 48h prior. Tone applied: Empathetic & Medical Advisor.`);
+      setRagOutput(`[RAG Match: Chunks 1 & 3] Based on Diode Laser SOP & Pricing sheets: Diode Laser hair removal requires 48h patch test & Fitzpatrick scale assessment. Pricing: Small area ₹3,000, Full Body ₹45,000. Tone: Empathetic Medical Advisor.`);
       setIsTestingRag(false);
     }, 1000);
   };
@@ -162,7 +228,7 @@ export default function KnowledgeBasePage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-base text-white">Glow-Bot v2.4 (Dedicated Tenant AI Agent)</h2>
+              <h2 className="font-bold text-base text-white">DermAI Pro v3.0 (Dedicated Tenant AI Agent)</h2>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             <p className="text-xs text-slate-300 mt-1">
@@ -292,7 +358,7 @@ export default function KnowledgeBasePage() {
             type="text"
             value={testQuery}
             onChange={(e) => setTestQuery(e.target.value)}
-            placeholder="e.g. What is the laser treatment pricing and patch test policy?"
+            placeholder="e.g. What is the diode laser treatment pricing and patch test policy?"
             className="flex-1 px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <button
