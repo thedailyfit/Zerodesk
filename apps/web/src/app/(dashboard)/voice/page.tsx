@@ -122,23 +122,33 @@ export default function VoicePage() {
           <p className="text-[var(--color-text-muted)] text-sm mt-1">Autonomous phone call answering, appointment booking, and call history logs.</p>
         </div>
 
-        {/* Master ON / OFF Switch */}
-        <div className="flex items-center gap-3 bg-[var(--color-surface)] p-2 rounded-xl border border-[var(--color-border)]">
-          <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider pl-2">
-            Voice Feature
-          </span>
-          <button
-            onClick={() => setIsVoiceActive(!isVoiceActive)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md",
-              isVoiceActive
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                : "bg-red-600 hover:bg-red-500 text-white"
-            )}
+        <div className="flex items-center gap-3">
+          <a
+            href="/voice-knowledge-hub"
+            className="flex items-center gap-2 px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold transition-all shadow-md"
           >
-            <Power size={14} />
-            <span>{isVoiceActive ? 'VOICE AI ON' : 'VOICE AI OFF'}</span>
-          </button>
+            <Sparkles size={14} className="text-purple-400" />
+            <span>Voice AI Knowledge Hub & Prompts →</span>
+          </a>
+
+          {/* Master ON / OFF Switch */}
+          <div className="flex items-center gap-3 bg-[var(--color-surface)] p-2 rounded-xl border border-[var(--color-border)]">
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider pl-2">
+              Voice Feature
+            </span>
+            <button
+              onClick={() => setIsVoiceActive(!isVoiceActive)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md",
+                isVoiceActive
+                  ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                  : "bg-red-600 hover:bg-red-500 text-white"
+              )}
+            >
+              <Power size={14} />
+              <span>{isVoiceActive ? 'VOICE AI ON' : 'VOICE AI OFF'}</span>
+            </button>
+          </div>
         </div>
       </div>
 

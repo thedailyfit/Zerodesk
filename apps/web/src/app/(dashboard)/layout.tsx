@@ -36,7 +36,8 @@ import {
   AlertTriangle,
   IndianRupee,
   Heart,
-  SmilePlus
+  SmilePlus,
+  Cpu
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -84,10 +85,11 @@ const navItems = [
 
   // ===== BACKEND AI (ADMIN only) =====
   { divider: true, name: 'BACKEND AI', roles: ['ADMIN'] },
-  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
+  { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
+  { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
   { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
 
-{ name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
+  { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

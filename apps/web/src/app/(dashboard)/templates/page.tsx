@@ -110,6 +110,26 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'business_name']
   },
+  {
+    id: 'w4',
+    title: 'Voice AI Missed Call Auto-Responder (Tenglish / English)',
+    category: 'Auto-Trigger DM',
+    channel: 'WHATSAPP',
+    content: 'Namaskaram {{customer_name}}! 🙏 We noticed you just called {{business_name}} (Jubilee Hills). Our Voice AI assistant missed your call while assisting another patient.\n\nHow can we help you right now?\n1️⃣ Book Laser Hair Removal / HydraFacial\n2️⃣ Doctor Consultation Fee & Timings\n3️⃣ Reschedule Appointment\n\nReply with 1, 2, or 3 to chat instantly!',
+    mediaAttachment: 'NONE',
+    isPreinstalled: true,
+    variables: ['customer_name', 'business_name']
+  },
+  {
+    id: 'w5',
+    title: 'Post-Voice Call Appointment Confirmation + Clinic Map Pin',
+    category: 'Auto-Trigger DM',
+    channel: 'WHATSAPP',
+    content: 'Hi {{customer_name}}! ✨ Your appointment for {{service}} with Dr. {{staff_name}} is confirmed for {{appointment_time}} at {{business_name}}.\n\n📍 Clinic Address: Road No 36, Jubilee Hills, Hyderabad.\n🗺️ Google Maps Location: {{map_link}}\n\nSee you soon for your skin session!',
+    mediaAttachment: 'NONE',
+    isPreinstalled: true,
+    variables: ['customer_name', 'service', 'staff_name', 'appointment_time', 'business_name', 'map_link']
+  },
   // Voice AI Call Scripts
   {
     id: 'v1',
@@ -130,6 +150,16 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'business_name', 'service', 'appointment_time', 'staff_name']
+  },
+  {
+    id: 'v3',
+    title: 'Voice AI Hyderabadi Greeting & Dynamic Slot Booking Script',
+    category: 'Inbound Receptionist',
+    channel: 'VOICE',
+    content: 'Agent: "Namaskaram! Welcome to {{business_name}}, Jubilee Hills. I am {{bot_name}}, Dr. Meenakshi\'s AI assistant. Are you calling to check HydraFacial or Diode Laser pricing, or would you like me to book a doctor consultation slot for you?"',
+    mediaAttachment: 'NONE',
+    isPreinstalled: true,
+    variables: ['business_name', 'bot_name']
   },
 ];
 
