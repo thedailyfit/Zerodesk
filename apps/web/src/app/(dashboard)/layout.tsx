@@ -37,7 +37,10 @@ import {
   IndianRupee,
   Heart,
   SmilePlus,
-  Cpu
+  Cpu,
+  PhoneIncoming,
+  Megaphone,
+  Activity
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -80,8 +83,15 @@ const navItems = [
   { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['MANAGER', 'ADMIN'] },
   { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['MANAGER', 'ADMIN'] },
   { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Voice AI', href: '/voice', icon: Phone, roles: ['ADMIN'] },
   { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
+
+  // ===== VOICE TELEPHONY & MONITORING (ADMIN only) =====
+  { divider: true, name: 'VOICE TELEPHONY', roles: ['ADMIN'] },
+  { name: 'Voice AI Agent', href: '/voice', icon: Phone, roles: ['ADMIN'] },
+  { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+  { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
+  { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
+  { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN'] },
 
   // ===== BACKEND AI (ADMIN only) =====
   { divider: true, name: 'BACKEND AI', roles: ['ADMIN'] },
