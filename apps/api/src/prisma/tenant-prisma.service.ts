@@ -8,7 +8,7 @@ export class TenantPrismaService {
   /**
    * Returns an extended Prisma Client instance scoped to a specific tenant.
    * Uses Prisma Client Extensions ($extends) to automatically inject `tenantId`
-   * into all query operations without requiring $transaction overhead.
+   * and execute `set_config('app.current_tenant_id')` to enforce engine-level RLS.
    */
   getExtendedClient(tenantId: string) {
     return this.prisma.$extends({
@@ -26,6 +26,9 @@ export class TenantPrismaService {
               'KnowledgeDocument',
               'KnowledgeChunk',
               'AutomationWorkflow',
+              'Task',
+              'Activity',
+              'Invoice'
             ];
 
             if (tenantModels.includes(model)) {
@@ -51,13 +54,14 @@ export class TenantPrismaService {
 
   /**
    * Execute a callback within a strict PostgreSQL RLS session transaction.
+   * Sets app.current_tenant_id in PostgreSQL session so engine RLS policies block cross-tenant reads.
    */
   async executeInTenantContext<T>(
     tenantId: string,
     callback: (prisma: PrismaService) => Promise<T>,
   ): Promise<T> {
     return this.prisma.$transaction(async (tx: any) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant', ${tenantId}, true)`;
+      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`;
       return callback(tx as unknown as PrismaService);
     });
   }

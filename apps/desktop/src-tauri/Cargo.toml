@@ -1,0 +1,18 @@
+[package]
+name = "zerodesk-desktop"
+version = "1.2.0"
+description = "ZeroDesk Native Windows Desktop Client for Healthcare Clinics"
+authors = ["ZeroDesk AI Team"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0", features = ["tray-icon", "notification"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

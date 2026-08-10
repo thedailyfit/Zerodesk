@@ -40,7 +40,8 @@ import {
   Cpu,
   PhoneIncoming,
   Megaphone,
-  Activity
+  Activity,
+  Laptop
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -99,6 +100,7 @@ const navItems = [
   { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
   { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
 
+  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['STAFF', 'MANAGER', 'ADMIN'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
 ];
 
