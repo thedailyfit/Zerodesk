@@ -8,7 +8,7 @@ import {
 
 export const HOTEL_RESORT_CONFIG: NicheConfig = {
   id: 'hotel',
-  label: 'Hotel & Resort',
+  label: 'Hotel',
   tagline: 'Next-Gen Hospitality Operations OS',
   icon: 'Building', // Using Building as approximation
   accentColor: 'indigo-600',

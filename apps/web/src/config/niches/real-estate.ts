@@ -8,7 +8,7 @@ import {
 
 export const REAL_ESTATE_CONFIG: NicheConfig = {
   id: 'realestate',
-  label: 'Real Estate & Property',
+  label: 'Real Estate',
   tagline: 'High-Conversion Property Sales OS',
   icon: 'Building2', // We will assume an icon exists in the UI but string is fine for config if not strict type
   accentColor: 'amber-600',

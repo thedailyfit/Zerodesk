@@ -8,7 +8,7 @@ import type { NicheConfig } from './types';
 
 export const SKIN_CLINIC_CONFIG: NicheConfig = {
   id: 'skin',
-  label: 'Skin & Dermatology Clinic',
+  label: 'Skin Clinic',
   tagline: 'Comprehensive management for your dermatology practice.',
   icon: 'Heart',
   accentColor: 'text-purple-600',

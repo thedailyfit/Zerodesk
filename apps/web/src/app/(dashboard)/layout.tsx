@@ -49,13 +49,13 @@ import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
 
-const NICHE_OPTIONS: { id: NicheId; name: string; emoji: string; tag: string }[] = [
-  { id: 'skin', name: 'Skin & Dermatology', emoji: '🏥', tag: 'Dermatology' },
-  { id: 'dental', name: 'Dental Clinic', emoji: '🦷', tag: 'Dental Care' },
-  { id: 'spa', name: 'Spa & Wellness', emoji: '🧖', tag: 'Wellness' },
-  { id: 'salon', name: 'Luxury Salon', emoji: '💇', tag: 'Beauty & Style' },
-  { id: 'realestate', name: 'Real Estate & Property', emoji: '🏢', tag: 'Property OS' },
-  { id: 'hotel', name: 'Hotel & Resort', emoji: '🏨', tag: 'Hospitality' },
+const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
+  { id: 'skin', name: 'Skin Clinic', tag: 'Dermatology' },
+  { id: 'dental', name: 'Dental Clinic', tag: 'Dental Care' },
+  { id: 'spa', name: 'Spa & Wellness', tag: 'Wellness' },
+  { id: 'salon', name: 'Luxury Salon', tag: 'Beauty & Style' },
+  { id: 'realestate', name: 'Real Estate', tag: 'Property OS' },
+  { id: 'hotel', name: 'Hotel', tag: 'Hospitality' },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -80,9 +80,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const filteredNavItems = useMemo(() => {
     if (!nicheNavItems || nicheNavItems.length === 0) return [];
     if (demoRole === 'ADMIN') return nicheNavItems;
-    return nicheNavItems.filter(item => 
-      !item.roles || item.roles.length === 0 || item.roles.includes(demoRole) || item.roles.includes('ADMIN')
-    );
+    return nicheNavItems.filter(item => {
+      if (item.divider) {
+        return !item.roles || item.roles.length === 0 || item.roles.includes(demoRole);
+      }
+      return item.roles && item.roles.includes(demoRole);
+    });
   }, [demoRole, nicheNavItems]);
 
   return (
@@ -150,10 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-lg shrink-0">
-                {NICHE_OPTIONS.find(n => n.id === currentNiche)?.emoji || '🏥'}
-              </span>
-              {isSidebarOpen && (
+              {isSidebarOpen ? (
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-xs font-bold text-[var(--color-text)] truncate">
                     {NICHE_OPTIONS.find(n => n.id === currentNiche)?.name || nicheConfig.label}
@@ -163,6 +163,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Switch Dashboard
                   </span>
                 </div>
+              ) : (
+                <span className="text-xs font-extrabold text-[var(--color-primary-light)]">
+                  {currentNiche.slice(0, 2).toUpperCase()}
+                </span>
               )}
             </div>
             {isSidebarOpen && (
@@ -203,10 +207,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           : "text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                       )}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base shrink-0">{niche.emoji}</span>
-                        <span className="truncate">{niche.name}</span>
-                      </div>
+                      <span className="truncate">{niche.name}</span>
                       <span className={cn(
                         "text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ml-1",
                         isSelected ? "bg-white/20 text-white" : "bg-[var(--color-surface)] text-[var(--color-text-muted)]"
