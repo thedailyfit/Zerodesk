@@ -4,7 +4,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 
 export const SPA_WELLNESS_CONFIG: NicheConfig = {
   id: 'spa',
@@ -32,39 +32,58 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'spa_manager', label: 'Spa Manager/Owner', description: 'Full access to all operations, analytics, and revenue', icon: 'Shield' },
-    { id: 'bams_doctor', label: 'Ayurvedic Doctor (BAMS)', description: 'Access to guest health profiles, prescriptions, and therapy plans', icon: 'Activity' },
-    { id: 'therapist', label: 'Therapist/Masseuse', description: 'Access to their daily schedule and therapy room assignments', icon: 'SmilePlus' },
-    { id: 'front_desk', label: 'Front Desk Host', description: 'Guest check-ins, quick billing, and scheduling', icon: 'Users' },
-    { id: 'yoga_instructor', label: 'Yoga Instructor', description: 'Access to class schedules and group wellness sessions', icon: 'Target' },
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to spa operations, revenue, settings, and staff.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Spa Manager', description: 'Access to therapy schedules, guest management, and analytics.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Host', description: 'Guest check-ins, therapy bookings, quick billing, and chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['spa_manager', 'front_desk'] },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['spa_manager'] },
-    { name: 'Teams', href: '/teams', icon: Users, roles: ['spa_manager'] },
-    { name: 'Therapy Suite Scheduler', href: '/calendar', icon: Calendar, roles: ['spa_manager', 'front_desk', 'therapist', 'bams_doctor', 'yoga_instructor'] },
-    { name: 'Operational Delays', href: '/delays', icon: AlertTriangle, roles: ['spa_manager', 'front_desk'] },
-    { name: 'Sales', href: '/sales', icon: Receipt, roles: ['spa_manager'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Appointments', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'WELLNESS', roles: [], divider: true },
-    { name: 'Therapy Queue', href: '/queue', icon: Clock, roles: ['front_desk', 'therapist'] },
-    { name: 'Therapy Suites', href: '/suites', icon: Target, roles: ['spa_manager', 'front_desk'] },
-    { name: 'Guest Profiles', href: '/guests/profiles', icon: Heart, roles: ['spa_manager', 'bams_doctor', 'front_desk'] },
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'FRONTDESK', roles: [], divider: true },
-    { name: 'Quick Bill', href: '/billing/quick', icon: CreditCard, roles: ['front_desk', 'spa_manager'] },
-    { name: 'Invoices', href: '/billing/invoices', icon: FileText, roles: ['front_desk', 'spa_manager'] },
-    { name: 'Book Therapy', href: '/book', icon: CalendarDays, roles: ['front_desk'] },
-    { name: 'Guests', href: '/guests', icon: Users, roles: ['front_desk', 'spa_manager'] },
-    { name: 'Conversations', href: '/conversations', icon: MessageCircle, roles: ['front_desk', 'spa_manager'] },
+    { name: 'Wellness', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Therapy Queue', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Therapy Suites', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guest Profiles', href: '/patient-files', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'AUTOMATION', roles: [], divider: true },
-    { name: 'Automation', href: '/automation', icon: Workflow, roles: ['spa_manager'] },
-    { name: 'Voice Telephony', href: '/telephony', icon: PhoneIncoming, roles: ['spa_manager', 'front_desk'] },
-    { name: 'Backend AI', href: '/ai', icon: Cpu, roles: ['spa_manager'] },
-    { name: 'Desktop App', href: '/downloads', icon: Laptop, roles: ['all'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['spa_manager'] },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Book Therapy', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guest LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Guest Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
+
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [

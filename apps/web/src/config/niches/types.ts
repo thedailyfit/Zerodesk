@@ -1,10 +1,4 @@
-import { 
-  LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
-  MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
-  CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle,
-  type LucideIcon
-} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 // ============================================================
 // CORE TYPE DEFINITIONS
@@ -135,11 +129,4 @@ export interface NicheConfig {
   inputVariables: { token: string; label: string; fallback: string }[];
 }
 
-// Re-export icons for use in niche configs
-export {
-  LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
-  MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
-  CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle
-};
 export type { LucideIcon };

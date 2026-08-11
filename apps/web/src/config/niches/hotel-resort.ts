@@ -4,7 +4,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 
 export const HOTEL_RESORT_CONFIG: NicheConfig = {
   id: 'hotel',
@@ -32,37 +32,58 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'gm', label: 'General Manager', description: 'Oversees entire property operations, revenue, and guest satisfaction.', icon: 'Crown' },
-    { id: 'front-office', label: 'Front Office Manager', description: 'Manages check-ins, check-outs, and lobby operations.', icon: 'Users' },
-    { id: 'concierge', label: 'Concierge', description: 'Handles guest requests, itineraries, and special arrangements.', icon: 'Heart' },
-    { id: 'reservations', label: 'Reservations Manager', description: 'Manages incoming bookings across all channels (OTA & Direct).', icon: 'CalendarDays' },
-    { id: 'housekeeping', label: 'Housekeeping Manager', description: 'Manages room cleaning schedules and maintenance SLAs.', icon: 'SmilePlus' },
-    { id: 'banquet', label: 'Banquet Coordinator', description: 'Handles event spaces, weddings, and corporate conferences.', icon: 'Target' },
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to property operations, revenue, settings, and staff.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'General Manager', description: 'Access to bookings, room occupancy, guest management, and analytics.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to check-ins, room bookings, folios, and guest chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['all'] },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['gm', 'reservations'] },
-    { name: 'Teams', href: '/teams', icon: Users, roles: ['gm'] },
-    { name: 'Room Bookings', href: '/bookings', icon: CalendarDays, roles: ['all'] },
-    { name: 'Operational Delays', href: '/delays', icon: AlertTriangle, roles: ['gm', 'front-office', 'housekeeping'] },
-    { name: 'Sales', href: '/sales', icon: TrendingUp, roles: ['gm', 'reservations'] },
-    { name: 'HOSPITALITY', roles: ['all'], divider: true },
-    { name: 'Check-in Lobby', href: '/hospitality/lobby', icon: Clock, roles: ['all'] },
-    { name: 'Room Occupancy Chart', href: '/hospitality/occupancy', icon: Calendar, roles: ['all'] },
-    { name: 'Guest Profiles', href: '/hospitality/guests', icon: Users, roles: ['all'] },
-    { name: 'Frontdesk', roles: ['all'], divider: true },
-    { name: 'Quick Bill/Folio', href: '/frontdesk/folio', icon: Receipt, roles: ['front-office', 'gm'] },
-    { name: 'Invoices', href: '/frontdesk/invoices', icon: FileText, roles: ['front-office', 'gm'] },
-    { name: 'Book Room', href: '/frontdesk/book', icon: BookOpen, roles: ['all'] },
-    { name: 'Guests', href: '/frontdesk/guests', icon: Users, roles: ['all'] },
-    { name: 'Conversations', href: '/frontdesk/conversations', icon: MessageSquare, roles: ['all'] },
-    { name: 'Automation', roles: ['all'], divider: true },
-    { name: 'Automations', href: '/automation', icon: Workflow, roles: ['gm'] },
-    { name: 'WhatsApp', href: '/automation/whatsapp', icon: MessageCircle, roles: ['all'] },
-    { name: 'Voice Telephony', href: '/telephony', icon: PhoneIncoming, roles: ['all'] },
-    { name: 'Backend AI', href: '/ai', icon: Cpu, roles: ['gm'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['gm'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Room Bookings', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
+    
+    { name: 'Hospitality', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Check-in Lobby', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Room Occupancy Chart', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guest Profiles', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Quick Bill / Folio', href: '/billing', icon: Receipt, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Book Room', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Guest LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Guest Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
+
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [

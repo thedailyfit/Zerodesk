@@ -3,7 +3,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 import type { NicheConfig } from './types';
 
 export const DENTAL_CLINIC_CONFIG: NicheConfig = {
@@ -32,60 +32,58 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'chief_dentist', label: 'Chief Dentist', description: 'Full access to business analytics and practice operations.', icon: 'Shield' },
-    { id: 'associate_dentist', label: 'Associate Dentist', description: 'Access to patient records, charts, and daily schedule.', icon: 'Activity' },
-    { id: 'dental_assistant', label: 'Dental Assistant', description: 'Manage chair turnarounds, sterilization logs, and lab orders.', icon: 'Laptop' },
-    { id: 'front_desk', label: 'Front Desk', description: 'Handle patient check-ins, calls, billing, and insurance.', icon: 'SmilePlus' },
-    { id: 'treatment_coordinator', label: 'Treatment Coordinator', description: 'Present treatment plans, manage financing, and follow up.', icon: 'MessageCircle' }
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to practice analytics, revenue, settings, and team.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Practice Manager', description: 'Access to operations, chair scheduling, and patient retention.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['chief_dentist', 'associate_dentist'] },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['chief_dentist'] },
-    { name: 'Teams', href: '/dashboard/teams', icon: Users, roles: ['chief_dentist'] },
-    { name: 'Appointments', href: '/dashboard/appointments', icon: CalendarDays, roles: ['chief_dentist', 'front_desk', 'associate_dentist'] },
-    { name: 'Operational Delays', href: '/dashboard/delays', icon: AlertTriangle, roles: ['chief_dentist', 'front_desk'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Appointments', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'Sales', roles: ['chief_dentist'], divider: true },
-    { name: 'Today\'s Revenue', href: '/dashboard/sales/today', icon: IndianRupee, roles: ['chief_dentist', 'front_desk'] },
-    { name: 'Monthly Sales', href: '/dashboard/sales/monthly', icon: TrendingUp, roles: ['chief_dentist'] },
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'Clinical', roles: ['associate_dentist', 'dental_assistant'], divider: true },
-    { name: 'Waiting Room', href: '/dashboard/clinical/waiting', icon: Clock, roles: ['front_desk', 'dental_assistant'] },
-    { name: 'Chair Scheduler', href: '/dashboard/clinical/slots', icon: Calendar, roles: ['associate_dentist', 'front_desk'] },
-    { name: 'Dental Records', href: '/dashboard/clinical/files', icon: FileText, roles: ['associate_dentist'] },
-    { name: 'Lab Orders', href: '/dashboard/clinical/lab', icon: Target, roles: ['associate_dentist', 'dental_assistant'] },
+    { name: 'Clinical', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Chair Scheduler', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Dental Records', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'Frontdesk', roles: ['front_desk', 'treatment_coordinator'], divider: true },
-    { name: 'Quick Bill', href: '/dashboard/frontdesk/quickbill', icon: Receipt, roles: ['front_desk'] },
-    { name: 'Invoices', href: '/dashboard/frontdesk/invoices', icon: CreditCard, roles: ['front_desk'] },
-    { name: 'Book Appointment', href: '/dashboard/frontdesk/book', icon: BookOpen, roles: ['front_desk'] },
-    { name: 'Customers/Patients', href: '/dashboard/frontdesk/patients', icon: Users, roles: ['front_desk'] },
-    { name: 'Conversations', href: '/dashboard/frontdesk/conversations', icon: MessageSquare, roles: ['front_desk', 'treatment_coordinator'] },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Book Appointment', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
 
-    { name: 'Automation', roles: ['chief_dentist'], divider: true },
-    { name: 'Automations', href: '/dashboard/automation/list', icon: Workflow, roles: ['chief_dentist'] },
-    { name: 'Hygiene Recall', href: '/dashboard/automation/recall', icon: Heart, roles: ['chief_dentist', 'front_desk'] },
-    { name: 'Lead Management', href: '/dashboard/automation/leads', icon: Target, roles: ['chief_dentist', 'treatment_coordinator'] },
-    { name: 'Patient Sentiment', href: '/dashboard/automation/sentiment', icon: SmilePlus, roles: ['chief_dentist'] },
-    { name: 'WhatsApp', href: '/dashboard/automation/whatsapp', icon: MessageCircle, roles: ['chief_dentist'] },
-    { name: 'Ready to Scale', href: '/dashboard/automation/scale', icon: Rocket, roles: ['chief_dentist'] },
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
-    { name: 'Voice Telephony', roles: ['chief_dentist'], divider: true },
-    { name: 'Voice AI Agent', href: '/dashboard/voice/agent', icon: Cpu, roles: ['chief_dentist'] },
-    { name: 'Phone Numbers', href: '/dashboard/voice/numbers', icon: Phone, roles: ['chief_dentist'] },
-    { name: 'Inbound Calls', href: '/dashboard/voice/inbound', icon: PhoneIncoming, roles: ['chief_dentist', 'front_desk'] },
-    { name: 'Outbound Campaigns', href: '/dashboard/voice/outbound', icon: Megaphone, roles: ['chief_dentist', 'treatment_coordinator'] },
-    { name: 'Agent Analytics', href: '/dashboard/voice/analytics', icon: Activity, roles: ['chief_dentist'] },
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
 
-    { name: 'Backend AI', roles: ['chief_dentist'], divider: true },
-    { name: 'Voice AI Knowledge Hub', href: '/dashboard/ai/hub', icon: Cpu, roles: ['chief_dentist'] },
-    { name: 'Company Knowledge Base', href: '/dashboard/ai/kb', icon: BookOpen, roles: ['chief_dentist'] },
-    { name: 'Templates', href: '/dashboard/ai/templates', icon: FileText, roles: ['chief_dentist'] },
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
 
-    { name: 'System', roles: ['chief_dentist'], divider: true },
-    { name: 'Desktop App', href: '/dashboard/system/desktop', icon: Laptop, roles: ['chief_dentist'] },
-    { name: 'Settings', href: '/dashboard/system/settings', icon: Settings, roles: ['chief_dentist'] }
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [

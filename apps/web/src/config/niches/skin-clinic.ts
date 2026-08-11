@@ -3,7 +3,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 import type { NicheConfig } from './types';
 
 export const SKIN_CLINIC_CONFIG: NicheConfig = {
@@ -32,60 +32,58 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'clinic_owner', label: 'Clinic Owner', description: 'Full access to business analytics and operations.', icon: 'Shield' },
-    { id: 'consultant_derm', label: 'Consultant Dermatologist', description: 'Access to patient files and appointment schedules.', icon: 'Activity' },
-    { id: 'laser_tech', label: 'Laser Technician', description: 'Manage laser session appointments and room allocations.', icon: 'Laptop' },
-    { id: 'front_desk', label: 'Front Desk', description: 'Handle patient walk-ins, calls, and quick billing.', icon: 'SmilePlus' },
-    { id: 'patient_coord', label: 'Patient Coordinator', description: 'Follow ups, lead management, and patient queries.', icon: 'MessageCircle' }
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to business analytics, revenue, settings, and staff.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Clinic Manager', description: 'Access to operations, lead management, and patient care.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['clinic_owner', 'consultant_derm'] },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['clinic_owner'] },
-    { name: 'Teams', href: '/dashboard/teams', icon: Users, roles: ['clinic_owner'] },
-    { name: 'Appointments', href: '/dashboard/appointments', icon: CalendarDays, roles: ['clinic_owner', 'front_desk', 'consultant_derm'] },
-    { name: 'Operational Delays', href: '/dashboard/delays', icon: AlertTriangle, roles: ['clinic_owner', 'front_desk'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Appointments', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'Sales', roles: ['clinic_owner'], divider: true },
-    { name: 'Today\'s Revenue', href: '/dashboard/sales/today', icon: IndianRupee, roles: ['clinic_owner', 'front_desk'] },
-    { name: 'Monthly Sales', href: '/dashboard/sales/monthly', icon: TrendingUp, roles: ['clinic_owner'] },
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'Clinical', roles: ['consultant_derm', 'laser_tech'], divider: true },
-    { name: 'Waiting Room', href: '/dashboard/clinical/waiting', icon: Clock, roles: ['front_desk', 'laser_tech'] },
-    { name: 'Doctor Slots', href: '/dashboard/clinical/slots', icon: Calendar, roles: ['consultant_derm', 'front_desk'] },
-    { name: 'Patient Files', href: '/dashboard/clinical/files', icon: FileText, roles: ['consultant_derm'] },
-    { name: 'Staff Calendar', href: '/dashboard/clinical/calendar', icon: CalendarDays, roles: ['clinic_owner', 'front_desk'] },
+    { name: 'Clinical', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Doctor Slots', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'Frontdesk', roles: ['front_desk', 'patient_coord'], divider: true },
-    { name: 'Quick Bill', href: '/dashboard/frontdesk/quickbill', icon: Receipt, roles: ['front_desk'] },
-    { name: 'Invoices', href: '/dashboard/frontdesk/invoices', icon: CreditCard, roles: ['front_desk'] },
-    { name: 'Book Appointment', href: '/dashboard/frontdesk/book', icon: BookOpen, roles: ['front_desk'] },
-    { name: 'Customers/Patients', href: '/dashboard/frontdesk/patients', icon: Users, roles: ['front_desk'] },
-    { name: 'Conversations', href: '/dashboard/frontdesk/conversations', icon: MessageSquare, roles: ['front_desk', 'patient_coord'] },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Book Appointment', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
 
-    { name: 'Automation', roles: ['clinic_owner'], divider: true },
-    { name: 'Automations', href: '/dashboard/automation/list', icon: Workflow, roles: ['clinic_owner'] },
-    { name: 'Lead Management', href: '/dashboard/automation/leads', icon: Target, roles: ['clinic_owner', 'patient_coord'] },
-    { name: 'Patient LTV', href: '/dashboard/automation/ltv', icon: Heart, roles: ['clinic_owner'] },
-    { name: 'Patient Sentiment', href: '/dashboard/automation/sentiment', icon: SmilePlus, roles: ['clinic_owner'] },
-    { name: 'WhatsApp', href: '/dashboard/automation/whatsapp', icon: MessageCircle, roles: ['clinic_owner'] },
-    { name: 'Ready to Scale', href: '/dashboard/automation/scale', icon: Rocket, roles: ['clinic_owner'] },
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
-    { name: 'Voice Telephony', roles: ['clinic_owner'], divider: true },
-    { name: 'Voice AI Agent', href: '/dashboard/voice/agent', icon: Cpu, roles: ['clinic_owner'] },
-    { name: 'Phone Numbers', href: '/dashboard/voice/numbers', icon: Phone, roles: ['clinic_owner'] },
-    { name: 'Inbound Calls', href: '/dashboard/voice/inbound', icon: PhoneIncoming, roles: ['clinic_owner', 'front_desk'] },
-    { name: 'Outbound Campaigns', href: '/dashboard/voice/outbound', icon: Megaphone, roles: ['clinic_owner', 'patient_coord'] },
-    { name: 'Agent Analytics', href: '/dashboard/voice/analytics', icon: Activity, roles: ['clinic_owner'] },
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
 
-    { name: 'Backend AI', roles: ['clinic_owner'], divider: true },
-    { name: 'Voice AI Knowledge Hub', href: '/dashboard/ai/hub', icon: Cpu, roles: ['clinic_owner'] },
-    { name: 'Company Knowledge Base', href: '/dashboard/ai/kb', icon: BookOpen, roles: ['clinic_owner'] },
-    { name: 'Templates', href: '/dashboard/ai/templates', icon: FileText, roles: ['clinic_owner'] },
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
 
-    { name: 'System', roles: ['clinic_owner'], divider: true },
-    { name: 'Desktop App', href: '/dashboard/system/desktop', icon: Laptop, roles: ['clinic_owner'] },
-    { name: 'Settings', href: '/dashboard/system/settings', icon: Settings, roles: ['clinic_owner'] }
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [

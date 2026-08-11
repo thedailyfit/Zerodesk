@@ -22,7 +22,7 @@ const NICHES = [
 ] as const;
 
 const ROLES = [
-  { id: 'SUPER_ADMIN', title: 'Owner / Admin', description: 'Full access to all settings, billing, and team management.', icon: Crown },
+  { id: 'ADMIN', title: 'Owner / Admin', description: 'Full access to all settings, billing, and team management.', icon: Crown },
   { id: 'MANAGER', title: 'Manager', description: 'Oversee daily operations, staff schedules, and reports.', icon: Users },
   { id: 'STAFF', title: 'Staff', description: 'Access to personal schedule and basic customer management.', icon: User },
 ] as const;

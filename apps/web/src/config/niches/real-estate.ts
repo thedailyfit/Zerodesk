@@ -4,7 +4,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 
 export const REAL_ESTATE_CONFIG: NicheConfig = {
   id: 'realestate',
@@ -32,39 +32,58 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'agency-owner', label: 'Agency Owner', description: 'Full access to all analytics, pipelines, and revenue.', icon: 'Crown' },
-    { id: 'property-advisor', label: 'Property Advisor', description: 'Access to assigned leads, follow-ups, and site visits.', icon: 'User' },
-    { id: 'site-coordinator', label: 'Site Visit Coordinator', description: 'Manages logistics, cabs, and site scheduling.', icon: 'Map' },
-    { id: 'tele-calling', label: 'Tele-Calling Team', description: 'Handles outbound dialling and inbound inquiries.', icon: 'Phone' },
-    { id: 'documentation-mgr', label: 'Documentation Manager', description: 'Manages RERA compliance, KYC, and booking forms.', icon: 'FileText' },
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to property sales, revenue, settings, and staff.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Sales Manager', description: 'Access to site visit calendar, lead pipeline, and team sales.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to site visit bookings, lead inquiries, and chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['all'] },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['agency-owner'] },
-    { name: 'Teams', href: '/teams', icon: Users, roles: ['agency-owner'] },
-    { name: 'Site Visits', href: '/site-visits', icon: CalendarDays, roles: ['all'] },
-    { name: 'Operational Delays', href: '/delays', icon: AlertTriangle, roles: ['agency-owner', 'site-coordinator'] },
-    { name: 'Sales', href: '/sales', icon: TrendingUp, roles: ['all'] },
-    { name: 'PROPERTIES', roles: ['all'], divider: true },
-    { name: 'Property Matrix', href: '/properties/matrix', icon: Target, roles: ['all'] },
-    { name: 'Site Visit Calendar', href: '/properties/calendar', icon: Calendar, roles: ['all'] },
-    { name: 'Lead Profiles', href: '/properties/leads', icon: Users, roles: ['all'] },
-    { name: 'Frontdesk', roles: ['all'], divider: true },
-    { name: 'Billing', href: '/frontdesk/billing', icon: Receipt, roles: ['agency-owner', 'documentation-mgr'] },
-    { name: 'Invoices', href: '/frontdesk/invoices', icon: FileText, roles: ['agency-owner', 'documentation-mgr'] },
-    { name: 'Schedule Visit', href: '/frontdesk/schedule', icon: Clock, roles: ['all'] },
-    { name: 'Leads/Prospects', href: '/frontdesk/prospects', icon: Users, roles: ['all'] },
-    { name: 'Conversations', href: '/frontdesk/conversations', icon: MessageSquare, roles: ['all'] },
-    { name: 'Automation', roles: ['all'], divider: true },
-    { name: 'Automations', href: '/automation', icon: Workflow, roles: ['agency-owner'] },
-    { name: 'Lead Pipeline', href: '/automation/pipeline', icon: Target, roles: ['all'] },
-    { name: 'Lead Scoring', href: '/automation/scoring', icon: Activity, roles: ['all'] },
-    { name: 'Sentiment', href: '/automation/sentiment', icon: Heart, roles: ['agency-owner'] },
-    { name: 'WhatsApp', href: '/automation/whatsapp', icon: MessageCircle, roles: ['all'] },
-    { name: 'Voice Telephony', href: '/telephony', icon: PhoneIncoming, roles: ['all'] },
-    { name: 'Backend AI', href: '/ai', icon: Cpu, roles: ['agency-owner'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['agency-owner'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Site Visits', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
+    
+    { name: 'Properties', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Property Matrix', href: '/waiting-room', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Site Visit Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Lead Profiles', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Schedule Visit', href: '/appointments', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Lead LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
+
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [

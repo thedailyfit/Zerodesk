@@ -4,7 +4,7 @@ import {
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
   Megaphone, Activity, Laptop, AlertTriangle
-} from './types';
+} from 'lucide-react';
 
 export const LUXURY_SALON_CONFIG: NicheConfig = {
   id: 'salon',
@@ -32,39 +32,58 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'salon_owner', label: 'Salon Owner', description: 'Full access to floor operations, retail sales, and staff performance', icon: 'Shield' },
-    { id: 'master_stylist', label: 'Master Stylist', description: 'Access to their chair schedule, client formulas, and re-booking tools', icon: 'Activity' },
-    { id: 'hair_colorist', label: 'Hair Colorist', description: 'Manage color appointments and backbar inventory notes', icon: 'Target' },
-    { id: 'nail_tech', label: 'Nail Technician', description: 'Manage manicure/pedicure station bookings', icon: 'Heart' },
-    { id: 'front_desk', label: 'Front Desk Manager', description: 'Oversee walk-ins, phone bookings, and checkout', icon: 'Users' },
-    { id: 'bridal_coord', label: 'Bridal Coordinator', description: 'Manage bridal trials, group bookings, and event schedules', icon: 'CalendarDays' },
+    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to floor operations, retail revenue, settings, and staff.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Salon Manager', description: 'Access to chair scheduling, client management, and analytics.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to appointments, frontdesk billing, and client chats.', icon: 'User' },
   ],
 
   navItems: [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['salon_owner', 'front_desk'] },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['salon_owner'] },
-    { name: 'Teams', href: '/teams', icon: Users, roles: ['salon_owner'] },
-    { name: 'Floor & Chair Scheduler', href: '/calendar', icon: Calendar, roles: ['all'] },
-    { name: 'Sales', href: '/sales', icon: Receipt, roles: ['salon_owner', 'front_desk'] },
+    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Appointments', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'STYLING', roles: [], divider: true },
-    { name: 'Live Floor Queue', href: '/queue', icon: Clock, roles: ['front_desk', 'master_stylist', 'hair_colorist'] },
-    { name: 'Chair Schedule', href: '/chairs', icon: Target, roles: ['salon_owner', 'front_desk'] },
-    { name: 'Client Beauty Profiles', href: '/clients/profiles', icon: Heart, roles: ['salon_owner', 'master_stylist', 'hair_colorist', 'front_desk'] },
+    { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'FRONTDESK', roles: [], divider: true },
-    { name: 'Quick Bill', href: '/billing/quick', icon: CreditCard, roles: ['front_desk', 'salon_owner'] },
-    { name: 'Invoices', href: '/billing/invoices', icon: FileText, roles: ['front_desk', 'salon_owner'] },
-    { name: 'Book Session', href: '/book', icon: CalendarDays, roles: ['front_desk'] },
-    { name: 'Clients', href: '/clients', icon: Users, roles: ['front_desk', 'salon_owner'] },
-    { name: 'Conversations', href: '/conversations', icon: MessageCircle, roles: ['front_desk', 'salon_owner'] },
+    { name: 'Styling', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Live Floor Queue', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Chair Schedule', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Client Profiles', href: '/patient-files', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
-    { name: 'AUTOMATION', roles: [], divider: true },
-    { name: 'Automation', href: '/automation', icon: Workflow, roles: ['salon_owner'] },
-    { name: 'Voice Telephony', href: '/telephony', icon: PhoneIncoming, roles: ['salon_owner', 'front_desk'] },
-    { name: 'Backend AI', href: '/ai', icon: Cpu, roles: ['salon_owner'] },
-    { name: 'Desktop App', href: '/downloads', icon: Laptop, roles: ['all'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['salon_owner'] },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
+    { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Book Session', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Clients', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    
+    { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Client LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Client Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
+
+    { name: 'Voice Telephony', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
+    { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'Backend AI', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+
+    { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],
 
   kpis: [
