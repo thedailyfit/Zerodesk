@@ -1,5 +1,6 @@
 'use client';
 
+import { useNiche } from '@/components/providers/niche-provider';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { Phone, MessageSquare, Calendar as CalendarIcon, IndianRupee } from 'lucide-react';
@@ -25,49 +26,36 @@ const pieData = [
 ];
 
 export default function DashboardOverview() {
+  const { nicheConfig } = useNiche();
+  const kpis = nicheConfig.kpis || [];
+  const icons = [Phone, MessageSquare, CalendarIcon, IndianRupee];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Overview</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Welcome back! Here's what's happening today.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              {nicheConfig.label}
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">{nicheConfig.terminology?.overview || "Overview"}</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">{nicheConfig.tagline || "Welcome back! Here's what's happening today."}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard 
-          title="Today's Calls" 
-          value="1,245" 
-          numericValue={1245} 
-          trend={12.5} 
-          icon={Phone} 
-          delay={0.1} 
-        />
-        <KPICard 
-          title="WhatsApp Msgs" 
-          value="8,432" 
-          numericValue={8432} 
-          trend={18.2} 
-          icon={MessageSquare} 
-          delay={0.2} 
-        />
-        <KPICard 
-          title="Appointments" 
-          value="142" 
-          numericValue={142} 
-          trend={-4.5} 
-          icon={CalendarIcon} 
-          delay={0.3} 
-        />
-        <KPICard 
-          title="Revenue (Est)" 
-          value="124k" 
-          numericValue={124000} 
-          trend={24.8} 
-          icon={IndianRupee} 
-          delay={0.4} 
-          prefix="₹"
-        />
+        {kpis.map((kpi, idx) => (
+          <KPICard 
+            key={kpi.label}
+            title={kpi.label} 
+            value={kpi.value} 
+            numericValue={parseFloat(kpi.value.replace(/[^0-9.]/g, '')) || 100} 
+            trend={kpi.trend === 'up' ? 12.5 : kpi.trend === 'down' ? -4.2 : 0} 
+            icon={icons[idx % icons.length]} 
+            delay={0.1 * (idx + 1)} 
+          />
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

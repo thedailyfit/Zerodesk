@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { NicheProvider } from '@/components/providers/niche-provider';
 import { Toaster } from 'sonner';
 import { PostHogProvider } from '@/components/providers/posthog-provider';
 import { RoleProvider } from '@/components/providers/role-provider';
@@ -26,19 +27,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className={`${inter.variable} font-sans antialiased`}>
           <PostHogProvider>
             <ThemeProvider defaultTheme="dark">
-              <RoleProvider>
-                {children}
-                <Toaster
-                  position="bottom-right"
-                  toastOptions={{
-                    style: {
-                      background: 'var(--color-surface)',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--color-text)',
-                    },
-                  }}
-                />
-              </RoleProvider>
+              <NicheProvider>
+                <RoleProvider>
+                  {children}
+                  <Toaster
+                    position="bottom-right"
+                    toastOptions={{
+                      style: {
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text)',
+                      },
+                    }}
+                  />
+                </RoleProvider>
+              </NicheProvider>
             </ThemeProvider>
           </PostHogProvider>
         </body>

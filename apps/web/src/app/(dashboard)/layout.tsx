@@ -46,82 +46,41 @@ import {
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
+import { useNiche } from '@/components/providers/niche-provider';
 
-type Role = 'STAFF' | 'MANAGER' | 'ADMIN';
+// Nav items are now loaded dynamically from the active niche configuration
 
-const navItems = [
-  // ===== TOP-LEVEL ITEMS (MANAGER & ADMIN) =====
-  { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Teams', href: '/teams', icon: Users, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Appointments', href: '/appointments', icon: Calendar, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['MANAGER', 'ADMIN'] },
-
-  // ===== SALES (MANAGER & ADMIN) =====
-  { divider: true, name: 'SALES', roles: ['MANAGER', 'ADMIN'] },
-  { name: "Today's Revenue", href: '/todays-revenue', icon: IndianRupee, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['MANAGER', 'ADMIN'] },
-
-  // ===== CLINICAL (STAFF & ADMIN — no duplicates) =====
-  { divider: true, name: 'CLINICAL', roles: ['STAFF', 'ADMIN'] },
-  { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Doctor Slots', href: '/calendar', icon: CalendarDays, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Staff Calendar', href: '/staff-calendar', icon: Calendar, roles: ['ADMIN'] },
-
-  // ===== FRONTDESK (STAFF & ADMIN — no duplicates) =====
-  { divider: true, name: 'FRONTDESK', roles: ['STAFF', 'ADMIN'] },
-  { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Invoices', href: '/invoices', icon: Receipt, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Book Appointment', href: '/appointments', icon: Calendar, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['STAFF', 'ADMIN'] },
-  { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['STAFF'] },
-
-  // ===== AUTOMATION & CHANNELS (MANAGER & ADMIN) =====
-  { name: 'Automations', href: '/automations', icon: Workflow, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Lead Management', href: '/crm', icon: Target, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['MANAGER', 'ADMIN'] },
-  { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
-
-  // ===== VOICE TELEPHONY & MONITORING (ADMIN only) =====
-  { divider: true, name: 'VOICE TELEPHONY', roles: ['ADMIN'] },
-  { name: 'Voice AI Agent', href: '/voice', icon: Phone, roles: ['ADMIN'] },
-  { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
-  { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
-  { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
-  { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN'] },
-
-  // ===== BACKEND AI (ADMIN only) =====
-  { divider: true, name: 'BACKEND AI', roles: ['ADMIN'] },
-  { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
-  { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
-  { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
-
-  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['STAFF', 'MANAGER', 'ADMIN'] },
-  { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
-];
+const ROLE_COLORS: Record<string, string> = {
+  STAFF: 'bg-blue-500',
+  MANAGER: 'bg-amber-500',
+  ADMIN: 'bg-purple-500',
+  OWNER: 'bg-purple-500',
+  DOCTOR: 'bg-emerald-500',
+  TECHNICIAN: 'bg-cyan-500',
+  FRONTDESK: 'bg-blue-500',
+  COORDINATOR: 'bg-amber-500',
+  THERAPIST: 'bg-emerald-500',
+  STYLIST: 'bg-rose-500',
+  ADVISOR: 'bg-amber-500',
+  CONCIERGE: 'bg-indigo-500',
+  RESERVATIONS: 'bg-indigo-500',
+  HOUSEKEEPING: 'bg-teal-500',
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCmdkOpen, setIsCmdkOpen] = useState(false);
-  const [demoRole, setDemoRole] = useState<Role>('ADMIN');
+  const [demoRole, setDemoRole] = useState<string>('ADMIN');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { nicheConfig } = useNiche();
+  const nicheNavItems = nicheConfig.navItems;
 
   const filteredNavItems = useMemo(() => {
-    return navItems.filter(item => item.roles.includes(demoRole));
-  }, [demoRole]);
-
-  const roleColors = {
-    STAFF: 'bg-blue-500',
-    MANAGER: 'bg-amber-500',
-    ADMIN: 'bg-purple-500'
-  };
+    return nicheNavItems.filter(item => item.roles.includes(demoRole));
+  }, [demoRole, nicheNavItems]);
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
@@ -282,8 +241,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 border border-[var(--color-border)] hover:bg-[var(--color-surface)] rounded-md transition-colors text-xs font-semibold text-[var(--color-text)]"
               >
-                <div className={cn("w-2 h-2 rounded-full shadow-[var(--shadow-glow)]", roleColors[demoRole])} />
-                {demoRole}
+                <div className={cn("w-2 h-2 rounded-full shadow-[var(--shadow-glow)]", ROLE_COLORS[demoRole] || 'bg-purple-500')} />
+                {nicheConfig.roles.find(r => r.id === demoRole)?.label || demoRole}
                 <ChevronDown size={12} className="text-[var(--color-text-muted)]" />
               </button>
               
@@ -293,19 +252,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute right-0 top-full mt-1 w-40 bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-md shadow-lg overflow-hidden z-50"
+                    className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-md shadow-lg overflow-hidden z-50"
                   >
-                    {(['STAFF', 'MANAGER', 'ADMIN'] as Role[]).map(role => (
+                    {nicheConfig.roles.map(role => (
                       <button
-                        key={role}
+                        key={role.id}
                         onClick={() => {
-                          setDemoRole(role);
+                          setDemoRole(role.id);
                           setRoleDropdownOpen(false);
                         }}
                         className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
                       >
-                        <div className={cn("w-2 h-2 rounded-full", roleColors[role])} />
-                        {role}
+                        <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[role.id] || 'bg-purple-500')} />
+                        {role.label}
                       </button>
                     ))}
                   </motion.div>

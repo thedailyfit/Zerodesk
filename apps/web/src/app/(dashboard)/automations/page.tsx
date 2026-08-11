@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNiche } from '@/components/providers/niche-provider';
 import { 
   Workflow, 
   Phone, 
@@ -146,7 +147,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
 ];
 
 export default function AutomationsPage() {
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>(INITIAL_WORKFLOWS);
+  const { nicheConfig } = useNiche();
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>((nicheConfig.initialWorkflows as any) || INITIAL_WORKFLOWS);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Modal State matching user screenshot
@@ -236,7 +238,7 @@ export default function AutomationsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {PRESET_TEMPLATES.map((tmpl, idx) => (
+          {(nicheConfig.automationPresets as any || PRESET_TEMPLATES).map((tmpl: any, idx: number) => (
             <button
               key={idx}
               onClick={() => {
@@ -264,7 +266,7 @@ export default function AutomationsPage() {
       {/* Workflow Sequence List */}
       <div className="space-y-4">
         {workflows.map((wf, i) => {
-          const Icon = wf.icon;
+          const Icon = wf.icon || Workflow;
           return (
             <motion.div
               key={wf.id}

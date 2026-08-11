@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNiche } from '@/components/providers/niche-provider';
 import { 
   Sparkles, 
   Bot, 
@@ -68,30 +69,17 @@ const INITIAL_RULES = [
 ];
 
 export default function VoiceKnowledgeHubPage() {
-  const [selectedTone, setSelectedTone] = useState('hyderabadi_warmth');
-  const [goldenPrompt, setGoldenPrompt] = useState(
-`You are 'DermAI', the expert AI receptionist for Glow Skin Clinic (Banjara Hills & Jubilee Hills, Hyderabad).
-You are handling a live phone call.
-
-PRIMARY DIRECTIVES:
-1. Speak in a warm, polite, and reassuring tone.
-2. Keep responses under 2 sentences (maximum 30 words). Never use bullet points, markdown, or lists.
-3. Use the knowledge base to answer pricing & treatment questions accurately in INR (₹).
-4. Guide every caller toward booking a consultation slot with Dr. Meenakshi.
-5. If caller speaks in Telugu, Hindi, or Tenglish ("Mera appointment schedule cheyandi"), reply naturally; our translation pipeline handles script rendering.
-
-CLINICAL BOUNDARIES:
-- Never give medical diagnosis over phone.
-- Emphasize US-FDA approved Diode Laser technology and dermatologist expertise.`
-  );
-  const [rules, setRules] = useState(INITIAL_RULES);
+  const { nicheConfig } = useNiche();
+  const [selectedTone, setSelectedTone] = useState(nicheConfig.tones?.[0]?.id || 'default');
+  const [goldenPrompt, setGoldenPrompt] = useState(nicheConfig.goldenPrompt || '');
+  const [rules, setRules] = useState<any[]>((nicheConfig.aiRules as any) || INITIAL_RULES);
   const [newRuleTitle, setNewRuleTitle] = useState('');
   const [newRuleContent, setNewRuleContent] = useState('');
   const [showAddRule, setShowAddRule] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const activeToneObj = HYDERABAD_TONES.find(t => t.id === selectedTone) || HYDERABAD_TONES[0];
+  const activeToneObj = (nicheConfig.tones as any)?.find((t: any) => t.id === selectedTone) || (nicheConfig.tones as any)?.[0] || HYDERABAD_TONES[0];
 
   const handleSave = () => {
     setSavedSuccess(true);
@@ -112,7 +100,7 @@ CLINICAL BOUNDARIES:
   };
 
   const handleDeleteRule = (id: string) => {
-    setRules(rules.filter(r => r.id !== id));
+    setRules(rules.filter((r: any) => r.id !== id));
   };
 
   const handleCopyPrompt = () => {
@@ -237,12 +225,7 @@ CLINICAL BOUNDARIES:
             </p>
 
             <div className="space-y-3">
-              {[
-                { name: 'customer_name', defaultVal: 'Valued Guest', source: 'Caller ID / Telephony Metadata', active: true, desc: 'Used in dynamic greeting e.g. "Namaskaram {{customer_name}}"' },
-                { name: 'last_treatment_date', defaultVal: '30 days ago', source: 'CRM Patient File', active: true, desc: 'Used for win-back campaigns e.g. "It has been {{last_treatment_date}} since your laser session"' },
-                { name: 'assigned_doctor', defaultVal: 'Dr. Meenakshi', source: 'Clinic Schedule', active: true, desc: 'Prefills primary dermatologist for doctor slot bookings' },
-                { name: 'clinic_branch', defaultVal: 'Jubilee Hills Main', source: 'Phone Number Mapping', active: true, desc: 'Sets branch location and direction context' },
-              ].map((v) => (
+              {((nicheConfig.inputVariables as any) || []).map((v: any) => (
                 <div key={v.name} className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -276,7 +259,7 @@ CLINICAL BOUNDARIES:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              {HYDERABAD_TONES.map((tone) => (
+              {((nicheConfig.tones as any) || HYDERABAD_TONES).map((tone: any) => (
                 <button
                   key={tone.id}
                   onClick={() => setSelectedTone(tone.id)}

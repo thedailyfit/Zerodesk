@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNiche } from '@/components/providers/niche-provider';
 import { 
   Plus, 
   Search, 
@@ -119,7 +120,8 @@ const categoryConfig: Record<string, { color: string; label: string }> = {
 };
 
 export default function KnowledgeBasePage() {
-  const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
+  const { nicheConfig } = useNiche();
+  const [documents, setDocuments] = useState<DocumentItem[]>((nicheConfig.knowledgeBaseDocs as any) || INITIAL_DOCUMENTS);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNiche } from '@/components/providers/niche-provider';
 import { 
   Plus, 
   FileText, 
@@ -177,7 +178,8 @@ const mediaBadge = {
 };
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<TemplateItem[]>(INITIAL_TEMPLATES);
+  const { nicheConfig } = useNiche();
+  const [templates, setTemplates] = useState<TemplateItem[]>((nicheConfig.templates as any) || INITIAL_TEMPLATES);
   const [channelFilter, setChannelFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
