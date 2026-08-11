@@ -268,16 +268,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="p-4 border-t border-[var(--color-border)] flex flex-col gap-4">
-          <div className={cn("flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
-            <OrganizationSwitcher 
-              hidePersonal
-              appearance={{
-                elements: {
-                  rootBox: "w-full",
-                  organizationSwitcherTrigger: cn("w-full hover:bg-[var(--color-surface)] p-1 rounded transition-colors", !isSidebarOpen && "justify-center")
-                }
-              }}
-            />
+          <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 text-xs font-semibold text-[var(--color-text)]", !isSidebarOpen && "justify-center")}>
+            <div className="w-2 h-2 rounded-full bg-[var(--color-success)] animate-pulse shrink-0" />
+            {isSidebarOpen && (
+              <span className="truncate">
+                {nicheConfig?.label || 'ZeroDesk OS'}
+              </span>
+            )}
           </div>
           <div className={cn("flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
             <UserButton appearance={{ elements: { rootBox: cn(!isSidebarOpen && "mx-auto") } }} />
