@@ -73,75 +73,27 @@ const sourceLabels: Record<string, string> = {
   MANUAL: '✍️ Manual Walk-in' 
 };
 
+import { useServices } from '@/lib/services-store';
+
 export default function AppointmentsPage() {
   const { currentNiche, nicheConfig } = useNiche();
+  const { activeServices } = useServices();
   const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
   const [viewMode, setViewMode] = useState<'list' | 'month'>('list');
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<AppointmentItem | null>(null);
   const [confirmationTriggeredId, setConfirmationTriggeredId] = useState<string | null>(null);
 
-  const getServicesForNiche = () => {
-    if (currentNiche === 'dental') {
-      return [
-        { name: 'Root Canal Treatment (RCT)', duration: 45, price: 6500 },
-        { name: 'Zirconia Crown / Cap', duration: 30, price: 12000 },
-        { name: 'Invisible Aligners Consultation', duration: 30, price: 1500 },
-        { name: 'Routine Scaling & Polishing', duration: 30, price: 1800 },
-        { name: 'Teeth Whitening Laser', duration: 45, price: 8000 },
-        { name: 'Dental Implant Consultation', duration: 45, price: 2500 },
-      ];
-    }
-    if (currentNiche === 'spa') {
-      return [
-        { name: 'Ayurvedic Abhyanga Massage', duration: 60, price: 3500 },
-        { name: 'Deep Tissue Stress Relief', duration: 60, price: 4000 },
-        { name: 'Panchakarma Detox Session', duration: 90, price: 5500 },
-        { name: 'Aromatherapy Body Wrap', duration: 45, price: 3000 },
-        { name: 'Hot Stone Therapy', duration: 60, price: 4500 },
-      ];
-    }
-    if (currentNiche === 'salon') {
-      return [
-        { name: 'Keratin Hair Smoothening', duration: 90, price: 6500 },
-        { name: 'Balayage Color & Highlights', duration: 90, price: 8000 },
-        { name: 'Bridal Makeup & Styling Trial', duration: 60, price: 5000 },
-        { name: 'Gel Nail Art & Extensions', duration: 45, price: 2500 },
-        { name: 'Deluxe Pedicure & Foot Spa', duration: 45, price: 1800 },
-      ];
-    }
-    if (currentNiche === 'realestate') {
-      return [
-        { name: '3BHK Villa Guided Site Visit', duration: 60, price: 0 },
-        { name: 'Commercial Space Property Tour', duration: 45, price: 0 },
-        { name: 'NRI Video Walkthrough & Legal Review', duration: 30, price: 0 },
-        { name: 'Home Loan Eligibility & Cost Sheet', duration: 30, price: 0 },
-      ];
-    }
-    if (currentNiche === 'hotel') {
-      return [
-        { name: 'Executive Suite Room Booking', duration: 60, price: 8500 },
-        { name: 'Presidential Ocean Suite Stay', duration: 60, price: 22000 },
-        { name: 'Banquet & Wedding Hall Inspection', duration: 45, price: 0 },
-        { name: 'Weekend Spa & Dining Package', duration: 60, price: 6000 },
-      ];
-    }
-    return [
-      { name: 'Laser Hair Removal', duration: 45, price: 5000 },
-      { name: 'Chemical Peel', duration: 30, price: 3500 },
-      { name: 'PRP Therapy', duration: 60, price: 8000 },
-      { name: 'Botox Treatment', duration: 45, price: 12000 },
-      { name: 'Hair Transplant Consultation', duration: 30, price: 1500 },
-      { name: 'HydraFacial Glow Treatment', duration: 45, price: 4500 },
-    ];
-  };
-
-  const SERVICES = getServicesForNiche();
+  const SERVICES = activeServices.map(s => ({
+    name: s.name,
+    duration: s.duration,
+    price: s.price
+  }));
 
   // Manual Walk-in Booking Form State
   const [customer, setCustomer] = useState('');
   const [phone, setPhone] = useState('');
-  const [service, setService] = useState(SERVICES[0]?.name || 'General Booking');
+  const [service, setService] = useState(SERVICES[0]?.name || 'General Consultation');
   const [isCustomService, setIsCustomService] = useState(false);
   const [doctor, setDoctor] = useState('Lead Specialist');
   const [therapist, setTherapist] = useState('');

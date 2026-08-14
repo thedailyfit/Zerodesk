@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
 } from 'lucide-react';
 
 export const HOTEL_RESORT_CONFIG: NicheConfig = {
@@ -21,8 +21,8 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     customers: 'Guests',
     appointment: 'Check-in',
     appointments: 'Room Bookings',
-    service: 'Concierge',
-    services: 'Amenities',
+    service: 'Service / Amenity',
+    services: 'Services & Amenities',
     staff: 'Hotel Staff',
     waitingRoom: 'Check-in Lobby',
     patientFiles: 'Guest Profiles',
@@ -56,6 +56,7 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Quick Bill / Folio', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Book Room', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },

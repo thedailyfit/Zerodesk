@@ -2,39 +2,40 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
 export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   id: 'dental',
   label: 'Dental Clinic',
-  tagline: 'Streamlined practice management for modern dental clinics.',
+  tagline: 'Precision dental practice management & patient workflow OS',
   icon: 'SmilePlus',
   accentColor: 'text-cyan-600',
-  accentColorRGB: '8, 145, 178',
-  gradientFrom: 'from-cyan-600',
-  gradientTo: 'to-teal-500',
+  accentColorRGB: '6, 182, 212',
+  gradientFrom: 'from-cyan-500',
+  gradientTo: 'to-teal-600',
 
   terminology: {
     customer: 'Patient',
     customers: 'Patients',
-    appointment: 'Visit',
-    appointments: 'Visits',
+    appointment: 'Sitting',
+    appointments: 'Sittings',
     service: 'Treatment',
     services: 'Treatments',
     staff: 'Dentist',
-    waitingRoom: 'Lounge',
+    waitingRoom: 'Waiting Room',
     patientFiles: 'Dental Records',
     calendar: 'Chair Scheduler',
-    billing: 'Invoices',
-    overview: 'Overview'
+    billing: 'Invoice',
+    overview: 'Dental Practice Overview'
   },
 
   roles: [
-    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to practice analytics, revenue, settings, and team.', icon: 'Shield' },
-    { id: 'MANAGER', label: 'Practice Manager', description: 'Access to operations, chair scheduling, and patient retention.', icon: 'Users' },
-    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
+    { id: 'dentist', label: 'Chief Dentist', description: 'Full access to practice analytics, revenue, settings, and team.', icon: 'Shield' },
+    { id: 'associate', label: 'Associate Dentist', description: 'Access to operations, chair scheduling, and patient retention.', icon: 'Users' },
+    { id: 'hygienist', label: 'Dental Hygienist', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
+    { id: 'frontdesk', label: 'Front Desk Host', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
   ],
 
   navItems: [
@@ -56,6 +57,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
     { name: 'Book Appointment', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },

@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -56,6 +56,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
     { name: 'Book Appointment', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },

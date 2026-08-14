@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
 } from 'lucide-react';
 
 export const REAL_ESTATE_CONFIG: NicheConfig = {
@@ -21,8 +21,8 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     customers: 'Prospects',
     appointment: 'Site Visit',
     appointments: 'Site Visits',
-    service: 'Property Advisor',
-    services: 'Consultations',
+    service: 'Property Offering',
+    services: 'Properties & Services',
     staff: 'Sales Team',
     waitingRoom: 'Property Matrix',
     patientFiles: 'Lead Profiles',
@@ -56,6 +56,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Schedule Visit', href: '/appointments', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },

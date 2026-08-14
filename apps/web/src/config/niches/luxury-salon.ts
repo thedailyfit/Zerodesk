@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
 } from 'lucide-react';
 
 export const LUXURY_SALON_CONFIG: NicheConfig = {
@@ -21,8 +21,8 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
     customers: 'Clients',
     appointment: 'Styling Session',
     appointments: 'Styling Sessions',
-    service: 'Chair/Station',
-    services: 'Chairs/Stations',
+    service: 'Service Offering',
+    services: 'Salon Services',
     staff: 'Artist/Stylist',
     waitingRoom: 'Live Floor Queue',
     patientFiles: 'Client Beauty Profiles',
@@ -56,6 +56,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Book Session', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'STAFF'] },
     { name: 'Clients', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
