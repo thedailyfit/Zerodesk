@@ -103,15 +103,7 @@ export default function InboundCallsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider border border-purple-500/20">
-              Live Monitoring
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[11px] font-mono border border-emerald-500/20">
-              Real-Time Transcripts Active
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">Inbound Patient Call Logs</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Inbound Call Logs</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
             Monitor real-time incoming telephone calls, listen to recordings, review full transcripts, and check AI resolution rates.
           </p>

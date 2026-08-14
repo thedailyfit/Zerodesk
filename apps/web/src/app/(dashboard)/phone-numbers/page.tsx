@@ -98,17 +98,9 @@ export default function PhoneNumbersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider border border-purple-500/20">
-              Telephony Infrastructure
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[11px] font-mono border border-emerald-500/20">
-              Indian SIP Trunking Verified
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">Phone Numbers Management</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Phone Numbers Management</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Provision, assign, and route virtual Indian phone numbers to clinic branches and Voice AI agents.
+            Provision, assign, and route virtual phone numbers to clinic branches and Voice AI agents.
           </p>
         </div>
 

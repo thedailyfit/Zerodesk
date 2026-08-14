@@ -88,17 +88,9 @@ export default function OutboundCampaignsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider border border-purple-500/20">
-              Outbound Telephony Dialer
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[11px] font-mono border border-emerald-500/20">
-              TRAI DND Filter Active
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">Outbound AI Campaigns</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Outbound AI Campaigns</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Launch automated outbound AI calling campaigns for patient win-backs, post-care check-ins, and consultation reminders.
+            Launch automated outbound AI calling campaigns for client win-backs, post-care check-ins, and consultation reminders.
           </p>
         </div>
 

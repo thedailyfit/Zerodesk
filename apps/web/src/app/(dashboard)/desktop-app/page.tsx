@@ -50,17 +50,9 @@ export default function DesktopAppPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider border border-cyan-500/20">
-              Windows Native Client
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[11px] font-mono border border-emerald-500/20">
-              Tauri v2.0 Engine • WebView2
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">ZeroDesk Windows Desktop App</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">ZeroDesk Windows Desktop App</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Download the native Windows `.exe` application for front-desk receptionists with auto-start, system tray integration, and loud call popups.
+            Download the native Windows desktop application for frontdesk staff with auto-start, system tray integration, and instant call popups.
           </p>
         </div>
       </div>
