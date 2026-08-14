@@ -1,265 +1,470 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { 
-  Sparkles, 
   Bot, 
   Cpu, 
-  FileCode, 
-  ShieldCheck, 
   Save, 
   CheckCircle2, 
-  Sliders, 
-  Globe2, 
-  Mic2, 
   Languages, 
   Plus, 
   Trash2, 
   Copy, 
   Check, 
-  Info,
-  Zap,
-  Volume2,
-  Wand2,
-  BookOpenCheck,
-  Braces
+  Info, 
+  Wand2, 
+  Braces,
+  Edit2,
+  X,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  Sliders
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Hyderabad Regional Tones
-const HYDERABAD_TONES = [
+// Regional Tone Presets
+const DEFAULT_TONES = [
   {
-    id: 'hyderabadi_warmth',
-    name: 'Hyderabadi Warmth (Banjara Hills / Jubilee Hills)',
+    id: 'warm_local',
+    name: 'Warm & Hospitable (Regional Friendly)',
     tag: 'RECOMMENDED',
-    description: 'Polite English mixed with warm Telugu/Hindi honorifics (Namaskaram, Ji, Aandi). Ideal for premium local patients.',
-    greeting: 'Namaskaram! Welcome to Glow Skin Clinic, Jubilee Hills. How may I assist with your skin & hair care today?',
+    description: 'Polite English mixed with warm, respectful honorifics (Namaskaram, Sir/Maam). Ideal for premium customer care.',
+    greeting: 'Namaskaram! Welcome to {{business_name}}. How may I assist with your booking or inquiries today?',
     promptStyle: 'Respectful, hospitable, uses natural local phrasing, concise 2-sentence responses.',
-    badge: 'Popular in Hyderabad'
+    badge: 'Popular'
   },
   {
-    id: 'hitech_corporate',
-    name: 'Hitech City Express (IT Professional)',
-    tag: 'FAST & PRECISE',
-    description: 'Efficient, crisp English with instant slot options. Tailored for busy tech professionals in Gachibowli & Madhapur.',
-    greeting: 'Hello! You have reached Glow Skin Clinic Hitech City. Are you calling to book a procedure or check doctor slots?',
+    id: 'fast_express',
+    name: 'Executive Express (Fast & Precise)',
+    tag: 'FAST & DIRECT',
+    description: 'Efficient, crisp English with instant slot options. Tailored for busy professionals.',
+    greeting: 'Hello! You have reached {{business_name}}. Are you calling to book a slot or check pricing?',
     promptStyle: 'Direct, zero fluff, instant slot recommendations, bullet-fast info.',
     badge: 'High Conversion'
   },
   {
-    id: 'dermatology_luxury',
-    name: 'Luxury Aesthetics Concierge',
+    id: 'luxury_concierge',
+    name: 'Luxury Concierge',
     tag: 'PREMIUM',
-    description: 'Calm, elegant, reassuring tone focusing on FDA-approved lasers, HydraFacials, and anti-aging treatments.',
-    greeting: 'Good day. Welcome to Glow Aesthetic Dermatology. How can our clinical specialists guide your treatment journey today?',
-    promptStyle: 'Refined vocabulary, emphasizes clinical safety, FDA diode tech, luxury touch.',
+    description: 'Calm, elegant, reassuring tone focusing on top-tier service, safety protocols, and personalized care.',
+    greeting: 'Good day. Welcome to {{business_name}}. How can our specialists guide your experience today?',
+    promptStyle: 'Refined vocabulary, emphasizes quality safety standards, luxury touch.',
     badge: 'VIP Tone'
   }
 ];
 
 // Pre-configured Policy Rules
-const INITIAL_RULES = [
-  { id: '1', title: 'Prescription Safety Protocol', rule: 'STRICT: Never prescribe medical drugs, Botox units, or oral retinoids over the phone. Direct patient to mandatory in-person dermatologist consultation.', category: 'Safety' },
-  { id: '2', title: 'Laser Patch Test Requirement', rule: 'For all Diode Laser Hair Removal inquiries, remind the patient that a 48-hour patch test is mandatory prior to full body sessions.', category: 'Clinical SOP' },
-  { id: '3', title: 'Slot Booking Urgency', rule: 'Always offer 2 open time slots (e.g. "Tomorrow at 11 AM or Friday at 4 PM") to increase immediate booking conversion.', category: 'Sales' },
-  { id: '4', title: 'Hyderabad Pricing Transparency', rule: 'State pricing clearly in INR (e.g. ₹500 consultation, ₹3,000 diode laser per session). Mention packages have 20% bundle discount.', category: 'Pricing' },
-  { id: '5', title: 'Code-Switching Language Rule', rule: 'If caller speaks Telugu or Tenglish, reply in simple English/Telugu. Sarvam Translate will auto-convert text to native script for ElevenLabs TTS.', category: 'Language' },
+const DEFAULT_RULES = [
+  { id: '1', title: 'Medical / Treatment Prescription Safety', rule: 'STRICT: Never prescribe medical drugs, dosages, or irreversible procedures over the phone. Direct callers to mandatory in-person specialist consultation.', category: 'Safety' },
+  { id: '2', title: 'Pre-Session Assessment Requirement', rule: 'For procedure inquiries, remind the caller that an initial diagnostic assessment is recommended prior to scheduling treatment.', category: 'Clinical SOP' },
+  { id: '3', title: 'Slot Booking Urgency & Conversion', rule: 'Always offer 2 open time slots (e.g. "Tomorrow at 11 AM or Friday at 4 PM") to increase immediate booking conversion.', category: 'Sales' },
+  { id: '4', title: 'Transparent Pricing Disclosure', rule: 'State pricing clearly in INR. Mention that multi-session packages include a 20% bundle discount.', category: 'Pricing' },
+  { id: '5', title: 'Multi-Lingual Handling', rule: 'If caller speaks Telugu, Hindi, or mixed phrases, maintain courteous, clear bilingual communication.', category: 'Language' },
 ];
 
+interface InputVar {
+  token: string;
+  label: string;
+  fallback: string;
+  source?: string;
+}
+
 export default function VoiceKnowledgeHubPage() {
-  const { nicheConfig } = useNiche();
-  const [selectedTone, setSelectedTone] = useState(nicheConfig.tones?.[0]?.id || 'default');
-  const [goldenPrompt, setGoldenPrompt] = useState(nicheConfig.goldenPrompt || '');
-  const [rules, setRules] = useState<any[]>((nicheConfig.aiRules as any) || INITIAL_RULES);
-  const [newRuleTitle, setNewRuleTitle] = useState('');
-  const [newRuleContent, setNewRuleContent] = useState('');
-  const [showAddRule, setShowAddRule] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const { currentNiche, nicheConfig } = useNiche();
+
+  const getInitialPrompt = () => nicheConfig?.goldenPrompt || 'You are an intelligent, courteous AI receptionist for {{business_name}}. Greet the caller warmly, answer queries using the knowledge base, and assist with scheduling appointments.';
+
+  const getInitialRules = () => {
+    if (nicheConfig?.aiRules && nicheConfig.aiRules.length > 0) {
+      return (nicheConfig.aiRules as any[]).map((r, i) => ({
+        id: r.id || `rule-${i}`,
+        title: r.title || 'AI Rule',
+        rule: r.rule || r.content || '',
+        category: r.category || 'Policy'
+      }));
+    }
+    return DEFAULT_RULES;
+  };
+
+  const getInitialVariables = (): InputVar[] => {
+    if (nicheConfig?.inputVariables && nicheConfig.inputVariables.length > 0) {
+      return (nicheConfig.inputVariables as any[]).map((v) => ({
+        token: v.token || v.name || 'variable',
+        label: v.label || v.desc || 'Dynamic variable',
+        fallback: v.fallback || v.defaultVal || 'Valued Client',
+        source: v.source || 'CRM Context'
+      }));
+    }
+    return [
+      { token: 'customer_name', label: 'Caller Full Name', fallback: 'Valued Client', source: 'CRM Context' },
+      { token: 'assigned_staff', label: 'Doctor / Specialist Name', fallback: 'Senior Specialist', source: 'Calendar API' },
+      { token: 'clinic_branch', label: 'Center Branch Location', fallback: 'Main Center', source: 'Tenant Config' },
+      { token: 'last_service_date', label: 'Last Visit Date', fallback: 'Recent', source: 'Database' }
+    ];
+  };
+
+  const [goldenPrompt, setGoldenPrompt] = useState(getInitialPrompt());
+  const [rules, setRules] = useState(getInitialRules());
+  const [inputVariables, setInputVariables] = useState<InputVar[]>(getInitialVariables());
+  const [selectedTone, setSelectedTone] = useState(nicheConfig?.tones?.[0]?.id || 'warm_local');
+  const [tonesList, setTonesList] = useState<any[]>(nicheConfig?.tones || DEFAULT_TONES);
+  
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const activeToneObj = (nicheConfig.tones as any)?.find((t: any) => t.id === selectedTone) || (nicheConfig.tones as any)?.[0] || HYDERABAD_TONES[0];
+  // Edit / Add Rule Modal
+  const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [ruleTitle, setRuleTitle] = useState('');
+  const [ruleContent, setRuleContent] = useState('');
+  const [ruleCategory, setRuleCategory] = useState('Safety');
 
-  const handleSave = () => {
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+  // Edit / Add Variable Modal
+  const [isVarModalOpen, setIsVarModalOpen] = useState(false);
+  const [editingVarToken, setEditingVarToken] = useState<string | null>(null);
+  const [varToken, setVarToken] = useState('');
+  const [varLabel, setVarLabel] = useState('');
+  const [varFallback, setVarFallback] = useState('');
+
+  // Niche change reload & local storage
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem(`zerodesk_prompt_${currentNiche}`);
+    if (savedPrompt) setGoldenPrompt(savedPrompt);
+    else setGoldenPrompt(getInitialPrompt());
+
+    const savedRules = localStorage.getItem(`zerodesk_rules_${currentNiche}`);
+    if (savedRules) {
+      try { setRules(JSON.parse(savedRules)); } catch (e) {}
+    } else {
+      setRules(getInitialRules());
+    }
+
+    const savedVars = localStorage.getItem(`zerodesk_vars_${currentNiche}`);
+    if (savedVars) {
+      try { setInputVariables(JSON.parse(savedVars)); } catch (e) {}
+    } else {
+      setInputVariables(getInitialVariables());
+    }
+
+    setTonesList(nicheConfig?.tones || DEFAULT_TONES);
+  }, [currentNiche, nicheConfig]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleAddRule = () => {
-    if (!newRuleTitle || !newRuleContent) return;
-    setRules([...rules, {
-      id: Date.now().toString(),
-      title: newRuleTitle,
-      rule: newRuleContent,
-      category: 'Custom Rule'
-    }]);
-    setNewRuleTitle('');
-    setNewRuleContent('');
-    setShowAddRule(false);
+  const handleSaveAll = () => {
+    localStorage.setItem(`zerodesk_prompt_${currentNiche}`, goldenPrompt);
+    localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(rules));
+    localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(inputVariables));
+    showToast('✨ Voice AI System Prompt, Rules & Variables Saved!');
   };
 
-  const handleDeleteRule = (id: string) => {
-    setRules(rules.filter((r: any) => r.id !== id));
+  const handleResetPrompt = () => {
+    const def = getInitialPrompt();
+    setGoldenPrompt(def);
+    localStorage.setItem(`zerodesk_prompt_${currentNiche}`, def);
+    showToast('Prompt reset to default');
   };
 
   const handleCopyPrompt = () => {
     navigator.clipboard.writeText(goldenPrompt);
     setCopied(true);
+    showToast('Golden Prompt copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const insertTokenIntoPrompt = (token: string) => {
+    setGoldenPrompt(prev => `${prev} {{${token}}}`);
+  };
+
+  // Rule Handlers
+  const openAddRule = () => {
+    setEditingRuleId(null);
+    setRuleTitle('');
+    setRuleContent('');
+    setRuleCategory('Safety');
+    setIsRuleModalOpen(true);
+  };
+
+  const openEditRule = (r: any) => {
+    setEditingRuleId(r.id);
+    setRuleTitle(r.title);
+    setRuleContent(r.rule);
+    setRuleCategory(r.category || 'Policy');
+    setIsRuleModalOpen(true);
+  };
+
+  const handleSaveRule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ruleTitle.trim() || !ruleContent.trim()) return;
+
+    if (editingRuleId) {
+      const updated = rules.map(r => r.id === editingRuleId ? { ...r, title: ruleTitle, rule: ruleContent, category: ruleCategory } : r);
+      setRules(updated);
+      localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+      showToast('AI Rule updated!');
+    } else {
+      const created = {
+        id: Date.now().toString(),
+        title: ruleTitle,
+        rule: ruleContent,
+        category: ruleCategory
+      };
+      const updated = [...rules, created];
+      setRules(updated);
+      localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+      showToast('New AI Rule added!');
+    }
+    setIsRuleModalOpen(false);
+  };
+
+  const handleDeleteRule = (id: string) => {
+    const updated = rules.filter(r => r.id !== id);
+    setRules(updated);
+    localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+    showToast('Rule removed');
+  };
+
+  // Variable Handlers
+  const openAddVar = () => {
+    setEditingVarToken(null);
+    setVarToken('');
+    setVarLabel('');
+    setVarFallback('');
+    setIsVarModalOpen(true);
+  };
+
+  const openEditVar = (v: InputVar) => {
+    setEditingVarToken(v.token);
+    setVarToken(v.token);
+    setVarLabel(v.label);
+    setVarFallback(v.fallback);
+    setIsVarModalOpen(true);
+  };
+
+  const handleSaveVar = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!varToken.trim()) return;
+
+    const cleanedToken = varToken.replace(/[{}]/g, '').trim();
+
+    if (editingVarToken) {
+      const updated = inputVariables.map(v => v.token === editingVarToken ? { ...v, token: cleanedToken, label: varLabel, fallback: varFallback } : v);
+      setInputVariables(updated);
+      localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+      showToast('Variable updated!');
+    } else {
+      const created: InputVar = {
+        token: cleanedToken,
+        label: varLabel || cleanedToken,
+        fallback: varFallback || 'N/A',
+        source: 'Custom Context'
+      };
+      const updated = [...inputVariables, created];
+      setInputVariables(updated);
+      localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+      showToast('New variable token added!');
+    }
+    setIsVarModalOpen(false);
+  };
+
+  const handleDeleteVar = (token: string) => {
+    const updated = inputVariables.filter(v => v.token !== token);
+    setInputVariables(updated);
+    localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+    showToast('Variable removed');
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Page Header */}
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-emerald-950/90 border border-emerald-500/40 text-emerald-200 rounded-xl shadow-2xl backdrop-blur-xl text-xs font-semibold"
+          >
+            <CheckCircle2 size={16} className="text-emerald-400" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clean Page Header (Removed unwanted tags/pills as requested) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider border border-purple-500/20">
-              AI Instruction Hub
-            </span>
-            <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[11px] font-mono border border-cyan-500/20">
-              Hyderabad Region Optimised
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">Voice AI Knowledge Hub</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Voice AI Knowledge Hub</h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Configure the AI Receptionist’s behavioral rules, Golden Prompt, and regional tone persona for Hyderabad patients.
+            Configure your Voice AI Receptionist’s behavioral rules, Golden System Prompt, and personalization tokens.
           </p>
         </div>
 
         <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+          onClick={handleSaveAll}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
         >
-          {savedSuccess ? <CheckCircle2 size={18} className="text-emerald-300" /> : <Save size={18} />}
-          <span>{savedSuccess ? 'Prompt & Rules Saved!' : 'Save AI Instructions'}</span>
+          <Save size={16} />
+          <span>Save AI Instructions</span>
         </button>
-      </div>
-
-      {/* Pipeline Status Banner */}
-      <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-purple-300 shrink-0">
-            <Cpu size={20} />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              Hybrid Pipeline Connected
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            </h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Ears: <span className="text-cyan-300 font-mono">Sarvam STT (Tenglish)</span> · Brain: <span className="text-emerald-300 font-mono">ZeroDesk + GPT-4o</span> · Mouth: <span className="text-purple-300 font-mono">ElevenLabs TTS</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs">
-          <div className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 font-mono">
-            Conditional Translation: <span className="text-emerald-400 font-bold">ENABLED</span>
-          </div>
-        </div>
       </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Left 2 Columns: Golden Prompt & Tone Tuning */}
+        
+        {/* Left 2 Columns: Golden Prompt Editor, Variables & Tones */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* Golden Prompt Editor */}
+          
+          {/* Golden Prompt Editor Card */}
           <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wand2 size={20} className="text-purple-400" />
                 <h2 className="text-base font-bold text-[var(--color-text)]">Voice AI "Golden System Prompt" Editor</h2>
               </div>
-              <button 
-                onClick={handleCopyPrompt}
-                className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-purple-400 transition-colors bg-[var(--color-surface)] px-2.5 py-1.5 rounded-lg border border-[var(--color-border)]"
-              >
-                {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                <span>{copied ? 'Copied' : 'Copy Prompt'}</span>
-              </button>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleResetPrompt}
+                  className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-white transition-colors bg-[var(--color-surface)] px-2.5 py-1.5 rounded-lg border border-[var(--color-border)]"
+                  title="Reset to default prompt"
+                >
+                  <RotateCcw size={13} />
+                  <span>Reset</span>
+                </button>
+                <button 
+                  onClick={handleCopyPrompt}
+                  className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-purple-400 transition-colors bg-[var(--color-surface)] px-2.5 py-1.5 rounded-lg border border-[var(--color-border)]"
+                >
+                  {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
             </div>
 
             <p className="text-xs text-[var(--color-text-muted)]">
-              This prompt instructs OpenAI on how to behave during live telephone calls. It enforces 2-sentence limits, natural phone etiquette, and regional tone boundaries.
+              This prompt instructs OpenAI & ElevenLabs on how to speak during live phone calls. You can edit any sentence below.
             </p>
+
+            {/* Quick Variable Token Inserters */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-semibold text-purple-300">Click to insert token into prompt:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {inputVariables.map((v) => (
+                  <button
+                    key={v.token}
+                    type="button"
+                    onClick={() => insertTokenIntoPrompt(v.token)}
+                    className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-mono text-[10px] rounded-md transition-colors"
+                  >
+                    + {`{{${v.token}}}`}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="relative">
               <textarea
                 value={goldenPrompt}
                 onChange={(e) => setGoldenPrompt(e.target.value)}
-                rows={12}
-                className="w-full p-4 rounded-xl font-mono text-xs bg-slate-950/80 text-cyan-200 border border-purple-500/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none shadow-inner leading-relaxed"
-                placeholder="Enter Golden System Prompt..."
+                rows={11}
+                className="w-full p-4 rounded-xl font-mono text-xs bg-slate-950/80 text-cyan-200 border border-purple-500/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-y shadow-inner leading-relaxed"
+                placeholder="Enter Voice AI Golden System Prompt instructions..."
               />
-              <div className="absolute bottom-3 right-3 text-[10px] text-slate-500 font-mono">
-                System Prompt · UTF-8
+              <div className="flex items-center justify-between pt-1 px-1 text-[10px] text-slate-400 font-mono">
+                <span>{goldenPrompt.length} characters · {goldenPrompt.split(/\s+/).filter(Boolean).length} words</span>
+                <span>System Prompt · UTF-8</span>
               </div>
             </div>
 
             <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-start gap-2">
               <Info size={16} className="shrink-0 mt-0.5 text-purple-400" />
               <div>
-                <span className="font-bold">Pro Tip for Hyderabad Clinics:</span> The backend dynamically appends live RAG pricing & open doctor slots from your <span className="font-semibold text-white underline">Company Knowledge Base</span> directly below this prompt on every call.
+                <span className="font-bold">Dynamic Knowledge Base Connection:</span> Live pricing and open appointment slots from your <span className="font-semibold text-white underline">Company Knowledge Base</span> are automatically injected below this prompt on every incoming call.
               </div>
             </div>
           </div>
 
-          {/* Input Variables & Personalization Manager (Idea 1) */}
+          {/* Input Variables & Personalization Tokens (Fixed {{undefined}} bug!) */}
           <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Braces size={20} className="text-cyan-400" />
                 <h2 className="text-base font-bold text-[var(--color-text)]">Input Variables & Personalization Tokens</h2>
               </div>
-              <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 font-semibold">
-                Runtime Context Injection
-              </span>
+              <button
+                onClick={openAddVar}
+                className="flex items-center gap-1 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-lg text-xs font-semibold transition-colors"
+              >
+                <Plus size={14} />
+                <span>Add Token</span>
+              </button>
             </div>
 
             <p className="text-xs text-[var(--color-text-muted)]">
-              Define dynamic variables passed to the Voice AI before a call starts (e.g. greeting caller by name, referencing past treatments).
+              Dynamic variables passed to the Voice AI before a call starts (e.g. caller name, doctor name, clinic branch).
             </p>
 
-            <div className="space-y-3">
-              {((nicheConfig.inputVariables as any) || []).map((v: any) => (
-                <div key={v.name} className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
-                  <div className="space-y-1">
+            <div className="space-y-2.5">
+              {inputVariables.map((v) => (
+                <div 
+                  key={v.token} 
+                  className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs hover:border-purple-500/40 transition-all group"
+                >
+                  <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                        {`{{${v.name}}}`}
+                        {`{{${v.token}}}`}
                       </span>
-                      <span className="text-slate-400">Default: <strong className="text-white">"{v.defaultVal}"</strong></span>
+                      <span className="text-slate-400 text-xs">
+                        Fallback: <strong className="text-white">"{v.fallback}"</strong>
+                      </span>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] font-sans">{v.desc}</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] font-sans">{v.label}</p>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-1 rounded">Source: {v.source}</span>
-                    <span className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      SENT TO LLM
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-1 rounded">
+                      {v.source || 'Context API'}
                     </span>
+                    <button
+                      onClick={() => openEditVar(v)}
+                      className="p-1.5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-lg transition-colors"
+                      title="Edit variable"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteVar(v.token)}
+                      className="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                      title="Delete variable"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Regional Hyderabad Tone Selection */}
+          {/* Regional Tone Selection */}
           <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4">
             <div className="flex items-center gap-2">
               <Languages size={20} className="text-cyan-400" />
-              <h2 className="text-base font-bold text-[var(--color-text)]">Hyderabad Regional Persona & Tone Selection</h2>
+              <h2 className="text-base font-bold text-[var(--color-text)]">Persona & Tone Persona Selection</h2>
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">
-              Select the communication style that best aligns with your target demographic in Hyderabad (Jubilee Hills vs Hitech City vs Secunderabad).
+              Choose the communication demeanor for your AI receptionist.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              {((nicheConfig.tones as any) || HYDERABAD_TONES).map((tone: any) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+              {tonesList.map((tone: any) => (
                 <button
                   key={tone.id}
                   onClick={() => setSelectedTone(tone.id)}
@@ -276,13 +481,13 @@ export default function VoiceKnowledgeHubPage() {
                         "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded",
                         selectedTone === tone.id ? "bg-purple-500 text-white" : "bg-slate-800 text-slate-400"
                       )}>
-                        {tone.tag}
+                        {tone.tag || 'Style'}
                       </span>
                       {selectedTone === tone.id && (
                         <CheckCircle2 size={16} className="text-emerald-400" />
                       )}
                     </div>
-                    <h3 className="font-bold text-sm text-[var(--color-text)] group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--color-text)] group-hover:text-purple-400 transition-colors">
                       {tone.name}
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1.5 leading-snug">
@@ -290,39 +495,28 @@ export default function VoiceKnowledgeHubPage() {
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-cyan-400/90 font-mono">
-                    💬 "{tone.greeting.slice(0, 45)}..."
-                  </div>
+                  {tone.greeting && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-800 text-[11px] text-cyan-400/90 font-mono line-clamp-2">
+                      💬 "{tone.greeting}"
+                    </div>
+                  )}
                 </button>
               ))}
-            </div>
-
-            {/* Active Tone Details */}
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 mt-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-semibold">Selected Persona Greeting Sample:</span>
-                <span className="text-purple-400 font-mono text-[11px]">{activeToneObj.badge}</span>
-              </div>
-              <p className="text-sm font-medium text-white italic bg-slate-950 p-3 rounded-lg border border-slate-800">
-                "{activeToneObj.greeting}"
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Right 1 Column: AI Policy Rules Manager */}
+        {/* Right 1 Column: AI Policy Rules (Editable) */}
         <div className="space-y-6">
-
-          {/* AI Policy Rules */}
-          <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4">
+          <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={20} className="text-emerald-400" />
                 <h2 className="text-base font-bold text-[var(--color-text)]">AI Policy Rules</h2>
               </div>
               <button
-                onClick={() => setShowAddRule(!showAddRule)}
-                className="p-1.5 text-xs text-purple-400 hover:bg-purple-500/10 rounded-lg transition-colors flex items-center gap-1 font-semibold"
+                onClick={openAddRule}
+                className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-lg text-xs font-semibold transition-colors"
               >
                 <Plus size={14} />
                 <span>Add Rule</span>
@@ -330,98 +524,213 @@ export default function VoiceKnowledgeHubPage() {
             </div>
 
             <p className="text-xs text-[var(--color-text-muted)]">
-              Strict operational boundaries that the Voice AI must follow at all times during phone calls.
+              Operational guardrails the AI Voice Receptionist must strictly follow at all times. Click any rule to edit.
             </p>
 
-            {/* Add Rule Form */}
-            <AnimatePresence>
-              {showAddRule && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-3 rounded-xl bg-slate-900 border border-purple-500/30 space-y-3 overflow-hidden"
-                >
-                  <input
-                    type="text"
-                    placeholder="Rule Title (e.g. Booking Cancellation)"
-                    value={newRuleTitle}
-                    onChange={(e) => setNewRuleTitle(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-950 text-white border border-slate-700 focus:border-purple-500"
-                  />
-                  <textarea
-                    placeholder="Rule content..."
-                    value={newRuleContent}
-                    onChange={(e) => setNewRuleContent(e.target.value)}
-                    rows={2}
-                    className="w-full p-2 rounded-lg text-xs bg-slate-950 text-white border border-slate-700 focus:border-purple-500 resize-none"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setShowAddRule(false)}
-                      className="px-2.5 py-1 text-xs text-slate-400 hover:text-white"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAddRule}
-                      className="px-3 py-1 text-xs font-bold bg-purple-600 text-white rounded-md hover:bg-purple-500"
-                    >
-                      Save Rule
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Rules List */}
             <div className="space-y-3">
-              {rules.map((rule) => (
-                <div 
-                  key={rule.id}
-                  className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-purple-500/30 transition-all space-y-1.5 relative group"
+              {rules.map((r: any) => (
+                <div
+                  key={r.id}
+                  className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-purple-500/40 transition-all group relative"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
-                      <BookOpenCheck size={13} />
-                      {rule.title}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteRule(rule.id)}
-                      className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                      title="Delete Rule"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 cursor-pointer" onClick={() => openEditRule(r)}>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-purple-300 border border-purple-500/20">
+                        {r.category || 'Policy'}
+                      </span>
+                      <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-purple-300 transition-colors">
+                        {r.title}
+                      </h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
+                        {r.rule}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => openEditRule(r)}
+                        className="p-1.5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-lg transition-colors"
+                        title="Edit rule"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRule(r.id)}
+                        className="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                        title="Delete rule"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                    {rule.rule}
-                  </p>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Quick Nav to Company Knowledge Base */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/20 space-y-3">
-            <div className="flex items-center gap-2 text-indigo-400">
-              <Globe2 size={18} />
-              <h3 className="font-bold text-sm text-white">Need to update Treatment Prices?</h3>
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Medical SOPs, HydraFacial pricing, doctor schedules, and consent forms are stored in your <strong>Company Knowledge Base</strong>.
-            </p>
-            <a
-              href="/knowledge-base"
-              className="inline-flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors pt-1"
-            >
-              <span>Go to Company Knowledge Base →</span>
-            </a>
-          </div>
-
         </div>
 
       </div>
+
+      {/* Add / Edit AI Rule Modal */}
+      <AnimatePresence>
+        {isRuleModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl p-6 shadow-2xl space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-400" />
+                  <span>{editingRuleId ? 'Edit AI Rule' : 'Add AI Policy Rule'}</span>
+                </h3>
+                <button onClick={() => setIsRuleModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveRule} className="space-y-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Rule Title</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. No Medical Prescriptions"
+                    value={ruleTitle}
+                    onChange={(e) => setRuleTitle(e.target.value)}
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Category</label>
+                  <select
+                    value={ruleCategory}
+                    onChange={(e) => setRuleCategory(e.target.value)}
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="Safety">Safety & Compliance</option>
+                    <option value="Clinical SOP">Clinical SOP</option>
+                    <option value="Sales">Sales & Booking</option>
+                    <option value="Pricing">Pricing & Discounts</option>
+                    <option value="Language">Language & Tone</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Rule Instruction / Constraint</label>
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Explain the boundary or instruction the Voice AI must obey..."
+                    value={ruleContent}
+                    onChange={(e) => setRuleContent(e.target.value)}
+                    className="w-full p-2.5 bg-slate-950 border border-[var(--color-border)] rounded-xl text-white font-sans focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
+                  <button
+                    type="button"
+                    onClick={() => setIsRuleModalOpen(false)}
+                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl"
+                  >
+                    Save Rule
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add / Edit Input Variable Modal */}
+      <AnimatePresence>
+        {isVarModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl p-6 shadow-2xl space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <Braces size={16} className="text-cyan-400" />
+                  <span>{editingVarToken ? 'Edit Variable Token' : 'Add Variable Token'}</span>
+                </h3>
+                <button onClick={() => setIsVarModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveVar} className="space-y-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Variable Token Name *</label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-purple-400 font-mono text-sm">{`{{`}</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. discount_code"
+                      value={varToken}
+                      onChange={(e) => setVarToken(e.target.value)}
+                      className="flex-1 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <span className="text-purple-400 font-mono text-sm">{`}}`}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Description / Label</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Promotional discount code"
+                    value={varLabel}
+                    onChange={(e) => setVarLabel(e.target.value)}
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Default / Fallback Value</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. None"
+                    value={varFallback}
+                    onChange={(e) => setVarFallback(e.target.value)}
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
+                  <button
+                    type="button"
+                    onClick={() => setIsVarModalOpen(false)}
+                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl"
+                  >
+                    Save Token
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { 
   Plus, 
   FileText, 
   Search, 
-  Sparkles, 
   MessageSquare, 
   PhoneCall, 
   Mail, 
@@ -15,10 +14,12 @@ import {
   Copy, 
   Check, 
   X,
-  Paperclip,
   Image as ImageIcon,
   Video,
-  FileSpreadsheet
+  Edit3,
+  RotateCcw,
+  CheckCircle2,
+  Save
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,58 +36,56 @@ interface TemplateItem {
 }
 
 const INITIAL_TEMPLATES: TemplateItem[] = [
-  // Email Scripts & Templates
   {
     id: 'e1',
-    title: 'Appointment Confirmation & Pre-Procedure Care Email',
+    title: 'Appointment Confirmation & Pre-Care Email',
     category: 'Booking Confirmation',
     channel: 'EMAIL',
     subject: 'Confirmed: Your {{service}} session at {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-Treatment Dermatology Instructions:\n1. Avoid direct sun exposure, tanning, or wax treatments 48h prior.\n2. Discontinue active retinoids, AHA/BHA chemical exfoliants 3 days before.\n3. Arrive with clean skin free of makeup or heavy oils.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Clinical Team',
+    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-Treatment Instructions:\n1. Avoid direct sun exposure or harsh treatments 48h prior.\n2. Discontinue active retinoids and chemical exfoliants 3 days before.\n3. Arrive with clean skin free of makeup or heavy oils.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Clinical Team',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name', 'phone']
   },
   {
     id: 'e2',
-    title: 'Dermatology Invoice & Treatment Receipt Delivery Email',
+    title: 'Invoice & Treatment Receipt Delivery Email',
     category: 'Billing & Receipt',
     channel: 'EMAIL',
     subject: 'Receipt & Invoice #{{invoice_no}} from {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nThank you for visiting {{business_name}} today for your {{service}} session!\n\nAttached is your official treatment receipt #{{invoice_no}} detailing your procedure breakdown and doctor fee.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your post-care recovery or next PRP/Laser session, feel free to reply.',
+    content: 'Dear {{customer_name}},\n\nThank you for visiting {{business_name}} today for your {{service}} session!\n\nAttached is your official treatment receipt #{{invoice_no}} detailing your procedure breakdown and doctor fee.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your post-care recovery or next session, feel free to reply.',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'invoice_no', 'service', 'amount', 'date', 'business_name']
   },
   {
     id: 'e3',
-    title: '90-Day Skin Care Maintenance & Win-Back Discount Offer',
+    title: '90-Day Follow-Up & Win-Back Discount Offer',
     category: 'Retention Marketing',
     channel: 'EMAIL',
-    subject: 'Time for your skin touch-up at {{business_name}}? 20% Off Inside 🎁',
-    content: 'Hello {{customer_name}},\n\nIt has been 90 days since your last {{service}} session with us!\n\nTo ensure your skin glowing results stay optimal and maintain collagen stimulation from your Laser, Microneedling, or PRP treatment, we invite you back with an exclusive 20% discount.\n\nUse Code: DERMGLOW20 when booking online or via WhatsApp.\n\nBook your follow-up slot today!',
+    subject: 'Time for your touch-up at {{business_name}}? 20% Off Inside 🎁',
+    content: 'Hello {{customer_name}},\n\nIt has been 90 days since your last {{service}} session with us!\n\nTo ensure your results stay optimal, we invite you back with an exclusive 20% discount.\n\nUse Code: GLOW20 when booking online or via WhatsApp.\n\nBook your follow-up slot today!',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'business_name']
   },
   {
     id: 'e4',
-    title: 'Digital Skin Analysis Report & Personalized Roadmap Email',
+    title: 'Digital Consultation Report & Personalized Roadmap Email',
     category: 'Consultation Follow-up',
     channel: 'EMAIL',
-    subject: 'Your Skin Analysis Report & Clinical Treatment Plan - {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nThank you for undergoing a comprehensive clinical consultation with Dr. {{staff_name}} at {{business_name}}.\n\nBased on your skin barrier evaluation, acne scar grading, and pigmentation analysis, here is your recommended treatment roadmap:\n\nRecommended Clinical Procedures:\n- Primary Treatment: {{service}} (Recommended 4-6 sessions spaced 4 weeks apart)\n- Maintenance: Monthly HydraFacial & Light Chemical Peels\n\nDaily Homecare Regimen:\n- AM: Gentle Cleanser + Vitamin C Serum + Broad-Spectrum SPF 50+\n- PM: Barrier Repair Cream + Hydrating Niacinamide Serum\n\nAttached is your full PDF Skin Diagnostic Report. Reply or call {{phone}} to schedule session #1!',
+    subject: 'Your Analysis Report & Treatment Plan - {{business_name}}',
+    content: 'Dear {{customer_name}},\n\nThank you for undergoing a comprehensive consultation with Dr. {{staff_name}} at {{business_name}}.\n\nBased on your assessment, here is your recommended treatment roadmap:\n\nRecommended Procedures:\n- Primary Treatment: {{service}} (Recommended 4-6 sessions)\n- Maintenance: Monthly follow-ups & routine care\n\nAttached is your full PDF Diagnostic Report. Reply or call {{phone}} to schedule session #1!',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'staff_name', 'business_name', 'phone']
   },
-  // WhatsApp Templates
   {
     id: 'w1',
     title: 'WhatsApp Appointment & Pre-Care Reminder (24h Prior)',
     category: 'Reminders',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! 👋 Reminder: Your {{service}} session (Laser/PRP/Chemical Peel) is tomorrow at {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-care check: Stop using retinol/acid serums tonight & apply SPF tomorrow.\n\nReply 1 to Confirm or 2 to Reschedule.',
+    content: 'Hi {{customer_name}}! 👋 Reminder: Your {{service}} session is tomorrow at {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-care check: Arrive 10 minutes early.\n\nReply 1 to Confirm or 2 to Reschedule.',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name']
@@ -96,170 +95,264 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     title: 'WhatsApp Post-Visit Care Check & Review Request',
     category: 'Customer Feedback',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! Hope your skin feels refreshed after your {{service}} session today with Dr. {{staff_name}} at {{business_name}}. 🌟\n\nPlease keep your skin hydrated and protected with SPF 50+.\n\nCould you take 30 seconds to rate your doctor experience? {{review_link}}',
+    content: 'Hi {{customer_name}}! Hope you feel great after your {{service}} session today with Dr. {{staff_name}} at {{business_name}}. 🌟\n\nPlease follow all aftercare guidelines given.\n\nCould you take 30 seconds to rate your experience? {{review_link}}',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'staff_name', 'business_name', 'review_link']
   },
   {
     id: 'w3',
-    title: 'WhatsApp Post-Treatment Aftercare Instructions (Sun & Acid Guidelines)',
+    title: 'WhatsApp Post-Treatment Aftercare Guidelines',
     category: 'Post-Care Instructions',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! 🌿 Key aftercare instructions for your {{service}} treatment today:\n\n1. ☀️ Sun Protection: Apply broad-spectrum SPF 50+ every 3 hours.\n2. 🧼 Avoid Harsh Actives: No AHAs, BHAs, Retin-A, or scrubs for 5-7 days.\n3. 🧴 Barrier Care: Apply gentle, fragrance-free moisturizer twice daily.\n4. 🚫 Avoid Gym & Saunas: No heavy sweating or hot showers for 24-48 hours.\n\nContact {{business_name}} if you experience excessive erythema or swelling!',
+    content: 'Hi {{customer_name}}! 🌿 Key aftercare instructions for your {{service}} treatment today:\n\n1. ☀️ Sun Protection: Apply broad-spectrum SPF every 3 hours.\n2. 🧼 Avoid Harsh Products: Use gentle cleanser for 3-5 days.\n3. 🚫 Avoid Heavy Sweating: No intense workouts or hot saunas for 24h.\n\nContact {{business_name}} if you have any questions!',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'business_name']
   },
   {
     id: 'w4',
-    title: 'Voice AI Missed Call Auto-Responder (Tenglish / English)',
+    title: 'Voice AI Missed Call Auto-Responder',
     category: 'Auto-Trigger DM',
     channel: 'WHATSAPP',
-    content: 'Namaskaram {{customer_name}}! 🙏 We noticed you just called {{business_name}} (Jubilee Hills). Our Voice AI assistant missed your call while assisting another patient.\n\nHow can we help you right now?\n1️⃣ Book Laser Hair Removal / HydraFacial\n2️⃣ Doctor Consultation Fee & Timings\n3️⃣ Reschedule Appointment\n\nReply with 1, 2, or 3 to chat instantly!',
+    content: 'Hello {{customer_name}}! 🙏 We noticed you just called {{business_name}}. Our AI assistant missed your call while assisting another caller.\n\nHow can we help you right now?\n1️⃣ Book Appointment / Check Services\n2️⃣ Doctor Timings & Pricing\n3️⃣ Reschedule Booking\n\nReply with 1, 2, or 3 to chat instantly!',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'business_name']
   },
   {
-    id: 'w5',
-    title: 'Post-Voice Call Appointment Confirmation + Clinic Map Pin',
-    category: 'Auto-Trigger DM',
-    channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! ✨ Your appointment for {{service}} with Dr. {{staff_name}} is confirmed for {{appointment_time}} at {{business_name}}.\n\n📍 Clinic Address: Road No 36, Jubilee Hills, Hyderabad.\n🗺️ Google Maps Location: {{map_link}}\n\nSee you soon for your skin session!',
-    mediaAttachment: 'NONE',
-    isPreinstalled: true,
-    variables: ['customer_name', 'service', 'staff_name', 'appointment_time', 'business_name', 'map_link']
-  },
-  // Voice AI Call Scripts
-  {
     id: 'v1',
-    title: 'Voice AI Consultation Lead Outreach - Laser & PRP Inquiries',
-    category: 'Lead Outreach',
+    title: 'Voice AI Inbound Receptionist Script',
+    category: 'Inbound Receptionist',
     channel: 'VOICE',
-    content: 'Agent: "Hello {{customer_name}}, this is {{bot_name}} calling from {{business_name}}. I noticed you inquired about our {{service}} treatments (Laser Hair Removal / PRP / Botox / Chemical Peels). Do you have 2 minutes to discuss your skin goals and reserve an in-person consultation with our senior dermatologist?"',
-    mediaAttachment: 'NONE',
+    content: 'Namaskaram! Welcome to {{business_name}}. I am your AI receptionist. Are you calling to book a new appointment, check procedure prices, or speak with our coordinator?',
     isPreinstalled: true,
-    variables: ['customer_name', 'bot_name', 'business_name', 'service']
+    variables: ['business_name']
   },
   {
     id: 'v2',
-    title: 'Voice AI 10-Min Pre-Procedure Booking & Skin Prep Confirmation Call',
-    category: 'Booking Confirmation',
+    title: 'Voice AI Outbound Appointment Confirmation Call Script',
+    category: 'Outbound Reminder',
     channel: 'VOICE',
-    content: 'Agent: "Hi {{customer_name}}, I am calling from {{business_name}} to confirm your {{service}} procedure today at {{appointment_time}} with Dr. {{staff_name}}. Please ensure you haven\'t applied active retinol or chemical acids in the last 48 hours. Should I confirm your slot now?"',
-    mediaAttachment: 'NONE',
+    content: 'Hello {{customer_name}}, this is {{business_name}} calling regarding your appointment scheduled for {{appointment_time}} with Dr. {{staff_name}}. Can you confirm if you will be attending?',
     isPreinstalled: true,
-    variables: ['customer_name', 'business_name', 'service', 'appointment_time', 'staff_name']
-  },
-  {
-    id: 'v3',
-    title: 'Voice AI Hyderabadi Greeting & Dynamic Slot Booking Script',
-    category: 'Inbound Receptionist',
-    channel: 'VOICE',
-    content: 'Agent: "Namaskaram! Welcome to {{business_name}}, Jubilee Hills. I am {{bot_name}}, Dr. Meenakshi\'s AI assistant. Are you calling to check HydraFacial or Diode Laser pricing, or would you like me to book a doctor consultation slot for you?"',
-    mediaAttachment: 'NONE',
-    isPreinstalled: true,
-    variables: ['business_name', 'bot_name']
-  },
+    variables: ['customer_name', 'appointment_time', 'staff_name', 'business_name']
+  }
 ];
 
 const channelIcons = {
   WHATSAPP: { icon: MessageSquare, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  VOICE: { icon: PhoneCall, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+  VOICE: { icon: PhoneCall, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
   EMAIL: { icon: Mail, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
 };
 
 const mediaBadge = {
-  PDF: { label: 'PDF Guide Attached', icon: Paperclip, color: 'text-red-400 bg-red-500/10 border-red-500/20' },
-  IMAGE: { label: 'Image Card Attached', icon: ImageIcon, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-  VIDEO: { label: 'Video Attached', icon: Video, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
-  NONE: null
+  PDF: { label: 'PDF Brochure Attached', icon: FileCheck, color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  IMAGE: { label: 'Image Attached', icon: ImageIcon, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  VIDEO: { label: 'Video Demo Attached', icon: Video, color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+  NONE: { label: 'Text Only', icon: FileText, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' }
 };
 
 export default function TemplatesPage() {
-  const { nicheConfig } = useNiche();
-  const [templates, setTemplates] = useState<TemplateItem[]>((nicheConfig.templates as any) || INITIAL_TEMPLATES);
+  const { currentNiche, nicheConfig } = useNiche();
+  
+  const getDefaultTemplates = (): TemplateItem[] => {
+    if (nicheConfig?.templates && nicheConfig.templates.length > 0) {
+      return nicheConfig.templates.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        category: t.category || 'General',
+        channel: t.channel || 'WHATSAPP',
+        subject: t.subject,
+        content: t.content,
+        mediaAttachment: t.mediaAttachment || 'NONE',
+        isPreinstalled: t.isPreinstalled !== false,
+        variables: t.variables || ['customer_name', 'business_name']
+      }));
+    }
+    return INITIAL_TEMPLATES;
+  };
+
+  const [templates, setTemplates] = useState<TemplateItem[]>(getDefaultTemplates());
   const [channelFilter, setChannelFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Form State for new custom template
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [channel, setChannel] = useState<'WHATSAPP' | 'VOICE' | 'EMAIL'>('EMAIL');
-  const [category, setCategory] = useState('Custom Script');
+  const [category, setCategory] = useState('General');
+  const [channel, setChannel] = useState<'WHATSAPP' | 'VOICE' | 'EMAIL'>('WHATSAPP');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [mediaAttachment, setMediaAttachment] = useState<TemplateItem['mediaAttachment']>('NONE');
+  const [mediaAttachment, setMediaAttachment] = useState<'PDF' | 'IMAGE' | 'VIDEO' | 'NONE'>('NONE');
 
-  const filtered = templates.filter((t) => {
-    if (channelFilter !== 'ALL' && t.channel !== channelFilter) return false;
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.content.toLowerCase().includes(search.toLowerCase())) return false;
+  useEffect(() => {
+    const saved = localStorage.getItem(`zerodesk_templates_${currentNiche}`);
+    if (saved) {
+      try {
+        setTemplates(JSON.parse(saved));
+        return;
+      } catch (e) {
+        // fallback
+      }
+    }
+    setTemplates(getDefaultTemplates());
+  }, [currentNiche, nicheConfig]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const saveToStorage = (updated: TemplateItem[]) => {
+    setTemplates(updated);
+    localStorage.setItem(`zerodesk_templates_${currentNiche}`, JSON.stringify(updated));
+  };
+
+  const handleResetDefaults = () => {
+    const def = getDefaultTemplates();
+    saveToStorage(def);
+    showToast('Templates reset to niche defaults');
+  };
+
+  const filtered = templates.filter((tpl) => {
+    if (channelFilter !== 'ALL' && tpl.channel !== channelFilter) return false;
+    if (search && !tpl.title.toLowerCase().includes(search.toLowerCase()) && !tpl.content.toLowerCase().includes(search.toLowerCase())) {
+      return false;
+    }
     return true;
   });
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    showToast('Template copied to clipboard!');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleCreateTemplate = (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setEditingTemplateId(null);
+    setTitle('');
+    setCategory('General');
+    setChannel('WHATSAPP');
+    setSubject('');
+    setContent('');
+    setMediaAttachment('NONE');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (tpl: TemplateItem) => {
+    setEditingTemplateId(tpl.id);
+    setTitle(tpl.title);
+    setCategory(tpl.category);
+    setChannel(tpl.channel);
+    setSubject(tpl.subject || '');
+    setContent(tpl.content);
+    setMediaAttachment(tpl.mediaAttachment || 'NONE');
+    setIsModalOpen(true);
+  };
+
+  const handleSaveTemplate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 
-    const created: TemplateItem = {
-      id: Date.now().toString(),
-      title,
-      category,
-      channel,
-      subject: channel === 'EMAIL' ? subject : undefined,
-      content,
-      mediaAttachment,
-      isPreinstalled: false,
-      variables: ['customer_name', 'service', 'business_name']
-    };
+    if (editingTemplateId) {
+      const updated = templates.map((t) => {
+        if (t.id === editingTemplateId) {
+          return {
+            ...t,
+            title,
+            category,
+            channel,
+            subject: channel === 'EMAIL' ? subject : undefined,
+            content,
+            mediaAttachment,
+          };
+        }
+        return t;
+      });
+      saveToStorage(updated);
+      showToast('Template successfully updated!');
+    } else {
+      const created: TemplateItem = {
+        id: Date.now().toString(),
+        title,
+        category,
+        channel,
+        subject: channel === 'EMAIL' ? subject : undefined,
+        content,
+        mediaAttachment,
+        isPreinstalled: false,
+        variables: ['customer_name', 'service', 'business_name']
+      };
+      saveToStorage([created, ...templates]);
+      showToast('New template created!');
+    }
 
-    setTemplates([created, ...templates]);
     setIsModalOpen(false);
-    setTitle('');
-    setSubject('');
-    setContent('');
+  };
+
+  const insertVariable = (token: string) => {
+    setContent(prev => `${prev} {{${token}}}`);
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-emerald-950/90 border border-emerald-500/40 text-emerald-200 rounded-xl shadow-2xl backdrop-blur-xl text-xs font-semibold"
+          >
+            <CheckCircle2 size={16} className="text-emerald-400" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <span>Pre-Installed Templates & AI Email Scripts</span>
             <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              WhatsApp, Voice AI & Email
+              Editable & Live
             </span>
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Pre-installed scripts customized for your clinic category with email templates and media attachments.
+            Pre-installed scripts customized for {nicheConfig?.label || 'your business'}. Edit any template, customize scripts, or add custom messages.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0"
-        >
-          <Plus size={16} />
-          Create Custom Template
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleResetDefaults}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white rounded-xl text-xs font-medium transition-all"
+            title="Reset to default niche templates"
+          >
+            <RotateCcw size={14} />
+            <span>Reset Defaults</span>
+          </button>
+
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0"
+          >
+            <Plus size={16} />
+            <span>Create Custom Template</span>
+          </button>
+        </div>
       </div>
 
-      {/* Channel Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Search templates or email scripts..."
+            placeholder="Search templates, subjects or script text..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -284,7 +377,6 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* Grid of Templates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((tpl, i) => {
           const chConf = channelIcons[tpl.channel];
@@ -296,38 +388,46 @@ export default function TemplatesPage() {
               key={tpl.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-all shadow-md group"
+              transition={{ delay: i * 0.04 }}
+              className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-all shadow-md group relative"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className={cn("p-2 rounded-xl border", chConf.bg)}>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn("p-2 rounded-xl border shrink-0", chConf.bg)}>
                       <ChIcon size={18} className={chConf.color} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm text-[var(--color-text)]">{tpl.title}</h3>
+                        <h3 className="font-bold text-sm text-[var(--color-text)] truncate">{tpl.title}</h3>
                         {tpl.isPreinstalled && (
-                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold">
+                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold shrink-0">
                             Preinstalled
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{tpl.category}</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 truncate">{tpl.category}</p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleCopy(tpl.id, tpl.content)}
-                    className="p-2 hover:bg-[var(--color-surface)] text-slate-400 hover:text-white rounded-xl transition-colors shrink-0"
-                    title="Copy Template Content"
-                  >
-                    {copiedId === tpl.id ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => openEditModal(tpl)}
+                      className="p-2 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-xl transition-colors"
+                      title="Edit this script/template"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleCopy(tpl.id, tpl.content)}
+                      className="p-2 hover:bg-[var(--color-surface)] text-slate-400 hover:text-white rounded-xl transition-colors"
+                      title="Copy Template Content"
+                    >
+                      {copiedId === tpl.id ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Email Subject Line if EMAIL */}
                 {tpl.channel === 'EMAIL' && tpl.subject && (
                   <div className="p-2.5 bg-slate-950/80 border border-purple-500/30 rounded-xl text-xs">
                     <span className="text-slate-400 font-medium">Subject: </span>
@@ -335,13 +435,11 @@ export default function TemplatesPage() {
                   </div>
                 )}
 
-                {/* Script Body Content */}
                 <div className="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                   {tpl.content}
                 </div>
               </div>
 
-              {/* Footer: Media Attachment Badge & Variables */}
               <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border)] text-[10px]">
                 <div>
                   {media && (
@@ -352,116 +450,163 @@ export default function TemplatesPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 font-mono text-[var(--color-text-muted)]">
-                  <span>Variables:</span>
-                  <span className="text-purple-300 font-bold">{tpl.variables.length} Tags</span>
-                </div>
+                <button
+                  onClick={() => openEditModal(tpl)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <Edit3 size={12} />
+                  <span>Edit Script</span>
+                </button>
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Modal for Creating Custom Template */}
+      {/* Edit / Create Template Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-2xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-base flex items-center gap-2">
-                  <FileText size={18} className="text-purple-400" />
-                  Create Custom Template & Script
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-lg">
+                    <Edit3 size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-[var(--color-text)]">
+                      {editingTemplateId ? 'Edit Script & Template' : 'Create Custom Template'}
+                    </h2>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {editingTemplateId ? 'Modify template content, dynamic variables, and channel settings.' : 'Add a new custom script for your business operations.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-[var(--color-surface)]"
+                >
                   <X size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleCreateTemplate} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Template Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Chemical Peel Care Instructions Email"
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+              <form onSubmit={handleSaveTemplate} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Template Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 24h Appointment Reminder"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Category / Tag</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Booking Confirmation, Follow Up"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Channel Type *</label>
+                    <label className="block text-slate-300 font-semibold mb-1">Channel</label>
                     <select
                       value={channel}
                       onChange={(e) => setChannel(e.target.value as any)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
                     >
-                      <option value="EMAIL">✉️ Email Script</option>
-                      <option value="WHATSAPP">💬 WhatsApp Message</option>
-                      <option value="VOICE">📞 Voice AI Call Script</option>
+                      <option value="WHATSAPP">WhatsApp Message</option>
+                      <option value="EMAIL">Email Template</option>
+                      <option value="VOICE">Voice AI Script</option>
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Media Attachment</label>
+                    <label className="block text-slate-300 font-semibold mb-1">Media Attachment</label>
                     <select
                       value={mediaAttachment}
                       onChange={(e) => setMediaAttachment(e.target.value as any)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     >
-                      <option value="NONE">None</option>
-                      <option value="PDF">PDF Guide Attachment</option>
-                      <option value="IMAGE">Image Card</option>
-                      <option value="VIDEO">Video Care Guide</option>
+                      <option value="NONE">None (Text Only)</option>
+                      <option value="PDF">PDF Brochure / Document</option>
+                      <option value="IMAGE">Image / Flyer</option>
+                      <option value="VIDEO">Video Demo</option>
                     </select>
                   </div>
                 </div>
 
                 {channel === 'EMAIL' && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Email Subject Line *</label>
+                    <label className="block text-slate-300 font-semibold mb-1">Email Subject Line</label>
                     <input
                       type="text"
-                      required
+                      placeholder="e.g. Your confirmed booking at {{business_name}}"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      placeholder="e.g. Your post-treatment instructions from {{business_name}}"
-                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Script Content & Text *</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-slate-300 font-semibold">Template Script / Body Content</label>
+                    <span className="text-[10px] text-purple-400">Click to insert token:</span>
+                  </div>
+
+                  {/* Variable insertion pills */}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name', 'amount'].map(v => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => insertVariable(v)}
+                        className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono text-[10px] rounded-md transition-colors"
+                      >
+                        + {`{{${v}}}`}
+                      </button>
+                    ))}
+                  </div>
+
                   <textarea
-                    rows={5}
                     required
+                    rows={8}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="Write script content. Use {{customer_name}}, {{service}}, {{appointment_time}} tags..."
-                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Type your message script with {{variables}}..."
+                    className="w-full p-3.5 bg-slate-950/80 border border-[var(--color-border)] focus:border-purple-500 rounded-xl text-[var(--color-text)] font-mono text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none leading-relaxed"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-lg font-medium"
+                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-lg font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
                   >
-                    Save Template
+                    <Save size={14} />
+                    <span>{editingTemplateId ? 'Save Changes' : 'Create Template'}</span>
                   </button>
                 </div>
               </form>
