@@ -42,30 +42,30 @@ export interface Appointment {
 const TYPE_CONFIG = {
   consult: {
     label: 'Skin Checkup / Consult',
-    color: 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200 hover:border-cyan-400',
-    badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-    dot: 'bg-cyan-400',
+    color: 'bg-cyan-500/15 dark:bg-cyan-500/20 border-cyan-500/40 text-cyan-950 dark:text-cyan-100 hover:border-cyan-500 shadow-sm',
+    badge: 'bg-cyan-500/20 text-cyan-800 dark:text-cyan-200 border-cyan-500/30',
+    dot: 'bg-cyan-500',
     icon: Stethoscope,
   },
   surgery: {
     label: 'Surgery',
-    color: 'bg-rose-500/20 border-rose-500/40 text-rose-200 hover:border-rose-400',
-    badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-    dot: 'bg-rose-400',
+    color: 'bg-rose-500/15 dark:bg-rose-500/20 border-rose-500/40 text-rose-950 dark:text-rose-100 hover:border-rose-500 shadow-sm',
+    badge: 'bg-rose-500/20 text-rose-800 dark:text-rose-200 border-rose-500/30',
+    dot: 'bg-rose-500',
     icon: Scissors,
   },
   wellness: {
     label: 'Wellness',
-    color: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200 hover:border-emerald-400',
-    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    dot: 'bg-emerald-400',
+    color: 'bg-emerald-500/15 dark:bg-emerald-500/20 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 shadow-sm',
+    badge: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border-emerald-500/30',
+    dot: 'bg-emerald-500',
     icon: HeartPulse,
   },
   followup: {
     label: 'Follow-up',
-    color: 'bg-amber-500/20 border-amber-500/40 text-amber-200 hover:border-amber-400',
-    badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-    dot: 'bg-amber-400',
+    color: 'bg-amber-500/15 dark:bg-amber-500/20 border-amber-500/40 text-amber-950 dark:text-amber-100 hover:border-amber-500 shadow-sm',
+    badge: 'bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/30',
+    dot: 'bg-amber-500',
     icon: RotateCcw,
   },
 };
@@ -306,15 +306,15 @@ export default function DoctorSlotsPage() {
       </div>
 
       {/* Reschedule Drag & Quick Shift Info Banner */}
-      <div className="bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-purple-900/30 border border-purple-500/20 rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs text-purple-200">
+      <div className="bg-purple-500/10 dark:bg-purple-900/30 border border-purple-500/30 rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs text-purple-950 dark:text-purple-200">
         <div className="flex items-center gap-2">
-          <Move size={15} className="text-cyan-400 animate-bounce" />
+          <Move size={15} className="text-purple-600 dark:text-cyan-400 animate-bounce" />
           <span className="font-semibold">Interactive Slots:</span>
           <span>Click any appointment card to open Quick Edit Modal or use instant <b>+15m / +30m</b> buttons below.</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-[11px] font-mono">+15m / +30m</span>
-          <span>Time Shifting Active</span>
+          <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-[11px] font-mono font-bold text-purple-700 dark:text-purple-300">+15m / +30m</span>
+          <span className="font-medium">Time Shifting Active</span>
         </div>
       </div>
 

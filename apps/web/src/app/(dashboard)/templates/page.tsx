@@ -389,7 +389,7 @@ export default function TemplatesPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-all shadow-md group relative"
+              className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-all shadow-sm group relative"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -401,7 +401,7 @@ export default function TemplatesPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-sm text-[var(--color-text)] truncate">{tpl.title}</h3>
                         {tpl.isPreinstalled && (
-                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold shrink-0">
+                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 font-semibold shrink-0">
                             Preinstalled
                           </span>
                         )}
@@ -413,29 +413,29 @@ export default function TemplatesPage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={() => openEditModal(tpl)}
-                      className="p-2 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-xl transition-colors"
+                      className="p-2 hover:bg-purple-500/10 text-[var(--color-text-muted)] hover:text-purple-600 dark:hover:text-purple-300 rounded-xl transition-colors cursor-pointer"
                       title="Edit this script/template"
                     >
                       <Edit3 size={15} />
                     </button>
                     <button
                       onClick={() => handleCopy(tpl.id, tpl.content)}
-                      className="p-2 hover:bg-[var(--color-surface)] text-slate-400 hover:text-white rounded-xl transition-colors"
+                      className="p-2 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl transition-colors cursor-pointer"
                       title="Copy Template Content"
                     >
-                      {copiedId === tpl.id ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+                      {copiedId === tpl.id ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
                     </button>
                   </div>
                 </div>
 
                 {tpl.channel === 'EMAIL' && tpl.subject && (
-                  <div className="p-2.5 bg-slate-950/80 border border-purple-500/30 rounded-xl text-xs">
-                    <span className="text-slate-400 font-medium">Subject: </span>
-                    <span className="font-mono text-purple-200 font-bold">{tpl.subject}</span>
+                  <div className="p-2.5 bg-[var(--color-bg)] border border-purple-500/30 rounded-xl text-xs">
+                    <span className="text-[var(--color-text-muted)] font-medium">Subject: </span>
+                    <span className="font-mono text-purple-700 dark:text-purple-300 font-bold">{tpl.subject}</span>
                   </div>
                 )}
 
-                <div className="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                <div className="p-3.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs font-mono text-[var(--color-text)] whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                   {tpl.content}
                 </div>
               </div>
@@ -452,7 +452,7 @@ export default function TemplatesPage() {
 
                 <button
                   onClick={() => openEditModal(tpl)}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-500 transition-colors cursor-pointer"
                 >
                   <Edit3 size={12} />
                   <span>Edit Script</span>
@@ -498,36 +498,36 @@ export default function TemplatesPage() {
               <form onSubmit={handleSaveTemplate} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Template Title</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Template Title</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. 24h Appointment Reminder"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Category / Tag</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Category / Tag</label>
                     <input
                       type="text"
                       placeholder="e.g. Booking Confirmation, Follow Up"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Channel</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Channel</label>
                     <select
                       value={channel}
                       onChange={(e) => setChannel(e.target.value as any)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
                     >
                       <option value="WHATSAPP">WhatsApp Message</option>
                       <option value="EMAIL">Email Template</option>
@@ -536,11 +536,11 @@ export default function TemplatesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Media Attachment</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Media Attachment</label>
                     <select
                       value={mediaAttachment}
                       onChange={(e) => setMediaAttachment(e.target.value as any)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     >
                       <option value="NONE">None (Text Only)</option>
                       <option value="PDF">PDF Brochure / Document</option>
@@ -552,21 +552,21 @@ export default function TemplatesPage() {
 
                 {channel === 'EMAIL' && (
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Email Subject Line</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Email Subject Line</label>
                     <input
                       type="text"
                       placeholder="e.g. Your confirmed booking at {{business_name}}"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     />
                   </div>
                 )}
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-slate-300 font-semibold">Template Script / Body Content</label>
-                    <span className="text-[10px] text-purple-400">Click to insert token:</span>
+                    <label className="block text-[var(--color-text)] font-semibold">Template Script / Body Content</label>
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400">Click to insert token:</span>
                   </div>
 
                   {/* Variable insertion pills */}
@@ -576,7 +576,7 @@ export default function TemplatesPage() {
                         key={v}
                         type="button"
                         onClick={() => insertVariable(v)}
-                        className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono text-[10px] rounded-md transition-colors"
+                        className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-300 font-mono text-[10px] rounded-md transition-colors cursor-pointer"
                       >
                         + {`{{${v}}}`}
                       </button>
@@ -589,7 +589,7 @@ export default function TemplatesPage() {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Type your message script with {{variables}}..."
-                    className="w-full p-3.5 bg-slate-950/80 border border-[var(--color-border)] focus:border-purple-500 rounded-xl text-[var(--color-text)] font-mono text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none leading-relaxed"
+                    className="w-full p-3.5 bg-[var(--color-bg)] border border-[var(--color-border)] focus:border-purple-500 rounded-xl text-[var(--color-text)] font-mono text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none leading-relaxed"
                   />
                 </div>
 
@@ -597,13 +597,13 @@ export default function TemplatesPage() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)] transition-colors"
+                    className="px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
+                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all cursor-pointer"
                   >
                     <Save size={14} />
                     <span>{editingTemplateId ? 'Save Changes' : 'Create Template'}</span>

@@ -630,11 +630,11 @@ export default function CrmPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
                     <h3 className="text-xs font-bold text-[var(--color-text)]">{stage.name}</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 font-mono font-bold border border-slate-700">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg)] text-[var(--color-text)] font-mono font-bold border border-[var(--color-border)]">
                       {stageLeads.length}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono font-bold text-slate-300">
+                  <span className="text-[11px] font-mono font-bold text-[var(--color-text-muted)]">
                     {formatCurrency(stageValue)}
                   </span>
                 </div>
@@ -652,18 +652,18 @@ export default function CrmPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: si * 0.04 + li * 0.02 }}
                         onClick={() => openLeadDrawer(lead)}
-                        className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl hover:border-purple-500/50 hover:shadow-xl transition-all cursor-pointer group space-y-2.5 shadow-sm relative overflow-hidden"
+                        className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl hover:border-purple-500/50 hover:shadow-xl transition-all cursor-pointer group space-y-2.5 shadow-sm relative overflow-hidden"
                       >
                         {/* Top Badges */}
                         <div className="flex items-center justify-between gap-1">
                           <div className="flex items-center gap-1.5">
-                            <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700", src.color)}>
+                            <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg)] border border-[var(--color-border)]", src.color)}>
                               <SrcIcon size={11} />
                               {src.label}
                             </span>
 
                             {lead.priority === 'VIP' && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/30">
                                 🌟 VIP
                               </span>
                             )}
@@ -671,10 +671,10 @@ export default function CrmPage() {
 
                           {/* AI Score Badge */}
                           <div className="flex items-center gap-1">
-                            {lead.score >= 85 && <Flame size={12} className="text-amber-400" />}
+                            {lead.score >= 85 && <Flame size={12} className="text-amber-500" />}
                             <span className={cn(
                               "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded",
-                              lead.score >= 85 ? "bg-emerald-500/20 text-emerald-300" : lead.score >= 60 ? "bg-cyan-500/20 text-cyan-300" : "bg-slate-800 text-slate-400"
+                              lead.score >= 85 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : lead.score >= 60 ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30" : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                             )}>
                               {lead.score}% AI
                             </span>
@@ -683,44 +683,44 @@ export default function CrmPage() {
 
                         {/* Title & Customer */}
                         <div>
-                          <h4 className="font-bold text-xs text-white group-hover:text-purple-300 transition-colors line-clamp-1">
+                          <h4 className="font-bold text-xs text-[var(--color-text)] group-hover:text-purple-500 transition-colors line-clamp-1">
                             {lead.title}
                           </h4>
                           <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 flex items-center justify-between">
                             <span>{lead.customer}</span>
-                            <span className="font-mono text-[10px] text-slate-500">{lead.phone}</span>
+                            <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{lead.phone}</span>
                           </p>
                         </div>
 
                         {/* AI Summary Snippet */}
                         {lead.aiSummary && (
-                          <p className="text-[10px] text-slate-400 line-clamp-2 bg-slate-950/60 p-2 rounded-lg font-sans leading-relaxed border border-slate-800/80">
+                          <p className="text-[10px] text-[var(--color-text-muted)] line-clamp-2 bg-[var(--color-bg)] p-2 rounded-lg font-sans leading-relaxed border border-[var(--color-border)]">
                             🤖 {lead.aiSummary}
                           </p>
                         )}
 
                         {/* Value & Quick Actions Bar */}
                         <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)] text-xs">
-                          <span className="font-mono font-bold text-white text-xs">
+                          <span className="font-mono font-bold text-[var(--color-text)] text-xs">
                             {formatCurrency(lead.value)}
                           </span>
 
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={(e) => triggerQuickWhatsApp(lead, e)}
-                              className="p-1.5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-emerald-500/20 text-[var(--color-text-muted)] hover:text-emerald-500 rounded-lg transition-colors"
                               title="Send WhatsApp DM"
                             >
                               <MessageSquare size={13} />
                             </button>
                             <button
                               onClick={(e) => triggerQuickCall(lead, e)}
-                              className="p-1.5 hover:bg-cyan-500/20 text-slate-400 hover:text-cyan-400 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-cyan-500/20 text-[var(--color-text-muted)] hover:text-cyan-500 rounded-lg transition-colors"
                               title="Trigger Voice AI Dialer"
                             >
                               <Phone size={13} />
                             </button>
-                            <div className="p-1 text-slate-500 group-hover:text-purple-400 transition-colors">
+                            <div className="p-1 text-[var(--color-text-muted)] group-hover:text-purple-500 transition-colors">
                               <ChevronRight size={13} />
                             </div>
                           </div>
