@@ -58,7 +58,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     { name: 'Quick Bill', href: '/billing', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Book Therapy', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Book Therapy', href: '/book-appointment', icon: CalendarDays, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
     { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     

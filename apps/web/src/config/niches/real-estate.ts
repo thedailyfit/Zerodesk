@@ -58,7 +58,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Schedule Visit', href: '/appointments', icon: Clock, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Schedule Visit', href: '/book-appointment', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
     { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     

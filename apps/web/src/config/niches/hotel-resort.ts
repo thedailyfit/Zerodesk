@@ -58,7 +58,7 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Quick Bill / Folio', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Book Room', href: '/appointments', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Book Room', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
     { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
