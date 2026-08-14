@@ -65,7 +65,6 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Patient Sentiment', href: '/patient-sentiment', icon: SmilePlus, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
