@@ -24,17 +24,9 @@ export default function AgentAnalyticsPage() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider border border-purple-500/20">
-            Real-Time Diagnostics
-          </span>
-          <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[11px] font-mono border border-cyan-500/20">
-            Latency Benchmark & Cost Analytics
-          </span>
-        </div>
-        <h1 className="text-2xl font-bold text-[var(--color-text)] mt-2">Voice Agent Analytics & Latency Monitor</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Voice Agent Analytics</h1>
         <p className="text-[var(--color-text-muted)] text-sm mt-1">
-          Deep-dive technical diagnostics into STT speech recognition accuracy, pipeline latency benchmarks, and telephony API cost breakdowns.
+          Performance metrics, response speed, accuracy benchmarks, and call analytics.
         </p>
       </div>
 
