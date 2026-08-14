@@ -73,7 +73,12 @@ export default function BookAppointmentPage() {
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Female');
   const [age, setAge] = useState('');
   const [includeRegFee, setIncludeRegFee] = useState(isClinic);
-  const registrationFee = isClinic ? 300 : 0;
+
+  const regFeeOffering = useMemo(() => {
+    return activeServices.find(s => s.category.toLowerCase() === 'registration' || s.name.toLowerCase().includes('registration'));
+  }, [activeServices]);
+
+  const registrationFee = isClinic ? (regFeeOffering?.price ?? 300) : 0;
 
   // Appointment Details State
   const [selectedServiceId, setSelectedServiceId] = useState<string>(activeServices[0]?.id || '');
@@ -416,9 +421,9 @@ export default function BookAppointmentPage() {
                         onChange={(e) => setIncludeRegFee(e.target.checked)}
                         className="rounded text-purple-600 focus:ring-purple-500"
                       />
-                      <span>Apply One-Time New Patient Registration & Case Sheet Fee (+₹300)</span>
+                      <span>Apply One-Time New Patient Registration & Case Sheet Fee (+₹{registrationFee})</span>
                     </label>
-                    <span className="text-xs font-bold text-purple-500 font-mono">₹300</span>
+                    <span className="text-xs font-bold text-purple-500 font-mono">₹{registrationFee}</span>
                   </div>
                 )}
               </div>
