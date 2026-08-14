@@ -3,24 +3,18 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, 
   Plus, 
   Search, 
   Clock, 
   IndianRupee, 
-  Tag, 
-  UserCheck, 
   Edit3, 
   Trash2, 
-  Check, 
   X, 
   RotateCcw, 
-  Layers, 
   Receipt,
   ArrowRight,
-  TrendingUp,
-  ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -28,10 +22,9 @@ import { useServices, type ServiceOffering } from '@/lib/services-store';
 import { cn, formatCurrency } from '@/lib/utils';
 
 export default function ServicesPage() {
-  const { currentNiche, nicheConfig } = useNiche();
+  const { nicheConfig } = useNiche();
   const { 
     services, 
-    activeServices, 
     addService, 
     updateService, 
     deleteService, 
@@ -76,16 +69,6 @@ export default function ServicesPage() {
       return matchesSearch && matchesCat;
     });
   }, [services, search, selectedCategory]);
-
-  // KPIs
-  const totalServices = services.length;
-  const activeCount = activeServices.length;
-  const avgPrice = totalServices > 0 
-    ? Math.round(services.reduce((acc, s) => acc + s.price, 0) / totalServices) 
-    : 0;
-  const avgDuration = totalServices > 0 
-    ? Math.round(services.reduce((acc, s) => acc + s.duration, 0) / totalServices) 
-    : 0;
 
   const handleOpenAddModal = () => {
     setEditingService(null);
@@ -152,7 +135,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-5 max-w-7xl mx-auto pb-12">
       {/* Toast Notification */}
       <AnimatePresence>
         {successToast && (
@@ -160,7 +143,7 @@ export default function ServicesPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-500/90 text-white font-medium text-sm shadow-xl backdrop-blur-md border border-emerald-400/30"
+            className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-600 text-white font-medium text-sm shadow-xl backdrop-blur-md border border-emerald-400/30"
           >
             <CheckCircle2 size={18} className="text-white" />
             <span>{successToast}</span>
@@ -168,112 +151,48 @@ export default function ServicesPage() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
+      {/* Clean, Simple Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              {nicheConfig.label} Catalog
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2.5">
-            <Sparkles className="text-purple-400" size={24} />
-            <span>{nicheConfig.terminology?.services || 'Services'} & Pricing Management</span>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">
+            {nicheConfig.terminology?.services || 'Services'}
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Configure {nicheConfig.terminology?.service?.toLowerCase() || 'service'} packages, pricing, durations & staff assignments. Synced live with Quick Bill and Appointments.
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            Manage your service offerings, prices, and durations.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={resetToDefaults}
             title="Reset catalog to niche defaults"
-            className="p-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+            className="p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
-            <RotateCcw size={15} />
+            <RotateCcw size={14} />
             <span className="hidden sm:inline">Reset Defaults</span>
           </button>
 
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
           >
-            <Plus size={16} />
-            <span>Add New {nicheConfig.terminology?.service || 'Service'}</span>
+            <Plus size={15} />
+            <span>Add Service</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Stats Banner */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Active Offerings</p>
-            <ShieldCheck size={16} className="text-emerald-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">{activeCount} / {totalServices}</p>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Live on billing & reception</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Average Ticket Price</p>
-            <IndianRupee size={16} className="text-purple-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-purple-300 mt-1 font-mono">{formatCurrency(avgPrice)}</p>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Across all active items</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Avg Session Time</p>
-            <Clock size={16} className="text-blue-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-blue-400 mt-1 font-mono">{avgDuration} mins</p>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Slot scheduling duration</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Categories</p>
-            <Layers size={16} className="text-amber-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-amber-300 mt-1 font-mono">{categories.length}</p>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Service taxonomy tiers</p>
-        </motion.div>
-      </div>
-
-      {/* Search & Category Filter Pills */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] p-4 rounded-2xl shadow-sm">
+      {/* Search & Category Filter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-2xl shadow-sm">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder={`Search ${nicheConfig.terminology?.services?.toLowerCase() || 'services'} by title, category, or specialist...`}
+            placeholder="Search services by name, category, or role..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 text-[var(--color-text)]"
+            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
           />
         </div>
 
@@ -285,7 +204,7 @@ export default function ServicesPage() {
               "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
               selectedCategory === 'ALL'
                 ? "bg-purple-600 text-white shadow-sm"
-                : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
             )}
           >
             All ({services.length})
@@ -300,7 +219,7 @@ export default function ServicesPage() {
                   "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
                   selectedCategory === cat
                     ? "bg-purple-600 text-white shadow-sm"
-                    : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                    : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                 )}
               >
                 {cat} ({count})
@@ -310,88 +229,81 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* Services Grid */}
+      {/* Services List Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredServices.map((service, i) => (
           <motion.div
             key={service.id}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.03 }}
+            transition={{ delay: i * 0.02 }}
             className={cn(
-              "p-5 rounded-2xl border transition-all relative flex flex-col justify-between group shadow-sm bg-[var(--color-glass)] backdrop-blur",
+              "p-5 rounded-2xl border transition-all relative flex flex-col justify-between group shadow-sm bg-[var(--color-surface)]",
               service.isActive 
-                ? "border-[var(--color-glass-border)] hover:border-purple-500/50" 
-                : "border-slate-800 opacity-60 bg-slate-900/40"
+                ? "border-[var(--color-border)] hover:border-purple-500/40" 
+                : "border-[var(--color-border)] opacity-60 bg-[var(--color-bg)]"
             )}
           >
             <div>
-              {/* Card Header: Category & Active status */}
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  {service.category}
-                </span>
+              {/* Header: Title & Active Status */}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <span className="text-[11px] font-semibold text-purple-500 uppercase tracking-wider">
+                    {service.category}
+                  </span>
+                  <h3 className="font-bold text-base text-[var(--color-text)] mt-0.5">
+                    {service.name}
+                  </h3>
+                </div>
 
                 <button
                   onClick={() => toggleServiceStatus(service.id)}
                   title={service.isActive ? "Click to Deactivate" : "Click to Activate"}
                   className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide transition-all cursor-pointer flex items-center gap-1",
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide transition-all cursor-pointer flex items-center gap-1 shrink-0",
                     service.isActive 
-                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" 
-                      : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
+                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
                   )}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", service.isActive ? "bg-emerald-400 animate-pulse" : "bg-zinc-500")}></span>
+                  <span className={cn("w-1.5 h-1.5 rounded-full", service.isActive ? "bg-emerald-500" : "bg-zinc-400")}></span>
                   <span>{service.isActive ? "Active" : "Inactive"}</span>
                 </button>
               </div>
 
-              {/* Service Title & Pricing */}
-              <h3 className="font-bold text-base text-[var(--color-text)] group-hover:text-purple-300 transition-colors">
-                {service.name}
-              </h3>
-
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-xl font-extrabold text-white font-mono">
+              {/* Pricing & Duration */}
+              <div className="flex items-baseline gap-2.5 my-2">
+                <span className="text-xl font-extrabold text-[var(--color-text)] font-mono">
                   {formatCurrency(service.price)}
                 </span>
                 <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 font-mono">
-                  <Clock size={12} className="text-blue-400" />
+                  <Clock size={12} className="text-blue-500" />
                   {service.duration} mins
                 </span>
               </div>
 
               {/* Description */}
               {service.description && (
-                <p className="text-xs text-[var(--color-text-muted)] mt-2.5 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-[var(--color-text-muted)] line-clamp-2 leading-relaxed mt-1">
                   {service.description}
                 </p>
               )}
-
-              {/* Assigned Staff */}
-              {service.staffRole && (
-                <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-[var(--color-border)] text-[11px] text-zinc-400">
-                  <UserCheck size={13} className="text-purple-400" />
-                  <span className="truncate">{service.staffRole}</span>
-                </div>
-              )}
             </div>
 
-            {/* Card Actions */}
+            {/* Actions Bar */}
             <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--color-border)]">
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleOpenEditModal(service)}
                   title="Edit Service"
-                  className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-purple-300 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-purple-600 transition-colors cursor-pointer"
                 >
                   <Edit3 size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(service.id, service.name)}
                   title="Delete Service"
-                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-500 transition-colors cursor-pointer"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -399,7 +311,7 @@ export default function ServicesPage() {
 
               <Link
                 href="/billing"
-                className="flex items-center gap-1 text-[11px] font-semibold text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 hover:bg-purple-500/20 px-2.5 py-1 rounded-lg border border-purple-500/20 cursor-pointer"
+                className="flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:opacity-80 transition-opacity bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20 cursor-pointer"
               >
                 <Receipt size={12} />
                 <span>Quick Bill</span>
@@ -410,16 +322,16 @@ export default function ServicesPage() {
         ))}
 
         {filteredServices.length === 0 && (
-          <div className="col-span-full text-center py-16 bg-[var(--color-glass)] border border-[var(--color-glass-border)] rounded-2xl">
-            <Sparkles size={36} className="mx-auto text-purple-400 mb-3 opacity-60" />
-            <h3 className="text-base font-bold text-white">No services found</h3>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">Try adjusting your search query or category filter</p>
+          <div className="col-span-full text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+            <Sparkles size={32} className="mx-auto text-purple-500 mb-2 opacity-60" />
+            <h3 className="text-sm font-bold text-[var(--color-text)]">No services found</h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">Try adjusting your search query or add a new service.</p>
             <button
               onClick={handleOpenAddModal}
               className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
             >
               <Plus size={14} />
-              Add Service Offering
+              Add Service
             </button>
           </div>
         )}
@@ -428,79 +340,69 @@ export default function ServicesPage() {
       {/* Add / Edit Service Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl space-y-5"
+              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
-                    <Sparkles size={18} />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-[var(--color-text)]">
-                      {editingService ? `Edit ${nicheConfig.terminology?.service || 'Service'}` : `Create New ${nicheConfig.terminology?.service || 'Service'}`}
-                    </h2>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      Saved offerings sync immediately with POS billing and booking forms.
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h2 className="text-base font-bold text-[var(--color-text)]">
+                  {editingService ? 'Edit Service' : 'Add New Service'}
+                </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-slate-800 text-[var(--color-text-muted)] hover:text-white transition-colors cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
-                    {nicheConfig.terminology?.service || 'Service'} Name *
+                  <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">
+                    Service Name *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Laser Hair Removal / RCT / Abhyanga Massage"
+                    placeholder="e.g. Full Face Laser / RCT / Villa Tour"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">Category</label>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Category</label>
                     <input
                       type="text"
-                      placeholder="e.g. Laser, Aesthetics, Endodontics"
+                      placeholder="e.g. Laser, Aesthetics, General"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">Assigned Specialist Role</label>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Staff / Specialist</label>
                     <input
                       type="text"
-                      placeholder="e.g. Consultant Dermatologist"
+                      placeholder="e.g. Specialist In-Charge"
                       value={staffRole}
                       onChange={(e) => setStaffRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">Price (₹ INR) *</label>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Price (₹ INR) *</label>
                     <div className="relative">
-                      <IndianRupee size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <IndianRupee size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
                       <input
                         type="number"
                         required
@@ -508,15 +410,15 @@ export default function ServicesPage() {
                         placeholder="3500"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">Duration (Minutes) *</label>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Duration (Minutes) *</label>
                     <div className="relative">
-                      <Clock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
                       <input
                         type="number"
                         required
@@ -524,45 +426,45 @@ export default function ServicesPage() {
                         placeholder="45"
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">Clinical Protocol / Description</label>
+                  <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Description</label>
                   <textarea
-                    rows={3}
-                    placeholder="Brief description of the procedure, equipment used, or guidelines for front desk staff."
+                    rows={2}
+                    placeholder="Brief description of the service..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--color-text)]">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[var(--color-text)]">
                     <input
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
                       className="rounded text-purple-600 focus:ring-purple-500"
                     />
-                    <span>Active in billing & appointment catalog</span>
+                    <span>Active in catalog</span>
                   </label>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-zinc-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                      className="px-3.5 py-1.5 bg-[var(--color-surface-hover)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium rounded-xl transition-all cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md cursor-pointer"
+                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md cursor-pointer"
                     >
                       {editingService ? 'Save Changes' : 'Create Service'}
                     </button>

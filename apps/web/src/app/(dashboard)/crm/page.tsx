@@ -763,11 +763,11 @@ export default function CrmPage() {
                       className="hover:bg-slate-900/50 transition-colors cursor-pointer group"
                     >
                       <td className="p-3.5">
-                        <div className="font-bold text-white group-hover:text-purple-300 transition-colors">
+                        <div className="font-bold text-[var(--color-text)] group-hover:text-purple-400 transition-colors">
                           {lead.title}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {lead.customer} · <span className="font-mono text-slate-500">{lead.phone}</span>
+                        <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                          {lead.customer} · <span className="font-mono text-[var(--color-text-muted)]">{lead.phone}</span>
                         </div>
                       </td>
 
@@ -780,7 +780,7 @@ export default function CrmPage() {
                         </span>
                       </td>
 
-                      <td className="p-3.5 font-mono font-bold text-white">
+                      <td className="p-3.5 font-mono font-bold text-[var(--color-text)]">
                         {formatCurrency(lead.value)}
                       </td>
 
@@ -793,16 +793,16 @@ export default function CrmPage() {
                       <td className="p-3.5">
                         <div className="flex items-center gap-1.5 font-mono font-bold text-xs">
                           {lead.score >= 85 ? (
-                            <span className="text-amber-400 flex items-center gap-1">
+                            <span className="text-amber-500 flex items-center gap-1">
                               <Flame size={13} /> {lead.score}%
                             </span>
                           ) : (
-                            <span className="text-slate-300">{lead.score}%</span>
+                            <span className="text-[var(--color-text-muted)]">{lead.score}%</span>
                           )}
                         </div>
                       </td>
 
-                      <td className="p-3.5 text-slate-300">
+                      <td className="p-3.5 text-[var(--color-text-muted)]">
                         {lead.assignedTo}
                       </td>
 
@@ -810,14 +810,14 @@ export default function CrmPage() {
                         <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={(e) => triggerQuickWhatsApp(lead, e)}
-                            className="p-1.5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-emerald-500/20 text-[var(--color-text-muted)] hover:text-emerald-500 rounded-lg transition-colors"
                             title="WhatsApp"
                           >
                             <MessageSquare size={13} />
                           </button>
                           <button
                             onClick={(e) => triggerQuickCall(lead, e)}
-                            className="p-1.5 hover:bg-cyan-500/20 text-slate-400 hover:text-cyan-400 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-cyan-500/20 text-[var(--color-text-muted)] hover:text-cyan-500 rounded-lg transition-colors"
                             title="Call"
                           >
                             <Phone size={13} />
@@ -836,51 +836,51 @@ export default function CrmPage() {
       {/* INTERACTIVE LEAD PROFILE DRAWER */}
       <AnimatePresence>
         {isDrawerOpen && selectedLead && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, x: 300 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 300 }}
-              className="w-full max-w-lg bg-[#0d111a] border-l border-[var(--color-border)] p-6 text-white space-y-6 shadow-2xl overflow-y-auto flex flex-col justify-between"
+              className="w-full max-w-lg bg-[var(--color-surface)] border-l border-[var(--color-border)] p-6 text-[var(--color-text)] space-y-6 shadow-2xl overflow-y-auto flex flex-col justify-between"
             >
               <div className="space-y-5">
                 {/* Header */}
-                <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-4">
                   <div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 uppercase font-mono">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-500 border border-purple-500/20 uppercase font-mono">
                       Lead Profile & Deal Info
                     </span>
-                    <h2 className="text-lg font-bold text-white mt-1.5">{selectedLead.title}</h2>
-                    <p className="text-xs text-slate-400">{selectedLead.customer} · {selectedLead.phone}</p>
+                    <h2 className="text-lg font-bold text-[var(--color-text)] mt-1.5">{selectedLead.title}</h2>
+                    <p className="text-xs text-[var(--color-text-muted)]">{selectedLead.customer} · {selectedLead.phone}</p>
                   </div>
                   <button
                     onClick={() => setIsDrawerOpen(false)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                    className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-lg hover:bg-[var(--color-surface-hover)]"
                   >
                     <X size={18} />
                   </button>
                 </div>
 
                 {/* Deal Value & Stage Advancement */}
-                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+                <div className="p-4 rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-bold">Deal Value</span>
-                      <p className="text-xl font-extrabold text-emerald-400 font-mono">
+                      <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">Deal Value</span>
+                      <p className="text-xl font-extrabold text-emerald-500 font-mono">
                         {formatCurrency(selectedLead.value)}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-bold">AI Intent Score</span>
-                      <p className="text-xl font-extrabold text-purple-400 font-mono flex items-center gap-1">
-                        <Flame size={16} className="text-amber-400" />
+                      <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">AI Intent Score</span>
+                      <p className="text-xl font-extrabold text-purple-500 font-mono flex items-center gap-1">
+                        <Flame size={16} className="text-amber-500" />
                         {selectedLead.score}/100
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Advance Pipeline Stage</label>
+                    <label className="block text-[11px] font-semibold text-[var(--color-text)] mb-1.5">Advance Pipeline Stage</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                       {stages.map((s) => (
                         <button
@@ -891,7 +891,7 @@ export default function CrmPage() {
                             "px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all truncate",
                             selectedLead.stageSlug === s.slug
                               ? "bg-purple-600 text-white border-purple-400 shadow-md"
-                              : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+                              : "bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-text)]"
                           )}
                         >
                           {s.name}
@@ -903,12 +903,12 @@ export default function CrmPage() {
 
                 {/* AI Summary Box */}
                 {selectedLead.aiSummary && (
-                  <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30 space-y-1.5">
-                    <span className="text-[10px] font-bold text-purple-300 uppercase flex items-center gap-1">
+                  <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-1.5">
+                    <span className="text-[10px] font-bold text-purple-500 uppercase flex items-center gap-1">
                       <Sparkles size={12} />
                       AI Conversation Key Insights
                     </span>
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                    <p className="text-xs text-[var(--color-text)] leading-relaxed font-sans">
                       {selectedLead.aiSummary}
                     </p>
                   </div>
@@ -918,14 +918,14 @@ export default function CrmPage() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     onClick={(e) => triggerQuickWhatsApp(selectedLead, e)}
-                    className="p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="p-2.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
                   >
                     <MessageSquare size={14} />
                     <span>WhatsApp Follow-up</span>
                   </button>
                   <button
                     onClick={(e) => triggerQuickCall(selectedLead, e)}
-                    className="p-2.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="p-2.5 rounded-xl bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
                   >
                     <Phone size={14} />
                     <span>Voice AI Call</span>
@@ -934,7 +934,7 @@ export default function CrmPage() {
 
                 {/* Activity & Note History Log */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Activity History & Notes</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Activity History & Notes</h3>
                   
                   {/* Add Note Form */}
                   <form onSubmit={handleAddActivityNote} className="flex gap-2">
@@ -943,7 +943,7 @@ export default function CrmPage() {
                       placeholder="Add an internal follow-up note..."
                       value={newNoteText}
                       onChange={(e) => setNewNoteText(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-purple-500"
                     />
                     <button
                       type="submit"

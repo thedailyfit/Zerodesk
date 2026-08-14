@@ -20,7 +20,9 @@ import {
   Phone,
   MessageCircle,
   Mail,
-  UserCheck
+  UserCheck,
+  Zap,
+  PhoneOutgoing
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
@@ -357,95 +359,74 @@ export default function AppointmentsPage() {
       {/* APPOINTMENT DETAILED POPUP MODAL */}
       <AnimatePresence>
         {selectedAppt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white space-y-5 shadow-2xl"
+              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 text-[var(--color-text)] space-y-5 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <div className="flex items-center gap-3">
                   <Avatar3D name={selectedAppt.customer} size="md" />
                   <div>
-                    <h3 className="font-bold text-base">{selectedAppt.customer}</h3>
-                    <p className="text-xs text-slate-400 font-mono">{selectedAppt.phone || '+91 98765 43210'}</p>
+                    <h3 className="font-bold text-base text-[var(--color-text)]">{selectedAppt.customer}</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] font-mono">{selectedAppt.phone || '+91 98765 43210'}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedAppt(null)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setSelectedAppt(null)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
                 </button>
               </div>
 
               {/* Appointment Details Grid */}
-              <div className="grid grid-cols-2 gap-3 p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-1">
+              <div className="grid grid-cols-2 gap-3 p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs space-y-1">
                 <div>
-                  <span className="text-slate-400 block mb-0.5">Treatment / Service</span>
-                  <span className="font-bold text-white text-sm">{selectedAppt.service}</span>
+                  <span className="text-[var(--color-text-muted)] block mb-0.5">Treatment / Service</span>
+                  <span className="font-bold text-[var(--color-text)] text-sm">{selectedAppt.service}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block mb-0.5">Assigned Staff Doctor</span>
-                  <span className="font-bold text-purple-300 text-sm">{selectedAppt.staff}</span>
+                  <span className="text-[var(--color-text-muted)] block mb-0.5">Assigned Staff Doctor</span>
+                  <span className="font-bold text-purple-500 text-sm">{selectedAppt.staff}</span>
                 </div>
                 <div className="pt-2">
-                  <span className="text-slate-400 block mb-0.5">Scheduled Date & Time</span>
-                  <span className="font-mono text-slate-200 font-semibold">{selectedAppt.scheduledAt.replace('T', ' at ')}</span>
+                  <span className="text-[var(--color-text-muted)] block mb-0.5">Scheduled Date & Time</span>
+                  <span className="font-mono text-[var(--color-text)] font-semibold">{selectedAppt.scheduledAt.replace('T', ' at ')}</span>
                 </div>
                 <div className="pt-2">
-                  <span className="text-slate-400 block mb-0.5">Booking Channel Source</span>
-                  <span className="font-semibold text-slate-200">{sourceLabels[selectedAppt.source]}</span>
+                  <span className="text-[var(--color-text-muted)] block mb-0.5">Booking Channel Source</span>
+                  <span className="font-semibold text-[var(--color-text)]">{sourceLabels[selectedAppt.source]}</span>
                 </div>
               </div>
 
               {/* Booking Confirmation Status Box */}
-              <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-2">
+              <div className="p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <UserCheck size={14} />
-                    Booking Confirmation Status
-                  </span>
-                  <span className="text-xs font-mono font-bold text-emerald-300">
-                    {selectedAppt.status}
+                  <div className="flex items-center gap-2">
+                    <Zap size={16} className="text-purple-400" />
+                    <span className="font-bold text-xs uppercase tracking-wider text-[var(--color-text)]">Autonomous WhatsApp Sequence</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20">
+                    Engine Active
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 font-medium">
-                  {selectedAppt.confirmationStatus || 'Booking Confirmed'}
-                </p>
-              </div>
 
-              {/* Trigger AI Confirmation Workflow (Step 1: WhatsApp -> Step 2: Voice Call in 10 mins) */}
-              <div className="p-4 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-3">
-                <h4 className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles size={14} />
-                  AI 2-Step Auto Confirmation Workflow
-                </h4>
-                
-                {/* Visual Timeline */}
-                <div className="relative pl-4 space-y-4 my-4 before:absolute before:inset-y-0 before:left-1.5 before:w-0.5 before:bg-slate-700">
-                  <div className="relative z-10 flex items-start gap-3">
-                    <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-white">WhatsApp Confirmation Sent</p>
-                      <p className="text-[10px] text-slate-400">Timestamp: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                    </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+                    <p className="text-[var(--color-text-muted)]">Step 1</p>
+                    <p className="text-xs font-bold text-[var(--color-text)]">WhatsApp Sent</p>
                   </div>
-                  <div className="relative z-10 flex items-start gap-3">
-                    <div className="w-3.5 h-3.5 bg-blue-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-white">Voice AI Follow-up</p>
-                      <p className="text-[10px] text-slate-400">10 min later</p>
-                    </div>
+                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+                    <p className="text-[var(--color-text-muted)]">Step 2</p>
+                    <p className="text-xs font-bold text-[var(--color-text)]">Voice Follow-up</p>
                   </div>
-                  <div className="relative z-10 flex items-start gap-3">
-                    <div className="w-3.5 h-3.5 bg-purple-500 rounded-full ring-4 ring-slate-900 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-white">Auto Confirmed or Resend Offer</p>
-                      <p className="text-[10px] text-slate-400">30 min later</p>
-                    </div>
+                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+                    <p className="text-[var(--color-text-muted)]">Step 3</p>
+                    <p className="text-xs font-bold text-[var(--color-text)]">Auto Confirmed</p>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => handleSendConfirmationRequest(selectedAppt.id)}
                     disabled={confirmationTriggeredId === selectedAppt.id}
@@ -453,27 +434,28 @@ export default function AppointmentsPage() {
                   >
                     {confirmationTriggeredId === selectedAppt.id ? (
                       <>
-                        <RefreshCw size={14} className="animate-spin" />
-                        <span>Sending...</span>
+                        <Check size={14} className="text-white animate-bounce" />
+                        <span>Sequence Dispatched!</span>
                       </>
                     ) : (
                       <>
                         <Send size={14} />
-                        <span>Send Confirmation</span>
+                        <span>Send WhatsApp Confirmation</span>
                       </>
                     )}
                   </button>
+
                   <button className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md">
-                    <Sparkles size={14} />
-                    <span>Send Follow-up Offer</span>
+                    <PhoneOutgoing size={14} />
+                    <span>Trigger Voice Call</span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2 border-t border-slate-800">
+              <div className="flex justify-end pt-2 border-t border-[var(--color-border)]">
                 <button
                   onClick={() => setSelectedAppt(null)}
-                  className="px-4 py-2 bg-slate-800 text-white text-xs rounded-xl font-medium"
+                  className="px-4 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] text-[var(--color-text)] text-xs rounded-xl font-medium"
                 >
                   Close Window
                 </button>
@@ -486,53 +468,53 @@ export default function AppointmentsPage() {
       {/* MANUAL WALK-IN BOOKING MODAL */}
       <AnimatePresence>
         {isBookModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+              className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 text-[var(--color-text)] space-y-4 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-base flex items-center gap-2">
-                  <CalIcon size={18} className="text-purple-400" />
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="font-bold text-base flex items-center gap-2 text-[var(--color-text)]">
+                  <CalIcon size={18} className="text-purple-500" />
                   Book Manual Walk-in Appointment
                 </h3>
-                <button onClick={() => setIsBookModalOpen(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setIsBookModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
                 </button>
               </div>
 
               <form onSubmit={handleBookAppointment} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Patient Full Name *</label>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Patient Full Name *</label>
                   <input
                     type="text"
                     required
                     value={customer}
                     onChange={(e) => setCustomer(e.target.value)}
                     placeholder="e.g. Vikram Singh"
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Phone Number</label>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Phone Number</label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+91 98765 00000"
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Doctor *</label>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Doctor *</label>
                     <select
                       value={doctor}
                       onChange={(e) => setDoctor(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white font-medium"
+                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-medium"
                     >
                       <option value="Dr. Meenakshi">Dr. Meenakshi</option>
                       <option value="Dr. Arun">Dr. Arun</option>
@@ -542,11 +524,11 @@ export default function AppointmentsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Therapist *</label>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Therapist *</label>
                     <select
                       value={therapist}
                       onChange={(e) => setTherapist(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white font-medium"
+                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-medium"
                     >
                       <option value="Kavita">Kavita</option>
                       <option value="Rekha">Rekha</option>
@@ -558,7 +540,7 @@ export default function AppointmentsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Treatment / Service *</label>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Treatment / Service *</label>
                   <select
                     value={isCustomService ? 'custom' : service}
                     onChange={(e) => {
@@ -572,7 +554,7 @@ export default function AppointmentsPage() {
                         if (found) setDuration(found.duration.toString());
                       }
                     }}
-                    className="w-full px-3.5 py-2 mb-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                    className="w-full px-3.5 py-2 mb-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
                   >
                     {SERVICES.map(s => (
                       <option key={s.name} value={s.name}>{s.name} ({s.duration} min, ₹{s.price.toLocaleString()})</option>
