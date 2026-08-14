@@ -6,20 +6,22 @@ import { Search, Activity, Calendar, Clock, X, FileText, Upload, CheckCircle2, F
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import { useRole } from '@/components/providers/role-provider';
+import { useNiche } from '@/components/providers/niche-provider';
 
 const PATIENTS = [
-  { id: 1, name: 'Vikram Singh', age: 34, lastVisit: '2026-08-01', tags: ['Mole Removal', 'Active'], frontMarkers: [{x: 45, y: 15, type: 'active', label: 'Mole'}, {x: 65, y: 40, type: 'treated', label: 'Scar'}], backMarkers: [] },
-  { id: 2, name: 'Priya Sharma', age: 28, lastVisit: '2026-07-25', tags: ['Acne', 'Monitoring'], frontMarkers: [{x: 55, y: 20, type: 'monitoring', label: 'Rash'}], backMarkers: [{x: 50, y: 35, type: 'active', label: 'Acne'}] },
-  { id: 3, name: 'Rajesh Kumar', age: 42, lastVisit: '2026-08-05', tags: ['Hair Loss', 'VIP'], frontMarkers: [{x: 50, y: 8, type: 'active', label: 'Thinning'}], backMarkers: [] },
-  { id: 4, name: 'Sneha Reddy', age: 31, lastVisit: '2026-06-15', tags: ['Laser', 'Completed'], frontMarkers: [], backMarkers: [{x: 40, y: 60, type: 'treated', label: 'Patch'}] },
-  { id: 5, name: 'Amit Patel', age: 45, lastVisit: '2026-08-03', tags: ['Pigmentation'], frontMarkers: [{x: 40, y: 22, type: 'active', label: 'Birthmark'}], backMarkers: [] },
-  { id: 6, name: 'Meera Joshi', age: 26, lastVisit: '2026-07-30', tags: ['Botox'], frontMarkers: [{x: 48, y: 14, type: 'monitoring', label: 'Wrinkles'}], backMarkers: [] },
-  { id: 7, name: 'Kiran Tiwari', age: 38, lastVisit: '2026-07-12', tags: ['Checkup'], frontMarkers: [], backMarkers: [] },
-  { id: 8, name: 'Rahul Bose', age: 29, lastVisit: '2026-08-06', tags: ['Scar Treatment'], frontMarkers: [{x: 35, y: 38, type: 'treated', label: 'Burn'}], backMarkers: [] },
+  { id: 1, name: 'Vikram Singh', age: 34, lastVisit: '2026-08-01', tags: ['Active Plan', 'Verified'], frontMarkers: [{x: 45, y: 15, type: 'active', label: 'Primary Area'}, {x: 65, y: 40, type: 'treated', label: 'Review'}], backMarkers: [] },
+  { id: 2, name: 'Priya Sharma', age: 28, lastVisit: '2026-07-25', tags: ['In Progress', 'Monitoring'], frontMarkers: [{x: 55, y: 20, type: 'monitoring', label: 'Consultation'}], backMarkers: [{x: 50, y: 35, type: 'active', label: 'Follow-up'}] },
+  { id: 3, name: 'Rajesh Kumar', age: 42, lastVisit: '2026-08-05', tags: ['VIP Client', 'Active'], frontMarkers: [{x: 50, y: 8, type: 'active', label: 'Routine Care'}], backMarkers: [] },
+  { id: 4, name: 'Sneha Reddy', age: 31, lastVisit: '2026-06-15', tags: ['Completed', 'Review Done'], frontMarkers: [], backMarkers: [{x: 40, y: 60, type: 'treated', label: 'Completed'}] },
+  { id: 5, name: 'Amit Patel', age: 45, lastVisit: '2026-08-03', tags: ['General Assessment'], frontMarkers: [{x: 40, y: 22, type: 'active', label: 'Inquiry Area'}], backMarkers: [] },
+  { id: 6, name: 'Meera Joshi', age: 26, lastVisit: '2026-07-30', tags: ['VIP Package'], frontMarkers: [{x: 48, y: 14, type: 'monitoring', label: 'Assessment'}], backMarkers: [] },
+  { id: 7, name: 'Kiran Tiwari', age: 38, lastVisit: '2026-07-12', tags: ['Annual Check'], frontMarkers: [], backMarkers: [] },
+  { id: 8, name: 'Rahul Bose', age: 29, lastVisit: '2026-08-06', tags: ['Specialist Session'], frontMarkers: [{x: 35, y: 38, type: 'treated', label: 'Review'}], backMarkers: [] },
 ];
 
 export default function PatientFilesPage() {
   const { isManager, isAdmin, isSuperAdmin } = useRole();
+  const { nicheConfig } = useNiche();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<typeof PATIENTS[0] | null>(null);
 
@@ -75,9 +77,9 @@ export default function PatientFilesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <FileText className="text-blue-400" /> Patient Files
+            <FileText className="text-blue-400" /> {nicheConfig.terminology?.patientFiles || "Patient Files"}
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">Digital records and body map tracking</p>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">Digital {nicheConfig.terminology?.customer?.toLowerCase() || "patient"} profiles, treatment history & diagnostic logs</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -85,7 +87,7 @@ export default function PatientFilesPage() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <input 
               type="text" 
-              placeholder="Search patients..." 
+              placeholder={`Search ${nicheConfig.terminology?.customers?.toLowerCase() || "patients"}...`} 
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)]"

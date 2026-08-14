@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import { useNiche } from '@/components/providers/niche-provider';
 
 const COLUMNS = [
   { id: 'checked-in', title: 'Checked In', color: 'blue' },
   { id: 'waiting', title: 'Waiting', color: 'amber' },
-  { id: 'with-doctor', title: 'With Doctor', color: 'green' },
-  { id: 'treatment', title: 'Getting Treatment', color: 'purple' },
+  { id: 'with-doctor', title: 'In Service', color: 'green' },
+  { id: 'treatment', title: 'In Progress', color: 'purple' },
   { id: 'checkout', title: 'Checkout', color: 'emerald' },
 ] as const;
 
@@ -28,24 +29,24 @@ interface PatientItem {
 }
 
 const INITIAL_PATIENTS: PatientItem[] = [
-  { id: '1', pid: 'PID-8492', name: 'Rajesh K.', time: '10:00 AM', service: 'Consultation', elapsed: '2 min', col: 'checked-in', vip: false },
-  { id: '2', pid: 'PID-1042', name: 'Priya S.', time: '10:15 AM', service: 'Chemical Peel', elapsed: '5 min', col: 'checked-in', vip: true },
-  { id: '3', pid: 'PID-3829', name: 'Sneha R.', time: '09:45 AM', service: 'Massage', elapsed: '15 min', col: 'waiting', vip: false },
-  { id: '4', pid: 'PID-5712', name: 'Amit P.', time: '09:30 AM', service: 'Hair Consult', elapsed: '20 min', col: 'waiting', vip: false },
-  { id: '5', pid: 'PID-9201', name: 'Ananya I.', time: '09:50 AM', service: 'Botox', elapsed: '12 min', col: 'waiting', vip: true },
-  { id: '6', pid: 'PID-4482', name: 'Deepak M.', time: '09:15 AM', service: 'Surgery', elapsed: '45 min', col: 'with-doctor', vip: true },
-  { id: '7', pid: 'PID-6310', name: 'Meera J.', time: '09:20 AM', service: 'Consultation', elapsed: '30 min', col: 'with-doctor', vip: false },
-  { id: '8', pid: 'PID-7193', name: 'Kiran T.', time: '08:30 AM', service: 'PRP Therapy', elapsed: '1h 15m', col: 'treatment', vip: false },
-  { id: '9', pid: 'PID-2054', name: 'Rahul B.', time: '09:00 AM', service: 'Laser Hair', elapsed: '5 min', col: 'checkout', vip: false },
+  { id: '1', pid: 'ID-8492', name: 'Rajesh K.', time: '10:00 AM', service: 'Consultation', elapsed: '2 min', col: 'checked-in', vip: false },
+  { id: '2', pid: 'ID-1042', name: 'Priya S.', time: '10:15 AM', service: 'Primary Session', elapsed: '5 min', col: 'checked-in', vip: true },
+  { id: '3', pid: 'ID-3829', name: 'Sneha R.', time: '09:45 AM', service: 'VIP Care', elapsed: '15 min', col: 'waiting', vip: false },
+  { id: '4', pid: 'ID-5712', name: 'Amit P.', time: '09:30 AM', service: 'Assessment', elapsed: '20 min', col: 'waiting', vip: false },
+  { id: '5', pid: 'ID-9201', name: 'Ananya I.', time: '09:50 AM', service: 'Specialist Session', elapsed: '12 min', col: 'waiting', vip: true },
+  { id: '6', pid: 'ID-4482', name: 'Deepak M.', time: '09:15 AM', service: 'Dedicated Procedure', elapsed: '45 min', col: 'with-doctor', vip: true },
+  { id: '7', pid: 'ID-6310', name: 'Meera J.', time: '09:20 AM', service: 'Review & Care', elapsed: '30 min', col: 'with-doctor', vip: false },
+  { id: '8', pid: 'ID-7193', name: 'Kiran T.', time: '08:30 AM', service: 'Follow-up Session', elapsed: '1h 15m', col: 'treatment', vip: false },
+  { id: '9', pid: 'ID-2054', name: 'Rahul B.', time: '09:00 AM', service: 'Express Service', elapsed: '5 min', col: 'checkout', vip: false },
 ];
 
 const BOOKED_APPOINTMENTS = [
-  { pid: 'PID-9104', name: 'Vikram Malhotra', time: '11:00 AM', service: 'Laser Hair Removal', vip: true },
-  { pid: 'PID-6291', name: 'Sunita Kapoor', time: '11:30 AM', service: 'Chemical Peel', vip: false },
-  { pid: 'PID-3305', name: 'Arjun Das', time: '12:00 PM', service: 'PRP Therapy', vip: false },
-  { pid: 'PID-5519', name: 'Pooja Hegde', time: '12:15 PM', service: 'Botox Consultation', vip: true },
-  { pid: 'PID-8840', name: 'Rohan Sharma', time: '12:30 PM', service: 'Hair Restoration', vip: false },
-  { pid: 'PID-4128', name: 'Neha Gupta', time: '01:00 PM', service: 'Acne Treatment', vip: false },
+  { pid: 'ID-9104', name: 'Vikram Malhotra', time: '11:00 AM', service: 'Standard Service Session', vip: true },
+  { pid: 'ID-6291', name: 'Sunita Kapoor', time: '11:30 AM', service: 'Primary Assessment', vip: false },
+  { pid: 'ID-3305', name: 'Arjun Das', time: '12:00 PM', service: 'Custom Treatment', vip: false },
+  { pid: 'ID-5519', name: 'Pooja Hegde', time: '12:15 PM', service: 'Consultation & Review', vip: true },
+  { pid: 'ID-8840', name: 'Rohan Sharma', time: '12:30 PM', service: 'Specialist Booking', vip: false },
+  { pid: 'ID-4128', name: 'Neha Gupta', time: '01:00 PM', service: 'Follow-up Check', vip: false },
 ];
 
 const COLOR_MAP: Record<string, string> = {
@@ -65,6 +66,7 @@ const BORDER_MAP: Record<string, string> = {
 };
 
 export default function WaitingRoomPage() {
+  const { nicheConfig } = useNiche();
   const [patients, setPatients] = useState<PatientItem[]>(INITIAL_PATIENTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -119,9 +121,9 @@ export default function WaitingRoomPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <Radio className="text-green-500 animate-pulse" /> Live Waiting Room
+            <Radio className="text-green-500 animate-pulse" /> Live {nicheConfig.terminology?.waitingRoom || "Waiting Room"}
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">Real-time patient status & stage tracking</p>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">Real-time {nicheConfig.terminology?.customer?.toLowerCase() || "patient"} status & stage tracking</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -131,7 +133,7 @@ export default function WaitingRoomPage() {
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder="Search Booked Appointment / Patient ID..."
+                placeholder={`Search Booked ${nicheConfig.terminology?.appointment || "Appointment"} / ID...`}
                 value={searchQuery}
                 onFocus={() => setIsDropdownOpen(true)}
                 onChange={(e) => {

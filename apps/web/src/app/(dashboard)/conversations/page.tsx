@@ -6,16 +6,7 @@ import { Search, Filter, Phone, MessageCircle, Globe, ArrowUpRight, Clock } from
 import { cn, timeAgo } from '@/lib/utils';
 
 import { Avatar3D } from '@/components/ui/avatar-3d';
-
-const conversations = [
-  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to book an appointment for skin treatment', aiSummary: 'Customer interested in laser treatment', sentiment: 'POSITIVE', duration: '4:32', time: new Date(Date.now() - 300000) },
-  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you share the price list for hair treatments?', aiSummary: 'Requested pricing for hair treatments', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
-  { id: '3', customer: 'Amit Patel', phone: '+91 76543 21098', channel: 'WEB_CHAT', status: 'CLOSED', lastMessage: 'Thank you, I will visit tomorrow', aiSummary: 'Appointment confirmed for tomorrow', sentiment: 'POSITIVE', time: new Date(Date.now() - 1800000) },
-  { id: '4', customer: 'Sneha Reddy', phone: '+91 65432 10987', channel: 'VOICE', status: 'CLOSED', lastMessage: 'The doctor was very helpful, thank you', aiSummary: 'Follow-up call for post-treatment feedback', sentiment: 'POSITIVE', duration: '2:15', time: new Date(Date.now() - 3600000) },
-  { id: '5', customer: 'Vikram Singh', phone: '+91 54321 09876', channel: 'WHATSAPP', status: 'TRANSFERRED', lastMessage: 'I need to speak to the manager about billing', aiSummary: 'Billing issue escalated to human agent', sentiment: 'NEGATIVE', time: new Date(Date.now() - 7200000) },
-  { id: '6', customer: 'Ananya Iyer', phone: '+91 43210 98765', channel: 'WEB_CHAT', status: 'ACTIVE', lastMessage: 'What packages do you have for couples?', aiSummary: 'Inquiring about couples spa packages', sentiment: 'NEUTRAL', time: new Date(Date.now() - 5400000) },
-  { id: '7', customer: 'Deepak Menon', phone: '+91 32109 87654', channel: 'VOICE', status: 'CLOSED', lastMessage: 'Please confirm my appointment for 3 PM', aiSummary: 'Appointment confirmed at 3 PM today', sentiment: 'POSITIVE', duration: '1:45', time: new Date(Date.now() - 10800000) },
-];
+import { useNiche } from '@/components/providers/niche-provider';
 
 const channelConfig: Record<string, { icon: typeof Phone; label: string; color: string }> = {
   VOICE: { icon: Phone, label: 'Voice Call', color: 'text-blue-400' },
@@ -36,8 +27,39 @@ const sentimentStyle: Record<string, { label: string; style: string }> = {
 };
 
 export default function ConversationsPage() {
+  const { currentNiche } = useNiche();
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+
+  const getConversations = () => {
+    if (currentNiche === 'dental') {
+      return [
+        { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I have severe tooth pain in my upper molar, is root canal available today?', aiSummary: 'Urgent RCT inquiry scheduled for 4 PM', sentiment: 'POSITIVE', duration: '3:45', time: new Date(Date.now() - 300000) },
+        { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you send the cost comparison between metal and invisible aligners?', aiSummary: 'Sent Aligner pricing PDF via WhatsApp', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
+        { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', channel: 'VOICE', status: 'CLOSED', lastMessage: 'The doctor explained the crown fitting very clearly', aiSummary: 'Post-op crown fitting check complete', sentiment: 'POSITIVE', duration: '2:10', time: new Date(Date.now() - 3600000) },
+      ];
+    }
+    if (currentNiche === 'realestate') {
+      return [
+        { id: '1', customer: 'Vikramaditya Varma', phone: '+91 98490 12345', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'Are the East-facing 3BHK luxury villas still available at the Gachibowli project?', aiSummary: '3BHK villa inquiry + site visit scheduled for Saturday', sentiment: 'POSITIVE', duration: '4:15', time: new Date(Date.now() - 300000) },
+        { id: '2', customer: 'Anand Rao', phone: '+91 97000 88991', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Please share the RERA approval certificate and updated price sheet', aiSummary: 'Sent RERA doc + payment schedule', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
+      ];
+    }
+    if (currentNiche === 'hotel') {
+      return [
+        { id: '1', customer: 'Dr. Srinivas Reddy', phone: '+91 98765 11223', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to reserve the Presidential Ocean Suite with airport pickup for 3 nights', aiSummary: 'VIP suite booking confirmed with early check-in', sentiment: 'POSITIVE', duration: '3:20', time: new Date(Date.now() - 300000) },
+        { id: '2', customer: 'Pooja Hegde', phone: '+91 87654 44332', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'What is the banquet capacity and catering menu for a 300-guest wedding reception?', aiSummary: 'Sent Grand Ballroom banquet brochure and dining menu', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
+      ];
+    }
+    return [
+      { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to book an appointment for laser skin treatment', aiSummary: 'Customer interested in laser treatment', sentiment: 'POSITIVE', duration: '4:32', time: new Date(Date.now() - 300000) },
+      { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you share the price list for hair treatments and PRP?', aiSummary: 'Requested pricing for hair treatments', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
+      { id: '3', customer: 'Amit Patel', phone: '+91 76543 21098', channel: 'WEB_CHAT', status: 'CLOSED', lastMessage: 'Thank you, I will visit tomorrow at 11 AM', aiSummary: 'Appointment confirmed for tomorrow', sentiment: 'POSITIVE', time: new Date(Date.now() - 1800000) },
+      { id: '4', customer: 'Sneha Reddy', phone: '+91 65432 10987', channel: 'VOICE', status: 'CLOSED', lastMessage: 'The doctor was very helpful with my skin routine', aiSummary: 'Follow-up call for post-treatment feedback', sentiment: 'POSITIVE', duration: '2:15', time: new Date(Date.now() - 3600000) },
+    ];
+  };
+
+  const conversations = getConversations();
 
   const filtered = conversations.filter((c) => {
     if (filter !== 'ALL' && c.channel !== filter) return false;

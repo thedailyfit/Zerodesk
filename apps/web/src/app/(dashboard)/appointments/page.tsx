@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import posthog from 'posthog-js';
 
+import { useNiche } from '@/components/providers/niche-provider';
+
 interface AppointmentItem {
   id: string;
   customer: string;
@@ -43,14 +45,14 @@ interface AppointmentItem {
 }
 
 const INITIAL_APPOINTMENTS: AppointmentItem[] = [
-  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Laser Hair Removal', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-05T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI at 09:15 AM', confirmationSent: true },
-  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Chemical Peel', staff: 'Dr. Arun', scheduledAt: '2026-08-05T11:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call at 10:00 AM', confirmationSent: true },
-  { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'Full Body Massage', staff: 'Kavita', scheduledAt: '2026-08-05T12:30:00', duration: 60, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in at Front Desk', confirmationSent: true },
-  { id: '4', customer: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', service: 'Consultation', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-05T14:00:00', duration: 20, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
-  { id: '5', customer: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', service: 'Facial Treatment', staff: 'Rekha', scheduledAt: '2026-08-05T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Patient', confirmationSent: true },
-  { id: '6', customer: 'Deepak Menon', phone: '+91 32109 87654', email: 'deepak@email.com', service: 'Hair Transplant Consultation', staff: 'Dr. Arun', scheduledAt: '2026-08-06T10:00:00', duration: 30, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Patient Response', confirmationSent: false },
-  { id: '7', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'PRP Therapy', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-06T11:30:00', duration: 60, status: 'SCHEDULED', source: 'AI_WEB', priority: 'HIGH', confirmationStatus: 'WhatsApp Confirmation Sent', confirmationSent: true },
-  { id: '8', customer: 'Meera Joshi', phone: '+91 99887 76655', email: 'meera@email.com', service: 'Botox Treatment', staff: 'Dr. Arun', scheduledAt: '2026-08-12T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Patient Response', confirmationSent: false },
+  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Consultation & Procedure', staff: 'Specialist In-Charge', scheduledAt: '2026-08-05T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI at 09:15 AM', confirmationSent: true },
+  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Primary Treatment Session', staff: 'Associate Specialist', scheduledAt: '2026-08-05T11:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call at 10:00 AM', confirmationSent: true },
+  { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'VIP Service Package', staff: 'Senior Specialist', scheduledAt: '2026-08-05T12:30:00', duration: 60, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in at Front Desk', confirmationSent: true },
+  { id: '4', customer: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', service: 'Standard Consultation', staff: 'Lead Coordinator', scheduledAt: '2026-08-05T14:00:00', duration: 20, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
+  { id: '5', customer: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', service: 'Follow-up Review', staff: 'Clinical Assistant', scheduledAt: '2026-08-05T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Client', confirmationSent: true },
+  { id: '6', customer: 'Deepak Menon', phone: '+91 32109 87654', email: 'deepak@email.com', service: 'Consultation & Roadmap', staff: 'Specialist In-Charge', scheduledAt: '2026-08-06T10:00:00', duration: 30, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
+  { id: '7', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'Advanced Therapy Session', staff: 'Lead Coordinator', scheduledAt: '2026-08-06T11:30:00', duration: 60, status: 'SCHEDULED', source: 'AI_WEB', priority: 'HIGH', confirmationStatus: 'WhatsApp Confirmation Sent', confirmationSent: true },
+  { id: '8', customer: 'Meera Joshi', phone: '+91 99887 76655', email: 'meera@email.com', service: 'Maintenance Care', staff: 'Associate Specialist', scheduledAt: '2026-08-12T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
 ];
 
 const statusConfig: Record<string, { icon: typeof CheckCircle2; label: string; style: string }> = {
@@ -72,35 +74,80 @@ const sourceLabels: Record<string, string> = {
 };
 
 export default function AppointmentsPage() {
+  const { currentNiche, nicheConfig } = useNiche();
   const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
   const [viewMode, setViewMode] = useState<'list' | 'month'>('list');
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<AppointmentItem | null>(null);
   const [confirmationTriggeredId, setConfirmationTriggeredId] = useState<string | null>(null);
 
+  const getServicesForNiche = () => {
+    if (currentNiche === 'dental') {
+      return [
+        { name: 'Root Canal Treatment (RCT)', duration: 45, price: 6500 },
+        { name: 'Zirconia Crown / Cap', duration: 30, price: 12000 },
+        { name: 'Invisible Aligners Consultation', duration: 30, price: 1500 },
+        { name: 'Routine Scaling & Polishing', duration: 30, price: 1800 },
+        { name: 'Teeth Whitening Laser', duration: 45, price: 8000 },
+        { name: 'Dental Implant Consultation', duration: 45, price: 2500 },
+      ];
+    }
+    if (currentNiche === 'spa') {
+      return [
+        { name: 'Ayurvedic Abhyanga Massage', duration: 60, price: 3500 },
+        { name: 'Deep Tissue Stress Relief', duration: 60, price: 4000 },
+        { name: 'Panchakarma Detox Session', duration: 90, price: 5500 },
+        { name: 'Aromatherapy Body Wrap', duration: 45, price: 3000 },
+        { name: 'Hot Stone Therapy', duration: 60, price: 4500 },
+      ];
+    }
+    if (currentNiche === 'salon') {
+      return [
+        { name: 'Keratin Hair Smoothening', duration: 90, price: 6500 },
+        { name: 'Balayage Color & Highlights', duration: 90, price: 8000 },
+        { name: 'Bridal Makeup & Styling Trial', duration: 60, price: 5000 },
+        { name: 'Gel Nail Art & Extensions', duration: 45, price: 2500 },
+        { name: 'Deluxe Pedicure & Foot Spa', duration: 45, price: 1800 },
+      ];
+    }
+    if (currentNiche === 'realestate') {
+      return [
+        { name: '3BHK Villa Guided Site Visit', duration: 60, price: 0 },
+        { name: 'Commercial Space Property Tour', duration: 45, price: 0 },
+        { name: 'NRI Video Walkthrough & Legal Review', duration: 30, price: 0 },
+        { name: 'Home Loan Eligibility & Cost Sheet', duration: 30, price: 0 },
+      ];
+    }
+    if (currentNiche === 'hotel') {
+      return [
+        { name: 'Executive Suite Room Booking', duration: 60, price: 8500 },
+        { name: 'Presidential Ocean Suite Stay', duration: 60, price: 22000 },
+        { name: 'Banquet & Wedding Hall Inspection', duration: 45, price: 0 },
+        { name: 'Weekend Spa & Dining Package', duration: 60, price: 6000 },
+      ];
+    }
+    return [
+      { name: 'Laser Hair Removal', duration: 45, price: 5000 },
+      { name: 'Chemical Peel', duration: 30, price: 3500 },
+      { name: 'PRP Therapy', duration: 60, price: 8000 },
+      { name: 'Botox Treatment', duration: 45, price: 12000 },
+      { name: 'Hair Transplant Consultation', duration: 30, price: 1500 },
+      { name: 'HydraFacial Glow Treatment', duration: 45, price: 4500 },
+    ];
+  };
+
+  const SERVICES = getServicesForNiche();
+
   // Manual Walk-in Booking Form State
   const [customer, setCustomer] = useState('');
   const [phone, setPhone] = useState('');
-  const [service, setService] = useState('Laser Hair Removal');
+  const [service, setService] = useState(SERVICES[0]?.name || 'General Booking');
   const [isCustomService, setIsCustomService] = useState(false);
-  const [doctor, setDoctor] = useState('Dr. Meenakshi');
-  const [therapist, setTherapist] = useState('Kavita');
-  const [date, setDate] = useState('2026-08-05');
+  const [doctor, setDoctor] = useState('Lead Specialist');
+  const [therapist, setTherapist] = useState('');
+  const [date, setDate] = useState('2026-08-14');
   const [time, setTime] = useState('10:00');
   const [duration, setDuration] = useState('45');
-
-  const SERVICES = [
-    { name: 'Laser Hair Removal', duration: 45, price: 5000 },
-    { name: 'Chemical Peel', duration: 30, price: 3500 },
-    { name: 'PRP Therapy', duration: 60, price: 8000 },
-    { name: 'Botox Treatment', duration: 45, price: 12000 },
-    { name: 'Hair Transplant Consultation', duration: 30, price: 1500 },
-    { name: 'Full Body Massage', duration: 60, price: 4000 },
-    { name: 'Facial Treatment', duration: 45, price: 2500 },
-    { name: 'Mole/Skin Tag Removal', duration: 20, price: 3000 },
-    { name: 'Acne Scar Treatment', duration: 45, price: 6000 },
-    { name: 'General Consultation', duration: 20, price: 500 },
-  ];
   const [source, setSource] = useState<AppointmentItem['source']>('MANUAL');
   const [priority, setPriority] = useState<AppointmentItem['priority']>('HIGH');
 
@@ -166,13 +213,13 @@ export default function AppointmentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>Appointments & Scheduling</span>
+            <span>{nicheConfig.terminology?.appointments || 'Appointments'} & Scheduling</span>
             <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
               AI 2-Step Confirmation Engine
             </span>
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Manual walk-in bookings and automated 2-step AI confirmation (WhatsApp ➡️ Voice Call 10m later).
+            Manual {nicheConfig.terminology?.customer?.toLowerCase() || 'customer'} bookings and automated 2-step AI confirmation.
           </p>
         </div>
 

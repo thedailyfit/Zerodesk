@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Phone, MessageCircle, Globe, TrendingUp, TrendingDown, Minus, Upload, FileSpreadsheet, X, Check, Star } from 'lucide-react';
 import { cn, formatCurrency, timeAgo, getInitials } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import { useNiche } from '@/components/providers/niche-provider';
 
 interface CustomerItem {
   id: string;
@@ -20,15 +21,6 @@ interface CustomerItem {
   lastSeen: Date;
   totalConversations: number;
 }
-
-const INITIAL_CUSTOMERS: CustomerItem[] = [
-  { id: '1', name: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', leadScore: 85, sentiment: 'POSITIVE', lifetimeValue: 45000, priority: 'VIP', tags: ['Skin Care', 'Laser'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 3600000), totalConversations: 12 },
-  { id: '2', name: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', leadScore: 72, sentiment: 'NEUTRAL', lifetimeValue: 28000, priority: 'HIGH', tags: ['Hair Treatment'], lastChannel: 'WHATSAPP', lastSeen: new Date(Date.now() - 7200000), totalConversations: 8 },
-  { id: '3', name: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', leadScore: 45, sentiment: 'NEUTRAL', lifetimeValue: 12000, priority: 'STANDARD', tags: ['New Customer'], lastChannel: 'WEB_CHAT', lastSeen: new Date(Date.now() - 86400000), totalConversations: 3 },
-  { id: '4', name: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', leadScore: 92, sentiment: 'POSITIVE', lifetimeValue: 120000, priority: 'VIP', tags: ['Premium', 'Referral'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 1800000), totalConversations: 24 },
-  { id: '5', name: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', leadScore: 33, sentiment: 'NEGATIVE', lifetimeValue: 5000, priority: 'MEDIUM', tags: ['At Risk'], lastChannel: 'WHATSAPP', lastSeen: new Date(Date.now() - 172800000), totalConversations: 5 },
-  { id: '6', name: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', leadScore: 67, sentiment: 'POSITIVE', lifetimeValue: 35000, priority: 'HIGH', tags: ['Wellness'], lastChannel: 'WEB_CHAT', lastSeen: new Date(Date.now() - 14400000), totalConversations: 15 },
-];
 
 const channelIcons: Record<string, { icon: typeof Phone; color: string }> = {
   VOICE: { icon: Phone, color: 'text-blue-400' },
@@ -50,7 +42,31 @@ const sentimentIcon: Record<string, { icon: typeof TrendingUp; color: string; la
 };
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<CustomerItem[]>(INITIAL_CUSTOMERS);
+  const { currentNiche, nicheConfig } = useNiche();
+
+  const getDefaultCustomers = (): CustomerItem[] => {
+    if (currentNiche === 'dental') {
+      return [
+        { id: '1', name: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', leadScore: 85, sentiment: 'POSITIVE', lifetimeValue: 45000, priority: 'VIP', tags: ['Invisalign', 'Crown'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 3600000), totalConversations: 12 },
+        { id: '2', name: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', leadScore: 72, sentiment: 'NEUTRAL', lifetimeValue: 28000, priority: 'HIGH', tags: ['Root Canal'], lastChannel: 'WHATSAPP', lastSeen: new Date(Date.now() - 7200000), totalConversations: 8 },
+        { id: '3', name: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', leadScore: 92, sentiment: 'POSITIVE', lifetimeValue: 120000, priority: 'VIP', tags: ['Implants', 'Full Arch'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 1800000), totalConversations: 24 },
+      ];
+    }
+    if (currentNiche === 'realestate') {
+      return [
+        { id: '1', name: 'Vikramaditya Varma', phone: '+91 98490 12345', email: 'vikram.varma@hyderabad.com', leadScore: 95, sentiment: 'POSITIVE', lifetimeValue: 28500000, priority: 'VIP', tags: ['3BHK Villa', 'Jubilee Hills'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 3600000), totalConversations: 8 },
+        { id: '2', name: 'Anand Rao', phone: '+91 97000 88991', email: 'anand.rao@techcorp.com', leadScore: 88, sentiment: 'POSITIVE', lifetimeValue: 45000000, priority: 'VIP', tags: ['Commercial Space'], lastChannel: 'WHATSAPP', lastSeen: new Date(Date.now() - 7200000), totalConversations: 14 },
+      ];
+    }
+    return [
+      { id: '1', name: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', leadScore: 85, sentiment: 'POSITIVE', lifetimeValue: 45000, priority: 'VIP', tags: ['Skin Care', 'Laser'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 3600000), totalConversations: 12 },
+      { id: '2', name: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', leadScore: 72, sentiment: 'NEUTRAL', lifetimeValue: 28000, priority: 'HIGH', tags: ['Hair Care', 'PRP'], lastChannel: 'WHATSAPP', lastSeen: new Date(Date.now() - 7200000), totalConversations: 8 },
+      { id: '3', name: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', leadScore: 45, sentiment: 'NEUTRAL', lifetimeValue: 12000, priority: 'STANDARD', tags: ['New Client'], lastChannel: 'WEB_CHAT', lastSeen: new Date(Date.now() - 86400000), totalConversations: 3 },
+      { id: '4', name: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', leadScore: 92, sentiment: 'POSITIVE', lifetimeValue: 120000, priority: 'VIP', tags: ['VIP Treatment', 'Referral'], lastChannel: 'VOICE', lastSeen: new Date(Date.now() - 1800000), totalConversations: 24 },
+    ];
+  };
+
+  const [customers, setCustomers] = useState<CustomerItem[]>(getDefaultCustomers());
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -133,8 +149,8 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Customer Directory</h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">Unified customer memory across Voice, WhatsApp, and Webchat.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">{nicheConfig.terminology?.customers || "Customer Directory"}</h1>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">Unified {nicheConfig.terminology?.customer?.toLowerCase() || "customer"} memory across Voice, WhatsApp, and Webchat.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -150,7 +166,7 @@ export default function CustomersPage() {
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold transition-all shadow-md"
           >
             <Plus size={16} />
-            Add Customer
+            Add {nicheConfig.terminology?.customer || "Customer"}
           </button>
         </div>
       </div>

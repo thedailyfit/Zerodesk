@@ -19,6 +19,7 @@ import {
   FileCheck,
   Building2
 } from 'lucide-react';
+import { useNiche } from '@/components/providers/niche-provider';
 import { cn } from '@/lib/utils';
 
 interface ServiceItem {
@@ -37,22 +38,6 @@ interface PackageItem {
   border: string;
 }
 
-const SERVICES: ServiceItem[] = [
-  { id: 1, name: 'General Consultation', category: 'Consultation', duration: 20, price: 500 },
-  { id: 2, name: 'Chemical Peel', category: 'Aesthetics', duration: 30, price: 3500 },
-  { id: 3, name: 'Laser Hair Removal', category: 'Laser', duration: 45, price: 5000 },
-  { id: 4, name: 'Acne Scar Treatment', category: 'Dermatology', duration: 45, price: 6000 },
-  { id: 5, name: 'Full Body Massage', category: 'Wellness', duration: 60, price: 4000 },
-  { id: 6, name: 'PRP Hair Therapy', category: 'Hair Care', duration: 45, price: 8500 },
-  { id: 7, name: 'Botox Anti-Aging (Per Unit)', category: 'Aesthetics', duration: 30, price: 12000 },
-];
-
-const PACKAGES: PackageItem[] = [
-  { id: 'p1', name: 'Glow Package (3 Sessions)', price: 15000, color: 'from-amber-500/20 to-orange-500/5', border: 'border-amber-500/30' },
-  { id: 'p2', name: 'Laser Pro (6 Sessions)', price: 45000, color: 'from-purple-500/20 to-pink-500/5', border: 'border-purple-500/30' },
-  { id: 'p3', name: 'Annual Wellness Pass', price: 25000, color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/30' },
-];
-
 const PATIENTS = [
   { id: '001', name: 'Vikram Singh', phone: '+91 98765 43210' },
   { id: '002', name: 'Priya Sharma', phone: '+91 87654 32109' },
@@ -61,6 +46,93 @@ const PATIENTS = [
 ];
 
 export default function BillingPage() {
+  const { currentNiche, nicheConfig } = useNiche();
+
+  const getServicesForNiche = (): ServiceItem[] => {
+    if (currentNiche === 'dental') {
+      return [
+        { id: 1, name: 'Dental Assessment & X-Ray', category: 'Consultation', duration: 20, price: 600 },
+        { id: 2, name: 'Root Canal Treatment (RCT)', category: 'Endodontics', duration: 45, price: 6500 },
+        { id: 3, name: 'Zirconia Premium Crown', category: 'Prosthodontics', duration: 30, price: 12000 },
+        { id: 4, name: 'Routine Scaling & Polishing', category: 'Preventive', duration: 30, price: 1800 },
+        { id: 5, name: 'Laser Teeth Whitening', category: 'Cosmetic', duration: 45, price: 8000 },
+        { id: 6, name: 'Invisible Aligners Scan', category: 'Orthodontics', duration: 30, price: 2500 },
+      ];
+    }
+    if (currentNiche === 'spa') {
+      return [
+        { id: 1, name: 'Ayurvedic Wellness Consultation', category: 'Consultation', duration: 20, price: 800 },
+        { id: 2, name: 'Abhyanga Full Body Massage', category: 'Ayurveda', duration: 60, price: 3500 },
+        { id: 3, name: 'Deep Tissue Relief Therapy', category: 'Therapy', duration: 60, price: 4000 },
+        { id: 4, name: 'Panchakarma Detox Session', category: 'Ayurveda', duration: 90, price: 5500 },
+        { id: 5, name: 'Aromatherapy Body Scrub', category: 'Wellness', duration: 45, price: 3000 },
+      ];
+    }
+    if (currentNiche === 'salon') {
+      return [
+        { id: 1, name: 'Hair & Scalp Consultation', category: 'Styling', duration: 20, price: 500 },
+        { id: 2, name: 'Keratin Hair Smoothening', category: 'Hair Care', duration: 90, price: 6500 },
+        { id: 3, name: 'Balayage Color & Highlights', category: 'Coloring', duration: 90, price: 8000 },
+        { id: 4, name: 'Bridal Makeup & Styling', category: 'Bridal', duration: 60, price: 5000 },
+        { id: 5, name: 'Gel Nail Art & Extensions', category: 'Nails', duration: 45, price: 2500 },
+        { id: 6, name: 'Deluxe Pedicure & Foot Spa', category: 'Spa', duration: 45, price: 1800 },
+      ];
+    }
+    if (currentNiche === 'realestate') {
+      return [
+        { id: 1, name: 'Property Verification & Title Search', category: 'Legal', duration: 30, price: 5000 },
+        { id: 2, name: 'Booking Token Processing', category: 'Sales', duration: 30, price: 50000 },
+        { id: 3, name: 'Site Visit Chauffeur Cab Fee', category: 'Logistics', duration: 60, price: 1500 },
+        { id: 4, name: 'RERA Documentation & Stamp Filing', category: 'Documentation', duration: 45, price: 12000 },
+      ];
+    }
+    if (currentNiche === 'hotel') {
+      return [
+        { id: 1, name: 'Deluxe Suite Booking (Night)', category: 'Stay', duration: 60, price: 8500 },
+        { id: 2, name: 'Presidential Suite Booking (Night)', category: 'Luxury', duration: 60, price: 22000 },
+        { id: 3, name: 'Banquet Hall Reservation Advance', category: 'Events', duration: 60, price: 50000 },
+        { id: 4, name: 'Airport VIP Transfer', category: 'Concierge', duration: 45, price: 2500 },
+      ];
+    }
+    return [
+      { id: 1, name: 'General Consultation', category: 'Consultation', duration: 20, price: 500 },
+      { id: 2, name: 'Chemical Peel', category: 'Aesthetics', duration: 30, price: 3500 },
+      { id: 3, name: 'Laser Hair Removal', category: 'Laser', duration: 45, price: 5000 },
+      { id: 4, name: 'Acne Scar Treatment', category: 'Dermatology', duration: 45, price: 6000 },
+      { id: 5, name: 'Full Body Massage', category: 'Wellness', duration: 60, price: 4000 },
+      { id: 6, name: 'PRP Hair Therapy', category: 'Hair Care', duration: 45, price: 8500 },
+      { id: 7, name: 'Botox Anti-Aging (Per Unit)', category: 'Aesthetics', duration: 30, price: 12000 },
+    ];
+  };
+
+  const getPackagesForNiche = (): PackageItem[] => {
+    if (currentNiche === 'dental') {
+      return [
+        { id: 'p1', name: 'Smile Makeover (Full Arch)', price: 85000, color: 'from-cyan-500/20 to-teal-500/5', border: 'border-cyan-500/30' },
+        { id: 'p2', name: 'Annual Family Dental Pass', price: 12000, color: 'from-purple-500/20 to-pink-500/5', border: 'border-purple-500/30' },
+      ];
+    }
+    if (currentNiche === 'spa') {
+      return [
+        { id: 'p1', name: 'Ayurvedic Rejuvenation (5 Days)', price: 18000, color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/30' },
+        { id: 'p2', name: 'Annual Spa & Wellness Pass', price: 25000, color: 'from-purple-500/20 to-pink-500/5', border: 'border-purple-500/30' },
+      ];
+    }
+    if (currentNiche === 'salon') {
+      return [
+        { id: 'p1', name: 'Complete Bridal Glow Package', price: 25000, color: 'from-rose-500/20 to-pink-500/5', border: 'border-rose-500/30' },
+        { id: 'p2', name: 'Annual Hair & Grooming Pass', price: 30000, color: 'from-purple-500/20 to-indigo-500/5', border: 'border-purple-500/30' },
+      ];
+    }
+    return [
+      { id: 'p1', name: 'Glow Package (3 Sessions)', price: 15000, color: 'from-amber-500/20 to-orange-500/5', border: 'border-amber-500/30' },
+      { id: 'p2', name: 'Laser Pro (6 Sessions)', price: 45000, color: 'from-purple-500/20 to-pink-500/5', border: 'border-purple-500/30' },
+      { id: 'p3', name: 'Annual Wellness Pass', price: 25000, color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/30' },
+    ];
+  };
+
+  const SERVICES = getServicesForNiche();
+  const PACKAGES = getPackagesForNiche();
   const [selectedPatientId, setSelectedPatientId] = useState<string>('001');
   const [quantities, setQuantities] = useState<Record<string, number>>({ '1': 1, '2': 1 }); // service/package id -> qty
   const [serviceSearch, setServiceSearch] = useState('');

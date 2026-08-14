@@ -17,6 +17,7 @@ import {
   Sparkles,
   Printer
 } from 'lucide-react';
+import { useNiche } from '@/components/providers/niche-provider';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 
@@ -36,16 +37,50 @@ interface InvoiceItem {
   sentViaAi: boolean;
 }
 
-const INITIAL_INVOICES: InvoiceItem[] = [
-  { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Full Laser Treatment Package', amount: 40000, tax: 5000, total: 45000, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
-  { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Chemical Peel & Facial Session', amount: 25000, tax: 3000, total: 28000, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
-  { id: '3', invoiceNo: 'INV-2026-003', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'PRP Therapy & Hair Consultation', amount: 105000, tax: 15000, total: 120000, dueDate: '2026-08-05', status: 'PAID', createdDate: '2026-07-28', sentViaAi: true },
-  { id: '4', invoiceNo: 'INV-2026-004', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'Acne Consultation & Medication', amount: 4500, tax: 500, total: 5000, dueDate: '2026-07-25', status: 'OVERDUE', createdDate: '2026-07-15', sentViaAi: false },
-  { id: '5', invoiceNo: 'INV-2026-005', customer: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', service: 'Wellness & Body Massage Session', amount: 30000, tax: 5000, total: 35000, dueDate: '2026-08-20', status: 'PENDING', createdDate: '2026-08-04', sentViaAi: true },
-];
-
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<InvoiceItem[]>(INITIAL_INVOICES);
+  const { currentNiche, nicheConfig } = useNiche();
+
+  const getDefaultInvoices = (): InvoiceItem[] => {
+    if (currentNiche === 'dental') {
+      return [
+        { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Zirconia Crown & Root Canal', amount: 18500, tax: 2220, total: 20720, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+        { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Invisible Aligners - Stage 1', amount: 45000, tax: 5400, total: 50400, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+        { id: '3', invoiceNo: 'INV-2026-003', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'Laser Whitening & Scaling', amount: 9800, tax: 1176, total: 10976, dueDate: '2026-08-05', status: 'PAID', createdDate: '2026-07-28', sentViaAi: true },
+      ];
+    }
+    if (currentNiche === 'spa') {
+      return [
+        { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Panchakarma Detox 5-Day Pass', amount: 18000, tax: 2160, total: 20160, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+        { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Abhyanga Full Body Massage', amount: 3500, tax: 420, total: 3920, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+      ];
+    }
+    if (currentNiche === 'salon') {
+      return [
+        { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Keratin Smoothening + Hair Spa', amount: 8500, tax: 1020, total: 9520, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+        { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Bridal Makeup & Styling Package', amount: 25000, tax: 3000, total: 28000, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+      ];
+    }
+    if (currentNiche === 'realestate') {
+      return [
+        { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: '3BHK Villa Booking Token', amount: 100000, tax: 18000, total: 118000, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+        { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Legal Verification & Title Search', amount: 5000, tax: 900, total: 5900, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+      ];
+    }
+    if (currentNiche === 'hotel') {
+      return [
+        { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Presidential Suite Stay (3 Nights)', amount: 66000, tax: 7920, total: 73920, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+        { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Grand Ballroom Banquet Advance', amount: 50000, tax: 6000, total: 56000, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+      ];
+    }
+    return [
+      { id: '1', invoiceNo: 'INV-2026-001', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Full Laser Treatment Package', amount: 40000, tax: 5000, total: 45000, dueDate: '2026-08-10', status: 'PAID', createdDate: '2026-08-01', sentViaAi: true },
+      { id: '2', invoiceNo: 'INV-2026-002', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Chemical Peel & Facial Session', amount: 25000, tax: 3000, total: 28000, dueDate: '2026-08-15', status: 'PENDING', createdDate: '2026-08-02', sentViaAi: true },
+      { id: '3', invoiceNo: 'INV-2026-003', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'PRP Therapy & Hair Consultation', amount: 105000, tax: 15000, total: 120000, dueDate: '2026-08-05', status: 'PAID', createdDate: '2026-07-28', sentViaAi: true },
+      { id: '4', invoiceNo: 'INV-2026-004', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'Acne Consultation & Care', amount: 4500, tax: 500, total: 5000, dueDate: '2026-07-25', status: 'OVERDUE', createdDate: '2026-07-15', sentViaAi: false },
+    ];
+  };
+
+  const [invoices, setInvoices] = useState<InvoiceItem[]>(getDefaultInvoices());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
