@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, 
@@ -26,25 +26,9 @@ import {
 } from 'lucide-react';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useServices } from '@/lib/services-store';
+import { usePatients, PatientRecord } from '@/lib/patients-store';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
-
-interface ExistingPatient {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  lastVisit: string;
-  totalVisits: number;
-}
-
-const DEFAULT_EXISTING_CUSTOMERS: ExistingPatient[] = [
-  { id: 'PID-8421', name: 'Vikram Singh', phone: '+91 98765 43210', email: 'vikram@example.com', lastVisit: '2026-08-01', totalVisits: 4 },
-  { id: 'PID-8422', name: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya.s@gmail.com', lastVisit: '2026-08-10', totalVisits: 2 },
-  { id: 'PID-8423', name: 'Rajesh Kumar', phone: '+91 76543 21098', email: 'rajesh.k@yahoo.com', lastVisit: '2026-07-28', totalVisits: 6 },
-  { id: 'PID-8424', name: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha.reddy@gmail.com', lastVisit: '2026-08-12', totalVisits: 1 },
-  { id: 'PID-8425', name: 'Ananya Verma', phone: '+91 98111 22334', email: 'ananya@corp.in', lastVisit: '2026-06-15', totalVisits: 3 },
-];
 
 const TIME_SLOTS = [
   '09:30 AM', '10:15 AM', '11:00 AM', '11:45 AM',
@@ -55,6 +39,7 @@ const TIME_SLOTS = [
 export default function BookAppointmentPage() {
   const { currentNiche, nicheConfig } = useNiche();
   const { activeServices } = useServices();
+  const { patients, addPatient } = usePatients();
 
   const isClinic = currentNiche === 'skin' || currentNiche === 'dental';
   const customerLabel = nicheConfig.terminology?.customer || 'Patient';
@@ -63,7 +48,7 @@ export default function BookAppointmentPage() {
 
   // Search & Patient Selection Mode
   const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<ExistingPatient | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<PatientRecord | null>(null);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
 
   // New Patient Form State
@@ -73,6 +58,7 @@ export default function BookAppointmentPage() {
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Female');
   const [age, setAge] = useState('');
   const [includeRegFee, setIncludeRegFee] = useState(isClinic);
+  const [priority, setPriority] = useState<'VIP' | 'High' | 'Medium' | 'Standard'>('Standard');
 
   const regFeeOffering = useMemo(() => {
     return activeServices.find(s => s.category.toLowerCase() === 'registration' || s.name.toLowerCase().includes('registration'));
@@ -80,19 +66,41 @@ export default function BookAppointmentPage() {
 
   const registrationFee = isClinic ? (regFeeOffering?.price ?? 300) : 0;
 
+  // Service Tab
+  const [serviceTab, setServiceTab] = useState<'individual' | 'package'>('individual');
+  const [packagePaymentMode, setPackagePaymentMode] = useState<'FULL' | 'PER_SESSION' | 'CUSTOM'>('FULL');
+  const [customPaymentAmount, setCustomPaymentAmount] = useState<string>('');
+
+  const displayServices = useMemo(() => {
+    return activeServices.filter(s => serviceTab === 'package' ? s.isPackage : !s.isPackage);
+  }, [activeServices, serviceTab]);
+
   // Appointment Details State
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(activeServices[0]?.id || '');
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState(nicheConfig.roles[0]?.label || 'Lead Specialist');
-  const [bookingDate, setBookingDate] = useState('2026-08-14');
+  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[1]);
+  
+  // Custom Time Input
+  const [useCustomTime, setUseCustomTime] = useState(false);
+  const [customTime, setCustomTime] = useState('10:00');
+
   const [notes, setNotes] = useState('');
   const [sendWhatsApp, setSendWhatsApp] = useState(true);
   const [paymentOption, setPaymentOption] = useState<'PAY_NOW' | 'PAY_LATER'>('PAY_LATER');
+
+  // Set default service when tab changes
+  useEffect(() => {
+    if (displayServices.length > 0 && !displayServices.find(s => s.id === selectedServiceId)) {
+      setSelectedServiceId(displayServices[0].id);
+    }
+  }, [displayServices, selectedServiceId]);
 
   // Success Confirmation Modal
   const [confirmedBooking, setConfirmedBooking] = useState<{
     bookingId: string;
     tokenNumber: number;
+    customerId: string;
     customerName: string;
     phone: string;
     serviceName: string;
@@ -110,26 +118,36 @@ export default function BookAppointmentPage() {
 
   // Selected Service object
   const selectedService = useMemo(() => {
-    return activeServices.find(s => s.id === selectedServiceId) || activeServices[0];
-  }, [activeServices, selectedServiceId]);
+    return activeServices.find(s => s.id === selectedServiceId) || displayServices[0];
+  }, [activeServices, selectedServiceId, displayServices]);
 
   // Search matches
   const searchResults = useMemo(() => {
     if (!customerSearch.trim()) return [];
     const q = customerSearch.toLowerCase();
-    return DEFAULT_EXISTING_CUSTOMERS.filter(
+    return patients.filter(
       c => c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.id.toLowerCase().includes(q)
     );
-  }, [customerSearch]);
+  }, [customerSearch, patients]);
 
   // Pricing summary calculation
-  const servicePrice = selectedService ? selectedService.price : 0;
+  const baseServicePrice = selectedService ? selectedService.price : 0;
+  
+  let payableServicePrice = baseServicePrice;
+  if (selectedService?.isPackage) {
+    if (packagePaymentMode === 'PER_SESSION' && selectedService.totalSessions) {
+      payableServicePrice = baseServicePrice / selectedService.totalSessions;
+    } else if (packagePaymentMode === 'CUSTOM') {
+      payableServicePrice = Number(customPaymentAmount) || 0;
+    }
+  }
+
   const regFee = (isNewCustomer && includeRegFee) ? registrationFee : 0;
-  const subtotal = servicePrice + regFee;
+  const subtotal = payableServicePrice + regFee;
   const gst = Math.round(subtotal * 0.18);
   const totalPayable = subtotal + gst;
 
-  const handleSelectExisting = (patient: ExistingPatient) => {
+  const handleSelectExisting = (patient: PatientRecord) => {
     setSelectedCustomer(patient);
     setIsNewCustomer(false);
     setCustomerSearch('');
@@ -150,25 +168,54 @@ export default function BookAppointmentPage() {
     setNewEmail('');
     setAge('');
     setNotes('');
+    setUseCustomTime(false);
+  };
+
+  const formatCustomTime = (time: string) => {
+    if (!time) return '';
+    const [h, m] = time.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12.toString().padStart(2, '0')}:${m} ${ampm}`;
   };
 
   const handleConfirmBooking = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const customerName = isNewCustomer ? newName : (selectedCustomer?.name || 'Walk-in Guest');
-    const customerPhone = isNewCustomer ? newPhone : (selectedCustomer?.phone || '+91 98765 00000');
+    let customerName = selectedCustomer?.name || 'Walk-in Guest';
+    let customerPhone = selectedCustomer?.phone || '+91 98765 00000';
+    let finalCustomerId = selectedCustomer?.id || '';
+
+    if (isNewCustomer) {
+      const newPatient = addPatient({
+        name: newName,
+        phone: newPhone,
+        email: newEmail,
+        gender: gender,
+        age: parseInt(age) || undefined,
+        priority: priority,
+        tags: []
+      });
+      customerName = newPatient.name;
+      customerPhone = newPatient.phone;
+      finalCustomerId = newPatient.id;
+    }
+
     const tokenNo = Math.floor(100 + Math.random() * 900);
     const bookingId = `BK-${Date.now().toString().slice(-5)}`;
+    const finalTime = useCustomTime ? formatCustomTime(customTime) : selectedSlot;
 
     const newBooking = {
       bookingId,
       tokenNumber: tokenNo,
+      customerId: finalCustomerId,
       customerName,
       phone: customerPhone,
       serviceName: selectedService?.name || 'General Consultation',
       doctorName: selectedDoctor,
       date: bookingDate,
-      time: selectedSlot,
+      time: finalTime,
       totalAmount: totalPayable,
     };
 
@@ -181,7 +228,7 @@ export default function BookAppointmentPage() {
         name: customerName,
         service: selectedService?.name || 'Consultation',
         doctor: selectedDoctor,
-        time: selectedSlot,
+        time: finalTime,
         status: 'In Waiting Room',
       },
       ...prev
@@ -324,7 +371,7 @@ export default function BookAppointmentPage() {
                           </span>
                         </div>
                         <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                          {selectedCustomer.phone} · Last Visit: {selectedCustomer.lastVisit} ({selectedCustomer.totalVisits} visits)
+                          {selectedCustomer.phone} · Last Visit: {selectedCustomer.lastVisit || 'First Visit'} ({selectedCustomer.totalVisits} visits)
                         </p>
                       </div>
                     </div>
@@ -410,6 +457,33 @@ export default function BookAppointmentPage() {
                     />
                   </div>
                 </div>
+                
+                {/* Priority Selection */}
+                <div className="pt-2 border-t border-[var(--color-border)]">
+                  <label className="block text-xs font-semibold text-[var(--color-text)] mb-2">Priority Level</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { value: 'VIP', label: 'VIP 🌟' },
+                      { value: 'High', label: 'High 🔴' },
+                      { value: 'Medium', label: 'Medium 🟡' },
+                      { value: 'Standard', label: 'Standard ⚪' }
+                    ].map(p => (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => setPriority(p.value as any)}
+                        className={cn(
+                          "py-1.5 px-2 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
+                          priority === p.value
+                            ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                            : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* New Patient Registration Fee Checkbox for Clinics */}
                 {isClinic && (
@@ -432,13 +506,43 @@ export default function BookAppointmentPage() {
 
           {/* SECTION 2: Service & Specialist Assignment */}
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-3">
-              <span className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/20">
-                2
-              </span>
-              <h2 className="font-bold text-sm text-[var(--color-text)]">
-                Select {serviceLabel} & {staffLabel}
-              </h2>
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/20">
+                  2
+                </span>
+                <h2 className="font-bold text-sm text-[var(--color-text)]">
+                  Select {serviceLabel} & {staffLabel}
+                </h2>
+              </div>
+            </div>
+            
+            {/* Treatment Packages vs Individual Services Toggle */}
+            <div className="flex bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)] mb-4">
+              <button
+                type="button"
+                onClick={() => setServiceTab('individual')}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                  serviceTab === 'individual'
+                    ? "bg-[var(--color-surface)] shadow text-[var(--color-text)]"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                )}
+              >
+                Individual Services
+              </button>
+              <button
+                type="button"
+                onClick={() => setServiceTab('package')}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                  serviceTab === 'package'
+                    ? "bg-[var(--color-surface)] shadow text-[var(--color-text)]"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                )}
+              >
+                Treatment Packages
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -451,16 +555,29 @@ export default function BookAppointmentPage() {
                   onChange={(e) => setSelectedServiceId(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {activeServices.map((srv) => (
+                  {displayServices.length > 0 ? displayServices.map((srv) => (
                     <option key={srv.id} value={srv.id}>
                       {srv.name} ({srv.duration} mins - {formatCurrency(srv.price)})
                     </option>
-                  ))}
+                  )) : (
+                    <option value="">No services found in this category</option>
+                  )}
                 </select>
                 {selectedService && (
-                  <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5">
-                    Category: <span className="font-semibold text-purple-500">{selectedService.category}</span> · Duration: <span className="font-semibold text-[var(--color-text)]">{selectedService.duration} mins</span>
-                  </p>
+                  <div className="mt-1.5">
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      Category: <span className="font-semibold text-purple-500">{selectedService.category}</span> · Duration: <span className="font-semibold text-[var(--color-text)]">{selectedService.duration} mins</span>
+                    </p>
+                    {selectedService.isPackage && (
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
+                        Total Sessions: <span className="font-semibold text-[var(--color-text)]">{selectedService.totalSessions}</span> · 
+                        Validity: <span className="font-semibold text-[var(--color-text)]">{selectedService.packageValidityDays} days</span>
+                        {selectedService.totalSessions && selectedService.totalSessions > 0 ? (
+                          <span> · Per Session: <span className="font-semibold text-[var(--color-text)]">{formatCurrency(selectedService.price / selectedService.totalSessions)}</span></span>
+                        ) : null}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -485,6 +602,62 @@ export default function BookAppointmentPage() {
                 </div>
               </div>
             </div>
+            
+            {/* Package Payment Options */}
+            {selectedService?.isPackage && (
+              <div className="mt-4 p-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
+                <label className="block text-xs font-semibold text-[var(--color-text)] mb-2">Package Payment Plan</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPackagePaymentMode('FULL')}
+                    className={cn(
+                      "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
+                      packagePaymentMode === 'FULL'
+                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    )}
+                  >
+                    Pay Full
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPackagePaymentMode('PER_SESSION')}
+                    className={cn(
+                      "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
+                      packagePaymentMode === 'PER_SESSION'
+                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    )}
+                  >
+                    Pay Per Session
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPackagePaymentMode('CUSTOM')}
+                    className={cn(
+                      "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
+                      packagePaymentMode === 'CUSTOM'
+                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    )}
+                  >
+                    Custom Partial
+                  </button>
+                </div>
+                {packagePaymentMode === 'CUSTOM' && (
+                  <div className="mt-2">
+                    <input
+                      type="number"
+                      placeholder="Enter custom payment amount..."
+                      value={customPaymentAmount}
+                      onChange={(e) => setCustomPaymentAmount(e.target.value)}
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* SECTION 3: Date & Interactive Time Slot Selector */}
@@ -521,10 +694,10 @@ export default function BookAppointmentPage() {
                     <button
                       key={slot}
                       type="button"
-                      onClick={() => setSelectedSlot(slot)}
+                      onClick={() => { setUseCustomTime(false); setSelectedSlot(slot); }}
                       className={cn(
                         "py-2 px-1 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
-                        selectedSlot === slot
+                        !useCustomTime && selectedSlot === slot
                           ? "bg-purple-600 text-white border-purple-500 shadow-sm"
                           : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                       )}
@@ -532,7 +705,33 @@ export default function BookAppointmentPage() {
                       {slot}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => setUseCustomTime(true)}
+                    className={cn(
+                      "py-2 px-1 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
+                      useCustomTime
+                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    )}
+                  >
+                    Custom Time
+                  </button>
                 </div>
+                {useCustomTime && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">
+                      Enter Exact Time *
+                    </label>
+                    <input
+                      type="time"
+                      required={useCustomTime}
+                      value={customTime}
+                      onChange={(e) => setCustomTime(e.target.value)}
+                      className="w-full sm:w-1/2 px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -564,7 +763,7 @@ export default function BookAppointmentPage() {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-[var(--color-text-muted)]">
                 <span>{selectedService?.name || 'Selected Service'}</span>
-                <span className="font-mono text-[var(--color-text)] font-semibold">{formatCurrency(servicePrice)}</span>
+                <span className="font-mono text-[var(--color-text)] font-semibold">{formatCurrency(payableServicePrice)}</span>
               </div>
 
               {isNewCustomer && includeRegFee && (
@@ -695,6 +894,9 @@ export default function BookAppointmentPage() {
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">
                   Added to live Waiting Room queue and synced with doctor schedule.
                 </p>
+                <div className="mt-2 inline-block px-3 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg text-xs font-mono font-bold">
+                  {customerLabel} ID: {confirmedBooking.customerId}
+                </div>
               </div>
 
               {/* Summary Slip */}

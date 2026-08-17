@@ -5,6 +5,7 @@ import { LUXURY_SALON_CONFIG } from './luxury-salon';
 import { REAL_ESTATE_CONFIG } from './real-estate';
 import { DENTAL_CLINIC_CONFIG } from './dental-clinic';
 import { HOTEL_RESORT_CONFIG } from './hotel-resort';
+import { AUTOMOBILE_SHOWROOM_CONFIG } from './automobile-showroom';
 
 // ============================================================
 // MASTER NICHE REGISTRY
@@ -17,6 +18,7 @@ export const NICHE_REGISTRY: Record<NicheId, NicheConfig> = {
   realestate: REAL_ESTATE_CONFIG,
   dental: DENTAL_CLINIC_CONFIG,
   hotel: HOTEL_RESORT_CONFIG,
+  auto: AUTOMOBILE_SHOWROOM_CONFIG,
 };
 
 export const NICHE_LIST: { id: NicheId; label: string; icon: string; tagline: string; accentColor: string }[] = [
@@ -26,6 +28,7 @@ export const NICHE_LIST: { id: NicheId; label: string; icon: string; tagline: st
   { id: 'realestate', label: REAL_ESTATE_CONFIG.label, icon: REAL_ESTATE_CONFIG.icon, tagline: REAL_ESTATE_CONFIG.tagline, accentColor: REAL_ESTATE_CONFIG.accentColor },
   { id: 'dental', label: DENTAL_CLINIC_CONFIG.label, icon: DENTAL_CLINIC_CONFIG.icon, tagline: DENTAL_CLINIC_CONFIG.tagline, accentColor: DENTAL_CLINIC_CONFIG.accentColor },
   { id: 'hotel', label: HOTEL_RESORT_CONFIG.label, icon: HOTEL_RESORT_CONFIG.icon, tagline: HOTEL_RESORT_CONFIG.tagline, accentColor: HOTEL_RESORT_CONFIG.accentColor },
+  { id: 'auto', label: AUTOMOBILE_SHOWROOM_CONFIG.label, icon: AUTOMOBILE_SHOWROOM_CONFIG.icon, tagline: AUTOMOBILE_SHOWROOM_CONFIG.tagline, accentColor: AUTOMOBILE_SHOWROOM_CONFIG.accentColor },
 ];
 
 export const DEFAULT_NICHE: NicheId = 'skin';
@@ -38,4 +41,5 @@ export {
   REAL_ESTATE_CONFIG,
   DENTAL_CLINIC_CONFIG,
   HOTEL_RESORT_CONFIG,
+  AUTOMOBILE_SHOWROOM_CONFIG,
 };

@@ -34,14 +34,16 @@ import {
   CheckCircle,
   Activity,
   AlertCircle,
-  Copy
+  Copy,
+  Webhook,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface WorkflowStep {
   id: string;
   type: 'TRIGGER' | 'CONDITION' | 'ACTION' | 'DELAY';
-  actionType?: 'WHATSAPP' | 'VOICE_CALL' | 'EMAIL' | 'CREATE_TASK' | 'UPDATE_CRM' | 'WAIT_DELAY' | 'CUSTOM';
+  actionType?: 'WHATSAPP' | 'VOICE_CALL' | 'EMAIL' | 'CREATE_TASK' | 'UPDATE_CRM' | 'WAIT_DELAY' | 'CUSTOM' | 'WEBHOOK';
   label: string;
   detail: string;
   config?: Record<string, any>;
@@ -71,6 +73,7 @@ const STEP_ICONS: Record<string, any> = {
   CREATE_TASK: Bell,
   UPDATE_CRM: Database,
   WAIT_DELAY: Clock,
+  WEBHOOK: Webhook,
 };
 
 const STEP_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -659,19 +662,45 @@ export default function AutomationsPage() {
                         <option value="⏰ Scheduled (Cron Timer - Daily 5 PM)">⏰ Scheduled (Cron Timer - Daily 5 PM)</option>
                         <option value="📅 Appointment Created">📅 Appointment Created in Doctor Calendar</option>
                         <option value="📦 Lab Order Received">📦 Lab / Diagnostic Report Received</option>
+                        <option value="🔗 Incoming Webhook (External Trigger)">🔗 Incoming Webhook (External Trigger)</option>
                       </select>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-[11px] text-slate-300 font-semibold mb-1">Pipeline Description</label>
-                      <input
-                        type="text"
-                        value={activeWorkflow.description}
-                        onChange={(e) => setActiveWorkflow({ ...activeWorkflow, description: e.target.value })}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:border-purple-500 focus:outline-none"
-                        placeholder="Brief summary of this automation pipeline..."
-                      />
+                  {activeWorkflow.triggerEvent === '🔗 Incoming Webhook (External Trigger)' && (
+                    <div className="mt-3 p-3 bg-slate-950 border border-indigo-500/30 rounded-xl">
+                      <label className="block text-[11px] text-slate-300 font-semibold mb-1">Incoming Webhook URL</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`https://api.zerodesk.io/webhooks/wf-${activeWorkflow.id}`}
+                          className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono"
+                        />
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`https://api.zerodesk.io/webhooks/wf-${activeWorkflow.id}`);
+                            showToast('Webhook URL copied!');
+                          }}
+                          className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors flex shrink-0"
+                          title="Copy URL"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1.5">Trigger this workflow from Zapier, Make.com, or any external system.</p>
                     </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[11px] text-slate-300 font-semibold mb-1">Pipeline Description</label>
+                    <input
+                      type="text"
+                      value={activeWorkflow.description}
+                      onChange={(e) => setActiveWorkflow({ ...activeWorkflow, description: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:border-purple-500 focus:outline-none"
+                      placeholder="Brief summary of this automation pipeline..."
+                    />
                   </div>
                 </div>
 
@@ -801,6 +830,7 @@ export default function AutomationsPage() {
                           <option value="CREATE_TASK">🔔 Frontdesk / Doctor Task</option>
                           <option value="UPDATE_CRM">🗄️ Update CRM / EMR Status</option>
                           <option value="WAIT_DELAY">⏳ Wait Delay Timer</option>
+                          <option value="WEBHOOK">🌐 Send Webhook (Zapier / Make.com)</option>
                         </select>
                       </div>
 
@@ -815,6 +845,92 @@ export default function AutomationsPage() {
                         />
                       </div>
                     </div>
+
+                    {stepType === 'ACTION' && stepActionType === 'WEBHOOK' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">Webhook URL</label>
+                          <input
+                            type="text"
+                            value={activeWorkflow.steps[editingStepIndex]?.config?.url || ''}
+                            onChange={(e) => {
+                              const newSteps = [...activeWorkflow.steps];
+                              newSteps[editingStepIndex] = {
+                                ...newSteps[editingStepIndex],
+                                config: { ...newSteps[editingStepIndex].config, url: e.target.value }
+                              };
+                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
+                            }}
+                            placeholder="https://hooks.zapier.com/..."
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">HTTP Method</label>
+                          <select
+                            value={activeWorkflow.steps[editingStepIndex]?.config?.method || 'POST'}
+                            onChange={(e) => {
+                              const newSteps = [...activeWorkflow.steps];
+                              newSteps[editingStepIndex] = {
+                                ...newSteps[editingStepIndex],
+                                config: { ...newSteps[editingStepIndex].config, method: e.target.value }
+                              };
+                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
+                            }}
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-purple-500"
+                          >
+                            <option value="POST">POST</option>
+                            <option value="GET">GET</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-300 font-semibold mb-1">JSON Payload Preview</label>
+                          <textarea
+                            rows={3}
+                            value={activeWorkflow.steps[editingStepIndex]?.config?.payload || '{\n  "contact_name": "{{contact.name}}",\n  "phone": "{{contact.phone}}"\n}'}
+                            onChange={(e) => {
+                              const newSteps = [...activeWorkflow.steps];
+                              newSteps[editingStepIndex] = {
+                                ...newSteps[editingStepIndex],
+                                config: { ...newSteps[editingStepIndex].config, payload: e.target.value }
+                              };
+                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
+                            }}
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {stepType === 'ACTION' && (stepActionType === 'WHATSAPP' || stepActionType === 'VOICE_CALL') && (
+                      <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <label className="block text-slate-300 font-semibold mb-1">Select Template</label>
+                        <select
+                          value={activeWorkflow.steps[editingStepIndex]?.config?.templateId || ''}
+                          onChange={(e) => {
+                            const selectedTemp = nicheConfig?.templates?.find((t: any) => t.id === e.target.value);
+                            const newSteps = [...activeWorkflow.steps];
+                            newSteps[editingStepIndex] = {
+                              ...newSteps[editingStepIndex],
+                              config: { ...newSteps[editingStepIndex].config, templateId: e.target.value },
+                              detail: selectedTemp ? selectedTemp.content : newSteps[editingStepIndex].detail
+                            };
+                            setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
+                            if (selectedTemp) {
+                              setStepDetail(selectedTemp.content);
+                            }
+                          }}
+                          className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-purple-500"
+                        >
+                          <option value="">-- Custom Message (Type below) --</option>
+                          {nicheConfig?.templates
+                            ?.filter((t: any) => t.channel === (stepActionType === 'WHATSAPP' ? 'whatsapp' : 'voice'))
+                            .map((t: any) => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-slate-300 font-semibold mb-1">Action Details & Message Instruction</label>

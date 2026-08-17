@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRole } from '@/components/providers/role-provider';
 import { 
   Users, 
   Coffee, 
@@ -208,17 +209,51 @@ function formatDecimalHour(hr: number): string {
   return `${displayH}:${displayM} ${period}`;
 }
 
+const LEAVE_REQUESTS = [
+  { id: 'lr1', name: 'Sunita', role: 'Wellness Specialist', type: 'Sick Leave', reason: 'Fever and cold', dates: 'Aug 8 - Aug 9', status: 'Pending' },
+  { id: 'lr2', name: 'Amit', role: 'Reception Coordinator', type: 'Annual Leave', reason: 'Family trip', dates: 'Aug 10 - Aug 14', status: 'Pending' },
+  { id: 'lr3', name: 'Kavita', role: 'Senior Clinical Nurse', type: 'Casual Leave', reason: 'Personal work', dates: 'Aug 16', status: 'Pending' },
+];
+
+function timeToDecimal(timeStr: string): number {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h + (m / 60);
+}
+
+function decimalToTime(decimal: number): string {
+  const h = Math.floor(decimal);
+  const m = Math.round((decimal - h) * 60);
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+}
+
 export default function StaffCalendarPage() {
+  const { role } = useRole();
+  const isAdminOrManager = ['MANAGER', 'ORG_ADMIN', 'SUPER_ADMIN'].includes(role || '');
+
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('Today - Aug 6, 2026');
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 7, 6)); // Aug 6, 2026
   const [selectedStaffDetail, setSelectedStaffDetail] = useState<StaffMember | null>(null);
+  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF);
+  
+  // Edit schedule state
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [editForm, setEditForm] = useState({
+    dutyStart: '09:00', dutyEnd: '17:00',
+    lunchStart: '13:00', lunchEnd: '14:00',
+    hasOnCall: false, onCallStart: '17:00', onCallEnd: '20:00'
+  });
+
+  const handlePrevDay = () => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1));
+  const handleNextDay = () => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1));
+  const formattedDate = currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
   // Timeline hours from 8 AM to 8 PM (12 hour span)
   const timelineHours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 to 20
 
   const filteredStaff = useMemo(() => {
-    return INITIAL_STAFF.filter(s => {
+    return staffList.filter(s => {
       const matchDept = selectedDept === 'All' || s.department === selectedDept;
       const matchQuery = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          s.role.toLowerCase().includes(searchQuery.toLowerCase());
@@ -233,7 +268,7 @@ export default function StaffCalendarPage() {
     let onCallCount = 0;
     let leaveCount = 0;
 
-    INITIAL_STAFF.forEach(s => {
+    staffList.forEach(s => {
       if (s.shifts.some(sh => sh.type === 'leave')) {
         leaveCount++;
       } else {
@@ -243,8 +278,8 @@ export default function StaffCalendarPage() {
       }
     });
 
-    return { total: INITIAL_STAFF.length, dutyCount, lunchCount, onCallCount, leaveCount };
-  }, []);
+    return { total: staffList.length, dutyCount, lunchCount, onCallCount, leaveCount };
+  }, [staffList]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -269,11 +304,11 @@ export default function StaffCalendarPage() {
 
         {/* Date Selector Switcher */}
         <div className="flex items-center gap-3 bg-[var(--color-glass)] backdrop-blur-xl p-2 rounded-2xl border border-[var(--color-glass-border)] shadow-lg self-start md:self-auto">
-          <button className="p-2 hover:bg-[var(--color-surface)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+          <button onClick={handlePrevDay} className="p-2 hover:bg-[var(--color-surface)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
             <ChevronLeft size={18} />
           </button>
-          <span className="text-sm font-bold text-[var(--color-text)] px-2 font-mono">{selectedDate}</span>
-          <button className="p-2 hover:bg-[var(--color-surface)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+          <span className="text-sm font-bold text-[var(--color-text)] px-2 font-mono">{formattedDate}</span>
+          <button onClick={handleNextDay} className="p-2 hover:bg-[var(--color-surface)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
             <ChevronRight size={18} />
           </button>
         </div>
@@ -515,6 +550,49 @@ export default function StaffCalendarPage() {
         </div>
       </div>
 
+      {/* Leave Requests Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-[var(--color-text)] flex items-center gap-2">
+          <UserX className="w-5 h-5 text-rose-400" />
+          Pending Leave Requests
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {LEAVE_REQUESTS.map(req => (
+            <div key={req.id} className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-4 shadow-lg space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-bold text-[var(--color-text)]">{req.name}</h3>
+                  <p className="text-xs text-[var(--color-text-muted)]">{req.role}</p>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  {req.type}
+                </span>
+              </div>
+              <div className="text-sm space-y-1">
+                <div className="flex items-center justify-between text-[var(--color-text-muted)]">
+                  <span className="text-xs">Dates:</span>
+                  <span className="font-medium text-[var(--color-text)]">{req.dates}</span>
+                </div>
+                <div className="flex items-center justify-between text-[var(--color-text-muted)]">
+                  <span className="text-xs">Reason:</span>
+                  <span className="font-medium text-[var(--color-text)]">{req.reason}</span>
+                </div>
+              </div>
+              {isAdminOrManager && (
+                <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border)]">
+                  <button className="flex-1 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-colors">
+                    Approve
+                  </button>
+                  <button className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold transition-colors">
+                    Reject
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Staff Detail Drawer / Modal */}
       <AnimatePresence>
         {selectedStaffDetail && (
@@ -543,56 +621,180 @@ export default function StaffCalendarPage() {
                 </button>
               </div>
 
-              {/* Timing info boxes */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-3.5 space-y-1">
-                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Duty Shift Timing</span>
-                  <div className="font-mono font-bold text-sm text-emerald-400">{selectedStaffDetail.workingHoursStr}</div>
-                </div>
-                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-3.5 space-y-1">
-                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Scheduled Lunch Window</span>
-                  <div className="font-mono font-bold text-sm text-amber-400">{selectedStaffDetail.lunchHoursStr}</div>
-                </div>
-              </div>
-
-              {/* Detailed shift timeline blocks */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Today's Detailed Timeline:</span>
-                <div className="space-y-2">
-                  {selectedStaffDetail.shifts.map((sh, i) => {
-                    const leg = SHIFT_LEGEND.find(l => l.type === sh.type);
-                    return (
-                      <div key={i} className={cn("p-3 rounded-2xl border flex items-center justify-between text-xs font-semibold", leg?.color)}>
-                        <div className="flex items-center gap-2">
-                          <span className={cn("w-2.5 h-2.5 rounded-full", leg?.dot)} />
-                          <span>{sh.label || leg?.label}</span>
+              {isEditingSchedule ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--color-text-muted)]">Duty Start</label>
+                      <input type="time" value={editForm.dutyStart} onChange={e => setEditForm(prev => ({...prev, dutyStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--color-text-muted)]">Duty End</label>
+                      <input type="time" value={editForm.dutyEnd} onChange={e => setEditForm(prev => ({...prev, dutyEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--color-text-muted)]">Lunch Start</label>
+                      <input type="time" value={editForm.lunchStart} onChange={e => setEditForm(prev => ({...prev, lunchStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--color-text-muted)]">Lunch End</label>
+                      <input type="time" value={editForm.lunchEnd} onChange={e => setEditForm(prev => ({...prev, lunchEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                  </div>
+                  <div className="space-y-3 pt-2 border-t border-[var(--color-border)]">
+                    <label className="flex items-center gap-2 text-xs font-bold text-[var(--color-text)] cursor-pointer">
+                      <input type="checkbox" checked={editForm.hasOnCall} onChange={e => setEditForm(prev => ({...prev, hasOnCall: e.target.checked}))} className="rounded text-purple-600 bg-[var(--color-surface)] border-[var(--color-border)] focus:ring-purple-500" />
+                      Add On-Call Shift
+                    </label>
+                    {editForm.hasOnCall && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-[var(--color-text-muted)]">On-Call Start</label>
+                          <input type="time" value={editForm.onCallStart} onChange={e => setEditForm(prev => ({...prev, onCallStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
                         </div>
-                        <span className="font-mono text-xs">{formatDecimalHour(sh.startHour)} - {formatDecimalHour(sh.endHour)}</span>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-[var(--color-text-muted)]">On-Call End</label>
+                          <input type="time" value={editForm.onCallEnd} onChange={e => setEditForm(prev => ({...prev, onCallEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                        </div>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Timing info boxes */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Duty Shift Timing</span>
+                      <div className="font-mono font-bold text-sm text-emerald-400">{selectedStaffDetail.workingHoursStr}</div>
+                    </div>
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Scheduled Lunch Window</span>
+                      <div className="font-mono font-bold text-sm text-amber-400">{selectedStaffDetail.lunchHoursStr}</div>
+                    </div>
+                  </div>
 
-              {/* Contact Details */}
-              <div className="bg-[var(--color-surface)]/60 border border-[var(--color-border)] rounded-2xl p-3.5 text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[var(--color-text-muted)]">Phone:</span>
-                  <span className="font-mono text-[var(--color-text)] font-semibold">{selectedStaffDetail.phone}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[var(--color-text-muted)]">Email:</span>
-                  <span className="font-mono text-[var(--color-text)] font-semibold">{selectedStaffDetail.email}</span>
-                </div>
-              </div>
+                  {/* Detailed shift timeline blocks */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Today's Detailed Timeline:</span>
+                    <div className="space-y-2">
+                      {selectedStaffDetail.shifts.map((sh, i) => {
+                        const leg = SHIFT_LEGEND.find(l => l.type === sh.type);
+                        return (
+                          <div key={i} className={cn("p-3 rounded-2xl border flex items-center justify-between text-xs font-semibold", leg?.color)}>
+                            <div className="flex items-center gap-2">
+                              <span className={cn("w-2.5 h-2.5 rounded-full", leg?.dot)} />
+                              <span>{sh.label || leg?.label}</span>
+                            </div>
+                            <span className="font-mono text-xs">{formatDecimalHour(sh.startHour)} - {formatDecimalHour(sh.endHour)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={() => setSelectedStaffDetail(null)}
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all"
-                >
-                  Close Inspector
-                </button>
+                  {/* Contact Details */}
+                  <div className="bg-[var(--color-surface)]/60 border border-[var(--color-border)] rounded-2xl p-3.5 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--color-text-muted)]">Phone:</span>
+                      <span className="font-mono text-[var(--color-text)] font-semibold">{selectedStaffDetail.phone}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--color-text-muted)]">Email:</span>
+                      <span className="font-mono text-[var(--color-text)] font-semibold">{selectedStaffDetail.email}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-between items-center pt-2">
+                {isAdminOrManager && !isEditingSchedule && (
+                  <button
+                    onClick={() => {
+                      const dutyShift = selectedStaffDetail.shifts.find(s => s.type === 'duty');
+                      const lunchShift = selectedStaffDetail.shifts.find(s => s.type === 'lunch');
+                      const onCallShift = selectedStaffDetail.shifts.find(s => s.type === 'oncall');
+                      setEditForm({
+                        dutyStart: dutyShift ? decimalToTime(dutyShift.startHour) : '09:00',
+                        dutyEnd: dutyShift ? decimalToTime(selectedStaffDetail.shifts.filter(s => s.type === 'duty').pop()?.endHour || 17) : '17:00',
+                        lunchStart: lunchShift ? decimalToTime(lunchShift.startHour) : '13:00',
+                        lunchEnd: lunchShift ? decimalToTime(lunchShift.endHour) : '14:00',
+                        hasOnCall: !!onCallShift,
+                        onCallStart: onCallShift ? decimalToTime(onCallShift.startHour) : '17:00',
+                        onCallEnd: onCallShift ? decimalToTime(onCallShift.endHour) : '20:00',
+                      });
+                      setIsEditingSchedule(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-purple-500/10 hover:text-purple-400 text-[var(--color-text)] font-bold text-xs transition-colors"
+                  >
+                    Edit Schedule
+                  </button>
+                )}
+                {isEditingSchedule ? (
+                  <div className="flex gap-2 ml-auto">
+                    <button
+                      onClick={() => setIsEditingSchedule(false)}
+                      className="px-4 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] font-bold text-xs hover:bg-[var(--color-bg)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newShifts: StaffShiftBlock[] = [];
+                        const dStart = timeToDecimal(editForm.dutyStart);
+                        const dEnd = timeToDecimal(editForm.dutyEnd);
+                        const lStart = timeToDecimal(editForm.lunchStart);
+                        const lEnd = timeToDecimal(editForm.lunchEnd);
+                        
+                        if (lStart > dStart && lStart < dEnd) {
+                          newShifts.push({ type: 'duty', startHour: dStart, endHour: lStart, label: 'Morning Duty' });
+                          newShifts.push({ type: 'lunch', startHour: lStart, endHour: lEnd, label: 'Lunch Break' });
+                          newShifts.push({ type: 'duty', startHour: lEnd, endHour: dEnd, label: 'Afternoon Duty' });
+                        } else {
+                          newShifts.push({ type: 'duty', startHour: dStart, endHour: dEnd, label: 'Duty Time' });
+                        }
+                        
+                        if (editForm.hasOnCall) {
+                          newShifts.push({ type: 'oncall', startHour: timeToDecimal(editForm.onCallStart), endHour: timeToDecimal(editForm.onCallEnd), label: 'On Call' });
+                        }
+
+                        const formatTimeAMPM = (d: number) => {
+                          const h = Math.floor(d);
+                          const m = Math.round((d - h) * 60);
+                          const ampm = h >= 12 ? 'PM' : 'AM';
+                          const hr = h % 12 || 12;
+                          return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`;
+                        };
+
+                        const updatedStaff = {
+                          ...selectedStaffDetail,
+                          shifts: newShifts,
+                          workingHoursStr: `${formatTimeAMPM(dStart)} - ${formatTimeAMPM(dEnd)}`,
+                          lunchHoursStr: `${formatTimeAMPM(lStart)} - ${formatTimeAMPM(lEnd)}`
+                        };
+
+                        setStaffList(prev => prev.map(s => s.id === updatedStaff.id ? updatedStaff : s));
+                        setSelectedStaffDetail(updatedStaff);
+                        setIsEditingSchedule(false);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedStaffDetail(null);
+                      setIsEditingSchedule(false);
+                    }}
+                    className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all ml-auto"
+                  >
+                    Close Inspector
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>

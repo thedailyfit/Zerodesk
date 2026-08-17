@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 // CORE TYPE DEFINITIONS
 // ============================================================
 
-export type NicheId = 'skin' | 'spa' | 'salon' | 'realestate' | 'dental' | 'hotel';
+export type NicheId = 'skin' | 'spa' | 'salon' | 'realestate' | 'dental' | 'hotel' | 'auto';
 
 export interface NicheNavItem {
   name: string;

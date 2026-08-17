@@ -20,7 +20,11 @@ import {
   Sparkles,
   User,
   Sliders,
-  AlertCircle
+  AlertCircle,
+  PhoneForwarded,
+  Eye,
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatWidget } from '@/components/widget/chat-widget';
@@ -31,6 +35,7 @@ const tabs = [
   { id: 'widget', label: 'Web Chatbot AI', icon: MessageSquare },
   { id: 'voice_ai', label: 'Voice AI Settings', icon: Phone },
   { id: 'whatsapp_ai', label: 'WhatsApp AI Settings', icon: MessageCircle },
+  { id: 'handoff', label: 'Human Handoffs', icon: PhoneForwarded },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -68,16 +73,70 @@ export default function SettingsPage() {
   const [isWebchatEnabled, setIsWebchatEnabled] = useState(true);
   const [isVoiceAiEnabled, setIsVoiceAiEnabled] = useState(true);
   const [isWhatsappAiEnabled, setIsWhatsappAiEnabled] = useState(true);
+  const [isHandoffEnabled, setIsHandoffEnabled] = useState(true);
 
   // Voice AI Settings State
   const [voiceGender, setVoiceGender] = useState('female_rachel');
   const [voiceLanguage, setVoiceLanguage] = useState('en_hi');
-  const [voicePersonality, setVoicePersonality] = useState('doctor_assistant');
 
   // WhatsApp AI Settings State
   const [waNumber, setWaNumber] = useState('+91 98765 43210');
   const [waDelay, setWaDelay] = useState('2');
   const [waHandoffKeywords, setWaHandoffKeywords] = useState('doctor, emergency, refund, speak to human');
+  const [waVerified, setWaVerified] = useState<boolean | null>(null);
+  const [waVerifying, setWaVerifying] = useState(false);
+
+  // Handoff State
+  const [handoffVoice, setHandoffVoice] = useState('+91 98765 43210');
+  const [handoffWa, setHandoffWa] = useState('+91 98765 43210');
+  const [handoffWeb, setHandoffWeb] = useState('support@glowclinic.com');
+  const [handoffVoiceEnabled, setHandoffVoiceEnabled] = useState(true);
+  const [handoffWaEnabled, setHandoffWaEnabled] = useState(true);
+  const [handoffWebEnabled, setHandoffWebEnabled] = useState(true);
+
+  // Billing State
+  const [gstRate, setGstRate] = useState('18%');
+  const [invoicePrefix, setInvoicePrefix] = useState('INV-2026-');
+  const [paymentMethods, setPaymentMethods] = useState({ cash: true, card: true, upi: true, insurance: false });
+  const [bankUpi, setBankUpi] = useState('glowclinic@okicici');
+  const [invoiceFooter, setInvoiceFooter] = useState('Thank you for choosing Glow Skin & Hair Clinic. Terms & Conditions apply.');
+
+  // Security State
+  const [twoFactor, setTwoFactor] = useState(true);
+  const [sessionTimeout, setSessionTimeout] = useState('30min');
+  const [ipWhitelist, setIpWhitelist] = useState('');
+  const [passwordPolicy, setPasswordPolicy] = useState('Strong');
+
+  // Notifications State
+  const [notifSettings, setNotifSettings] = useState({
+    appointment: { inApp: true, email: true, whatsapp: true },
+    missedCall: { inApp: true, email: true, whatsapp: true },
+    lead: { inApp: true, email: true },
+    payment: { inApp: true, email: true, whatsapp: true },
+    leave: { inApp: true, email: true },
+    lowBalance: { inApp: true, email: true, sms: true },
+  });
+
+  // API Keys State
+  const [apiKeys, setApiKeys] = useState({
+    openai: 'sk-proj-xxxxxxxxxxxx',
+    deepgram: 'dg-xxxxxxxxxxxx',
+    elevenlabs: 'el-xxxxxxxxxxxx',
+    twilioSid: 'ACxxxxxxxxxxxx',
+    twilioToken: 'xxxxxxxxxxxx',
+    waToken: 'EAxxxxxxxxxxxx',
+    waPhoneId: '1234567890',
+    waBizId: '0987654321',
+    metaBizId: '',
+    metaAdId: '',
+    metaToken: '',
+    googleAds: '',
+    sentry: '',
+  });
+
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [verifyingKeys, setVerifyingKeys] = useState<Record<string, boolean>>({});
+  const [verifiedKeys, setVerifiedKeys] = useState<Record<string, boolean>>({});
 
   // Logo File Reader
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +162,74 @@ export default function SettingsPage() {
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
+
+  const verifyWa = () => {
+    setWaVerifying(true);
+    setTimeout(() => {
+      setWaVerifying(false);
+      setWaVerified(true); // Simulate success
+    }, 1500);
+  };
+
+  const verifyKey = (key: string) => {
+    setVerifyingKeys(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setVerifyingKeys(prev => ({ ...prev, [key]: false }));
+      setVerifiedKeys(prev => ({ ...prev, [key]: true })); // Simulate success
+    }, 1500);
+  };
+
+  const toggleNotif = (event: keyof typeof notifSettings, channel: keyof (typeof notifSettings)[keyof typeof notifSettings]) => {
+    setNotifSettings(prev => ({
+      ...prev,
+      [event]: {
+        ...prev[event],
+        [channel]: !(prev[event] as any)[channel]
+      }
+    }));
+  };
+
+  const renderApiKeyField = (id: string, label: string, desc: string, valueKey: keyof typeof apiKeys) => (
+    <div className="space-y-2 p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+        <div>
+          <label className="text-sm font-semibold text-[var(--color-text)]">{label}</label>
+          <p className="text-[10px] text-[var(--color-text-muted)]">{desc}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {verifiedKeys[id] !== undefined && (
+            <span className={cn("text-[10px] font-medium px-2 py-1 rounded-full", verifiedKeys[id] ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")}>
+              {verifiedKeys[id] ? '✓ Connected' : '✗ Not Connected'}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => verifyKey(id)}
+            disabled={verifyingKeys[id]}
+            className="px-3 py-1 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 rounded-lg text-[10px] font-bold transition-all border border-purple-500/20 flex items-center gap-1 disabled:opacity-50"
+          >
+            {verifyingKeys[id] ? <Loader2 size={12} className="animate-spin" /> : null}
+            Verify Connection
+          </button>
+        </div>
+      </div>
+      <div className="relative">
+        <input
+          type={showKeys[id] ? 'text' : 'password'}
+          value={apiKeys[valueKey]}
+          onChange={(e) => setApiKeys(prev => ({ ...prev, [valueKey]: e.target.value }))}
+          className="w-full px-3.5 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] pr-10 font-mono"
+        />
+        <button
+          type="button"
+          onClick={() => setShowKeys(prev => ({ ...prev, [id]: !prev[id] }))}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
+          {showKeys[id] ? <EyeOff size={14} /> : <Eye size={14} />}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -308,7 +435,7 @@ export default function SettingsPage() {
             </form>
           )}
 
-          {/* TAB 2: Working Hours (Interactive ON/OFF Toggles Fixed!) */}
+          {/* TAB 2: Working Hours */}
           {activeTab === 'hours' && (
             <div className="space-y-6">
               <div>
@@ -384,7 +511,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB 3: Web Chatbot AI (With ON/OFF Toggle) */}
+          {/* TAB 3: Web Chatbot AI */}
           {activeTab === 'widget' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
@@ -420,7 +547,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB 4: Voice AI Settings (New Subpage) */}
+          {/* TAB 4: Voice AI Settings */}
           {activeTab === 'voice_ai' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
@@ -448,6 +575,20 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-6">
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">Linked Phone Number</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono">{phone}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">✓ Verified</span>
+                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">Provider: Twilio</span>
+                    </div>
+                  </div>
+                  <button className="px-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] rounded-lg text-xs font-semibold text-[var(--color-text)] transition-colors">
+                    Test Call
+                  </button>
+                </div>
+
                 {/* Voice Character Selection */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
                   <label className="block text-xs font-semibold text-[var(--color-text)]">Preferred Voice Character (Male / Female)</label>
@@ -502,7 +643,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB 5: WhatsApp AI Settings (New Subpage) */}
+          {/* TAB 5: WhatsApp AI Settings */}
           {activeTab === 'whatsapp_ai' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
@@ -532,12 +673,35 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">WhatsApp Business Phone Number</label>
-                  <input
-                    type="tel"
-                    value={waNumber}
-                    onChange={(e) => setWaNumber(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-mono"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      value={waNumber}
+                      onChange={(e) => setWaNumber(e.target.value)}
+                      className="flex-1 px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={verifyWa}
+                      disabled={waVerifying}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+                    >
+                      {waVerifying ? <Loader2 size={14} className="animate-spin" /> : 'Verify Connection'}
+                    </button>
+                  </div>
+                  {waVerified !== null && (
+                    <div className="mt-2">
+                      {waVerified ? (
+                        <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-medium inline-flex items-center gap-1">
+                          <Check size={14} /> WhatsApp AI Connected & Active
+                        </span>
+                      ) : (
+                         <span className="text-xs bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full font-medium inline-flex items-center gap-1">
+                          ✗ Connection Failed
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -565,16 +729,349 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Placeholder for remaining tabs */}
-          {activeTab !== 'business' && activeTab !== 'hours' && activeTab !== 'widget' && activeTab !== 'voice_ai' && activeTab !== 'whatsapp_ai' && (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] flex items-center justify-center">
-                <Globe size={24} className="text-[var(--color-text-muted)]" />
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--color-text)]">{tabs.find(t => t.id === activeTab)?.label}</h3>
-              <p className="text-xs text-[var(--color-text-muted)]">Configuration settings active and synced.</p>
-            </div>
+          {/* TAB 6: Human Handoffs */}
+          {activeTab === 'handoff' && (
+             <div className="space-y-6">
+               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                 <div>
+                   <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                     <PhoneForwarded size={20} className="text-blue-400" />
+                     Human Handoffs
+                   </h2>
+                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">When a customer says &quot;talk to a human&quot; or &quot;connect me to someone&quot;, the AI will transfer the conversation to these numbers.</p>
+                 </div>
+                 
+                 <button
+                  type="button"
+                  onClick={() => setIsHandoffEnabled(!isHandoffEnabled)}
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border shadow",
+                    isHandoffEnabled
+                      ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500"
+                      : "bg-red-600 hover:bg-red-500 text-white border-red-500"
+                  )}
+                >
+                  <Power size={14} />
+                  <span>{isHandoffEnabled ? 'HANDOFF ON' : 'HANDOFF OFF'}</span>
+                </button>
+               </div>
+
+               <div className="space-y-4">
+                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Voice AI Human Handoff Number</label>
+                      <input
+                        type="tel"
+                        value={handoffVoice}
+                        onChange={(e) => setHandoffVoice(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHandoffVoiceEnabled(!handoffVoiceEnabled)}
+                      className={cn("mt-5 px-3 py-1.5 rounded text-xs font-bold border transition-colors", handoffVoiceEnabled ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" : "bg-red-500/10 text-red-500 border-red-500/30")}
+                    >
+                      {handoffVoiceEnabled ? 'ON' : 'OFF'}
+                    </button>
+                 </div>
+                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">WhatsApp Human Handoff Number</label>
+                      <input
+                        type="tel"
+                        value={handoffWa}
+                        onChange={(e) => setHandoffWa(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHandoffWaEnabled(!handoffWaEnabled)}
+                      className={cn("mt-5 px-3 py-1.5 rounded text-xs font-bold border transition-colors", handoffWaEnabled ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" : "bg-red-500/10 text-red-500 border-red-500/30")}
+                    >
+                      {handoffWaEnabled ? 'ON' : 'OFF'}
+                    </button>
+                 </div>
+                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">WebChat Escalation Email/Phone</label>
+                      <input
+                        type="text"
+                        value={handoffWeb}
+                        onChange={(e) => setHandoffWeb(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHandoffWebEnabled(!handoffWebEnabled)}
+                      className={cn("mt-5 px-3 py-1.5 rounded text-xs font-bold border transition-colors", handoffWebEnabled ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" : "bg-red-500/10 text-red-500 border-red-500/30")}
+                    >
+                      {handoffWebEnabled ? 'ON' : 'OFF'}
+                    </button>
+                 </div>
+               </div>
+             </div>
           )}
+
+          {/* TAB 7: Billing */}
+          {activeTab === 'billing' && (
+             <div className="space-y-6">
+                <div className="border-b border-[var(--color-border)] pb-3">
+                  <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                     <CreditCard size={20} className="text-orange-400" />
+                     Billing Settings
+                  </h2>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Manage invoice configuration and accepted payments.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Default GST Rate</label>
+                    <select
+                      value={gstRate}
+                      onChange={(e) => setGstRate(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                    >
+                      <option value="0%">0%</option>
+                      <option value="5%">5%</option>
+                      <option value="12%">12%</option>
+                      <option value="18%">18%</option>
+                      <option value="28%">28%</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Invoice Number Prefix</label>
+                    <input
+                      type="text"
+                      value={invoicePrefix}
+                      onChange={(e) => setInvoicePrefix(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                      placeholder="e.g. INV-2026-"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-2">Accepted Payment Methods</label>
+                    <div className="flex flex-wrap gap-4">
+                      {['cash', 'card', 'upi', 'insurance'].map((method) => (
+                        <label key={method} className="flex items-center gap-2 cursor-pointer">
+                           <input
+                             type="checkbox"
+                             checked={paymentMethods[method as keyof typeof paymentMethods]}
+                             onChange={() => setPaymentMethods(p => ({ ...p, [method]: !p[method as keyof typeof paymentMethods] }))}
+                             className="rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500"
+                           />
+                           <span className="text-sm text-[var(--color-text)] capitalize">{method}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Bank Account / UPI ID for QR</label>
+                    <input
+                      type="text"
+                      value={bankUpi}
+                      onChange={(e) => setBankUpi(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                      placeholder="e.g. yourbusiness@okicici"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Invoice Footer Text (Terms)</label>
+                    <textarea
+                      value={invoiceFooter}
+                      onChange={(e) => setInvoiceFooter(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] min-h-[80px]"
+                    />
+                  </div>
+                </div>
+             </div>
+          )}
+
+          {/* TAB 8: Security */}
+          {activeTab === 'security' && (
+             <div className="space-y-6">
+               <div className="border-b border-[var(--color-border)] pb-3">
+                  <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                     <Shield size={20} className="text-red-400" />
+                     Security Settings
+                  </h2>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Protect your account and monitor active sessions.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
+                     <div>
+                       <h3 className="text-sm font-semibold text-[var(--color-text)]">Two-Factor Authentication</h3>
+                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Require 2FA via email on login</p>
+                     </div>
+                     <button
+                      type="button"
+                      onClick={() => setTwoFactor(!twoFactor)}
+                      className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", twoFactor ? "bg-emerald-500/20 text-emerald-500" : "bg-slate-500/20 text-slate-400")}
+                     >
+                      {twoFactor ? 'ON' : 'OFF'}
+                     </button>
+                  </div>
+                  <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Session Timeout</label>
+                     <select
+                        value={sessionTimeout}
+                        onChange={(e) => setSessionTimeout(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                     >
+                       <option value="15min">15 Minutes</option>
+                       <option value="30min">30 Minutes</option>
+                       <option value="1hr">1 Hour</option>
+                       <option value="2hr">2 Hours</option>
+                       <option value="4hr">4 Hours</option>
+                     </select>
+                  </div>
+                  <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">IP Whitelist (One per line)</label>
+                     <textarea
+                        value={ipWhitelist}
+                        onChange={(e) => setIpWhitelist(e.target.value)}
+                        placeholder="Leave blank to allow all IPs"
+                        className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] min-h-[80px]"
+                     />
+                  </div>
+                  <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Password Policy</label>
+                     <select
+                        value={passwordPolicy}
+                        onChange={(e) => setPasswordPolicy(e.target.value)}
+                        className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
+                     >
+                       <option value="Standard">Standard (Min 8 chars, 1 number)</option>
+                       <option value="Strong">Strong (Min 10 chars, 1 number, 1 symbol)</option>
+                       <option value="Very Strong">Very Strong (Min 12 chars, mixed case, number, symbol)</option>
+                     </select>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Recent Login History</h3>
+                  <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+                     <table className="w-full text-left text-xs text-[var(--color-text)]">
+                       <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)]">
+                         <tr>
+                           <th className="px-4 py-2">Date & Time</th>
+                           <th className="px-4 py-2">IP Address</th>
+                           <th className="px-4 py-2">Device</th>
+                           <th className="px-4 py-2">Status</th>
+                         </tr>
+                       </thead>
+                       <tbody className="divide-y divide-[var(--color-border)]">
+                         <tr><td className="px-4 py-2">Today, 10:45 AM</td><td className="px-4 py-2">192.168.1.1</td><td className="px-4 py-2">Chrome / Windows</td><td className="px-4 py-2 text-emerald-400">Success</td></tr>
+                         <tr><td className="px-4 py-2">Yesterday, 4:20 PM</td><td className="px-4 py-2">115.240.x.x</td><td className="px-4 py-2">Safari / iOS</td><td className="px-4 py-2 text-emerald-400">Success</td></tr>
+                         <tr><td className="px-4 py-2">Yesterday, 4:18 PM</td><td className="px-4 py-2">115.240.x.x</td><td className="px-4 py-2">Safari / iOS</td><td className="px-4 py-2 text-red-400">Failed</td></tr>
+                         <tr><td className="px-4 py-2">Aug 15, 09:00 AM</td><td className="px-4 py-2">192.168.1.1</td><td className="px-4 py-2">Firefox / macOS</td><td className="px-4 py-2 text-emerald-400">Success</td></tr>
+                         <tr><td className="px-4 py-2">Aug 14, 06:30 PM</td><td className="px-4 py-2">192.168.1.1</td><td className="px-4 py-2">Chrome / Windows</td><td className="px-4 py-2 text-emerald-400">Success</td></tr>
+                       </tbody>
+                     </table>
+                  </div>
+                </div>
+             </div>
+          )}
+
+          {/* TAB 9: Notifications */}
+          {activeTab === 'notifications' && (
+             <div className="space-y-6">
+                <div className="border-b border-[var(--color-border)] pb-3">
+                  <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                     <Bell size={20} className="text-yellow-400" />
+                     Notifications
+                  </h2>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Control how and when you receive alerts for key events.</p>
+                </div>
+                
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+                   <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] text-xs font-semibold text-[var(--color-text-muted)]">
+                      <div className="col-span-6">Event</div>
+                      <div className="col-span-2 text-center">In-App</div>
+                      <div className="col-span-2 text-center">Email</div>
+                      <div className="col-span-2 text-center">WhatsApp/SMS</div>
+                   </div>
+                   
+                   {[
+                     { id: 'appointment', label: 'New Appointment Booked', channels: ['inApp', 'email', 'whatsapp'] },
+                     { id: 'missedCall', label: 'Missed Call Alert', channels: ['inApp', 'email', 'whatsapp'] },
+                     { id: 'lead', label: 'New Lead Created', channels: ['inApp', 'email'] },
+                     { id: 'payment', label: 'Payment Received', channels: ['inApp', 'email', 'whatsapp'] },
+                     { id: 'leave', label: 'Leave Request Submitted', channels: ['inApp', 'email'] },
+                     { id: 'lowBalance', label: 'Low Balance Alert', channels: ['inApp', 'email', 'sms'] },
+                   ].map((item) => (
+                      <div key={item.id} className="grid grid-cols-12 gap-4 p-4 items-center border-b border-[var(--color-border)] last:border-0">
+                         <div className="col-span-6 text-sm font-medium text-[var(--color-text)]">{item.label}</div>
+                         <div className="col-span-2 flex justify-center">
+                            {item.channels.includes('inApp') && (
+                              <input type="checkbox" checked={(notifSettings as any)[item.id].inApp} onChange={() => toggleNotif(item.id as any, 'inApp')} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                            )}
+                         </div>
+                         <div className="col-span-2 flex justify-center">
+                            {item.channels.includes('email') && (
+                              <input type="checkbox" checked={(notifSettings as any)[item.id].email} onChange={() => toggleNotif(item.id as any, 'email')} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                            )}
+                         </div>
+                         <div className="col-span-2 flex justify-center">
+                            {(item.channels.includes('whatsapp') || item.channels.includes('sms')) && (
+                              <input type="checkbox" checked={(notifSettings as any)[item.id][item.channels.includes('whatsapp') ? 'whatsapp' : 'sms']} onChange={() => toggleNotif(item.id as any, item.channels.includes('whatsapp') ? 'whatsapp' : 'sms' as any)} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                            )}
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+          )}
+
+          {/* TAB 10: API Keys */}
+          {activeTab === 'api' && (
+             <div className="space-y-6">
+                <div className="border-b border-[var(--color-border)] pb-3">
+                  <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                     <Key size={20} className="text-pink-400" />
+                     API Keys & Integrations
+                  </h2>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Manage connections to third-party services like LLMs, STT, TTS, and telephony providers.</p>
+                </div>
+                
+                <div className="space-y-8">
+                  {/* AI Models */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-[var(--color-text)] border-b border-[var(--color-border)] pb-2">AI Models & Voice</h3>
+                    {renderApiKeyField('openai', 'OpenAI API Key', 'Used for core LLM reasoning & chat completion.', 'openai')}
+                    {renderApiKeyField('deepgram', 'Deepgram API Key', 'Used for ultra-fast Speech-to-Text.', 'deepgram')}
+                    {renderApiKeyField('elevenlabs', 'ElevenLabs API Key', 'Used for realistic Text-to-Speech generation.', 'elevenlabs')}
+                  </div>
+
+                  {/* Telephony & Messaging */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-[var(--color-text)] border-b border-[var(--color-border)] pb-2">Telephony & Messaging</h3>
+                    {renderApiKeyField('twilioSid', 'Twilio/Exotel Account SID', 'Account SID for phone calls.', 'twilioSid')}
+                    {renderApiKeyField('twilioToken', 'Twilio/Exotel Auth Token', 'Auth token for secure API access.', 'twilioToken')}
+                    {renderApiKeyField('waToken', 'WhatsApp Cloud API Token', 'System user token for WhatsApp Business API.', 'waToken')}
+                    {renderApiKeyField('waPhoneId', 'WhatsApp Phone Number ID', 'Unique ID for your sending phone number.', 'waPhoneId')}
+                    {renderApiKeyField('waBizId', 'WhatsApp Business Account ID', 'Your Meta Business Account ID.', 'waBizId')}
+                  </div>
+
+                  {/* Marketing & Tracking */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-[var(--color-text)] border-b border-[var(--color-border)] pb-2">Meta Ads Integration</h3>
+                    {renderApiKeyField('metaBizId', 'Meta Business Account ID', 'Used for Meta Ads Lead syncing.', 'metaBizId')}
+                    {renderApiKeyField('metaAdId', 'Ad Account ID', 'Specific Ad Account ID for tracking.', 'metaAdId')}
+                    {renderApiKeyField('metaToken', 'System User Access Token', 'Token with leads_retrieval permissions.', 'metaToken')}
+                  </div>
+
+                  <div className="space-y-4">
+                     <h3 className="text-sm font-semibold text-[var(--color-text)] border-b border-[var(--color-border)] pb-2">Other (Optional)</h3>
+                     {renderApiKeyField('googleAds', 'Google Ads Customer ID', 'Optional tracking for Google Ads.', 'googleAds')}
+                     {renderApiKeyField('sentry', 'Sentry DSN', 'Error tracking and monitoring.', 'sentry')}
+                  </div>
+                </div>
+             </div>
+          )}
+
         </motion.div>
       </div>
     </div>

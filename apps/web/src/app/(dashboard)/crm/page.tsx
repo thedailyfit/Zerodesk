@@ -3,37 +3,22 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
-import { 
-  Plus, 
-  MoreHorizontal, 
-  X, 
-  Target, 
-  Phone, 
-  MessageSquare, 
-  Calendar, 
-  Search, 
-  Filter, 
-  LayoutGrid, 
-  List, 
-  CheckCircle2, 
-  Clock, 
-  Flame, 
-  Sparkles, 
-  ArrowRight, 
-  User, 
-  DollarSign, 
-  ChevronRight, 
-  FileText, 
-  Send, 
-  TrendingUp, 
-  Trash2, 
-  Edit3, 
-  Check, 
-  ShieldCheck,
+import {
+  Plus,
+  X,
+  Phone,
+  MessageSquare,
+  Search,
+  Flame,
   Building,
   Activity,
-  Layers,
-  ArrowUpRight
+  User,
+  Clock,
+  Briefcase,
+  ChevronRight,
+  MoreVertical,
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
@@ -45,274 +30,99 @@ export interface LeadActivity {
   author?: string;
 }
 
-export interface LeadItem {
+export interface Lead {
   id: string;
-  title: string;
-  customer: string;
+  name: string;
   phone: string;
   email?: string;
-  value: number;
-  stageSlug: string;
-  source: 'VOICE' | 'WHATSAPP' | 'WEB_CHAT' | 'STORE_VISIT' | 'REFERRAL';
-  score: number; // 0-100 AI Lead Quality Score
-  daysInStage: number;
-  priority: 'VIP' | 'HIGH' | 'MEDIUM' | 'STANDARD';
+  channel: 'VOICE' | 'WHATSAPP' | 'WEB_CHAT' | 'WALK_IN' | 'REFERRAL' | 'ADS';
+  stage: string;
+  dealValue: number;
+  aiScore: number;
   assignedTo: string;
-  aiSummary: string;
-  createdAt: string;
+  daysInStage: number;
+  summary: string;
+  priority?: 'VIP' | 'High' | 'Medium' | 'Standard';
   activities: LeadActivity[];
+  createdAt: string;
 }
 
 export interface StageItem {
   name: string;
   slug: string;
-  color: string;
+  colorClass: string;
+  bgClass: string;
 }
 
-const DEFAULT_STAGES: StageItem[] = [
-  { name: 'New Inquiries', slug: 'new', color: '#6366f1' },
-  { name: 'Contacted & Qualified', slug: 'contacted', color: '#8b5cf6' },
-  { name: 'Consultation / Site Visit', slug: 'qualified', color: '#a855f7' },
-  { name: 'Proposal Sent', slug: 'proposal', color: '#d946ef' },
-  { name: 'Won & Booked', slug: 'won', color: '#22c55e' },
-  { name: 'Lost / Dormant', slug: 'lost', color: '#ef4444' },
+const STAGES: StageItem[] = [
+  { name: 'New Inquiry', slug: 'new', colorClass: 'text-blue-500', bgClass: 'bg-blue-500/10' },
+  { name: 'Contacted', slug: 'contacted', colorClass: 'text-indigo-500', bgClass: 'bg-indigo-500/10' },
+  { name: 'Qualified', slug: 'qualified', colorClass: 'text-purple-500', bgClass: 'bg-purple-500/10' },
+  { name: 'Proposal/Quote', slug: 'proposal', colorClass: 'text-pink-500', bgClass: 'bg-pink-500/10' },
+  { name: 'Won', slug: 'won', colorClass: 'text-emerald-500', bgClass: 'bg-emerald-500/10' },
+  { name: 'Lost', slug: 'lost', colorClass: 'text-rose-500', bgClass: 'bg-rose-500/10' },
 ];
 
-const SOURCE_ICONS: Record<string, { label: string; icon: any; color: string }> = {
-  VOICE: { label: 'Voice AI', icon: Phone, color: 'text-cyan-400' },
-  WHATSAPP: { label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-400' },
-  WEB_CHAT: { label: 'Web Chat', icon: Activity, color: 'text-purple-400' },
-  STORE_VISIT: { label: 'Walk-In', icon: Building, color: 'text-amber-400' },
-  REFERRAL: { label: 'Referral', icon: User, color: 'text-blue-400' },
+const SOURCE_ICONS: Record<string, { label: string; icon: any; colorClass: string }> = {
+  VOICE: { label: 'Voice AI', icon: Phone, colorClass: 'text-cyan-500' },
+  WHATSAPP: { label: 'WhatsApp', icon: MessageSquare, colorClass: 'text-emerald-500' },
+  WEB_CHAT: { label: 'Web Chat', icon: Activity, colorClass: 'text-purple-500' },
+  WALK_IN: { label: 'Walk-In', icon: Building, colorClass: 'text-amber-500' },
+  REFERRAL: { label: 'Referral', icon: User, colorClass: 'text-blue-500' },
+  ADS: { label: 'Ads', icon: Flame, colorClass: 'text-orange-500' },
 };
 
 export default function CrmPage() {
-  const { currentNiche, nicheConfig } = useNiche();
+  const { currentNiche } = useNiche();
 
-  const getDefaultLeads = (): LeadItem[] => {
-    if (currentNiche === 'realestate') {
-      return [
-        {
-          id: 're_1',
-          title: '3BHK Luxury Villa Site Visit',
-          customer: 'Vikramaditya Varma',
-          phone: '+91 98490 12345',
-          email: 'vikram.varma@hyderabad.com',
-          value: 28500000,
-          stageSlug: 'qualified',
-          source: 'VOICE',
-          score: 94,
-          daysInStage: 1,
-          priority: 'VIP',
-          assignedTo: 'Suresh Reddy',
-          aiSummary: 'Inquired about East-facing 3BHK Gated Villa in Jubilee Hills. Budget approved up to ₹3 Cr. Weekend site visit scheduled.',
-          createdAt: 'Aug 13, 2026',
-          activities: [
-            { id: 'a1', type: 'CALL', text: 'Voice AI inbound call: Captured budget & location preference', time: 'Yesterday 3:15 PM' },
-            { id: 'a2', type: 'WHATSAPP', text: 'Brochure + Location coordinates sent via WhatsApp', time: 'Yesterday 3:17 PM' }
-          ]
-        },
-        {
-          id: 're_2',
-          title: 'Commercial Office Space Inquiry',
-          customer: 'Anand Rao (Tech Corp)',
-          phone: '+91 97000 88991',
-          value: 45000000,
-          stageSlug: 'proposal',
-          source: 'WHATSAPP',
-          score: 88,
-          daysInStage: 3,
-          priority: 'VIP',
-          assignedTo: 'Pooja Agarwal',
-          aiSummary: 'Looking for 5,000 sq.ft bare shell office in Hitec City. Sent pricing floor plan proposal.',
-          createdAt: 'Aug 11, 2026',
-          activities: [
-            { id: 'a1', type: 'WHATSAPP', text: 'Floor plans & cost estimation PDF shared', time: 'Aug 11' }
-          ]
-        },
-        {
-          id: 're_3',
-          title: '2BHK Apartment Investment',
-          customer: 'Kavitha Swaminathan',
-          phone: '+91 94400 33445',
-          value: 8500000,
-          stageSlug: 'new',
-          source: 'WEB_CHAT',
-          score: 65,
-          daysInStage: 0,
-          priority: 'HIGH',
-          assignedTo: 'Frontdesk AI',
-          aiSummary: 'Inquired via web widget regarding upcoming launch in Gachibowli.',
-          createdAt: 'Today 10:20 AM',
-          activities: [
-            { id: 'a1', type: 'NOTE', text: 'New inquiry registered from website widget', time: 'Today 10:20 AM' }
-          ]
-        }
-      ];
-    }
-
-    if (currentNiche === 'dental') {
-      return [
-        {
-          id: 'de_1',
-          title: 'Invisalign Invisible Aligners Package',
-          customer: 'Sneha Chawla',
-          phone: '+91 98850 44321',
-          value: 140000,
-          stageSlug: 'qualified',
-          score: 92,
-          source: 'VOICE',
-          daysInStage: 1,
-          priority: 'VIP',
-          assignedTo: 'Dr. Vivek Sharma',
-          aiSummary: 'Called for transparent aligners cost & 3D scan consultation. Scheduled clinical assessment.',
-          createdAt: 'Aug 14, 2026',
-          activities: [
-            { id: 'a1', type: 'CALL', text: 'Voice AI consultation: Scheduled 3D intraoral scan', time: 'Today 11:30 AM' }
-          ]
-        },
-        {
-          id: 'de_2',
-          title: 'Full Ceramic Crown & Root Canal',
-          customer: 'Mahesh Babu',
-          phone: '+91 98480 99887',
-          value: 38000,
-          stageSlug: 'proposal',
-          score: 85,
-          source: 'WHATSAPP',
-          daysInStage: 2,
-          priority: 'HIGH',
-          assignedTo: 'Dr. Ananya',
-          aiSummary: 'Sent treatment estimate for Zirconia crown and laser root canal procedure.',
-          createdAt: 'Aug 12, 2026',
-          activities: [
-            { id: 'a1', type: 'WHATSAPP', text: 'Digital estimate #DE-881 sent with payment link', time: 'Aug 12' }
-          ]
-        }
-      ];
-    }
-
-    // Default Skin & Aesthetic Clinic Deals
-    return [
-      {
-        id: 'sk_1',
-        title: 'Full Body Diode Laser Package (6 Sessions)',
-        customer: 'Sneha Reddy',
-        phone: '+91 98490 55432',
-        email: 'sneha.reddy@hyderabad.com',
-        value: 95000,
-        stageSlug: 'qualified',
-        source: 'VOICE',
-        score: 95,
-        daysInStage: 1,
-        priority: 'VIP',
-        assignedTo: 'Dr. Meenakshi',
-        aiSummary: 'Caller requested US-FDA Diode Laser package for full body. Approved budget, scheduled patch test for Saturday 4 PM.',
-        createdAt: 'Aug 14, 2026',
-        activities: [
-          { id: 'a1', type: 'CALL', text: 'Voice AI inbound call: Consultation booked for Saturday', time: 'Today 11:00 AM' },
-          { id: 'a2', type: 'WHATSAPP', text: 'Pre-treatment instructions + clinic location sent', time: 'Today 11:02 AM' }
-        ]
-      },
-      {
-        id: 'sk_2',
-        title: 'GFC & Hair PRP Therapy (4 Sessions)',
-        customer: 'Vikramaditya Singh',
-        phone: '+91 97000 11223',
-        value: 48000,
-        stageSlug: 'contacted',
-        source: 'WHATSAPP',
-        score: 78,
-        daysInStage: 2,
-        priority: 'HIGH',
-        assignedTo: 'Patient Coordinator',
-        aiSummary: 'Inquired about hair loss staging and GFC treatment timeline. Sent PDF brochure.',
-        createdAt: 'Aug 12, 2026',
-        activities: [
-          { id: 'a1', type: 'WHATSAPP', text: 'GFC therapy protocol PDF sent via WhatsApp', time: 'Aug 12' }
-        ]
-      },
-      {
-        id: 'sk_3',
-        title: 'Acne Scar Subcision & Chemical Peel Plan',
-        customer: 'Pooja Agarwal',
-        phone: '+91 99880 77665',
-        value: 32000,
-        stageSlug: 'proposal',
-        source: 'VOICE',
-        score: 88,
-        daysInStage: 3,
-        priority: 'HIGH',
-        assignedTo: 'Dr. Ramesh',
-        aiSummary: 'Doctor assessment completed. Sent customized 3-month scar reduction treatment proposal.',
-        createdAt: 'Aug 11, 2026',
-        activities: [
-          { id: 'a1', type: 'NOTE', text: 'Dr. Ramesh evaluated grade 3 scars; recommended peel + subcision', time: 'Aug 11' }
-        ]
-      },
-      {
-        id: 'sk_4',
-        title: 'HydraFacial Glow & Skin Brightening',
-        customer: 'Ananya Iyer',
-        phone: '+91 94400 66778',
-        value: 12500,
-        stageSlug: 'new',
-        source: 'WEB_CHAT',
-        score: 62,
-        daysInStage: 0,
-        priority: 'MEDIUM',
-        assignedTo: 'Frontdesk Host',
-        aiSummary: 'Inquired regarding bridal facial packages for next month wedding.',
-        createdAt: 'Today 9:15 AM',
-        activities: [
-          { id: 'a1', type: 'NOTE', text: 'Registered via web widget bridal form', time: 'Today 9:15 AM' }
-        ]
-      },
-      {
-        id: 'sk_5',
-        title: 'Annual Aesthetic Maintenance Membership',
-        customer: 'Deepak Menon',
-        phone: '+91 98850 33441',
-        value: 120000,
-        stageSlug: 'won',
-        source: 'REFERRAL',
-        score: 98,
-        daysInStage: 0,
-        priority: 'VIP',
-        assignedTo: 'Clinic Owner',
-        aiSummary: 'Enrolled in Annual VIP Aesthetic Program. 1st installment paid.',
-        createdAt: 'Aug 10, 2026',
-        activities: [
-          { id: 'a1', type: 'STATUS_CHANGE', text: 'Deal closed: Invoice #INV-2026-991 generated', time: 'Aug 10' }
-        ]
-      }
+  const getDefaultLeads = (niche: string): Lead[] => {
+    // Generate a set of realistic demo leads distributed across stages
+    const baseLeads: Partial<Lead>[] = [
+      { name: 'Arjun Reddy', channel: 'VOICE', stage: 'new', dealValue: 25000, aiScore: 88, daysInStage: 0, priority: 'High' },
+      { name: 'Sneha Sharma', channel: 'WHATSAPP', stage: 'new', dealValue: 15000, aiScore: 72, daysInStage: 1, priority: 'Standard' },
+      { name: 'Rahul Desai', channel: 'WEB_CHAT', stage: 'contacted', dealValue: 45000, aiScore: 92, daysInStage: 2, priority: 'VIP' },
+      { name: 'Pooja Singh', channel: 'REFERRAL', stage: 'contacted', dealValue: 12000, aiScore: 65, daysInStage: 3, priority: 'Medium' },
+      { name: 'Kiran Patel', channel: 'WALK_IN', stage: 'qualified', dealValue: 85000, aiScore: 95, daysInStage: 1, priority: 'VIP' },
+      { name: 'Anita Bose', channel: 'VOICE', stage: 'qualified', dealValue: 32000, aiScore: 78, daysInStage: 4, priority: 'High' },
+      { name: 'Vikram Iyer', channel: 'WHATSAPP', stage: 'proposal', dealValue: 55000, aiScore: 89, daysInStage: 2, priority: 'High' },
+      { name: 'Neha Gupta', channel: 'WEB_CHAT', stage: 'proposal', dealValue: 18000, aiScore: 60, daysInStage: 5, priority: 'Standard' },
+      { name: 'Amit Shah', channel: 'REFERRAL', stage: 'won', dealValue: 120000, aiScore: 98, daysInStage: 0, priority: 'VIP' },
+      { name: 'Riya Sen', channel: 'VOICE', stage: 'won', dealValue: 22000, aiScore: 85, daysInStage: 0, priority: 'Medium' },
+      { name: 'Sanjay Kumar', channel: 'ADS', stage: 'lost', dealValue: 10000, aiScore: 45, daysInStage: 10, priority: 'Standard' },
+      { name: 'Priya Menon', channel: 'WALK_IN', stage: 'lost', dealValue: 40000, aiScore: 50, daysInStage: 12, priority: 'Medium' },
     ];
+
+    return baseLeads.map((l, i) => ({
+      id: `lead_${niche}_${i}`,
+      name: l.name!,
+      phone: `+91 98${Math.floor(10000000 + Math.random() * 90000000)}`,
+      email: `${l.name?.split(' ')[0].toLowerCase()}@example.com`,
+      channel: l.channel as any,
+      stage: l.stage!,
+      dealValue: l.dealValue!,
+      aiScore: l.aiScore!,
+      assignedTo: 'Sales Team',
+      daysInStage: l.daysInStage!,
+      summary: `Automated AI summary for ${l.name}. Expressed interest via ${l.channel}. Need follow-up.`,
+      priority: l.priority as any,
+      createdAt: 'Recent',
+      activities: [
+        { id: `a_${i}`, type: 'NOTE', text: 'Initial inquiry captured.', time: 'Recent', author: 'System' }
+      ]
+    }));
   };
 
-  const [leads, setLeads] = useState<LeadItem[]>(getDefaultLeads());
-  const [stages] = useState<StageItem[]>(DEFAULT_STAGES);
-  const [viewMode, setViewMode] = useState<'KANBAN' | 'TABLE'>('KANBAN');
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSource, setSelectedSource] = useState('ALL');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Lead Profile Drawer State
-  const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
+  
+  // Modals & Drawers
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [newNoteText, setNewNoteText] = useState('');
-
-  // Add Deal Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newCustomer, setNewCustomer] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newValue, setNewValue] = useState('35000');
-  const [newSource, setNewSource] = useState<LeadItem['source']>('VOICE');
-  const [newPriority, setNewPriority] = useState<LeadItem['priority']>('HIGH');
-  const [newStage, setNewStage] = useState('new');
-  const [newSummary, setNewSummary] = useState('');
+  
+  // New Lead Form
+  const [newLead, setNewLead] = useState<Partial<Lead>>({ stage: 'new', channel: 'VOICE', dealValue: 0 });
 
-  // Niche storage sync
   useEffect(() => {
     const saved = localStorage.getItem(`zerodesk_crm_${currentNiche}`);
     if (saved) {
@@ -321,805 +131,285 @@ export default function CrmPage() {
         return;
       } catch (e) {}
     }
-    setLeads(getDefaultLeads());
+    setLeads(getDefaultLeads(currentNiche));
   }, [currentNiche]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  const saveLeads = (updated: LeadItem[]) => {
+  const saveLeads = (updated: Lead[]) => {
     setLeads(updated);
     localStorage.setItem(`zerodesk_crm_${currentNiche}`, JSON.stringify(updated));
   };
 
-  // KPIs
-  const totalPipelineValue = leads.reduce((sum, l) => sum + (l.stageSlug !== 'lost' ? l.value : 0), 0);
-  const activeDealsCount = leads.filter(l => l.stageSlug !== 'won' && l.stageSlug !== 'lost').length;
-  const wonDealsCount = leads.filter(l => l.stageSlug === 'won').length;
-  const hotLeadsCount = leads.filter(l => l.score >= 85 && l.stageSlug !== 'lost' && l.stageSlug !== 'won').length;
-
-  const filteredLeads = leads.filter(l => {
-    if (selectedSource !== 'ALL' && l.source !== selectedSource) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return l.title.toLowerCase().includes(q) || l.customer.toLowerCase().includes(q) || l.phone.includes(q);
-    }
-    return true;
-  });
-
-  const openLeadDrawer = (lead: LeadItem) => {
-    setSelectedLead(JSON.parse(JSON.stringify(lead)));
-    setIsDrawerOpen(true);
-  };
-
-  const handleUpdateLeadStage = (leadId: string, newStageSlug: string) => {
+  const handleUpdateStage = (leadId: string, newStage: string) => {
     const updated = leads.map(l => {
       if (l.id === leadId) {
-        const stageName = stages.find(s => s.slug === newStageSlug)?.name || newStageSlug;
-        const newAct: LeadActivity = {
-          id: `act_${Date.now()}`,
-          type: 'STATUS_CHANGE',
-          text: `Stage updated to "${stageName}"`,
-          time: 'Just now',
-          author: 'Manager'
-        };
         return {
           ...l,
-          stageSlug: newStageSlug,
+          stage: newStage,
           daysInStage: 0,
-          activities: [newAct, ...(l.activities || [])]
-        };
+          activities: [
+            { id: Date.now().toString(), type: 'STATUS_CHANGE', text: `Moved to ${STAGES.find(s=>s.slug===newStage)?.name}`, time: 'Just now' },
+            ...l.activities
+          ]
+        } as Lead;
       }
       return l;
     });
-
     saveLeads(updated);
-    if (selectedLead && selectedLead.id === leadId) {
-      setSelectedLead(updated.find(l => l.id === leadId) || null);
-    }
-    showToast('Lead stage updated!');
-  };
-
-  const handleAddActivityNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedLead || !newNoteText.trim()) return;
-
-    const newAct: LeadActivity = {
-      id: `act_${Date.now()}`,
-      type: 'NOTE',
-      text: newNoteText.trim(),
-      time: 'Just now',
-      author: 'Staff'
-    };
-
-    const updated = leads.map(l => {
-      if (l.id === selectedLead.id) {
-        return {
-          ...l,
-          activities: [newAct, ...(l.activities || [])]
-        };
-      }
-      return l;
-    });
-
-    saveLeads(updated);
-    setSelectedLead(updated.find(l => l.id === selectedLead.id) || null);
-    setNewNoteText('');
-    showToast('Note added to timeline');
-  };
-
-  const handleDeleteLead = (id: string) => {
-    const updated = leads.filter(l => l.id !== id);
-    saveLeads(updated);
-    setIsDrawerOpen(false);
-    showToast('Lead deal removed');
+    if (selectedLead?.id === leadId) setSelectedLead(updated.find(l => l.id === leadId) || null);
   };
 
   const handleCreateLead = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newCustomer.trim()) return;
-
-    const created: LeadItem = {
+    if (!newLead.name || !newLead.phone) return;
+    const created: Lead = {
       id: `lead_${Date.now()}`,
-      title: newTitle.trim(),
-      customer: newCustomer.trim(),
-      phone: newPhone.trim() || '+91 98000 00000',
-      value: parseFloat(newValue) || 25000,
-      stageSlug: newStage,
-      source: newSource,
-      score: 75,
+      name: newLead.name,
+      phone: newLead.phone,
+      channel: (newLead.channel || 'VOICE') as any,
+      stage: newLead.stage || 'new',
+      dealValue: newLead.dealValue || 0,
+      aiScore: 70,
+      assignedTo: 'Unassigned',
       daysInStage: 0,
-      priority: newPriority,
-      assignedTo: 'Lead Coordinator',
-      aiSummary: newSummary.trim() || 'Inbound inquiry captured in CRM.',
+      summary: 'Manually added lead.',
       createdAt: 'Just now',
-      activities: [
-        { id: `act_init`, type: 'NOTE', text: 'Deal registered in CRM pipeline', time: 'Just now' }
-      ]
+      activities: []
     };
-
-    const updated = [created, ...leads];
-    saveLeads(updated);
+    saveLeads([created, ...leads]);
     setIsAddModalOpen(false);
-    setNewTitle('');
-    setNewCustomer('');
-    setNewPhone('');
-    setNewSummary('');
-    showToast('✨ New deal successfully added to pipeline!');
+    setNewLead({ stage: 'new', channel: 'VOICE', dealValue: 0 });
   };
 
-  const triggerQuickWhatsApp = (lead: LeadItem, e: React.MouseEvent) => {
-    e.stopPropagation();
-    showToast(`💬 WhatsApp consultation link sent to ${lead.customer}`);
-  };
-
-  const triggerQuickCall = (lead: LeadItem, e: React.MouseEvent) => {
-    e.stopPropagation();
-    showToast(`📞 Voice AI outbound dialer dispatched to ${lead.phone}`);
-  };
+  const filteredLeads = leads.filter(l => 
+    !searchQuery || 
+    l.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    l.phone.includes(searchQuery)
+  );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-emerald-950/90 border border-emerald-500/40 text-emerald-200 rounded-xl shadow-2xl backdrop-blur-xl text-xs font-semibold"
-          >
-            <CheckCircle2 size={16} className="text-emerald-400" />
-            <span>{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="flex flex-col h-[calc(100vh-6rem)] max-w-full overflow-hidden p-4 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>Lead & Sales Management Pipeline</span>
-            <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              AI Scoring Active
-            </span>
-          </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Track inquiries, automate Voice & WhatsApp follow-ups, and convert leads into high-ticket clients.
-          </p>
+          <h1 className="text-xl font-bold text-[var(--color-text)]">Lead Pipeline</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">Manage your automated sales and leads.</p>
         </div>
-
+        
         <div className="flex items-center gap-3">
-          {/* View Mode Toggle (Kanban vs. Table) */}
-          <div className="flex items-center p-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
-            <button
-              onClick={() => setViewMode('KANBAN')}
-              className={cn(
-                "p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all",
-                viewMode === 'KANBAN'
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
-              )}
-              title="Kanban Pipeline View"
-            >
-              <LayoutGrid size={15} />
-              <span className="hidden sm:inline">Kanban</span>
-            </button>
-            <button
-              onClick={() => setViewMode('TABLE')}
-              className={cn(
-                "p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all",
-                viewMode === 'TABLE'
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
-              )}
-              title="Table List View"
-            >
-              <List size={15} />
-              <span className="hidden sm:inline">List View</span>
-            </button>
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <input
+              type="text"
+              placeholder="Search leads..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-2 w-64 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Plus size={16} />
-            <span>Add New Deal</span>
+            <span>Add Lead</span>
           </button>
         </div>
       </div>
 
-      {/* Top 4 KPI Metrics Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span>Total Pipeline Value</span>
-            <DollarSign size={16} className="text-purple-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-white font-mono mt-1">
-            {formatCurrency(totalPipelineValue)}
-          </p>
-          <p className="text-[11px] text-purple-300 mt-1">Across all open stages</p>
-        </div>
-
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span>Active Deals In-Flight</span>
-            <Target size={16} className="text-cyan-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-cyan-400 font-mono mt-1">
-            {activeDealsCount} Deals
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1">Inquiries undergoing follow-up</p>
-        </div>
-
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span>🔥 Hot High-Intent Leads</span>
-            <Flame size={16} className="text-amber-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-amber-400 font-mono mt-1">
-            {hotLeadsCount} Leads
-          </p>
-          <p className="text-[11px] text-amber-300/80 mt-1">AI Lead Score &gt;85</p>
-        </div>
-
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span>Closed Won Revenue</span>
-            <TrendingUp size={16} className="text-emerald-400" />
-          </div>
-          <p className="text-2xl font-extrabold text-emerald-400 font-mono mt-1">
-            {wonDealsCount} Won
-          </p>
-          <p className="text-[11px] text-emerald-300/80 mt-1">Confirmed packages & bookings</p>
-        </div>
-      </div>
-
-      {/* Search & Channel Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-          <input
-            type="text"
-            placeholder="Search lead title, customer name or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {['ALL', 'VOICE', 'WHATSAPP', 'WEB_CHAT', 'STORE_VISIT', 'REFERRAL'].map((src) => (
-            <button
-              key={src}
-              onClick={() => setSelectedSource(src)}
-              className={cn(
-                "px-3 py-1.5 text-xs rounded-xl border font-medium transition-all",
-                selectedSource === src
-                  ? "bg-purple-600 text-white border-purple-500 shadow"
-                  : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
-              )}
-            >
-              {src === 'ALL' ? 'All Channels' : SOURCE_ICONS[src]?.label || src}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* VIEW MODE 1: KANBAN BOARD */}
-      {viewMode === 'KANBAN' && (
-        <div className="flex gap-4 overflow-x-auto pb-6 pt-1">
-          {stages.map((stage, si) => {
-            const stageLeads = filteredLeads.filter(l => l.stageSlug === stage.slug);
-            const stageValue = stageLeads.reduce((s, l) => s + l.value, 0);
-
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
+        <div className="flex gap-4 h-full min-w-max items-start">
+          {STAGES.map((stage) => {
+            const stageLeads = filteredLeads.filter(l => l.stage === stage.slug);
             return (
-              <motion.div
-                key={stage.slug}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: si * 0.05 }}
-                className="flex-shrink-0 w-80 space-y-3"
-              >
+              <div key={stage.slug} className={cn("w-80 flex flex-col max-h-full rounded-xl border border-[var(--color-border)]", stage.bgClass)}>
                 {/* Column Header */}
-                <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
-                    <h3 className="text-xs font-bold text-[var(--color-text)]">{stage.name}</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg)] text-[var(--color-text)] font-mono font-bold border border-[var(--color-border)]">
-                      {stageLeads.length}
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-mono font-bold text-[var(--color-text-muted)]">
-                    {formatCurrency(stageValue)}
+                <div className="p-3 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-surface)] rounded-t-xl shrink-0">
+                  <h3 className="font-semibold text-sm text-[var(--color-text)] flex items-center gap-2">
+                    <span className={cn("w-2 h-2 rounded-full bg-current", stage.colorClass)} />
+                    {stage.name}
+                  </h3>
+                  <span className="text-xs font-mono px-2 py-0.5 bg-[var(--color-bg)] rounded-full text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                    {stageLeads.length}
                   </span>
                 </div>
 
-                {/* Lead Cards List */}
-                <div className="space-y-2.5 min-h-[150px]">
-                  {stageLeads.map((lead, li) => {
-                    const src = SOURCE_ICONS[lead.source] || SOURCE_ICONS.VOICE;
+                {/* Cards List */}
+                <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                  {stageLeads.map(lead => {
+                    const src = SOURCE_ICONS[lead.channel] || SOURCE_ICONS.VOICE;
                     const SrcIcon = src.icon;
-
                     return (
-                      <motion.div
+                      <div
                         key={lead.id}
-                        initial={{ opacity: 0, scale: 0.96 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: si * 0.04 + li * 0.02 }}
-                        onClick={() => openLeadDrawer(lead)}
-                        className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl hover:border-purple-500/50 hover:shadow-xl transition-all cursor-pointer group space-y-2.5 shadow-sm relative overflow-hidden"
+                        onClick={() => { setSelectedLead(lead); setIsDrawerOpen(true); }}
+                        className="bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-lg hover:border-blue-500 cursor-pointer transition-all shadow-sm group"
                       >
-                        {/* Top Badges */}
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg)] border border-[var(--color-border)]", src.color)}>
-                              <SrcIcon size={11} />
-                              {src.label}
-                            </span>
-
-                            {lead.priority === 'VIP' && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/30">
-                                🌟 VIP
-                              </span>
-                            )}
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-semibold text-sm text-[var(--color-text)] group-hover:text-blue-500">{lead.name}</h4>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{lead.phone}</p>
                           </div>
-
-                          {/* AI Score Badge */}
-                          <div className="flex items-center gap-1">
-                            {lead.score >= 85 && <Flame size={12} className="text-amber-500" />}
-                            <span className={cn(
-                              "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded",
-                              lead.score >= 85 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : lead.score >= 60 ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30" : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
-                            )}>
-                              {lead.score}% AI
-                            </span>
+                          <div className={cn("flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-[var(--color-border)] bg-[var(--color-bg)]", src.colorClass)}>
+                            <SrcIcon size={10} />
+                            {src.label}
                           </div>
                         </div>
 
-                        {/* Title & Customer */}
-                        <div>
-                          <h4 className="font-bold text-xs text-[var(--color-text)] group-hover:text-purple-500 transition-colors line-clamp-1">
-                            {lead.title}
-                          </h4>
-                          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 flex items-center justify-between">
-                            <span>{lead.customer}</span>
-                            <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{lead.phone}</span>
-                          </p>
-                        </div>
-
-                        {/* AI Summary Snippet */}
-                        {lead.aiSummary && (
-                          <p className="text-[10px] text-[var(--color-text-muted)] line-clamp-2 bg-[var(--color-bg)] p-2 rounded-lg font-sans leading-relaxed border border-[var(--color-border)]">
-                            🤖 {lead.aiSummary}
-                          </p>
-                        )}
-
-                        {/* Value & Quick Actions Bar */}
-                        <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)] text-xs">
-                          <span className="font-mono font-bold text-[var(--color-text)] text-xs">
-                            {formatCurrency(lead.value)}
-                          </span>
-
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={(e) => triggerQuickWhatsApp(lead, e)}
-                              className="p-1.5 hover:bg-emerald-500/20 text-[var(--color-text-muted)] hover:text-emerald-500 rounded-lg transition-colors"
-                              title="Send WhatsApp DM"
-                            >
-                              <MessageSquare size={13} />
-                            </button>
-                            <button
-                              onClick={(e) => triggerQuickCall(lead, e)}
-                              className="p-1.5 hover:bg-cyan-500/20 text-[var(--color-text-muted)] hover:text-cyan-500 rounded-lg transition-colors"
-                              title="Trigger Voice AI Dialer"
-                            >
-                              <Phone size={13} />
-                            </button>
-                            <div className="p-1 text-[var(--color-text-muted)] group-hover:text-purple-500 transition-colors">
-                              <ChevronRight size={13} />
-                            </div>
+                        <div className="flex items-center justify-between text-xs mt-3">
+                          <span className="font-mono text-[var(--color-text)]">{formatCurrency(lead.dealValue)}</span>
+                          <div className="flex gap-2 text-[var(--color-text-muted)] text-[10px] font-medium items-center">
+                            <span className="flex items-center gap-1" title="Assigned To"><User size={10}/> {lead.assignedTo.split(' ')[0]}</span>
+                            <span className="flex items-center gap-1" title="Days in Stage"><Clock size={12}/> {lead.daysInStage}d</span>
+                            {lead.aiScore >= 80 && <span className="flex items-center gap-0.5 text-amber-500" title="AI Lead Score"><Flame size={12}/>{lead.aiScore}</span>}
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
-      )}
+      </div>
 
-      {/* VIEW MODE 2: HIGH-DENSITY TABLE LIST VIEW */}
-      {viewMode === 'TABLE' && (
-        <div className="bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--color-surface)] border-b border-[var(--color-border)] text-slate-400 uppercase tracking-wider text-[10px] font-mono">
-                <tr>
-                  <th className="p-3.5">Deal Title & Customer</th>
-                  <th className="p-3.5">Stage</th>
-                  <th className="p-3.5">Deal Value</th>
-                  <th className="p-3.5">Channel</th>
-                  <th className="p-3.5">AI Intent Score</th>
-                  <th className="p-3.5">Assigned To</th>
-                  <th className="p-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {filteredLeads.map((lead) => {
-                  const stage = stages.find(s => s.slug === lead.stageSlug) || stages[0];
-                  const src = SOURCE_ICONS[lead.source] || SOURCE_ICONS.VOICE;
-
-                  return (
-                    <tr 
-                      key={lead.id}
-                      onClick={() => openLeadDrawer(lead)}
-                      className="hover:bg-slate-900/50 transition-colors cursor-pointer group"
-                    >
-                      <td className="p-3.5">
-                        <div className="font-bold text-[var(--color-text)] group-hover:text-purple-400 transition-colors">
-                          {lead.title}
-                        </div>
-                        <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                          {lead.customer} · <span className="font-mono text-[var(--color-text-muted)]">{lead.phone}</span>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        <span 
-                          className="px-2.5 py-1 rounded-full text-[10px] font-bold border"
-                          style={{ borderColor: `${stage.color}40`, backgroundColor: `${stage.color}15`, color: stage.color }}
-                        >
-                          {stage.name}
-                        </span>
-                      </td>
-
-                      <td className="p-3.5 font-mono font-bold text-[var(--color-text)]">
-                        {formatCurrency(lead.value)}
-                      </td>
-
-                      <td className="p-3.5">
-                        <span className={cn("font-medium text-[11px]", src.color)}>
-                          {src.label}
-                        </span>
-                      </td>
-
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5 font-mono font-bold text-xs">
-                          {lead.score >= 85 ? (
-                            <span className="text-amber-500 flex items-center gap-1">
-                              <Flame size={13} /> {lead.score}%
-                            </span>
-                          ) : (
-                            <span className="text-[var(--color-text-muted)]">{lead.score}%</span>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="p-3.5 text-[var(--color-text-muted)]">
-                        {lead.assignedTo}
-                      </td>
-
-                      <td className="p-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => triggerQuickWhatsApp(lead, e)}
-                            className="p-1.5 hover:bg-emerald-500/20 text-[var(--color-text-muted)] hover:text-emerald-500 rounded-lg transition-colors"
-                            title="WhatsApp"
-                          >
-                            <MessageSquare size={13} />
-                          </button>
-                          <button
-                            onClick={(e) => triggerQuickCall(lead, e)}
-                            className="p-1.5 hover:bg-cyan-500/20 text-[var(--color-text-muted)] hover:text-cyan-500 rounded-lg transition-colors"
-                            title="Call"
-                          >
-                            <Phone size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* INTERACTIVE LEAD PROFILE DRAWER */}
+      {/* Slide-over Detail Drawer */}
       <AnimatePresence>
         {isDrawerOpen && selectedLead && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+          <>
             <motion.div
-              initial={{ opacity: 0, x: 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 300 }}
-              className="w-full max-w-lg bg-[var(--color-surface)] border-l border-[var(--color-border)] p-6 text-[var(--color-text)] space-y-6 shadow-2xl overflow-y-auto flex flex-col justify-between"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+              onClick={() => setIsDrawerOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col"
             >
-              <div className="space-y-5">
-                {/* Header */}
-                <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-4">
+              <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between shrink-0">
+                <h2 className="font-semibold text-[var(--color-text)] text-lg">Lead Details</h2>
+                <button onClick={() => setIsDrawerOpen(false)} className="p-1 hover:bg-[var(--color-bg)] rounded-lg text-[var(--color-text-muted)]"><X size={20} /></button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                {/* Header Info */}
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-[var(--color-text)]">{selectedLead.name}</h3>
+                  <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
+                    <span className="flex items-center gap-1"><Phone size={14} /> {selectedLead.phone}</span>
+                    {selectedLead.email && <span className="flex items-center gap-1">· {selectedLead.email}</span>}
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  <button className="flex-1 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center gap-2 text-sm font-medium hover:bg-emerald-500/20">
+                    <MessageSquare size={16} /> WhatsApp
+                  </button>
+                  <button className="flex-1 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center gap-2 text-sm font-medium hover:bg-blue-500/20">
+                    <Phone size={16} /> Call
+                  </button>
+                </div>
+
+                {/* Status & Assignment */}
+                <div className="grid grid-cols-2 gap-4 p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
                   <div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-500 border border-purple-500/20 uppercase font-mono">
-                      Lead Profile & Deal Info
-                    </span>
-                    <h2 className="text-lg font-bold text-[var(--color-text)] mt-1.5">{selectedLead.title}</h2>
-                    <p className="text-xs text-[var(--color-text-muted)]">{selectedLead.customer} · {selectedLead.phone}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-1">Current Stage</p>
+                    <p className="text-sm font-semibold text-[var(--color-text)]">{STAGES.find(s=>s.slug===selectedLead.stage)?.name}</p>
                   </div>
-                  <button
-                    onClick={() => setIsDrawerOpen(false)}
-                    className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-lg hover:bg-[var(--color-surface-hover)]"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-
-                {/* Deal Value & Stage Advancement */}
-                <div className="p-4 rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">Deal Value</span>
-                      <p className="text-xl font-extrabold text-emerald-500 font-mono">
-                        {formatCurrency(selectedLead.value)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">AI Intent Score</span>
-                      <p className="text-xl font-extrabold text-purple-500 font-mono flex items-center gap-1">
-                        <Flame size={16} className="text-amber-500" />
-                        {selectedLead.score}/100
-                      </p>
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="block text-[11px] font-semibold text-[var(--color-text)] mb-1.5">Advance Pipeline Stage</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      {stages.map((s) => (
-                        <button
-                          key={s.slug}
-                          type="button"
-                          onClick={() => handleUpdateLeadStage(selectedLead.id, s.slug)}
-                          className={cn(
-                            "px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all truncate",
-                            selectedLead.stageSlug === s.slug
-                              ? "bg-purple-600 text-white border-purple-400 shadow-md"
-                              : "bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-text)]"
-                          )}
-                        >
-                          {s.name}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-1">Deal Value</p>
+                    <p className="text-sm font-mono font-semibold text-[var(--color-text)]">{formatCurrency(selectedLead.dealValue)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-1">Assigned To</p>
+                    <p className="text-sm font-medium text-[var(--color-text)] flex items-center gap-1"><User size={14}/> {selectedLead.assignedTo}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-1">AI Lead Score</p>
+                    <p className="text-sm font-semibold text-amber-500 flex items-center gap-1"><Flame size={14}/> {selectedLead.aiScore}/100</p>
                   </div>
                 </div>
 
-                {/* AI Summary Box */}
-                {selectedLead.aiSummary && (
-                  <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-1.5">
-                    <span className="text-[10px] font-bold text-purple-500 uppercase flex items-center gap-1">
-                      <Sparkles size={12} />
-                      AI Conversation Key Insights
-                    </span>
-                    <p className="text-xs text-[var(--color-text)] leading-relaxed font-sans">
-                      {selectedLead.aiSummary}
-                    </p>
+                {/* AI Summary */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+                    <Activity size={16} className="text-purple-500" /> AI Conversation Summary
+                  </h4>
+                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    {selectedLead.summary}
                   </div>
-                )}
-
-                {/* Quick Outreach Actions */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    onClick={(e) => triggerQuickWhatsApp(selectedLead, e)}
-                    className="p-2.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
-                  >
-                    <MessageSquare size={14} />
-                    <span>WhatsApp Follow-up</span>
-                  </button>
-                  <button
-                    onClick={(e) => triggerQuickCall(selectedLead, e)}
-                    className="p-2.5 rounded-xl bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all"
-                  >
-                    <Phone size={14} />
-                    <span>Voice AI Call</span>
-                  </button>
                 </div>
 
-                {/* Activity & Note History Log */}
+                {/* Move Stage Buttons */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-[var(--color-text)]">Advance Pipeline</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {STAGES.filter(s => s.slug !== selectedLead.stage).map(stage => (
+                      <button
+                        key={stage.slug}
+                        onClick={() => handleUpdateStage(selectedLead.id, stage.slug)}
+                        className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] hover:border-blue-500 transition-colors"
+                      >
+                        Move to {stage.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Activity Timeline */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Activity History & Notes</h3>
-                  
-                  {/* Add Note Form */}
-                  <form onSubmit={handleAddActivityNote} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Add an internal follow-up note..."
-                      value={newNoteText}
-                      onChange={(e) => setNewNoteText(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow transition-all shrink-0"
-                    >
-                      <Send size={13} />
-                    </button>
-                  </form>
-
-                  {/* Activity Timeline List */}
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {(selectedLead.activities || []).map((act, i) => (
-                      <div key={act.id || i} className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-slate-500">
-                          <span className="font-semibold text-purple-400">{act.author || 'System'}</span>
-                          <span>{act.time}</span>
-                        </div>
-                        <p className="text-slate-300 text-xs font-sans leading-snug">{act.text}</p>
+                  <h4 className="text-sm font-semibold text-[var(--color-text)]">Activity History</h4>
+                  <div className="space-y-4 relative before:absolute before:inset-y-0 before:left-2 before:w-0.5 before:bg-[var(--color-border)] pl-6">
+                    {selectedLead.activities.map((act, i) => (
+                      <div key={i} className="relative">
+                        <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-[var(--color-surface)] border-2 border-blue-500" />
+                        <p className="text-xs text-[var(--color-text-muted)]">{act.time} · {act.author}</p>
+                        <p className="text-sm text-[var(--color-text)] mt-0.5">{act.text}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-
-              {/* Drawer Footer Actions */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => handleDeleteLead(selectedLead.id)}
-                  className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <Trash2 size={14} />
-                  <span>Delete Deal</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
-                >
-                  Close
-                </button>
-              </div>
             </motion.div>
-          </div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* CREATE NEW DEAL MODAL */}
+      {/* Add Lead Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 text-white space-y-4 shadow-2xl text-xs"
-            >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-lg">
-                    <Target size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-base text-white">Add New Deal to Pipeline</h3>
-                    <p className="text-[11px] text-slate-400">Capture lead details, estimated value, and initial notes.</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white">
-                  <X size={18} />
-                </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)} />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl w-full max-w-md shadow-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[var(--color-text)]">Add New Lead</h3>
+                <button onClick={() => setIsAddModalOpen(false)} className="text-[var(--color-text-muted)]"><X size={20} /></button>
               </div>
-
-              <form onSubmit={handleCreateLead} className="space-y-3">
+              <form onSubmit={handleCreateLead} className="space-y-4">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Deal Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Diode Laser 6-Session Package"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Full Name</label>
+                  <input required type="text" value={newLead.name || ''} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]" />
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Customer Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Sneha Reddy"
-                      value={newCustomer}
-                      onChange={(e) => setNewCustomer(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Phone Number</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. +91 98490 12345"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Deal Value (₹)</label>
-                    <input
-                      type="number"
-                      value={newValue}
-                      onChange={(e) => setNewValue(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Stage</label>
-                    <select
-                      value={newStage}
-                      onChange={(e) => setNewStage(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      {stages.map(s => (
-                        <option key={s.slug} value={s.slug}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Channel Source</label>
-                    <select
-                      value={newSource}
-                      onChange={(e) => setNewSource(e.target.value as any)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="VOICE">📞 AI Voice</option>
-                      <option value="WHATSAPP">💬 WhatsApp</option>
-                      <option value="WEB_CHAT">🌐 Web Widget</option>
-                      <option value="STORE_VISIT">🏬 Walk-In</option>
-                      <option value="REFERRAL">🤝 Referral</option>
-                    </select>
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Initial Inquiry / AI Summary</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Brief notes about customer preferences, budget, or preferred time..."
-                    value={newSummary}
-                    onChange={(e) => setNewSummary(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 leading-relaxed font-sans"
-                  />
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Phone Number</label>
+                  <input required type="text" value={newLead.phone || ''} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]" />
                 </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 font-semibold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition-all"
-                  >
-                    Create Deal
-                  </button>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Deal Value (₹)</label>
+                  <input type="number" value={newLead.dealValue || ''} onChange={e => setNewLead({...newLead, dealValue: Number(e.target.value)})} className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Channel Source</label>
+                  <select value={newLead.channel} onChange={e => setNewLead({...newLead, channel: e.target.value as any})} className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]">
+                    {Object.keys(SOURCE_ICONS).map(k => <option key={k} value={k}>{SOURCE_ICONS[k].label}</option>)}
+                  </select>
+                </div>
+                <div className="pt-2 flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">Save Lead</button>
                 </div>
               </form>
             </motion.div>

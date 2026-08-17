@@ -124,11 +124,7 @@ export default function InboundCallsPage() {
           <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Human Handoffs</p>
           <p className="text-2xl font-extrabold text-purple-400 mt-1">3 Calls (Clinical)</p>
         </div>
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
-          <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Avg Cost per Call</p>
-          <p className="text-2xl font-extrabold text-cyan-400 font-mono mt-1">₹12.40 / call</p>
-        </div>
-      </div>
+    </div>
 
       {/* Search & Post-Call Disposition Filter Tabs */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[var(--color-surface)] p-4 rounded-2xl border border-[var(--color-border)]">
@@ -210,8 +206,6 @@ export default function InboundCallsPage() {
                   <span>🤖 Agent: <strong className="text-purple-300">{call.agent}</strong></span>
                   <span>•</span>
                   <span>⏱️ Duration: <strong>{call.duration}</strong></span>
-                  <span>•</span>
-                  <span>💰 Cost: <strong className="text-cyan-400">{call.cost}</strong></span>
                 </div>
               </div>
             </div>

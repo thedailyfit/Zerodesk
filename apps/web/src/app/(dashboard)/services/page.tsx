@@ -18,11 +18,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useNiche } from '@/components/providers/niche-provider';
-import { useServices, type ServiceOffering } from '@/lib/services-store';
+import { useServices, type ServiceOffering, SERVICE_CATEGORIES_BY_NICHE } from '@/lib/services-store';
 import { cn, formatCurrency } from '@/lib/utils';
 
 export default function ServicesPage() {
-  const { nicheConfig } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const { 
     services, 
     addService, 
@@ -46,6 +46,16 @@ export default function ServicesPage() {
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  const [customCategory, setCustomCategory] = useState('');
+  const [gstEnabled, setGstEnabled] = useState(true);
+  const [gstRate, setGstRate] = useState('18');
+
+  const [isPackage, setIsPackage] = useState(false);
+  const [totalSessions, setTotalSessions] = useState('6');
+  const [sessionDuration, setSessionDuration] = useState('45');
+  const [packageValidityDays, setPackageValidityDays] = useState('180');
+  const [packageDiscount, setPackageDiscount] = useState('10');
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -73,24 +83,49 @@ export default function ServicesPage() {
   const handleOpenAddModal = () => {
     setEditingService(null);
     setName('');
-    setCategory(categories[0] || 'General');
+    const nicheCategories = SERVICE_CATEGORIES_BY_NICHE[currentNiche] || [];
+    setCategory(nicheCategories.length > 0 ? nicheCategories[0] : 'General');
+    setCustomCategory('');
     setDuration('45');
     setPrice('3000');
     setStaffRole(nicheConfig.terminology?.staff || 'Specialist');
     setDescription('');
     setIsActive(true);
+    setGstEnabled(true);
+    setGstRate('18');
+    setIsPackage(false);
+    setTotalSessions('6');
+    setSessionDuration('45');
+    setPackageValidityDays('180');
+    setPackageDiscount('10');
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (service: ServiceOffering) => {
     setEditingService(service);
     setName(service.name);
-    setCategory(service.category);
+    
+    const nicheCategories = SERVICE_CATEGORIES_BY_NICHE[currentNiche] || [];
+    if (nicheCategories.includes(service.category)) {
+      setCategory(service.category);
+      setCustomCategory('');
+    } else {
+      setCategory('Other');
+      setCustomCategory(service.category);
+    }
+    
     setDuration(service.duration.toString());
     setPrice(service.price.toString());
     setStaffRole(service.staffRole || '');
     setDescription(service.description || '');
     setIsActive(service.isActive);
+    setGstEnabled(service.gstEnabled ?? true);
+    setGstRate(String(service.gstRate ?? 18));
+    setIsPackage(service.isPackage ?? false);
+    setTotalSessions(String(service.totalSessions ?? 6));
+    setSessionDuration(String(service.sessionDuration ?? 45));
+    setPackageValidityDays(String(service.packageValidityDays ?? 180));
+    setPackageDiscount(String(service.packageDiscount ?? 10));
     setIsModalOpen(true);
   };
 
@@ -98,26 +133,42 @@ export default function ServicesPage() {
     e.preventDefault();
     if (!name.trim()) return;
 
+    const finalCategory = category === 'Other' ? customCategory.trim() : category;
+
     if (editingService) {
       updateService(editingService.id, {
         name: name.trim(),
-        category: category.trim() || 'General',
+        category: finalCategory || 'General',
         duration: parseInt(duration) || 30,
         price: parseFloat(price) || 0,
         staffRole: staffRole.trim() || undefined,
         description: description.trim(),
         isActive,
+        gstEnabled,
+        gstRate: parseInt(gstRate) || 18,
+        isPackage,
+        totalSessions: isPackage ? parseInt(totalSessions) : undefined,
+        sessionDuration: isPackage ? parseInt(sessionDuration) : undefined,
+        packageValidityDays: isPackage ? parseInt(packageValidityDays) : undefined,
+        packageDiscount: isPackage ? parseFloat(packageDiscount) : undefined,
       });
       setSuccessToast(`"${name}" updated successfully!`);
     } else {
       addService({
         name: name.trim(),
-        category: category.trim() || 'General',
+        category: finalCategory || 'General',
         duration: parseInt(duration) || 30,
         price: parseFloat(price) || 0,
         staffRole: staffRole.trim() || undefined,
         description: description.trim(),
         isActive,
+        gstEnabled,
+        gstRate: parseInt(gstRate) || 18,
+        isPackage,
+        totalSessions: isPackage ? parseInt(totalSessions) : undefined,
+        sessionDuration: isPackage ? parseInt(sessionDuration) : undefined,
+        packageValidityDays: isPackage ? parseInt(packageValidityDays) : undefined,
+        packageDiscount: isPackage ? parseFloat(packageDiscount) : undefined,
       });
       setSuccessToast(`New service "${name}" added to catalog & Quick Bill!`);
     }
@@ -282,6 +333,25 @@ export default function ServicesPage() {
                 </span>
               </div>
 
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {service.gstEnabled && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    GST {service.gstRate ?? 18}%
+                  </span>
+                )}
+                {service.isPackage && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                    📦 Package · {service.totalSessions} Sessions
+                  </span>
+                )}
+                {service.isPackage && service.packageValidityDays && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                    Valid: {service.packageValidityDays} days
+                  </span>
+                )}
+              </div>
+
               {/* Description */}
               {service.description && (
                 <p className="text-xs text-[var(--color-text-muted)] line-clamp-2 leading-relaxed mt-1">
@@ -345,7 +415,7 @@ export default function ServicesPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl space-y-4"
+              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto scrollbar-none"
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <h2 className="text-base font-bold text-[var(--color-text)]">
@@ -377,13 +447,27 @@ export default function ServicesPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--color-text)] mb-1">Category</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Laser, Aesthetics, General"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
+                    <div className="space-y-2">
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        {(SERVICE_CATEGORIES_BY_NICHE[currentNiche] || []).map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                        <option value="Other">Other...</option>
+                      </select>
+                      {category === 'Other' && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom category"
+                          value={customCategory}
+                          onChange={(e) => setCustomCategory(e.target.value)}
+                          className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -430,6 +514,94 @@ export default function ServicesPage() {
                       />
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 p-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
+                  <div className="flex flex-col gap-2 justify-center">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--color-text)]">
+                      <input
+                        type="checkbox"
+                        checked={gstEnabled}
+                        onChange={(e) => setGstEnabled(e.target.checked)}
+                        className="rounded text-purple-600 focus:ring-purple-500"
+                      />
+                      <span>Apply GST</span>
+                    </label>
+                  </div>
+                  {gstEnabled && (
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[var(--color-text-muted)] mb-1">GST Rate (%)</label>
+                      <select
+                        value={gstRate}
+                        onChange={(e) => setGstRate(e.target.value)}
+                        className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="0">0%</option>
+                        <option value="5">5%</option>
+                        <option value="12">12%</option>
+                        <option value="18">18%</option>
+                        <option value="28">28%</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--color-text)]">
+                    <input
+                      type="checkbox"
+                      checked={isPackage}
+                      onChange={(e) => setIsPackage(e.target.checked)}
+                      className="rounded text-purple-600 focus:ring-purple-500"
+                    />
+                    <span>Is Treatment Package</span>
+                  </label>
+
+                  {isPackage && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[var(--color-text-muted)] mb-1">Total Sessions</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={totalSessions}
+                          onChange={(e) => setTotalSessions(e.target.value)}
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[var(--color-text-muted)] mb-1">Session Duration (min)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={sessionDuration}
+                          onChange={(e) => setSessionDuration(e.target.value)}
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[var(--color-text-muted)] mb-1">Validity (days)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={packageValidityDays}
+                          onChange={(e) => setPackageValidityDays(e.target.value)}
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[var(--color-text-muted)] mb-1">Discount (%)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={packageDiscount}
+                          onChange={(e) => setPackageDiscount(e.target.value)}
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>

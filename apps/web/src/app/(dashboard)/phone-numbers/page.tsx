@@ -24,10 +24,11 @@ import { cn } from '@/lib/utils';
 interface PhoneNumberItem {
   id: string;
   number: string;
-  clinicBranch: string;
+  isPrimary: boolean;
+  forwardingSource: string;
   assignedAgent: string;
   provider: 'Twilio (India)' | 'Plivo' | 'Tata Tele';
-  status: 'ACTIVE' | 'PENDING_KYC' | 'UNASSIGNED';
+  status: 'ACTIVE' | 'ON_HOLD' | 'PENDING_KYC' | 'UNASSIGNED';
   webhookUrl: string;
   monthlyCost: string;
 }
@@ -36,7 +37,8 @@ const INITIAL_NUMBERS: PhoneNumberItem[] = [
   {
     id: 'num_1',
     number: '+91 40 1234 5678',
-    clinicBranch: 'Jubilee Hills Main Clinic',
+    isPrimary: true,
+    forwardingSource: '+91 40 2355 1234 (Landline)',
     assignedAgent: 'DermAI Receptionist (vapi_agent_hyderabad_v4)',
     provider: 'Twilio (India)',
     status: 'ACTIVE',
@@ -46,17 +48,19 @@ const INITIAL_NUMBERS: PhoneNumberItem[] = [
   {
     id: 'num_2',
     number: '+91 40 8765 4321',
-    clinicBranch: 'Banjara Hills Branch',
+    isPrimary: false,
+    forwardingSource: '',
     assignedAgent: 'VIP Concierge (vapi_agent_vip_v2)',
     provider: 'Twilio (India)',
-    status: 'ACTIVE',
+    status: 'ON_HOLD',
     webhookUrl: 'https://api.zerodesk.com/v1/voice/vapi-webhook',
     monthlyCost: '₹1,200 / mo'
   },
   {
     id: 'num_3',
     number: '+91 40 5555 9999',
-    clinicBranch: 'Hitech City Express Clinic',
+    isPrimary: false,
+    forwardingSource: '+91 40 9999 8888 (Support)',
     assignedAgent: 'After-Hours Outbound (retell_agent_99a)',
     provider: 'Plivo',
     status: 'ACTIVE',
@@ -66,7 +70,8 @@ const INITIAL_NUMBERS: PhoneNumberItem[] = [
   {
     id: 'num_4',
     number: '+91 40 3333 4444',
-    clinicBranch: 'Gachibowli Branch (Upcoming)',
+    isPrimary: false,
+    forwardingSource: '',
     assignedAgent: 'Unassigned',
     provider: 'Twilio (India)',
     status: 'PENDING_KYC',
@@ -83,9 +88,22 @@ export default function PhoneNumbersPage() {
 
   const filteredNumbers = numbers.filter(n => 
     n.number.includes(search) || 
-    n.clinicBranch.toLowerCase().includes(search.toLowerCase()) ||
     n.assignedAgent.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleToggleStatus = (id: string) => {
+    setNumbers(prev => prev.map(n => {
+      if (n.id === id) {
+        if (n.status === 'ACTIVE') return { ...n, status: 'ON_HOLD' };
+        if (n.status === 'ON_HOLD') return { ...n, status: 'ACTIVE' };
+      }
+      return n;
+    }));
+  };
+
+  const handleUpdateForwarding = (id: string, value: string) => {
+    setNumbers(prev => prev.map(n => n.id === id ? { ...n, forwardingSource: value } : n));
+  };
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -114,7 +132,7 @@ export default function PhoneNumbersPage() {
       </div>
 
       {/* Stats Header */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xl">
             📞
@@ -122,16 +140,6 @@ export default function PhoneNumbersPage() {
           <div>
             <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Active Phone Numbers</p>
             <p className="text-2xl font-extrabold text-[var(--color-text)]">3 Active / 1 Pending</p>
-          </div>
-        </div>
-
-        <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xl">
-            🏢
-          </div>
-          <div>
-            <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Clinic Branches Covered</p>
-            <p className="text-2xl font-extrabold text-[var(--color-text)]">3 Branches (Hyderabad)</p>
           </div>
         </div>
 
@@ -152,7 +160,7 @@ export default function PhoneNumbersPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Search phone number or branch..."
+            placeholder="Search phone number or agent..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
@@ -182,29 +190,73 @@ export default function PhoneNumbersPage() {
 
               <div>
                 <div className="flex items-center gap-3">
-                  <h3 className="font-mono font-bold text-lg text-white">{num.number}</h3>
+                  <h3 className="font-mono font-bold text-lg text-[var(--color-text)]">{num.number}</h3>
+                  {num.isPrimary ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      Primary
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                      Secondary
+                    </span>
+                  )}
                   <span className={cn(
                     "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
                     num.status === 'ACTIVE' 
                       ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : num.status === 'ON_HOLD'
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                   )}>
-                    {num.status === 'ACTIVE' ? 'Active & Routing' : 'Pending KYC Docs'}
+                    {num.status === 'ACTIVE' ? 'Active & Routing' : num.status === 'ON_HOLD' ? 'On Hold' : 'Pending KYC Docs'}
                   </span>
-                  <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                  <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] px-2 py-0.5 rounded">
                     {num.provider}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)] mt-1 font-mono">
-                  <span>📍 {num.clinicBranch}</span>
-                  <span>•</span>
-                  <span>🤖 Agent: <strong className="text-purple-300">{num.assignedAgent}</strong></span>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)] font-mono">
+                    <span>🤖 Agent: <strong className="text-purple-400">{num.assignedAgent}</strong></span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--color-text-muted)] font-medium">Forwarded from:</span>
+                    <input
+                      type="text"
+                      value={num.forwardingSource}
+                      onChange={(e) => handleUpdateForwarding(num.id, e.target.value)}
+                      placeholder="+91 ... (Optional)"
+                      className="text-xs bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:border-purple-500 focus:outline-none w-64"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 self-end md:self-auto shrink-0">
+            <div className="flex flex-col md:flex-row items-end md:items-center gap-3 shrink-0">
+              {(num.status === 'ACTIVE' || num.status === 'ON_HOLD') && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-xs font-medium text-[var(--color-text-muted)]">
+                    {num.status === 'ACTIVE' ? 'Active' : 'Paused'}
+                  </span>
+                  <div className="relative inline-block w-10 h-5 align-middle select-none transition duration-200 ease-in">
+                    <input
+                      type="checkbox"
+                      name="toggle"
+                      id="toggle"
+                      checked={num.status === 'ACTIVE'}
+                      onChange={() => handleToggleStatus(num.id)}
+                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:right-0 checked:border-purple-500 checked:bg-white"
+                      style={{ right: num.status === 'ACTIVE' ? '0' : '1.25rem', top: 0 }}
+                    />
+                    <div className={cn(
+                      "toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors duration-200 ease-in-out",
+                      num.status === 'ACTIVE' ? "bg-purple-500" : "bg-slate-700"
+                    )}></div>
+                  </div>
+                </label>
+              )}
               <button
                 onClick={() => handleCopy(num.id, num.webhookUrl)}
                 className="px-3 py-1.5 bg-[var(--color-surface)] hover:bg-slate-800 text-[var(--color-text)] border border-[var(--color-border)] rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5"
@@ -251,15 +303,7 @@ export default function PhoneNumbersPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Assign to Clinic Branch</label>
-                  <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white">
-                    <option value="jubilee">Jubilee Hills Main Clinic</option>
-                    <option value="banjara">Banjara Hills Branch</option>
-                    <option value="hitech">Hitech City Express Clinic</option>
-                    <option value="gachibowli">Gachibowli Branch</option>
-                  </select>
-                </div>
+
 
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Link Voice Agent ID</label>
