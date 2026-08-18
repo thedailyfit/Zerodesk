@@ -131,8 +131,11 @@ export class VoiceService {
       return {
         assistant: {
           firstMessage: 'Hello, thank you for calling. How can I help you today?',
-          model: { provider: 'openai', model: 'gpt-4o-mini' },
-          voice: { provider: 'playht', voiceId: 'jennifer' },
+          model: { provider: 'openai', model: 'gpt-4o' },
+          voice: {
+            provider: '11labs',
+            voiceId: this.configService.get('ELEVENLABS_DEFAULT_VOICE_ID', 'pNInz6obpgDQGcFmaJgB'),
+          },
         },
       };
     }
@@ -144,25 +147,30 @@ export class VoiceService {
     const kbSearchResults = await this.ragService.search(tenant.id, 'business services pricing hours policies FAQs', 5);
     const kbContext = this.ragService.buildKnowledgeContext(kbSearchResults);
 
+    // Get ElevenLabs voice clone ID from tenant voice config or use default
+    const elevenLabsVoiceId = (voiceConfig?.settings as any)?.elevenLabsVoiceId
+      || this.configService.get('ELEVENLABS_DEFAULT_VOICE_ID', 'pNInz6obpgDQGcFmaJgB');
+
     return {
       assistant: {
         firstMessage: voiceConfig?.greeting || `Hello! Welcome to ${tenant.name}. How can I help you?`,
         model: {
           provider: 'openai',
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           systemMessage: this.buildVoiceSystemPrompt(tenant, voiceConfig, kbContext),
           functions: this.getVoiceFunctions(),
         },
         voice: {
-          provider: 'playht',
-          voiceId: this.getVoiceId(voiceConfig?.voicePersonality || 'professional'),
+          provider: '11labs',
+          voiceId: elevenLabsVoiceId,
         },
         recordingEnabled: true,
         endCallFunctionEnabled: true,
         transcriber: {
-          provider: 'deepgram',
-          model: 'nova-2',
-          language: voiceConfig?.languages?.[0] || 'en',
+          provider: 'custom-transcriber',
+          server: {
+            url: `${this.configService.get('API_URL')}/v1/voice/sarvam-stt-proxy`,
+          },
         },
       },
     };
