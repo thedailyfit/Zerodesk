@@ -269,7 +269,7 @@ export default function VoicePage() {
                 onChange={(e) => setSelectedAgentId(e.target.value)}
                 className="bg-slate-900 border border-blue-500/40 text-blue-300 font-mono text-xs font-bold px-3 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
-                {AVAILABLE_AGENTS.map((agent) => (
+                {availableAgents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name} ({agent.provider}) — ID: {agent.agentId}
                   </option>
