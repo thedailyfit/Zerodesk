@@ -526,9 +526,6 @@ export default function TeamsPage() {
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <Users className="text-blue-600 dark:text-blue-400" /> Teams & Resource Management
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Manage clinic practitioners, staff schedules, performance metrics, and access tiers.
-          </p>
         </div>
 
         <button

@@ -48,79 +48,14 @@ export default function BusinessHealthPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Top Banner: Business Health Overview & Health Score */}
+      {/* Top Banner: Business Health Overview */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">
             Business Health & Operations
           </h1>
         </div>
-
-        {/* Business Health Score Card */}
-        <div className="flex items-center gap-4 p-3.5 px-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm">
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-slate-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-blue-500"
-                strokeDasharray="88, 100"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <span className="absolute font-bold text-xs text-[var(--color-text)] font-mono">88%</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-[var(--color-text)]">Business Health Score</span>
-              <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.2 rounded-full">
-                Optimal
-              </span>
-            </div>
-            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-              Workflows, AI desk resolution & patient flow in green zone.
-            </p>
-          </div>
-        </div>
       </div>
-
-      {/* AI Suggestion / Intelligence Highlight Box */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
-            <Sparkles size={18} />
-          </div>
-          <div>
-            <span className="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
-              ZeroDesk AI Suggestion:
-              <span className="text-blue-400 font-normal">3 unconfirmed sittings today</span>
-            </span>
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              AI 2-Step Confirmation can recover ~₹18,500 in potential slot vacancy.
-            </p>
-          </div>
-        </div>
-
-        <Link
-          href="/appointments"
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 shrink-0 text-center"
-        >
-          View Appointments →
-        </Link>
-      </motion.div>
 
       {/* 4 Core Niche KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

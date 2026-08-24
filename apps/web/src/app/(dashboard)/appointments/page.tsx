@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { 
   Plus, 
   Calendar as CalIcon, 
@@ -24,15 +25,16 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
-  Flame
+  Flame,
+  Mail,
+  Edit3,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
-import posthog from 'posthog-js';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useServices } from '@/lib/services-store';
-
-import { useEffect } from 'react';
 import type { NicheId } from '@/config/niches/types';
 
 interface AppointmentItem {
@@ -49,13 +51,14 @@ interface AppointmentItem {
   priority?: 'VIP' | 'HIGH' | 'MEDIUM' | 'STANDARD';
   confirmationStatus?: string;
   confirmationSent?: boolean;
+  notes?: string;
 }
 
 const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
   skin: [
-    { id: 'sk-1', customer: 'Priya Sharma', phone: '+91 98765 43210', email: 'priya@email.com', service: 'HydraFacial Deep Pore Cleanse', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'sk-2', customer: 'Vikram Singh', phone: '+91 87654 32109', email: 'vikram@email.com', service: 'Laser Hair Removal (Full Face)', staff: 'Dr. Arun Kumar', scheduledAt: '2026-08-24T11:30:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
-    { id: 'sk-3', customer: 'Sneha Patel', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'Chemical Peel & Glow Treatment', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true },
+    { id: 'sk-1', customer: 'Priya Sharma', phone: '+91 98765 43210', email: 'priya@email.com', service: 'HydraFacial Deep Pore Cleanse', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Follow-up on skin sensitivity after laser.' },
+    { id: 'sk-2', customer: 'Vikram Singh', phone: '+91 87654 32109', email: 'vikram@email.com', service: 'Laser Hair Removal (Full Face)', staff: 'Dr. Arun Kumar', scheduledAt: '2026-08-24T11:30:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Session 3 of 6.' },
+    { id: 'sk-3', customer: 'Sneha Patel', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'Chemical Peel & Glow Treatment', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true, notes: 'Pre-wedding treatment package.' },
     { id: 'sk-4', customer: 'Rahul Desai', phone: '+91 76543 21098', email: 'rahul@email.com', service: 'Dermatology Consultation', staff: 'Dr. Arun Kumar', scheduledAt: '2026-08-25T10:00:00', duration: 20, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'sk-5', customer: 'Anjali Verma', phone: '+91 43210 98765', email: 'anjali@email.com', service: 'PRP Hair Restoration Therapy', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-25T15:00:00', duration: 60, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Client', confirmationSent: true },
     { id: 'sk-6', customer: 'Deepak Menon', phone: '+91 32109 87654', email: 'deepak@email.com', service: 'Acne Scar Subcision', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-26T10:00:00', duration: 45, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
@@ -63,9 +66,9 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 'sk-8', customer: 'Amit Patel', phone: '+91 99887 76655', email: 'amit@email.com', service: 'Laser Maintenance Care', staff: 'Aesthetician Nurse', scheduledAt: '2026-08-28T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   dental: [
-    { id: 'dt-1', customer: 'Ananya Reddy', phone: '+91 91234 56780', email: 'ananya@email.com', service: 'Invisible Aligners 3D Scan & Plan', staff: 'Dr. Priya Nair', scheduledAt: '2026-08-24T10:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'dt-2', customer: 'Karthik Menon', phone: '+91 91234 56781', email: 'karthik@email.com', service: 'Titanium Dental Implant Placement', staff: 'Dr. Rohan Verma', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
-    { id: 'dt-3', customer: 'Neha Gupta', phone: '+91 91234 56782', email: 'neha@email.com', service: 'Laser Teeth Whitening (In-Office)', staff: 'Dr. Arvind Sharma', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true },
+    { id: 'dt-1', customer: 'Ananya Reddy', phone: '+91 91234 56780', email: 'ananya@email.com', service: 'Invisible Aligners 3D Scan & Plan', staff: 'Dr. Priya Nair', scheduledAt: '2026-08-24T10:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Requires full mouth 3D iTero scan.' },
+    { id: 'dt-2', customer: 'Karthik Menon', phone: '+91 91234 56781', email: 'karthik@email.com', service: 'Titanium Dental Implant Placement', staff: 'Dr. Rohan Verma', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Stage 1 implant surgery on lower molar.' },
+    { id: 'dt-3', customer: 'Neha Gupta', phone: '+91 91234 56782', email: 'neha@email.com', service: 'Laser Teeth Whitening (In-Office)', staff: 'Dr. Arvind Sharma', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true, notes: 'Tooth shade evaluation before procedure.' },
     { id: 'dt-4', customer: 'Rohit Sharma', phone: '+91 91234 56783', email: 'rohit@email.com', service: 'Root Canal Treatment (Single Sitting)', staff: 'Dr. Arvind Sharma', scheduledAt: '2026-08-25T10:00:00', duration: 45, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'dt-5', customer: 'Pooja Iyer', phone: '+91 91234 56784', email: 'pooja@email.com', service: 'Routine Ultrasonic Scaling & Polish', staff: 'Hygienist Sarah', scheduledAt: '2026-08-25T15:00:00', duration: 30, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Patient', confirmationSent: true },
     { id: 'dt-6', customer: 'Vikram Seth', phone: '+91 91234 56785', email: 'vikram.s@email.com', service: 'Zirconia Monolithic Crown Prep', staff: 'Dr. Rohan Verma', scheduledAt: '2026-08-26T10:00:00', duration: 45, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
@@ -73,8 +76,8 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 'dt-8', customer: 'Arunav Roy', phone: '+91 91234 56787', email: 'arunav@email.com', service: 'Wisdom Tooth Pain Evaluation', staff: 'Dr. Arvind Sharma', scheduledAt: '2026-08-28T14:00:00', duration: 30, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   spa: [
-    { id: 'sp-1', customer: 'Meera Kapoor', phone: '+91 99887 76655', email: 'meera.k@email.com', service: 'Ayurvedic Abhyanga Full Body Massage', staff: 'Ananya Ayurvedic Healer', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'sp-2', customer: 'Aman Verma', phone: '+91 99887 76656', email: 'aman.v@email.com', service: 'Deep Tissue Muscle Relief Massage', staff: 'Master Somchai', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+    { id: 'sp-1', customer: 'Meera Kapoor', phone: '+91 99887 76655', email: 'meera.k@email.com', service: 'Ayurvedic Abhyanga Full Body Massage', staff: 'Ananya Ayurvedic Healer', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Prefers warm sesame oil with herbal aroma.' },
+    { id: 'sp-2', customer: 'Aman Verma', phone: '+91 99887 76656', email: 'aman.v@email.com', service: 'Deep Tissue Muscle Relief Massage', staff: 'Master Somchai', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Focus on lower back & shoulders.' },
     { id: 'sp-3', customer: 'Simran Kaur', phone: '+91 99887 76657', email: 'simran@email.com', service: 'Aromatherapy Herbal Body Wrap', staff: 'Maya Sen', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Lounge Desk', confirmationSent: true },
     { id: 'sp-4', customer: 'Karan Patel', phone: '+91 99887 76658', email: 'karan@email.com', service: 'Hot Stone Thermal Healing Massage', staff: 'Master Somchai', scheduledAt: '2026-08-25T10:00:00', duration: 60, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'sp-5', customer: 'Anita Desai', phone: '+91 99887 76659', email: 'anita@email.com', service: 'Panchakarma Detox Therapy Session', staff: 'Ananya Ayurvedic Healer', scheduledAt: '2026-08-25T15:00:00', duration: 90, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Guest', confirmationSent: true },
@@ -83,8 +86,8 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 'sp-8', customer: 'Devendra Rao', phone: '+91 99887 76662', email: 'devendra@email.com', service: 'Foot Reflexology & Herbal Soak', staff: 'Master Somchai', scheduledAt: '2026-08-28T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   salon: [
-    { id: 'sl-1', customer: 'Divya Nair', phone: '+91 98123 45670', email: 'divya.n@email.com', service: 'Balayage Color & Highlights', staff: 'Rohit Mehra', scheduledAt: '2026-08-24T10:00:00', duration: 90, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'sl-2', customer: 'Sameer Khan', phone: '+91 98123 45671', email: 'sameer@email.com', service: 'Keratin Hair Smoothening & Gloss', staff: 'Zara Khan', scheduledAt: '2026-08-24T11:30:00', duration: 90, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+    { id: 'sl-1', customer: 'Divya Nair', phone: '+91 98123 45670', email: 'divya.n@email.com', service: 'Balayage Color & Highlights', staff: 'Rohit Mehra', scheduledAt: '2026-08-24T10:00:00', duration: 90, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Requested cool ash blonde toner.' },
+    { id: 'sl-2', customer: 'Sameer Khan', phone: '+91 98123 45671', email: 'sameer@email.com', service: 'Keratin Hair Smoothening & Gloss', staff: 'Zara Khan', scheduledAt: '2026-08-24T11:30:00', duration: 90, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Formaldehyde-free organic formula requested.' },
     { id: 'sl-3', customer: 'Riya Sharma', phone: '+91 98123 45672', email: 'riya.s@email.com', service: 'Bridal HD Makeup & Hair Styling', staff: 'Tanya Roy', scheduledAt: '2026-08-24T14:00:00', duration: 60, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true },
     { id: 'sl-4', customer: 'Arjun Singh', phone: '+91 98123 45673', email: 'arjun@email.com', service: 'Gel Nail Extensions & Bespoke Art', staff: 'Maya Nail Artist', scheduledAt: '2026-08-25T10:00:00', duration: 45, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'sl-5', customer: 'Kavita Joshi', phone: '+91 98123 45674', email: 'kavita.j@email.com', service: 'Deluxe Moroccan Pedicure & Foot Spa', staff: 'Zara Khan', scheduledAt: '2026-08-25T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Client', confirmationSent: true },
@@ -93,8 +96,8 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 'sl-8', customer: 'Rahul Verma', phone: '+91 98123 45677', email: 'rahul.v@email.com', service: 'Precision Fade Haircut & Beard Sculpt', staff: 'Rohit Mehra', scheduledAt: '2026-08-28T14:00:00', duration: 30, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   realestate: [
-    { id: 're-1', customer: 'Rajesh Gupta', phone: '+91 90011 22334', email: 'rajesh.g@email.com', service: '3BHK Luxury Villa Guided Site Visit', staff: 'Vikram Property Advisor', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 're-2', customer: 'Sunita Reddy', phone: '+91 90011 22335', email: 'sunita.r@email.com', service: 'Commercial Space Property Inspection', staff: 'Rajesh Commercial Head', scheduledAt: '2026-08-24T11:30:00', duration: 45, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+    { id: 're-1', customer: 'Rajesh Gupta', phone: '+91 90011 22334', email: 'rajesh.g@email.com', service: '3BHK Luxury Villa Guided Site Visit', staff: 'Vikram Property Advisor', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Interested in Golf Course Extension project.' },
+    { id: 're-2', customer: 'Sunita Reddy', phone: '+91 90011 22335', email: 'sunita.r@email.com', service: 'Commercial Space Property Inspection', staff: 'Rajesh Commercial Head', scheduledAt: '2026-08-24T11:30:00', duration: 45, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Looking for 5,000 sq ft IT office space.' },
     { id: 're-3', customer: 'Ravi Kumar', phone: '+91 90011 22336', email: 'ravi.k@email.com', service: 'NRI Live Video Walkthrough & Consultation', staff: 'Vikram Property Advisor', scheduledAt: '2026-08-24T14:00:00', duration: 30, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Office', confirmationSent: true },
     { id: 're-4', customer: 'Alok Mishra', phone: '+91 90011 22337', email: 'alok.m@email.com', service: 'RERA Title Verification & Legal Search', staff: 'Legal Consultant', scheduledAt: '2026-08-25T10:00:00', duration: 45, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 're-5', customer: 'Nandini Das', phone: '+91 90011 22338', email: 'nandini.d@email.com', service: 'Property Booking Token Processing', staff: 'Rajesh Commercial Head', scheduledAt: '2026-08-25T15:00:00', duration: 30, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Rescheduled by Investor', confirmationSent: true },
@@ -103,8 +106,8 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 're-8', customer: 'Shiv Nadar', phone: '+91 90011 22341', email: 'shiv@email.com', service: 'Commercial Lease Agreement Signing', staff: 'Rajesh Commercial Head', scheduledAt: '2026-08-28T14:00:00', duration: 30, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   hotel: [
-    { id: 'ht-1', customer: 'Amit Patel', phone: '+91 97766 55443', email: 'amit.p@email.com', service: 'Executive Deluxe Suite Night Stay', staff: 'Front Office Host', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'ht-2', customer: 'Shruti Hasan', phone: '+91 97766 55444', email: 'shruti@email.com', service: 'Presidential Ocean Suite Night Stay', staff: 'VIP Concierge', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+    { id: 'ht-1', customer: 'Amit Patel', phone: '+91 97766 55443', email: 'amit.p@email.com', service: 'Executive Deluxe Suite Night Stay', staff: 'Front Office Host', scheduledAt: '2026-08-24T10:00:00', duration: 60, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'VIP high floor room preference.' },
+    { id: 'ht-2', customer: 'Shruti Hasan', phone: '+91 97766 55444', email: 'shruti@email.com', service: 'Presidential Ocean Suite Night Stay', staff: 'VIP Concierge', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: 'Early check-in requested.' },
     { id: 'ht-3', customer: 'Vikas Khanna', phone: '+91 97766 55445', email: 'vikas@email.com', service: 'Grand Ballroom Banquet Inspection', staff: 'Banquet Coordinator', scheduledAt: '2026-08-24T14:00:00', duration: 45, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Front Desk', confirmationSent: true },
     { id: 'ht-4', customer: 'Neha Sharma', phone: '+91 97766 55446', email: 'neha.s@email.com', service: 'Airport VIP Luxury Transfer', staff: 'Chief Concierge', scheduledAt: '2026-08-25T10:00:00', duration: 45, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'ht-5', customer: 'Rahul Bajaj', phone: '+91 97766 55447', email: 'rahul.b@email.com', service: 'Weekend Spa & Gourmet Dining Package', staff: 'Guest Experience Manager', scheduledAt: '2026-08-25T15:00:00', duration: 60, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Guest', confirmationSent: true },
@@ -113,8 +116,8 @@ const DEFAULT_APPOINTMENTS_BY_NICHE: Record<NicheId, AppointmentItem[]> = {
     { id: 'ht-8', customer: 'Mukesh Ambani', phone: '+91 97766 55450', email: 'mukesh@email.com', service: 'Helipad Transfer & Presidential Check-in', staff: 'VIP Concierge', scheduledAt: '2026-08-28T14:00:00', duration: 60, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
   ],
   auto: [
-    { id: 'au-1', customer: 'Suresh Kumar', phone: '+91 96655 44332', email: 'suresh@email.com', service: 'Test Drive Booking - Luxury SUV', staff: 'Senior Sales Executive', scheduledAt: '2026-08-24T10:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
-    { id: 'au-2', customer: 'Meenakshi Iyer', phone: '+91 96655 44333', email: 'meenakshi.i@email.com', service: 'Periodic Maintenance Service', staff: 'Service Advisor', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+    { id: 'au-1', customer: 'Suresh Kumar', phone: '+91 96655 44332', email: 'suresh@email.com', service: 'Test Drive Booking - Luxury SUV', staff: 'Senior Sales Executive', scheduledAt: '2026-08-24T10:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true, notes: 'Wants to test 4x4 off-road features.' },
+    { id: 'au-2', customer: 'Meenakshi Iyer', phone: '+91 96655 44333', email: 'meenakshi.i@email.com', service: 'Periodic Maintenance Service', staff: 'Service Advisor', scheduledAt: '2026-08-24T11:30:00', duration: 60, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true, notes: '20,000 km general service & oil check.' },
     { id: 'au-3', customer: 'Gaurav Singh', phone: '+91 96655 44334', email: 'gaurav@email.com', service: 'Premium Car Ceramic Detailing', staff: 'Service Advisor', scheduledAt: '2026-08-24T14:00:00', duration: 90, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Lounge Desk', confirmationSent: true },
     { id: 'au-4', customer: 'Preeti Desai', phone: '+91 96655 44335', email: 'preeti@email.com', service: 'Insurance Consultation & Processing', staff: 'Finance Manager', scheduledAt: '2026-08-25T10:00:00', duration: 45, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
     { id: 'au-5', customer: 'Aditya Chawla', phone: '+91 96655 44336', email: 'aditya@email.com', service: 'Pre-Delivery Inspection & Handover', staff: 'Senior Sales Executive', scheduledAt: '2026-08-25T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Rescheduled by Buyer', confirmationSent: true },
@@ -154,45 +157,81 @@ export default function AppointmentsPage() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [calendarSubView, setCalendarSubView] = useState<'month' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<number>(24);
-  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
-  const [selectedAppt, setSelectedAppt] = useState<AppointmentItem | null>(null);
   const [confirmationTriggeredId, setConfirmationTriggeredId] = useState<string | null>(null);
 
-  // Booking Form State
-  const [customer, setCustomer] = useState('');
-  const [phone, setPhone] = useState('');
-  const [service, setService] = useState(activeServices[0]?.name || 'General Consultation');
-  const [doctor, setDoctor] = useState('Lead Specialist');
-  const [date, setDate] = useState('2026-08-24');
-  const [time, setTime] = useState('10:00');
-  const [duration, setDuration] = useState('45');
-  const [source, setSource] = useState<AppointmentItem['source']>('MANUAL');
-  const [priority, setPriority] = useState<AppointmentItem['priority']>('HIGH');
+  // Edit Slide-Over Drawer State
+  const [editingAppt, setEditingAppt] = useState<AppointmentItem | null>(null);
+  const [editCustomer, setEditCustomer] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editService, setEditService] = useState('');
+  const [editStaff, setEditStaff] = useState('');
+  const [editDate, setEditDate] = useState('2026-08-24');
+  const [editTime, setEditTime] = useState('10:00');
+  const [editDuration, setEditDuration] = useState(30);
+  const [editStatus, setEditStatus] = useState<AppointmentItem['status']>('CONFIRMED');
+  const [editPriority, setEditPriority] = useState<AppointmentItem['priority']>('VIP');
+  const [editNotes, setEditNotes] = useState('');
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
 
-  const handleBookAppointment = (e: React.FormEvent) => {
+  const handleOpenEditDrawer = (appt: AppointmentItem) => {
+    setEditingAppt(appt);
+    setEditCustomer(appt.customer);
+    setEditPhone(appt.phone || '');
+    setEditEmail(appt.email || '');
+    setEditService(appt.service);
+    setEditStaff(appt.staff);
+    const d = new Date(appt.scheduledAt);
+    setEditDate(appt.scheduledAt.split('T')[0] || '2026-08-24');
+    const h = d.getHours().toString().padStart(2, '0');
+    const m = d.getMinutes().toString().padStart(2, '0');
+    setEditTime(`${h}:${m}`);
+    setEditDuration(appt.duration || 30);
+    setEditStatus(appt.status);
+    setEditPriority(appt.priority || 'STANDARD');
+    setEditNotes(appt.notes || '');
+    setSaveSuccessMsg(false);
+  };
+
+  const handleSaveAppointmentEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customer.trim()) return;
+    if (!editingAppt) return;
 
-    const scheduledAt = `${date}T${time}:00`;
-    const created: AppointmentItem = {
-      id: Date.now().toString(),
-      customer,
-      phone: phone || '+91 98765 00000',
-      service,
-      staff: doctor,
-      scheduledAt,
-      duration: parseInt(duration) || 30,
-      status: 'CONFIRMED',
-      source,
-      priority,
-      confirmationStatus: 'Booking Confirmed (Staff Entry)',
-      confirmationSent: true,
-    };
+    const scheduledAt = `${editDate}T${editTime}:00`;
+    setAppointments(prev => prev.map(a => {
+      if (a.id === editingAppt.id) {
+        return {
+          ...a,
+          customer: editCustomer,
+          phone: editPhone,
+          email: editEmail,
+          service: editService,
+          staff: editStaff,
+          scheduledAt,
+          duration: editDuration,
+          status: editStatus,
+          priority: editPriority,
+          notes: editNotes,
+        };
+      }
+      return a;
+    }));
 
-    setAppointments([created, ...appointments]);
-    setIsBookModalOpen(false);
-    setCustomer('');
-    setPhone('');
+    setSaveSuccessMsg(true);
+    setTimeout(() => {
+      setSaveSuccessMsg(false);
+      setEditingAppt(null);
+    }, 900);
+  };
+
+  const handleCancelAppointmentFromDrawer = (apptId: string) => {
+    setAppointments(prev => prev.map(a => {
+      if (a.id === apptId) {
+        return { ...a, status: 'CANCELLED' };
+      }
+      return a;
+    }));
+    setEditingAppt(null);
   };
 
   const handleSendConfirmationRequest = (apptId: string) => {
@@ -210,7 +249,7 @@ export default function AppointmentsPage() {
         return a;
       }));
       setConfirmationTriggeredId(null);
-    }, 1500);
+    }, 1200);
   };
 
   // Selected date appointments
@@ -258,28 +297,29 @@ export default function AppointmentsPage() {
             </button>
           </div>
 
-          <button
-            onClick={() => setIsBookModalOpen(true)}
+          {/* Book Appointment Button - Redirects directly to /book-appointment */}
+          <Link
+            href="/book-appointment"
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20 shrink-0"
           >
             <Plus size={16} />
             <span>Book Appointment</span>
-          </button>
+          </Link>
         </div>
       </div>
 
-      {/* Main Grid: Dominant Big Calendar (Left) + Vertical Stats Panel (Right) */}
+      {/* Main Grid: Dominant Big Calendar (Left) + Compact Stats & Appointments List (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column: Big Dominant Calendar / List */}
-        <div className="lg:col-span-9 space-y-4">
+        {/* Left Column: Dominant Big Calendar / List */}
+        <div className="lg:col-span-8 xl:col-span-8 space-y-4">
           {viewMode === 'calendar' ? (
             <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-3xl p-6 shadow-xl space-y-4">
-              {/* Calendar Controls (Month / Day Toggle like reference screenshot) */}
+              {/* Calendar Controls */}
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <div className="flex items-center gap-3">
                   <h2 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <CalIcon size={18} className="text-blue-400" />
+                    <CalIcon size={18} className="text-blue-500" />
                     <span>August 2026</span>
                   </h2>
                   <span className="text-xs text-[var(--color-text-muted)] font-medium">Asia/Calcutta</span>
@@ -321,7 +361,7 @@ export default function AppointmentsPage() {
                   <div className="grid grid-cols-7 gap-2">
                     {/* Padding days from July */}
                     {[26, 27, 28, 29, 30, 31].map(d => (
-                      <div key={`prev-${d}`} className="min-h-[90px] p-2 rounded-2xl border border-transparent text-slate-700 dark:text-slate-800 text-xs font-semibold">
+                      <div key={`prev-${d}`} className="min-h-[110px] p-2 rounded-2xl border border-transparent text-zinc-400 dark:text-zinc-600 text-xs font-semibold">
                         {d}
                       </div>
                     ))}
@@ -336,23 +376,23 @@ export default function AppointmentsPage() {
                           key={day}
                           onClick={() => setSelectedDate(day)}
                           className={cn(
-                            "min-h-[100px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group",
+                            "min-h-[110px] p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group",
                             isSelected
-                              ? "bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/30"
-                              : "bg-[var(--color-surface)]/50 border-[var(--color-border)] hover:border-blue-500/30 hover:bg-[var(--color-surface)]"
+                              ? "bg-blue-500/10 border-blue-500/50 shadow-md ring-2 ring-blue-500/30"
+                              : "bg-[var(--color-surface)]/60 border-[var(--color-border)] hover:border-blue-500/30 hover:bg-[var(--color-surface)]"
                           )}
                         >
                           <div className="flex items-center justify-between">
                             <span className={cn(
-                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold",
                               isSelected 
                                 ? "bg-blue-600 text-white shadow-sm" 
-                                : "text-[var(--color-text)]"
+                                : "text-[var(--color-text)] group-hover:text-blue-500"
                             )}>
                               {day}
                             </span>
                             {dayAppts.length > 0 && (
-                              <span className="text-[10px] font-mono text-blue-400 font-bold">
+                              <span className="text-[10px] font-mono text-blue-500 font-bold">
                                 {dayAppts.length} {dayAppts.length === 1 ? 'sitting' : 'sittings'}
                               </span>
                             )}
@@ -362,11 +402,15 @@ export default function AppointmentsPage() {
                             {dayAppts.slice(0, 2).map((a) => (
                               <div
                                 key={a.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditDrawer(a);
+                                }}
                                 className={cn(
-                                  "p-1 rounded-md text-[10px] truncate font-medium",
-                                  a.status === 'CONFIRMED' ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
-                                  a.status === 'IN_PROGRESS' ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
-                                  "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                  "p-1 rounded-md text-[10px] truncate font-medium hover:scale-[1.02] transition-transform",
+                                  a.status === 'CONFIRMED' ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30" :
+                                  a.status === 'IN_PROGRESS' ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30" :
+                                  "bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30"
                                 )}
                               >
                                 {a.customer.split(' ')[0]} - {a.service}
@@ -394,7 +438,7 @@ export default function AppointmentsPage() {
                     </span>
                     <button
                       onClick={() => setCalendarSubView('month')}
-                      className="text-xs text-blue-400 font-semibold hover:underline"
+                      className="text-xs text-blue-500 font-semibold hover:underline"
                     >
                       ← Back to Month
                     </button>
@@ -413,14 +457,21 @@ export default function AppointmentsPage() {
                           <div className="flex-1 space-y-1.5">
                             {hourAppts.length > 0 ? (
                               hourAppts.map(appt => (
-                                <div key={appt.id} className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+                                <div 
+                                  key={appt.id} 
+                                  onClick={() => handleOpenEditDrawer(appt)}
+                                  className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between cursor-pointer hover:border-blue-500 transition-all group"
+                                >
                                   <div>
-                                    <span className="font-bold text-xs text-[var(--color-text)]">{appt.customer}</span>
+                                    <span className="font-bold text-xs text-[var(--color-text)] group-hover:text-blue-500 transition-colors">{appt.customer}</span>
                                     <span className="text-[11px] text-[var(--color-text-muted)] block">{appt.service} • {appt.staff}</span>
                                   </div>
-                                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-                                    {appt.status}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                                      {appt.status}
+                                    </span>
+                                    <Edit3 size={13} className="text-[var(--color-text-muted)] group-hover:text-blue-500" />
+                                  </div>
                                 </div>
                               ))
                             ) : (
@@ -444,34 +495,34 @@ export default function AppointmentsPage() {
                 return (
                   <div
                     key={appt.id}
-                    onClick={() => setSelectedAppt(appt)}
+                    onClick={() => handleOpenEditDrawer(appt)}
                     className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl hover:border-blue-500/40 transition-all cursor-pointer gap-4 shadow-sm group"
                   >
                     <div className="flex items-center gap-4">
                       <Avatar3D name={appt.customer} size="md" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-sm text-[var(--color-text)] group-hover:text-blue-400 transition-colors">{appt.service}</p>
+                          <p className="font-bold text-sm text-[var(--color-text)] group-hover:text-blue-500 transition-colors">{appt.service}</p>
                           <span className={cn("px-2.5 py-0.5 text-[10px] rounded-full border flex items-center gap-1 font-semibold", status.style)}>
                             <StatusIcon size={10} />
                             {status.label}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
-                          <span>Patient: <strong className="text-slate-200">{appt.customer}</strong></span>
+                          <span>Patient: <strong className="text-[var(--color-text)]">{appt.customer}</strong></span>
                           <span>•</span>
-                          <span>Staff: <strong className="text-blue-400">{appt.staff}</strong></span>
+                          <span>Staff: <strong className="text-blue-500">{appt.staff}</strong></span>
                           <span>•</span>
-                          <span className="text-slate-300 font-medium">{sourceLabels[appt.source]}</span>
+                          <span className="text-[var(--color-text)] font-medium">{sourceLabels[appt.source]}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <p className="text-xs font-bold text-blue-400 font-mono">
+                      <p className="text-xs font-bold text-blue-500 font-mono">
                         {apptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {apptDate.getHours().toString().padStart(2, '0')}:{apptDate.getMinutes().toString().padStart(2, '0')}
                       </p>
-                      <span className="text-[10px] text-emerald-400 font-medium">{appt.confirmationStatus}</span>
+                      <span className="text-[10px] text-emerald-500 font-medium">{appt.confirmationStatus}</span>
                     </div>
                   </div>
                 );
@@ -480,182 +531,339 @@ export default function AppointmentsPage() {
           )}
         </div>
 
-        {/* Right Column: Vertical Compact Stats Panel + Selected Date Details (Reference Screenshot Style) */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Vertical Stacked Stats Cards */}
-          <div className="space-y-3">
+        {/* Right Column: Compact Smaller Stat Cards + Appointments List */}
+        <div className="lg:col-span-4 xl:col-span-4 space-y-4">
+          {/* 4 Smaller, Compact Stat Cards in 2x2 Grid */}
+          <div className="grid grid-cols-2 gap-2.5">
             {[
-              { label: 'Total Bookings', count: appointments.length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-              { label: 'Booking Confirmed', count: appointments.filter(a => a.status === 'CONFIRMED').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { label: 'Store Visit / Walk-ins', count: appointments.filter(a => a.source === 'STORE_VISIT' || a.source === 'MANUAL').length, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-              { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+              { label: 'Total Bookings', count: appointments.length, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+              { label: 'Booking Confirmed', count: appointments.filter(a => a.status === 'CONFIRMED').length, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+              { label: 'Store / Walk-ins', count: appointments.filter(a => a.source === 'STORE_VISIT' || a.source === 'MANUAL').length, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+              { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-1"
+                className="p-3 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-0.5"
               >
-                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold">{stat.label}</p>
+                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold truncate">{stat.label}</p>
                 <div className="flex items-baseline justify-between">
-                  <p className={cn("text-2xl font-extrabold font-mono", stat.color)}>{stat.count}</p>
-                  <span className="text-[10px] text-[var(--color-text-muted)]">Active sittings</span>
+                  <p className={cn("text-xl font-extrabold font-mono", stat.color)}>{stat.count}</p>
+                  <span className="text-[9px] text-[var(--color-text-muted)] font-medium">sittings</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Selected Date Inspector Card */}
-          <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
-              <span className="text-xs font-bold text-[var(--color-text)]">Selected Date</span>
-              <span className="text-xs font-mono font-bold text-blue-400">Aug {selectedDate}, 2026</span>
+          {/* Appointments Inspector Card (Renamed from Selected Date) */}
+          <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
+              <div>
+                <span className="text-xs font-bold text-[var(--color-text)]">Appointments</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] block">Click any to view & edit details</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-blue-500 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20">
+                Aug {selectedDate}, 2026
+              </span>
             </div>
 
             {selectedDateAppts.length > 0 ? (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                 {selectedDateAppts.map(a => (
-                  <div key={a.id} className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-xs space-y-1">
+                  <div 
+                    key={a.id} 
+                    onClick={() => handleOpenEditDrawer(a)}
+                    className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer text-xs space-y-1 group"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[var(--color-text)]">{a.customer}</span>
-                      <span className="font-mono text-[10px] text-blue-400">
+                      <span className="font-bold text-[var(--color-text)] group-hover:text-blue-500 transition-colors flex items-center gap-1.5">
+                        {a.customer}
+                        {a.priority === 'VIP' && (
+                          <span className="text-[9px] bg-amber-500/20 text-amber-500 px-1.5 py-0.2 rounded font-bold">VIP</span>
+                        )}
+                      </span>
+                      <span className="font-mono text-[11px] font-bold text-blue-500">
                         {new Date(a.scheduledAt).getHours().toString().padStart(2, '0')}:00
                       </span>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)] truncate">{a.service}</p>
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-emerald-400 font-medium">● {a.status}</span>
-                      {!a.confirmationSent && (
-                        <button
-                          onClick={() => handleSendConfirmationRequest(a.id)}
-                          className="text-[10px] text-blue-400 font-bold hover:underline"
-                        >
-                          Send Recall
-                        </button>
-                      )}
+                      <span className="text-[10px] text-emerald-500 font-semibold">● {a.status}</span>
+                      <span className="text-[10px] text-blue-500 group-hover:underline flex items-center gap-1">
+                        Edit details →
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-6 text-center text-xs text-[var(--color-text-muted)] space-y-1">
+              <div className="py-6 text-center text-xs text-[var(--color-text-muted)] space-y-2">
                 <p>No appointments on this date.</p>
-                <button
-                  onClick={() => setIsBookModalOpen(true)}
-                  className="text-xs text-blue-400 font-bold hover:underline"
+                <Link
+                  href="/book-appointment"
+                  className="inline-block text-xs text-blue-500 font-bold hover:underline"
                 >
                   + Add new booking
-                </button>
+                </Link>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Book Appointment Modal */}
+      {/* Large Slide-Over Appointment Details & Re-Edit Panel */}
       <AnimatePresence>
-        {isBookModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        {editingAppt && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-3xl p-6 w-full max-w-lg shadow-2xl space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-                <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
-                  <Plus size={18} className="text-blue-400" />
-                  Book Walk-in / Customer Appointment
-                </h3>
-                <button onClick={() => setIsBookModalOpen(false)} className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
-                  <X size={18} />
-                </button>
-              </div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingAppt(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            />
 
-              <form onSubmit={handleBookAppointment} className="space-y-3 text-xs">
-                <div>
-                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Customer / Patient Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ramesh Verma"
-                    value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
-                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Mobile Phone (For 2-Step Confirmation)</label>
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Service</label>
-                    <select
-                      value={service}
-                      onChange={(e) => setService(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      {activeServices.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                    </select>
+            {/* Slide-over Container */}
+            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="w-screen max-w-lg bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl flex flex-col justify-between"
+              >
+                {/* Drawer Header */}
+                <div className="p-5 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-secondary)]">
+                  <div className="flex items-center gap-3">
+                    <Avatar3D name={editCustomer} size="md" />
+                    <div>
+                      <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
+                        <span>{editCustomer}</span>
+                        {editPriority === 'VIP' && (
+                          <span className="text-[10px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-2 py-0.2 rounded-full font-bold">
+                            VIP
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-[var(--color-text-muted)]">Appointment Booking Details</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Assigned Specialist</label>
-                    <input
-                      type="text"
-                      value={doctor}
-                      onChange={(e) => setDoctor(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
+                  <button
+                    onClick={() => setEditingAppt(null)}
+                    className="p-2 rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-all cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
+                {/* Drawer Body Form */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+                  {/* Quick Action Contact Bar */}
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)]">
+                    {editPhone && (
+                      <a
+                        href={`tel:${editPhone.replace(/\s+/g, '')}`}
+                        className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-600/10 text-blue-500 font-semibold hover:bg-blue-600 hover:text-white transition-all text-center"
+                      >
+                        <Phone size={14} />
+                        Call Patient
+                      </a>
+                    )}
+                    {editPhone && (
+                      <a
+                        href={`https://wa.me/${editPhone.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-500/10 text-emerald-500 font-semibold hover:bg-emerald-600 hover:text-white transition-all text-center"
+                      >
+                        <MessageCircle size={14} />
+                        WhatsApp
+                      </a>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Time</label>
-                    <input
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
+                  {saveSuccessMsg && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-500 font-bold flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      <span>Appointment updated and saved successfully!</span>
+                    </div>
+                  )}
+
+                  <form id="edit-appt-form" onSubmit={handleSaveAppointmentEdit} className="space-y-4">
+                    {/* Customer Name & Phone */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Customer / Patient Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={editCustomer}
+                          onChange={(e) => setEditCustomer(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Phone Number</label>
+                        <input
+                          type="tel"
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        placeholder="e.g. client@email.com"
+                        className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Service & Staff Selection */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Service</label>
+                        <select
+                          value={editService}
+                          onChange={(e) => setEditService(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        >
+                          {activeServices.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Assigned Specialist</label>
+                        <input
+                          type="text"
+                          value={editStaff}
+                          onChange={(e) => setEditStaff(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="grid grid-cols-3 gap-2.5">
+                      <div className="col-span-1">
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Date</label>
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-2.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Time Slot</label>
+                        <input
+                          type="time"
+                          value={editTime}
+                          onChange={(e) => setEditTime(e.target.value)}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-2.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Duration (min)</label>
+                        <select
+                          value={editDuration}
+                          onChange={(e) => setEditDuration(parseInt(e.target.value))}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-2.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        >
+                          {[15, 20, 30, 45, 60, 90, 120].map(d => (
+                            <option key={d} value={d}>{d} min</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Status & Priority */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Booking Status</label>
+                        <select
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value as AppointmentItem['status'])}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold"
+                        >
+                          <option value="SCHEDULED">Scheduled</option>
+                          <option value="CONFIRMED">Confirmed</option>
+                          <option value="IN_PROGRESS">In Progress</option>
+                          <option value="COMPLETED">Completed</option>
+                          <option value="CANCELLED">Cancelled</option>
+                          <option value="NO_SHOW">No Show</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Client Priority</label>
+                        <select
+                          value={editPriority}
+                          onChange={(e) => setEditPriority(e.target.value as AppointmentItem['priority'])}
+                          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        >
+                          <option value="VIP">⭐ VIP Client</option>
+                          <option value="HIGH">🔥 High Priority</option>
+                          <option value="STANDARD">Standard</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Clinical / Booking Notes */}
+                    <div>
+                      <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Client Notes / Procedure History</label>
+                      <textarea
+                        rows={3}
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        placeholder="Add special instructions, allergies, procedure notes..."
+                        className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                      />
+                    </div>
+                  </form>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                {/* Drawer Footer Actions */}
+                <div className="p-5 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex items-center justify-between gap-3">
                   <button
                     type="button"
-                    onClick={() => setIsBookModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+                    onClick={() => handleCancelAppointmentFromDrawer(editingAppt.id)}
+                    className="py-2.5 px-4 rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 font-bold transition-all text-xs flex items-center gap-1.5 cursor-pointer"
                   >
-                    Cancel
+                    <Trash2 size={14} />
+                    Cancel Booking
                   </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25"
-                  >
-                    Confirm Booking
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingAppt(null)}
+                      className="py-2.5 px-4 rounded-xl border border-[var(--color-border)] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)] text-xs cursor-pointer"
+                    >
+                      Discard
+                    </button>
+                    <button
+                      type="submit"
+                      form="edit-appt-form"
+                      className="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check size={14} />
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
-              </form>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>
