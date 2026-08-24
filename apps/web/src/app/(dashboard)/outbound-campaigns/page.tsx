@@ -33,6 +33,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { useState, useEffect } from 'react';
+import type { NicheId } from '@/config/niches/types';
+
 // --- Types ---
 interface CampaignStat {
   sent: number;
@@ -59,28 +62,142 @@ interface WizardStep {
   config: Record<string, any>;
 }
 
-const INITIAL_CAMPAIGNS: CampaignItem[] = [
-  {
-    id: 'camp_1',
-    name: '90-Day Dormant Client Win-back',
-    goal: 'Win-back Dormant Clients',
-    channels: ['Voice AI', 'WhatsApp'],
-    audienceSize: 250,
-    status: 'ACTIVE',
-    createdDate: '2026-08-15',
-    stats: { sent: 250, delivered: 240, replied: 85 }
-  },
-  {
-    id: 'camp_2',
-    name: 'Festival Special Promo',
-    goal: 'Promotional Offer',
-    channels: ['WhatsApp'],
-    audienceSize: 1200,
-    status: 'COMPLETED',
-    createdDate: '2026-07-20',
-    stats: { sent: 1200, delivered: 1180, replied: 420 }
-  }
-];
+const DEFAULT_OUTBOUND_BY_NICHE: Record<NicheId, CampaignItem[]> = {
+  skin: [
+    {
+      id: 'camp_sk_1',
+      name: '90-Day Dormant Client Win-back',
+      goal: 'Win-back Dormant Clients',
+      channels: ['Voice AI', 'WhatsApp'],
+      audienceSize: 250,
+      status: 'ACTIVE',
+      createdDate: '2026-08-15',
+      stats: { sent: 250, delivered: 240, replied: 85 }
+    },
+    {
+      id: 'camp_sk_2',
+      name: 'Monsoon Glow Chemical Peel Promo',
+      goal: 'Promotional Offer',
+      channels: ['WhatsApp'],
+      audienceSize: 1200,
+      status: 'COMPLETED',
+      createdDate: '2026-07-20',
+      stats: { sent: 1200, delivered: 1180, replied: 420 }
+    }
+  ],
+  dental: [
+    {
+      id: 'camp_dt_1',
+      name: '6-Month Routine Scaling & Hygiene Recall',
+      goal: 'Win-back Dormant Clients',
+      channels: ['Voice AI', 'WhatsApp'],
+      audienceSize: 340,
+      status: 'ACTIVE',
+      createdDate: '2026-08-18',
+      stats: { sent: 340, delivered: 330, replied: 112 }
+    },
+    {
+      id: 'camp_dt_2',
+      name: 'Invisalign Aligners Free 3D Scan Broadcast',
+      goal: 'Promotional Offer',
+      channels: ['WhatsApp'],
+      audienceSize: 850,
+      status: 'ACTIVE',
+      createdDate: '2026-08-01',
+      stats: { sent: 850, delivered: 820, replied: 245 }
+    },
+    {
+      id: 'camp_dt_3',
+      name: 'Post-Root Canal Care & Crown Fitting Check',
+      goal: 'Post-Treatment Follow-up',
+      channels: ['Voice AI'],
+      audienceSize: 45,
+      status: 'COMPLETED',
+      createdDate: '2026-08-10',
+      stats: { sent: 45, delivered: 45, replied: 38 }
+    }
+  ],
+  spa: [
+    {
+      id: 'camp_sp_1',
+      name: 'Weekend Couples Sanctuary Re-engagement',
+      goal: 'Win-back Dormant Clients',
+      channels: ['WhatsApp', 'Voice AI'],
+      audienceSize: 180,
+      status: 'ACTIVE',
+      createdDate: '2026-08-12',
+      stats: { sent: 180, delivered: 175, replied: 64 }
+    },
+    {
+      id: 'camp_sp_2',
+      name: 'Ayurvedic Monsoon Detox Special',
+      goal: 'Promotional Offer',
+      channels: ['WhatsApp'],
+      audienceSize: 620,
+      status: 'ACTIVE',
+      createdDate: '2026-08-05',
+      stats: { sent: 620, delivered: 605, replied: 190 }
+    }
+  ],
+  salon: [
+    {
+      id: 'camp_sl_1',
+      name: '4-Week Root Touch-up & Keratin Maintenance',
+      goal: 'Appointment Reminder',
+      channels: ['WhatsApp'],
+      audienceSize: 410,
+      status: 'ACTIVE',
+      createdDate: '2026-08-14',
+      stats: { sent: 410, delivered: 395, replied: 156 }
+    },
+    {
+      id: 'camp_sl_2',
+      name: 'Bridal Season 2026 Early Bird Makeup Slots',
+      goal: 'Promotional Offer',
+      channels: ['WhatsApp', 'Voice AI'],
+      audienceSize: 950,
+      status: 'ACTIVE',
+      createdDate: '2026-08-02',
+      stats: { sent: 950, delivered: 920, replied: 310 }
+    }
+  ],
+  realestate: [
+    {
+      id: 'camp_re_1',
+      name: 'Ultra-Luxury 4BHK Villa Project Launch Invite',
+      goal: 'Promotional Offer',
+      channels: ['Voice AI', 'WhatsApp'],
+      audienceSize: 500,
+      status: 'ACTIVE',
+      createdDate: '2026-08-10',
+      stats: { sent: 500, delivered: 480, replied: 140 }
+    }
+  ],
+  hotel: [
+    {
+      id: 'camp_ht_1',
+      name: 'Long Weekend Suite Staycation Exclusive',
+      goal: 'Promotional Offer',
+      channels: ['WhatsApp'],
+      audienceSize: 1500,
+      status: 'ACTIVE',
+      createdDate: '2026-08-08',
+      stats: { sent: 1500, delivered: 1460, replied: 380 }
+    }
+  ],
+  auto: [
+    {
+      id: 'camp_au_1',
+      name: 'Annual Monsoon Vehicle Safety Checkup Camp',
+      goal: 'Promotional Offer',
+      channels: ['Voice AI', 'WhatsApp'],
+      audienceSize: 800,
+      status: 'ACTIVE',
+      createdDate: '2026-08-11',
+      stats: { sent: 800, delivered: 780, replied: 260 }
+    }
+  ]
+};
 
 const GOAL_OPTIONS = [
   { id: 'winback', title: 'Win-back Dormant Clients', desc: 'Re-engage customers who have not visited in 3+ months', icon: UserCheck },
@@ -106,7 +223,12 @@ const DEFAULT_SEQUENCE: WizardStep[] = [
 
 export default function OutboundCampaignsPage() {
   const { currentNiche, nicheConfig } = useNiche();
-  const [campaigns, setCampaigns] = useState<CampaignItem[]>(INITIAL_CAMPAIGNS);
+  const [campaigns, setCampaigns] = useState<CampaignItem[]>(() => DEFAULT_OUTBOUND_BY_NICHE[currentNiche] || DEFAULT_OUTBOUND_BY_NICHE.skin);
+
+  useEffect(() => {
+    setCampaigns(DEFAULT_OUTBOUND_BY_NICHE[currentNiche] || DEFAULT_OUTBOUND_BY_NICHE.skin);
+  }, [currentNiche]);
+
   const [search, setSearch] = useState('');
   
   // Wizard State

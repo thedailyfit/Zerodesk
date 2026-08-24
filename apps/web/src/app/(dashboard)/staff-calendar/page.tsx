@@ -1,8 +1,8 @@
-'use client';
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRole } from '@/components/providers/role-provider';
+import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
 import { 
   Users, 
   Coffee, 
@@ -19,7 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 
 export type ShiftType = 'duty' | 'lunch' | 'leave' | 'oncall';
-export type Department = 'Dermatology' | 'Cosmetology' | 'Reception' | 'Wellness';
 
 export interface StaffShiftBlock {
   type: ShiftType;
@@ -32,7 +31,7 @@ export interface StaffMember {
   id: string;
   name: string;
   role: string;
-  department: Department;
+  department: string;
   avatar: string;
   phone: string;
   email: string;
@@ -42,7 +41,15 @@ export interface StaffMember {
   lunchHoursStr: string;
 }
 
-const DEPARTMENTS: Department[] = ['Dermatology', 'Cosmetology', 'Reception', 'Wellness'];
+const DEPARTMENTS_BY_NICHE: Record<NicheId, string[]> = {
+  skin: ['Dermatology', 'Cosmetology', 'Reception', 'Wellness'],
+  dental: ['Endodontics', 'Orthodontics', 'Oral Surgery', 'Hygiene & Prep', 'Front Office'],
+  spa: ['Ayurvedic Therapy', 'Massage Therapy', 'Thermal Spa', 'Guest Relations'],
+  salon: ['Hair Styling', 'Color Lab', 'Bridal & Makeup', 'Nail Bar', 'Reception'],
+  realestate: ['Luxury Residential', 'Commercial Advisory', 'Legal & Documentation', 'Client Relations'],
+  hotel: ['Front Office', 'Concierge & VIP', 'Banquets & Events', 'Guest Experience'],
+  auto: ['Sales Advisory', 'Service & Repairs', 'Detailing Studio', 'Finance & Insurance'],
+};
 
 const SHIFT_LEGEND = [
   { 
@@ -79,126 +86,414 @@ const SHIFT_LEGEND = [
   },
 ];
 
-const INITIAL_STAFF: StaffMember[] = [
-  {
-    id: 's1',
-    name: 'Dr. Meenakshi',
-    role: 'Senior Dermatologist',
-    department: 'Dermatology',
-    avatar: 'DM',
-    phone: '+91 98765 11111',
-    email: 'meenakshi@zerodesk.com',
-    status: 'Active',
-    workingHoursStr: '9:00 AM - 5:00 PM',
-    lunchHoursStr: '1:00 PM - 2:00 PM',
-    shifts: [
-      { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Morning Consultations' },
-      { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
-      { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Afternoon Procedure Duty' },
-      { type: 'oncall', startHour: 17.0, endHour: 20.0, label: 'Emergency On Call' }
-    ]
-  },
-  {
-    id: 's2',
-    name: 'Dr. Arun',
-    role: 'Cosmetic Surgeon',
-    department: 'Cosmetology',
-    avatar: 'DA',
-    phone: '+91 98765 22222',
-    email: 'arun@zerodesk.com',
-    status: 'Active',
-    workingHoursStr: '10:00 AM - 6:00 PM',
-    lunchHoursStr: '2:00 PM - 3:00 PM',
-    shifts: [
-      { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Surgery OT Duty' },
-      { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
-      { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Post-Op Rounds & Consults' }
-    ]
-  },
-  {
-    id: 's3',
-    name: 'Kavita',
-    role: 'Senior Clinical Nurse',
-    department: 'Dermatology',
-    avatar: 'KV',
-    phone: '+91 98765 33333',
-    email: 'kavita@zerodesk.com',
-    status: 'Active',
-    workingHoursStr: '8:30 AM - 4:30 PM',
-    lunchHoursStr: '12:30 PM - 1:30 PM',
-    shifts: [
-      { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Patient Prep & Vitals' },
-      { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
-      { type: 'duty', startHour: 13.5, endHour: 16.5, label: 'PRP Assisting' }
-    ]
-  },
-  {
-    id: 's4',
-    name: 'Rekha',
-    role: 'Cosmetology Therapist',
-    department: 'Cosmetology',
-    avatar: 'RK',
-    phone: '+91 98765 44444',
-    email: 'rekha@zerodesk.com',
-    status: 'Active',
-    workingHoursStr: '9:00 AM - 5:00 PM',
-    lunchHoursStr: '1:30 PM - 2:30 PM',
-    shifts: [
-      { type: 'duty', startHour: 9.0, endHour: 13.5, label: 'Laser Treatments' },
-      { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
-      { type: 'duty', startHour: 14.5, endHour: 17.0, label: 'Peels & Facials' }
-    ]
-  },
-  {
-    id: 's5',
-    name: 'Sunita',
-    role: 'Wellness Specialist',
-    department: 'Wellness',
-    avatar: 'SN',
-    phone: '+91 98765 55555',
-    email: 'sunita@zerodesk.com',
-    status: 'On Break',
-    workingHoursStr: '9:30 AM - 5:30 PM',
-    lunchHoursStr: '1:00 PM - 2:00 PM',
-    shifts: [
-      { type: 'duty', startHour: 9.5, endHour: 13.0, label: 'Wellness Massages' },
-      { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
-      { type: 'duty', startHour: 14.0, endHour: 17.5, label: 'Holistic Spa Therapy' }
-    ]
-  },
-  {
-    id: 's6',
-    name: 'Pooja',
-    role: 'Head Desk Administrator',
-    department: 'Reception',
-    avatar: 'PJ',
-    phone: '+91 98765 66666',
-    email: 'pooja@zerodesk.com',
-    status: 'Active',
-    workingHoursStr: '8:00 AM - 4:00 PM',
-    lunchHoursStr: '12:00 PM - 1:00 PM',
-    shifts: [
-      { type: 'duty', startHour: 8.0, endHour: 12.0, label: 'Front Desk & Billing' },
-      { type: 'lunch', startHour: 12.0, endHour: 13.0, label: 'Lunch Break' },
-      { type: 'duty', startHour: 13.0, endHour: 16.0, label: 'Patient Check-ins' }
-    ]
-  },
-  {
-    id: 's7',
-    name: 'Amit',
-    role: 'Reception Coordinator',
-    department: 'Reception',
-    avatar: 'AM',
-    phone: '+91 98765 77777',
-    email: 'amit@zerodesk.com',
-    status: 'Off Shift',
-    workingHoursStr: 'On Leave Today',
-    lunchHoursStr: 'N/A',
-    shifts: [
-      { type: 'leave', startHour: 8.0, endHour: 20.0, label: 'Annual Paid Leave' }
-    ]
-  },
-];
+const DEFAULT_STAFF_BY_NICHE: Record<NicheId, StaffMember[]> = {
+  skin: [
+    {
+      id: 's-sk-1',
+      name: 'Dr. Meenakshi',
+      role: 'Senior Dermatologist',
+      department: 'Dermatology',
+      avatar: 'DM',
+      phone: '+91 98765 11111',
+      email: 'meenakshi@zerodesk.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 5:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Morning Consultations' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Afternoon Procedure Duty' },
+        { type: 'oncall', startHour: 17.0, endHour: 20.0, label: 'Emergency On Call' }
+      ]
+    },
+    {
+      id: 's-sk-2',
+      name: 'Dr. Arun',
+      role: 'Cosmetic Surgeon',
+      department: 'Cosmetology',
+      avatar: 'DA',
+      phone: '+91 98765 22222',
+      email: 'arun@zerodesk.com',
+      status: 'Active',
+      workingHoursStr: '10:00 AM - 6:00 PM',
+      lunchHoursStr: '2:00 PM - 3:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Surgery OT Duty' },
+        { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Post-Op Rounds & Consults' }
+      ]
+    },
+    {
+      id: 's-sk-3',
+      name: 'Kavita',
+      role: 'Senior Clinical Nurse',
+      department: 'Dermatology',
+      avatar: 'KV',
+      phone: '+91 98765 33333',
+      email: 'kavita@zerodesk.com',
+      status: 'Active',
+      workingHoursStr: '8:30 AM - 4:30 PM',
+      lunchHoursStr: '12:30 PM - 1:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Patient Prep & Vitals' },
+        { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.5, endHour: 16.5, label: 'PRP Assisting' }
+      ]
+    },
+    {
+      id: 's-sk-4',
+      name: 'Rekha',
+      role: 'Cosmetology Therapist',
+      department: 'Cosmetology',
+      avatar: 'RK',
+      phone: '+91 98765 44444',
+      email: 'rekha@zerodesk.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 5:00 PM',
+      lunchHoursStr: '1:30 PM - 2:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.5, label: 'Laser Treatments' },
+        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.5, endHour: 17.0, label: 'Peels & Facials' }
+      ]
+    },
+    {
+      id: 's-sk-5',
+      name: 'Pooja',
+      role: 'Head Desk Administrator',
+      department: 'Reception',
+      avatar: 'PJ',
+      phone: '+91 98765 66666',
+      email: 'pooja@zerodesk.com',
+      status: 'Active',
+      workingHoursStr: '8:00 AM - 4:00 PM',
+      lunchHoursStr: '12:00 PM - 1:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.0, endHour: 12.0, label: 'Front Desk & Billing' },
+        { type: 'lunch', startHour: 12.0, endHour: 13.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.0, endHour: 16.0, label: 'Patient Check-ins' }
+      ]
+    }
+  ],
+  dental: [
+    {
+      id: 's-dt-1',
+      name: 'Dr. Arvind Sharma',
+      role: 'Chief Endodontist',
+      department: 'Endodontics',
+      avatar: 'AS',
+      phone: '+91 91234 11111',
+      email: 'dr.sharma@dentalcare.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 5:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Root Canal Treatments' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Surgical Consultations' }
+      ]
+    },
+    {
+      id: 's-dt-2',
+      name: 'Dr. Priya Nair',
+      role: 'Orthodontist Specialist',
+      department: 'Orthodontics',
+      avatar: 'PN',
+      phone: '+91 91234 22222',
+      email: 'dr.priya@dentalcare.com',
+      status: 'Active',
+      workingHoursStr: '10:00 AM - 6:00 PM',
+      lunchHoursStr: '2:00 PM - 3:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Invisalign Aligners Scans' },
+        { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Braces Adjustments' }
+      ]
+    },
+    {
+      id: 's-dt-3',
+      name: 'Sarah Hygienist',
+      role: 'Lead Dental Hygienist',
+      department: 'Hygiene & Prep',
+      avatar: 'SH',
+      phone: '+91 91234 33333',
+      email: 'sarah@dentalcare.com',
+      status: 'Active',
+      workingHoursStr: '8:30 AM - 4:30 PM',
+      lunchHoursStr: '12:30 PM - 1:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Ultrasonic Scaling & Clean' },
+        { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.5, endHour: 16.5, label: 'Fluoride Polish & X-Rays' }
+      ]
+    },
+    {
+      id: 's-dt-4',
+      name: 'Pooja Hegde',
+      role: 'Dental Frontdesk Lead',
+      department: 'Front Office',
+      avatar: 'PH',
+      phone: '+91 91234 44444',
+      email: 'pooja@dentalcare.com',
+      status: 'Active',
+      workingHoursStr: '8:00 AM - 4:00 PM',
+      lunchHoursStr: '12:00 PM - 1:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.0, endHour: 12.0, label: 'Patient Reception & Files' },
+        { type: 'lunch', startHour: 12.0, endHour: 13.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.0, endHour: 16.0, label: 'Insurance & Estimates' }
+      ]
+    }
+  ],
+  spa: [
+    {
+      id: 's-sp-1',
+      name: 'Master Somchai',
+      role: 'Senior Deep Tissue Master',
+      department: 'Massage Therapy',
+      avatar: 'MS',
+      phone: '+91 99887 11111',
+      email: 'somchai@serenityspa.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 5:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Deep Tissue & Hot Stone Sessions' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Couples Sanctuary Sessions' }
+      ]
+    },
+    {
+      id: 's-sp-2',
+      name: 'Ananya Healer',
+      role: 'Ayurvedic Doctor (BAMS)',
+      department: 'Ayurvedic Therapy',
+      avatar: 'AH',
+      phone: '+91 99887 22222',
+      email: 'ananya@serenityspa.com',
+      status: 'Active',
+      workingHoursStr: '9:30 AM - 5:30 PM',
+      lunchHoursStr: '1:30 PM - 2:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.5, endHour: 13.5, label: 'Panchakarma & Abhyanga Prep' },
+        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.5, endHour: 17.5, label: 'Shirodhara & Herbal Consults' }
+      ]
+    },
+    {
+      id: 's-sp-3',
+      name: 'Maya Sen',
+      role: 'Aromatherapy Specialist',
+      department: 'Massage Therapy',
+      avatar: 'MS',
+      phone: '+91 99887 33333',
+      email: 'maya@serenityspa.com',
+      status: 'Active',
+      workingHoursStr: '10:00 AM - 6:00 PM',
+      lunchHoursStr: '2:00 PM - 3:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Herbal Body Wraps & Scrubs' },
+        { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Balinese Relaxation Massage' }
+      ]
+    },
+    {
+      id: 's-sp-4',
+      name: 'Leela Hostess',
+      role: 'Spa Concierge Lead',
+      department: 'Guest Relations',
+      avatar: 'LH',
+      phone: '+91 99887 44444',
+      email: 'leela@serenityspa.com',
+      status: 'Active',
+      workingHoursStr: '8:30 AM - 4:30 PM',
+      lunchHoursStr: '12:30 PM - 1:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Welcome Herbal Tea & Check-in' },
+        { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.5, endHour: 16.5, label: 'Lounge Care & Memberships' }
+      ]
+    }
+  ],
+  salon: [
+    {
+      id: 's-sl-1',
+      name: 'Zara Khan',
+      role: 'Master Creative Director',
+      department: 'Hair Styling',
+      avatar: 'ZK',
+      phone: '+91 98123 11111',
+      email: 'zara@luxurysalon.com',
+      status: 'Active',
+      workingHoursStr: '10:00 AM - 6:30 PM',
+      lunchHoursStr: '2:00 PM - 3:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Keratin & Precision Cuts' },
+        { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 15.0, endHour: 18.5, label: 'VIP Styling Appointments' }
+      ]
+    },
+    {
+      id: 's-sl-2',
+      name: 'Rohit Mehra',
+      role: 'Senior Colorist',
+      department: 'Color Lab',
+      avatar: 'RM',
+      phone: '+91 98123 22222',
+      email: 'rohit@luxurysalon.com',
+      status: 'Active',
+      workingHoursStr: '9:30 AM - 5:30 PM',
+      lunchHoursStr: '1:30 PM - 2:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.5, endHour: 13.5, label: 'Balayage & Highlights Foil Work' },
+        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.5, endHour: 17.5, label: 'Global Color & Gloss Toners' }
+      ]
+    },
+    {
+      id: 's-sl-3',
+      name: 'Tanya Roy',
+      role: 'Lead Bridal Artist',
+      department: 'Bridal & Makeup',
+      avatar: 'TR',
+      phone: '+91 98123 33333',
+      email: 'tanya@luxurysalon.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 5:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'HD Airbrush Makeup & Draping' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Bridal Trials & Consultations' }
+      ]
+    },
+    {
+      id: 's-sl-4',
+      name: 'Maya Nail Tech',
+      role: 'Senior Nail Artist',
+      department: 'Nail Bar',
+      avatar: 'MN',
+      phone: '+91 98123 44444',
+      email: 'maya@luxurysalon.com',
+      status: 'Active',
+      workingHoursStr: '10:30 AM - 6:30 PM',
+      lunchHoursStr: '2:30 PM - 3:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 10.5, endHour: 14.5, label: 'Gel Extensions & Nail Art' },
+        { type: 'lunch', startHour: 14.5, endHour: 15.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 15.5, endHour: 18.5, label: 'Moroccan Pedicure & Manicure' }
+      ]
+    }
+  ],
+  realestate: [
+    {
+      id: 's-re-1',
+      name: 'Vikram Property Advisor',
+      role: 'Senior Villa Specialist',
+      department: 'Luxury Residential',
+      avatar: 'VA',
+      phone: '+91 90011 11111',
+      email: 'vikram@zerorealty.com',
+      status: 'Active',
+      workingHoursStr: '9:00 AM - 6:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Villa Site Visits Tour' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 18.0, label: 'Investor Token Consultations' }
+      ]
+    },
+    {
+      id: 's-re-2',
+      name: 'Rajesh Commercial Head',
+      role: 'Commercial Portfolio Lead',
+      department: 'Commercial Advisory',
+      avatar: 'RC',
+      phone: '+91 90011 22222',
+      email: 'rajesh@zerorealty.com',
+      status: 'Active',
+      workingHoursStr: '9:30 AM - 6:30 PM',
+      lunchHoursStr: '1:30 PM - 2:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.5, endHour: 13.5, label: 'Grade-A Floor Plate Audits' },
+        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.5, endHour: 18.5, label: 'Corporate Lease Agreements' }
+      ]
+    }
+  ],
+  hotel: [
+    {
+      id: 's-ht-1',
+      name: 'Kabir Chief Concierge',
+      role: 'VIP Relations Head',
+      department: 'Concierge & VIP',
+      avatar: 'KC',
+      phone: '+91 97766 11111',
+      email: 'kabir@grandhotel.com',
+      status: 'Active',
+      workingHoursStr: '8:00 AM - 5:00 PM',
+      lunchHoursStr: '1:00 PM - 2:00 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.0, endHour: 13.0, label: 'Presidential Suite Arrival Briefing' },
+        { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Chauffeur & Dining Itinerary' }
+      ]
+    },
+    {
+      id: 's-ht-2',
+      name: 'Sneha Front Desk',
+      role: 'Front Office Hostess',
+      department: 'Front Office',
+      avatar: 'SF',
+      phone: '+91 97766 22222',
+      email: 'sneha@grandhotel.com',
+      status: 'Active',
+      workingHoursStr: '7:00 AM - 3:30 PM',
+      lunchHoursStr: '11:30 AM - 12:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 7.0, endHour: 11.5, label: 'Morning Checkouts & Folios' },
+        { type: 'lunch', startHour: 11.5, endHour: 12.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 12.5, endHour: 15.5, label: 'Early Arrival Keycard Issuance' }
+      ]
+    }
+  ],
+  auto: [
+    {
+      id: 's-au-1',
+      name: 'Suresh Senior Sales',
+      role: 'Lead Automotive Advisor',
+      department: 'Sales Advisory',
+      avatar: 'SS',
+      phone: '+91 96655 11111',
+      email: 'suresh@zeroshowroom.com',
+      status: 'Active',
+      workingHoursStr: '9:30 AM - 6:30 PM',
+      lunchHoursStr: '1:30 PM - 2:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 9.5, endHour: 13.5, label: 'SUV Test Drives & Walkarounds' },
+        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 14.5, endHour: 18.5, label: 'Delivery Key Handover Ceremony' }
+      ]
+    },
+    {
+      id: 's-au-2',
+      name: 'Gaurav Service Lead',
+      role: 'Master Service Advisor',
+      department: 'Service & Repairs',
+      avatar: 'GS',
+      phone: '+91 96655 22222',
+      email: 'gaurav@zeroshowroom.com',
+      status: 'Active',
+      workingHoursStr: '8:30 AM - 5:30 PM',
+      lunchHoursStr: '12:30 PM - 1:30 PM',
+      shifts: [
+        { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Vehicle Job Card Intake' },
+        { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
+        { type: 'duty', startHour: 13.5, endHour: 17.5, label: 'Quality Control & Wash Inspection' }
+      ]
+    }
+  ]
+};
 
 function formatDecimalHour(hr: number): string {
   const h = Math.floor(hr);
@@ -209,11 +504,33 @@ function formatDecimalHour(hr: number): string {
   return `${displayH}:${displayM} ${period}`;
 }
 
-const LEAVE_REQUESTS = [
-  { id: 'lr1', name: 'Sunita', role: 'Wellness Specialist', type: 'Sick Leave', reason: 'Fever and cold', dates: 'Aug 8 - Aug 9', status: 'Pending' },
-  { id: 'lr2', name: 'Amit', role: 'Reception Coordinator', type: 'Annual Leave', reason: 'Family trip', dates: 'Aug 10 - Aug 14', status: 'Pending' },
-  { id: 'lr3', name: 'Kavita', role: 'Senior Clinical Nurse', type: 'Casual Leave', reason: 'Personal work', dates: 'Aug 16', status: 'Pending' },
-];
+const DEFAULT_LEAVE_REQUESTS_BY_NICHE: Record<NicheId, { id: string; name: string; role: string; type: string; reason: string; dates: string; status: string }[]> = {
+  skin: [
+    { id: 'lr-sk-1', name: 'Rekha', role: 'Cosmetology Therapist', type: 'Sick Leave', reason: 'Fever and cold', dates: 'Aug 8 - Aug 9', status: 'Pending' },
+    { id: 'lr-sk-2', name: 'Kavita', role: 'Senior Clinical Nurse', type: 'Casual Leave', reason: 'Personal work', dates: 'Aug 16', status: 'Pending' },
+  ],
+  dental: [
+    { id: 'lr-dt-1', name: 'Sarah Hygienist', role: 'Lead Dental Hygienist', type: 'Casual Leave', reason: 'Family function', dates: 'Aug 10', status: 'Pending' },
+    { id: 'lr-dt-2', name: 'Pooja Hegde', role: 'Dental Frontdesk Lead', type: 'Annual Leave', reason: 'Out of town', dates: 'Aug 14 - Aug 17', status: 'Pending' },
+  ],
+  spa: [
+    { id: 'lr-sp-1', name: 'Maya Sen', role: 'Aromatherapy Specialist', type: 'Sick Leave', reason: 'Rest & recovery', dates: 'Aug 11', status: 'Pending' },
+    { id: 'lr-sp-2', name: 'Master Somchai', role: 'Deep Tissue Master', type: 'Annual Leave', reason: 'Thailand retreat', dates: 'Aug 20 - Aug 25', status: 'Pending' },
+  ],
+  salon: [
+    { id: 'lr-sl-1', name: 'Rohit Mehra', role: 'Senior Colorist', type: 'Casual Leave', reason: 'Masterclass attendance', dates: 'Aug 12', status: 'Pending' },
+    { id: 'lr-sl-2', name: 'Maya Nail Tech', role: 'Senior Nail Artist', type: 'Sick Leave', reason: 'Hand sprain recovery', dates: 'Aug 15 - Aug 16', status: 'Pending' },
+  ],
+  realestate: [
+    { id: 'lr-re-1', name: 'Vikram Property Advisor', role: 'Senior Villa Specialist', type: 'Casual Leave', reason: 'Site registry at sub-registrar', dates: 'Aug 12', status: 'Pending' },
+  ],
+  hotel: [
+    { id: 'lr-ht-1', name: 'Sneha Front Desk', role: 'Front Office Hostess', type: 'Comp Off', reason: 'Weekend marathon shift', dates: 'Aug 10', status: 'Pending' },
+  ],
+  auto: [
+    { id: 'lr-au-1', name: 'Gaurav Service Lead', role: 'Master Service Advisor', type: 'Casual Leave', reason: 'OEM Technical Training', dates: 'Aug 14', status: 'Pending' },
+  ],
+};
 
 function timeToDecimal(timeStr: string): number {
   if (!timeStr) return 0;
@@ -229,14 +546,24 @@ function decimalToTime(decimal: number): string {
 
 export default function StaffCalendarPage() {
   const { role } = useRole();
+  const { currentNiche } = useNiche();
   const isAdminOrManager = ['MANAGER', 'ORG_ADMIN', 'SUPER_ADMIN'].includes(role || '');
 
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentDate, setCurrentDate] = useState(new Date(2026, 7, 6)); // Aug 6, 2026
   const [selectedStaffDetail, setSelectedStaffDetail] = useState<StaffMember | null>(null);
-  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF);
-  
+  const [staffList, setStaffList] = useState<StaffMember[]>(() => DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
+  const [leaveRequests, setLeaveRequests] = useState(() => DEFAULT_LEAVE_REQUESTS_BY_NICHE[currentNiche] || DEFAULT_LEAVE_REQUESTS_BY_NICHE.skin);
+
+  useEffect(() => {
+    setStaffList(DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
+    setLeaveRequests(DEFAULT_LEAVE_REQUESTS_BY_NICHE[currentNiche] || DEFAULT_LEAVE_REQUESTS_BY_NICHE.skin);
+    setSelectedDept('All');
+  }, [currentNiche]);
+
+  const departments = ['All', ...(DEPARTMENTS_BY_NICHE[currentNiche] || DEPARTMENTS_BY_NICHE.skin)];
+
   // Edit schedule state
   const [isEditingSchedule, setIsEditingSchedule] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -375,7 +702,7 @@ export default function StaffCalendarPage() {
           >
             All Departments
           </button>
-          {DEPARTMENTS.map(dept => (
+          {departments.filter(d => d !== 'All').map(dept => (
             <button
               key={dept}
               onClick={() => setSelectedDept(dept)}
@@ -535,7 +862,7 @@ export default function StaffCalendarPage() {
           Pending Leave Requests
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {LEAVE_REQUESTS.map(req => (
+          {leaveRequests.map(req => (
             <div key={req.id} className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-4 shadow-lg space-y-3">
               <div className="flex items-start justify-between">
                 <div>

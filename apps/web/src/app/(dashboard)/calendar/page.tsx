@@ -1,25 +1,6 @@
-'use client';
-
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar as CalIcon, 
-  Filter, 
-  Plus, 
-  Clock, 
-  Edit3, 
-  Move, 
-  X, 
-  Check, 
-  Sparkles,
-  Stethoscope,
-  Scissors,
-  HeartPulse,
-  RotateCcw
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useMemo, useEffect } from 'react';
+import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
 
 export type ViewMode = '2h' | '4h' | '12h' | '24h' | 'weekly' | '15days';
 
@@ -41,28 +22,28 @@ export interface Appointment {
 
 const TYPE_CONFIG = {
   consult: {
-    label: 'Skin Checkup / Consult',
+    label: 'Consultation / Checkup',
     color: 'bg-cyan-500/15 dark:bg-cyan-500/20 border-cyan-500/40 text-cyan-950 dark:text-cyan-100 hover:border-cyan-500 shadow-sm',
     badge: 'bg-cyan-500/20 text-cyan-800 dark:text-cyan-200 border-cyan-500/30',
     dot: 'bg-cyan-500',
     icon: Stethoscope,
   },
   surgery: {
-    label: 'Surgery',
+    label: 'Primary Procedure / Session',
     color: 'bg-rose-500/15 dark:bg-rose-500/20 border-rose-500/40 text-rose-950 dark:text-rose-100 hover:border-rose-500 shadow-sm',
     badge: 'bg-rose-500/20 text-rose-800 dark:text-rose-200 border-rose-500/30',
     dot: 'bg-rose-500',
     icon: Scissors,
   },
   wellness: {
-    label: 'Wellness',
+    label: 'Wellness / Maintenance',
     color: 'bg-emerald-500/15 dark:bg-emerald-500/20 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 shadow-sm',
     badge: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border-emerald-500/30',
     dot: 'bg-emerald-500',
     icon: HeartPulse,
   },
   followup: {
-    label: 'Follow-up',
+    label: 'Review & Follow-up',
     color: 'bg-amber-500/15 dark:bg-amber-500/20 border-amber-500/40 text-amber-950 dark:text-amber-100 hover:border-amber-500 shadow-sm',
     badge: 'bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/30',
     dot: 'bg-amber-500',
@@ -70,26 +51,71 @@ const TYPE_CONFIG = {
   },
 };
 
-const STAFF_LIST = ['Dr. Meenakshi', 'Dr. Arun', 'Kavita', 'Rekha', 'Sunita'];
+const STAFF_BY_NICHE: Record<NicheId, string[]> = {
+  skin: ['Dr. Meenakshi', 'Dr. Arun', 'Kavita', 'Rekha', 'Sunita'],
+  dental: ['Dr. Arvind Sharma', 'Dr. Priya Nair', 'Dr. Rohan Verma', 'Hygienist Sarah', 'Assistant Pooja'],
+  spa: ['Master Somchai', 'Maya Sen', 'Ananya Ayurvedic Healer', 'Therapist David', 'Hostess Leela'],
+  salon: ['Zara Khan', 'Rohit Mehra', 'Tanya Roy', 'Maya Nail Artist', 'Assistant Vikrant'],
+  realestate: ['Vikram Property Advisor', 'Rajesh Commercial Head', 'Legal Consultant Adv. Bose', 'Associate Priya'],
+  hotel: ['Chief Concierge Kabir', 'Front Desk Hostess Sneha', 'Banquet Coordinator Ritu', 'VIP Host Daniel'],
+  auto: ['Senior Sales Exec Suresh', 'Service Lead Gaurav', 'Finance Manager Aditya', 'Advisor Deepak'],
+};
+
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const INITIAL_APPOINTMENTS: Appointment[] = [
-  { id: '1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.5, patient: 'Rajesh K.', phone: '+91 98765 43210', service: 'Skin Checkup & Acne Consult', type: 'consult', staff: 'Dr. Meenakshi', status: 'Confirmed', room: 'Consult Room 1' },
-  { id: '2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.5, duration: 2.5, patient: 'Priya S.', phone: '+91 98123 45678', service: 'Hair Transplant Surgery', type: 'surgery', staff: 'Dr. Arun', status: 'Confirmed', room: 'OT 2' },
-  { id: '3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Sneha R.', phone: '+91 97654 32109', service: 'Full Facial Wellness Massage', type: 'wellness', staff: 'Sunita', status: 'Confirmed', room: 'Spa Room B' },
-  { id: '4', dayIndex: 1, dateStr: '2026-08-04', startTime: 14.0, duration: 0.5, patient: 'Amit P.', phone: '+91 96543 21098', service: 'Laser Treatment Follow-up', type: 'followup', staff: 'Dr. Meenakshi', status: 'Pending', room: 'Consult Room 1' },
-  { id: '5', dayIndex: 2, dateStr: '2026-08-05', startTime: 9.5, duration: 1.5, patient: 'Ananya I.', phone: '+91 95432 10987', service: 'Chemical Peel & Glow', type: 'consult', staff: 'Rekha', status: 'Confirmed', room: 'Treatment 3' },
-  { id: '6', dayIndex: 2, dateStr: '2026-08-05', startTime: 13.0, duration: 3.0, patient: 'Deepak M.', phone: '+91 94321 09876', service: 'Scar Revision Surgery', type: 'surgery', staff: 'Dr. Arun', status: 'Confirmed', room: 'OT 1' },
-  { id: '7', dayIndex: 3, dateStr: '2026-08-06', startTime: 9.0, duration: 1.0, patient: 'Vikram S.', phone: '+91 93210 98765', service: 'PRP Scalp Therapy', type: 'wellness', staff: 'Kavita', status: 'Confirmed', room: 'Proc Room 2' },
-  { id: '8', dayIndex: 3, dateStr: '2026-08-06', startTime: 11.0, duration: 0.5, patient: 'Meera J.', phone: '+91 92109 87654', service: 'Post-Op Follow-up', type: 'followup', staff: 'Dr. Meenakshi', status: 'Confirmed', room: 'Consult Room 1' },
-  { id: '9', dayIndex: 4, dateStr: '2026-08-07', startTime: 10.0, duration: 1.5, patient: 'Kiran T.', phone: '+91 91098 76543', service: 'Botox Anti-Aging Consult', type: 'consult', staff: 'Dr. Meenakshi', status: 'Pending', room: 'Consult Room 2' },
-  { id: '10', dayIndex: 4, dateStr: '2026-08-07', startTime: 15.0, duration: 2.0, patient: 'Rahul B.', phone: '+91 90987 65432', service: 'Full Body Laser Session', type: 'wellness', staff: 'Rekha', status: 'Confirmed', room: 'Laser Suite' },
-  { id: '11', dayIndex: 5, dateStr: '2026-08-08', startTime: 11.0, duration: 1.5, patient: 'Pooja V.', phone: '+91 89876 54321', service: 'Minor Mole Excision Surgery', type: 'surgery', staff: 'Dr. Arun', status: 'Confirmed', room: 'OT 2' },
-  { id: '12', dayIndex: 5, dateStr: '2026-08-08', startTime: 14.0, duration: 1.0, patient: 'Sameer N.', phone: '+91 88765 43210', service: 'HydraFacial Wellness', type: 'wellness', staff: 'Sunita', status: 'Completed', room: 'Spa Room A' },
-  { id: '13', dayIndex: 6, dateStr: '2026-08-09', startTime: 10.0, duration: 0.5, patient: 'Divya M.', phone: '+91 87654 32109', service: 'Routine Skin Checkup', type: 'consult', staff: 'Dr. Meenakshi', status: 'Confirmed', room: 'Consult Room 1' },
-  { id: '14', dayIndex: 7, dateStr: '2026-08-10', startTime: 9.5, duration: 1.0, patient: 'Siddharth R.', phone: '+91 86543 21098', service: 'Acne Scars Consultation', type: 'consult', staff: 'Dr. Meenakshi', status: 'Confirmed', room: 'Consult Room 1' },
-  { id: '15', dayIndex: 9, dateStr: '2026-08-12', startTime: 11.0, duration: 2.0, patient: 'Neha G.', phone: '+91 85432 10987', service: 'Liposuction Follow-up', type: 'followup', staff: 'Dr. Arun', status: 'Confirmed', room: 'Consult Room 2' },
-];
+const DEFAULT_CALENDAR_BY_NICHE: Record<NicheId, Appointment[]> = {
+  skin: [
+    { id: 'sk-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.5, patient: 'Rajesh K.', phone: '+91 98765 43210', service: 'Skin Checkup & Acne Consult', type: 'consult', staff: 'Dr. Meenakshi', status: 'Confirmed', room: 'Consult Room 1' },
+    { id: 'sk-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.5, duration: 2.5, patient: 'Priya S.', phone: '+91 98123 45678', service: 'Hair Transplant Surgery', type: 'surgery', staff: 'Dr. Arun', status: 'Confirmed', room: 'OT 2' },
+    { id: 'sk-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Sneha R.', phone: '+91 97654 32109', service: 'Full Facial Glow Medi-Facial', type: 'wellness', staff: 'Sunita', status: 'Confirmed', room: 'Spa Room B' },
+    { id: 'sk-c4', dayIndex: 1, dateStr: '2026-08-04', startTime: 14.0, duration: 0.5, patient: 'Amit P.', phone: '+91 96543 21098', service: 'Laser Treatment Follow-up', type: 'followup', staff: 'Dr. Meenakshi', status: 'Pending', room: 'Consult Room 1' },
+    { id: 'sk-c5', dayIndex: 2, dateStr: '2026-08-05', startTime: 9.5, duration: 1.5, patient: 'Ananya I.', phone: '+91 95432 10987', service: 'Chemical Peel & Glow', type: 'consult', staff: 'Rekha', status: 'Confirmed', room: 'Treatment 3' },
+    { id: 'sk-c6', dayIndex: 3, dateStr: '2026-08-06', startTime: 9.0, duration: 1.0, patient: 'Vikram S.', phone: '+91 93210 98765', service: 'PRP Scalp Therapy', type: 'wellness', staff: 'Kavita', status: 'Confirmed', room: 'Proc Room 2' },
+    { id: 'sk-c7', dayIndex: 4, dateStr: '2026-08-07', startTime: 10.0, duration: 1.5, patient: 'Kiran T.', phone: '+91 91098 76543', service: 'Botox Anti-Aging Consult', type: 'consult', staff: 'Dr. Meenakshi', status: 'Pending', room: 'Consult Room 2' },
+  ],
+  dental: [
+    { id: 'dt-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.0, patient: 'Ananya Reddy', phone: '+91 91234 56780', service: 'Invisible Aligners 3D Scan', type: 'consult', staff: 'Dr. Priya Nair', status: 'Confirmed', room: 'Op Suite 1' },
+    { id: 'dt-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 10.5, duration: 2.0, patient: 'Karthik Menon', phone: '+91 91234 56781', service: 'Titanium Dental Implant Surgery', type: 'surgery', staff: 'Dr. Rohan Verma', status: 'Confirmed', room: 'Surgical Room' },
+    { id: 'dt-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Neha Gupta', phone: '+91 91234 56782', service: 'Laser Teeth Whitening', type: 'wellness', staff: 'Dr. Arvind Sharma', status: 'Confirmed', room: 'Cosmetic Bay' },
+    { id: 'dt-c4', dayIndex: 1, dateStr: '2026-08-04', startTime: 14.0, duration: 1.0, patient: 'Rohit Sharma', phone: '+91 91234 56783', service: 'Root Canal Therapy (RCT)', type: 'surgery', staff: 'Dr. Arvind Sharma', status: 'Confirmed', room: 'Endo Suite' },
+    { id: 'dt-c5', dayIndex: 2, dateStr: '2026-08-05', startTime: 9.5, duration: 0.5, patient: 'Pooja Iyer', phone: '+91 91234 56784', service: 'Scaling & Fluoride Polish', type: 'wellness', staff: 'Hygienist Sarah', status: 'Confirmed', room: 'Hygiene Bay' },
+    { id: 'dt-c6', dayIndex: 3, dateStr: '2026-08-06', startTime: 11.0, duration: 0.5, patient: 'Vikram Seth', phone: '+91 91234 56785', service: 'Crown Cementation Follow-up', type: 'followup', staff: 'Dr. Rohan Verma', status: 'Confirmed', room: 'Op Suite 2' },
+    { id: 'dt-c7', dayIndex: 4, dateStr: '2026-08-07', startTime: 10.0, duration: 1.0, patient: 'Meera Nambiar', phone: '+91 91234 56786', service: 'Aligner Review & Attachment Check', type: 'followup', staff: 'Dr. Priya Nair', status: 'Pending', room: 'Op Suite 1' },
+  ],
+  spa: [
+    { id: 'sp-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.5, patient: 'Meera Kapoor', phone: '+91 99887 76655', service: 'Ayurvedic Abhyanga Massage', type: 'wellness', staff: 'Ananya Ayurvedic Healer', status: 'Confirmed', room: 'Ayurveda Sanctuary' },
+    { id: 'sp-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 1.5, patient: 'Aman Verma', phone: '+91 99887 76656', service: 'Deep Tissue Muscle Relief', type: 'wellness', staff: 'Master Somchai', status: 'Confirmed', room: 'Therapy Suite 1' },
+    { id: 'sp-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Simran Kaur', phone: '+91 99887 76657', service: 'Aromatherapy Herbal Wrap', type: 'wellness', staff: 'Maya Sen', status: 'Confirmed', room: 'Therapy Suite 2' },
+    { id: 'sp-c4', dayIndex: 1, dateStr: '2026-08-04', startTime: 14.0, duration: 2.0, patient: 'Karan Patel', phone: '+91 99887 76658', service: 'Hot Stone Thermal Therapy', type: 'wellness', staff: 'Master Somchai', status: 'Confirmed', room: 'Thermal Suite' },
+    { id: 'sp-c5', dayIndex: 2, dateStr: '2026-08-05', startTime: 9.5, duration: 1.5, patient: 'Anita Desai', phone: '+91 99887 76659', service: 'Panchakarma Detox Session', type: 'surgery', staff: 'Ananya Ayurvedic Healer', status: 'Confirmed', room: 'Ayurveda Sanctuary' },
+    { id: 'sp-c6', dayIndex: 3, dateStr: '2026-08-06', startTime: 11.0, duration: 1.0, patient: 'Rohan Bose', phone: '+91 99887 76660', service: 'Balinese Relaxation Therapy', type: 'wellness', staff: 'Maya Sen', status: 'Confirmed', room: 'Therapy Suite 1' },
+    { id: 'sp-c7', dayIndex: 4, dateStr: '2026-08-07', startTime: 10.0, duration: 1.0, patient: 'Tara Alisha', phone: '+91 99887 76661', service: 'Shirodhara Mind Calm Session', type: 'wellness', staff: 'Ananya Ayurvedic Healer', status: 'Pending', room: 'Ayurveda Sanctuary' },
+  ],
+  salon: [
+    { id: 'sl-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 2.0, patient: 'Divya Nair', phone: '+91 98123 45670', service: 'Balayage Color & Gloss Toner', type: 'surgery', staff: 'Rohit Mehra', status: 'Confirmed', room: 'Color Station 1' },
+    { id: 'sl-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.5, duration: 2.5, patient: 'Sameer Khan', phone: '+91 98123 45671', service: 'Keratin Hair Smoothening', type: 'surgery', staff: 'Zara Khan', status: 'Confirmed', room: 'Styling Bay A' },
+    { id: 'sl-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.5, patient: 'Riya Sharma', phone: '+91 98123 45672', service: 'Bridal HD Makeup Consultation', type: 'consult', staff: 'Tanya Roy', status: 'Confirmed', room: 'Bridal Lounge' },
+    { id: 'sl-c4', dayIndex: 1, dateStr: '2026-08-04', startTime: 14.0, duration: 1.0, patient: 'Arjun Singh', phone: '+91 98123 45673', service: 'Gel Nail Extensions & Art', type: 'wellness', staff: 'Maya Nail Artist', status: 'Confirmed', room: 'Nail Bar 2' },
+    { id: 'sl-c5', dayIndex: 2, dateStr: '2026-08-05', startTime: 9.5, duration: 1.0, patient: 'Kavita Joshi', phone: '+91 98123 45674', service: 'Moroccan Pedicure & Foot Spa', type: 'wellness', staff: 'Zara Khan', status: 'Confirmed', room: 'Pedicure Suite' },
+    { id: 'sl-c6', dayIndex: 3, dateStr: '2026-08-06', startTime: 11.0, duration: 1.0, patient: 'Sunita Sharma', phone: '+91 98123 45676', service: 'Hair Spa Deep Conditioning', type: 'wellness', staff: 'Zara Khan', status: 'Confirmed', room: 'Wash Bay' },
+    { id: 'sl-c7', dayIndex: 4, dateStr: '2026-08-07', startTime: 10.0, duration: 0.5, patient: 'Rahul Verma', phone: '+91 98123 45677', service: 'Fade Haircut & Beard Grooming', type: 'consult', staff: 'Rohit Mehra', status: 'Pending', room: 'Styling Bay B' },
+  ],
+  realestate: [
+    { id: 're-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.5, patient: 'Rajesh Gupta', phone: '+91 90011 22334', service: '3BHK Villa Guided Site Visit', type: 'consult', staff: 'Vikram Property Advisor', status: 'Confirmed', room: 'Site Office' },
+    { id: 're-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 1.5, patient: 'Sunita Reddy', phone: '+91 90011 22335', service: 'Commercial Floor Inspection', type: 'consult', staff: 'Rajesh Commercial Head', status: 'Confirmed', room: 'Tower B Floor 5' },
+    { id: 're-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Ravi Kumar', phone: '+91 90011 22336', service: 'NRI Video Walkthrough', type: 'wellness', staff: 'Vikram Property Advisor', status: 'Confirmed', room: 'Virtual Studio' },
+    { id: 're-c4', dayIndex: 2, dateStr: '2026-08-05', startTime: 14.0, duration: 1.0, patient: 'Alok Mishra', phone: '+91 90011 22337', service: 'Title Verification Deed Review', type: 'surgery', staff: 'Legal Consultant Adv. Bose', status: 'Confirmed', room: 'Legal Desk' },
+  ],
+  hotel: [
+    { id: 'ht-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.0, patient: 'Amit Patel', phone: '+91 97766 55443', service: 'Deluxe Suite Check-in & Keycard', type: 'consult', staff: 'Front Desk Hostess Sneha', status: 'Confirmed', room: 'Suite 401' },
+    { id: 'ht-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 1.5, patient: 'Shruti Hasan', phone: '+91 97766 55444', service: 'Presidential Ocean Suite Briefing', type: 'wellness', staff: 'Chief Concierge Kabir', status: 'Confirmed', room: 'Penthouse 701' },
+    { id: 'ht-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Vikas Khanna', phone: '+91 97766 55445', service: 'Grand Ballroom Venue Preview', type: 'surgery', staff: 'Banquet Coordinator Ritu', status: 'Confirmed', room: 'Ballroom Hall' },
+  ],
+  auto: [
+    { id: 'au-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.0, patient: 'Suresh Kumar', phone: '+91 96655 44332', service: 'SUV Test Drive Experience', type: 'consult', staff: 'Senior Sales Exec Suresh', status: 'Confirmed', room: 'Test Track' },
+    { id: 'au-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 2.0, patient: 'Meenakshi Iyer', phone: '+91 96655 44333', service: 'Periodic Maintenance Service', type: 'surgery', staff: 'Service Lead Gaurav', status: 'Confirmed', room: 'Service Bay 3' },
+  ],
+};
 
 function formatTime(decimalHour: number): string {
   const hrs = Math.floor(decimalHour);
@@ -101,10 +127,18 @@ function formatTime(decimalHour: number): string {
 }
 
 export default function DoctorSlotsPage() {
+  const { currentNiche } = useNiche();
   const [viewMode, setViewMode] = useState<ViewMode>('weekly');
   const [selectedStaff, setSelectedStaff] = useState<string>('All Staff');
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>(() => DEFAULT_CALENDAR_BY_NICHE[currentNiche] || DEFAULT_CALENDAR_BY_NICHE.skin);
+
+  useEffect(() => {
+    setAppointments(DEFAULT_CALENDAR_BY_NICHE[currentNiche] || DEFAULT_CALENDAR_BY_NICHE.skin);
+    setSelectedStaff('All Staff');
+  }, [currentNiche]);
+
+  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
   const [focusHour, setFocusHour] = useState<number>(9); // 9 AM default for 2h/4h focus window
   
   // Quick Edit Modal state
@@ -258,7 +292,7 @@ export default function DoctorSlotsPage() {
           >
             All Doctors & Staff
           </button>
-          {STAFF_LIST.map(st => (
+          {staffList.map(st => (
             <button
               key={st}
               onClick={() => setSelectedStaff(st)}
@@ -430,7 +464,7 @@ function DetailHoursView({
       </div>
 
       <div className="space-y-4">
-        {STAFF_LIST.map(staffName => {
+        {staffList.map(staffName => {
           const staffAppts = appointments.filter(a => 
             a.staff === staffName && 
             a.startTime >= focusHour && 
@@ -599,7 +633,7 @@ function FullDayView({
 
         {/* Rows per doctor */}
         <div className="divide-y divide-[var(--color-glass-border)]">
-          {STAFF_LIST.map(staff => {
+          {staffList.map(staff => {
             const staffAppts = appointments.filter(a => a.staff === staff);
             return (
               <div key={staff} className="py-4 flex items-start gap-4">
@@ -1008,7 +1042,7 @@ function QuickEditModal({
                 onChange={e => setFormData(prev => ({ ...prev, staff: e.target.value }))}
                 className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                {STAFF_LIST.map(s => (
+                {staffList.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>

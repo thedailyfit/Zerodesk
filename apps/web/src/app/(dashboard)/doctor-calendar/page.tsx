@@ -1,18 +1,20 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Coffee, 
   Plus, 
-  Stethoscope, 
+  UserCheck, 
   Phone, 
   X,
-  Calendar
+  Calendar,
+  Sparkles,
+  Scissors,
+  Stethoscope
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
 
 export interface DoctorProfile {
   id: string;
@@ -28,74 +30,289 @@ export interface DoctorProfile {
   todayAppointments: number;
 }
 
-const INITIAL_DOCTORS: DoctorProfile[] = [
-  {
-    id: 'doc-1',
-    name: 'Dr. Meenakshi Rao',
-    specialty: 'Senior Dermatologist & Aesthetician',
-    avatar: 'MR',
-    phone: '+91 98765 43210',
-    email: 'meenakshi@glowclinic.com',
-    status: 'Active',
-    hours: '09:00 AM - 05:00 PM',
-    bookedHours: 6.5,
-    totalHours: 8,
-    todayAppointments: 8
-  },
-  {
-    id: 'doc-2',
-    name: 'Dr. Arun Kumar',
-    specialty: 'Hair Restoration & Cosmetologist',
-    avatar: 'AK',
-    phone: '+91 98123 45678',
-    email: 'arun@glowclinic.com',
-    status: 'In Surgery',
-    hours: '10:00 AM - 06:00 PM',
-    bookedHours: 7,
-    totalHours: 8,
-    todayAppointments: 5
-  },
-  {
-    id: 'doc-3',
-    name: 'Dr. Kavita Reddy',
-    specialty: 'Clinical Dermatology Specialist',
-    avatar: 'KR',
-    phone: '+91 97654 32109',
-    email: 'kavita@glowclinic.com',
-    status: 'On Break',
-    hours: '09:30 AM - 04:30 PM',
-    bookedHours: 4.5,
-    totalHours: 7,
-    todayAppointments: 6
-  }
-];
+const DEFAULT_STAFF_BY_NICHE: Record<NicheId, DoctorProfile[]> = {
+  skin: [
+    {
+      id: 'doc-sk-1',
+      name: 'Dr. Meenakshi Rao',
+      specialty: 'Senior Dermatologist & Aesthetician',
+      avatar: 'MR',
+      phone: '+91 98765 43210',
+      email: 'meenakshi@glowclinic.com',
+      status: 'Active',
+      hours: '09:00 AM - 05:00 PM',
+      bookedHours: 6.5,
+      totalHours: 8,
+      todayAppointments: 8
+    },
+    {
+      id: 'doc-sk-2',
+      name: 'Dr. Arun Kumar',
+      specialty: 'Hair Restoration & Cosmetologist',
+      avatar: 'AK',
+      phone: '+91 98123 45678',
+      email: 'arun@glowclinic.com',
+      status: 'In Surgery',
+      hours: '10:00 AM - 06:00 PM',
+      bookedHours: 7,
+      totalHours: 8,
+      todayAppointments: 5
+    },
+    {
+      id: 'doc-sk-3',
+      name: 'Dr. Kavita Reddy',
+      specialty: 'Clinical Dermatology Specialist',
+      avatar: 'KR',
+      phone: '+91 97654 32109',
+      email: 'kavita@glowclinic.com',
+      status: 'On Break',
+      hours: '09:30 AM - 04:30 PM',
+      bookedHours: 4.5,
+      totalHours: 7,
+      todayAppointments: 6
+    }
+  ],
+  dental: [
+    {
+      id: 'doc-dt-1',
+      name: 'Dr. Arvind Sharma',
+      specialty: 'Chief Endodontist & Microscopic RCT Lead',
+      avatar: 'AS',
+      phone: '+91 91234 56780',
+      email: 'dr.sharma@dentalcare.com',
+      status: 'Active',
+      hours: '09:00 AM - 05:00 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 7
+    },
+    {
+      id: 'doc-dt-2',
+      name: 'Dr. Priya Nair',
+      specialty: 'Orthodontist & Clear Aligner Specialist',
+      avatar: 'PN',
+      phone: '+91 91234 56781',
+      email: 'dr.priya@dentalcare.com',
+      status: 'Active',
+      hours: '10:00 AM - 06:00 PM',
+      bookedHours: 6.5,
+      totalHours: 8,
+      todayAppointments: 9
+    },
+    {
+      id: 'doc-dt-3',
+      name: 'Dr. Rohan Verma',
+      specialty: 'Implantologist & Cosmetic Dentist',
+      avatar: 'RV',
+      phone: '+91 91234 56782',
+      email: 'dr.rohan@dentalcare.com',
+      status: 'In Surgery',
+      hours: '09:30 AM - 04:30 PM',
+      bookedHours: 5.5,
+      totalHours: 7,
+      todayAppointments: 4
+    }
+  ],
+  spa: [
+    {
+      id: 'doc-sp-1',
+      name: 'Master Somchai',
+      specialty: 'Ayurvedic & Deep Tissue Master Therapist',
+      avatar: 'MS',
+      phone: '+91 99887 76655',
+      email: 'somchai@serenityspa.com',
+      status: 'Active',
+      hours: '09:00 AM - 06:00 PM',
+      bookedHours: 7.0,
+      totalHours: 8,
+      todayAppointments: 6
+    },
+    {
+      id: 'doc-sp-2',
+      name: 'Maya Sen',
+      specialty: 'Holistic Aromatherapist & Body Treatment Specialist',
+      avatar: 'MS',
+      phone: '+91 99887 76656',
+      email: 'maya@serenityspa.com',
+      status: 'On Break',
+      hours: '10:00 AM - 07:00 PM',
+      bookedHours: 5.0,
+      totalHours: 8,
+      todayAppointments: 5
+    },
+    {
+      id: 'doc-sp-3',
+      name: 'Ananya Ayurvedic Healer',
+      specialty: 'BAMS Panchakarma & Shirodhara Physician',
+      avatar: 'AH',
+      phone: '+91 99887 76657',
+      email: 'ananya@serenityspa.com',
+      status: 'Active',
+      hours: '09:30 AM - 05:30 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 7
+    }
+  ],
+  salon: [
+    {
+      id: 'doc-sl-1',
+      name: 'Zara Khan',
+      specialty: 'Master Hair Stylist & Creative Director',
+      avatar: 'ZK',
+      phone: '+91 98123 45670',
+      email: 'zara@luxurysalon.com',
+      status: 'Active',
+      hours: '10:00 AM - 07:00 PM',
+      bookedHours: 7.5,
+      totalHours: 8,
+      todayAppointments: 8
+    },
+    {
+      id: 'doc-sl-2',
+      name: 'Rohit Mehra',
+      specialty: 'Senior Hair Colorist & Balayage Specialist',
+      avatar: 'RM',
+      phone: '+91 98123 45671',
+      email: 'rohit@luxurysalon.com',
+      status: 'In Surgery',
+      hours: '10:00 AM - 06:30 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 5
+    },
+    {
+      id: 'doc-sl-3',
+      name: 'Tanya Roy',
+      specialty: 'Celebrity Bridal & HD Airbrush Makeup Artist',
+      avatar: 'TR',
+      phone: '+91 98123 45672',
+      email: 'tanya@luxurysalon.com',
+      status: 'Active',
+      hours: '09:00 AM - 05:00 PM',
+      bookedHours: 6.5,
+      totalHours: 8,
+      todayAppointments: 6
+    }
+  ],
+  realestate: [
+    {
+      id: 'doc-re-1',
+      name: 'Vikram Aditya',
+      specialty: 'Senior Luxury Property Advisor (Villas & Penthouses)',
+      avatar: 'VA',
+      phone: '+91 90011 22334',
+      email: 'vikram@zerorealty.com',
+      status: 'Active',
+      hours: '09:00 AM - 06:00 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 4
+    },
+    {
+      id: 'doc-re-2',
+      name: 'Rajesh Gupta',
+      specialty: 'Commercial Asset & Grade-A Floor Plate Specialist',
+      avatar: 'RG',
+      phone: '+91 90011 22335',
+      email: 'rajesh@zerorealty.com',
+      status: 'Active',
+      hours: '09:30 AM - 06:00 PM',
+      bookedHours: 5.5,
+      totalHours: 8,
+      todayAppointments: 5
+    }
+  ],
+  hotel: [
+    {
+      id: 'doc-ht-1',
+      name: 'Kabir Mehta',
+      specialty: 'Chief Concierge & VIP Guest Relations Head',
+      avatar: 'KM',
+      phone: '+91 97766 55443',
+      email: 'kabir@grandhotel.com',
+      status: 'Active',
+      hours: '08:00 AM - 05:00 PM',
+      bookedHours: 7.0,
+      totalHours: 8,
+      todayAppointments: 10
+    },
+    {
+      id: 'doc-ht-2',
+      name: 'Sunita Rao',
+      specialty: 'Front Office & Guest Experience Manager',
+      avatar: 'SR',
+      phone: '+91 97766 55444',
+      email: 'sunita@grandhotel.com',
+      status: 'Active',
+      hours: '09:00 AM - 06:00 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 8
+    }
+  ],
+  auto: [
+    {
+      id: 'doc-au-1',
+      name: 'Amitav Ghosh',
+      specialty: 'Senior Automotive Consultant & Test Drive Lead',
+      avatar: 'AG',
+      phone: '+91 96655 44332',
+      email: 'amitav@zeroshowroom.com',
+      status: 'Active',
+      hours: '09:30 AM - 06:30 PM',
+      bookedHours: 6.0,
+      totalHours: 8,
+      todayAppointments: 6
+    },
+    {
+      id: 'doc-au-2',
+      name: 'Rajesh Nayak',
+      specialty: 'Master Service Advisor & Warranty Manager',
+      avatar: 'RN',
+      phone: '+91 96655 44333',
+      email: 'rajesh@zeroshowroom.com',
+      status: 'Active',
+      hours: '09:00 AM - 06:00 PM',
+      bookedHours: 6.5,
+      totalHours: 8,
+      todayAppointments: 7
+    }
+  ]
+};
 
 export default function DoctorCalendarPage() {
-  const { nicheConfig } = useNiche();
-  const [doctors, setDoctors] = useState<DoctorProfile[]>(INITIAL_DOCTORS);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(INITIAL_DOCTORS[0]);
+  const { currentNiche, nicheConfig } = useNiche();
+  const staffTerm = nicheConfig.terminology?.staff || 'Doctor';
+  
+  const [doctors, setDoctors] = useState<DoctorProfile[]>(() => DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(() => (DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin)[0]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // Load from localStorage
+  // Load from localStorage or defaults per niche
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('zerodesk_doctors');
+      const saved = localStorage.getItem(`zerodesk_doctors_${currentNiche}`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setDoctors(parsed);
           setSelectedDoctor(parsed[0]);
+          return;
         }
       }
     } catch (e) {
       console.error('Failed to load doctors from localStorage', e);
     }
-  }, []);
+    const defaults = DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin;
+    setDoctors(defaults);
+    setSelectedDoctor(defaults[0]);
+  }, [currentNiche]);
 
   const saveDoctors = (updated: DoctorProfile[]) => {
     setDoctors(updated);
     try {
-      localStorage.setItem('zerodesk_doctors', JSON.stringify(updated));
+      localStorage.setItem(`zerodesk_doctors_${currentNiche}`, JSON.stringify(updated));
     } catch (e) {
       console.error('Failed to save doctors to localStorage', e);
     }
@@ -151,13 +368,13 @@ export default function DoctorCalendarPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>Doctor & Specialist Management</span>
+            <span>{staffTerm} & Specialist Management</span>
             <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              {nicheConfig?.label ? `${nicheConfig.label} Hub` : 'Medical Team Hub'}
+              {nicheConfig?.label ? `${nicheConfig.label} Hub` : 'Team Hub'}
             </span>
           </h1>
           <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Administer doctor profiles, availability status, clinical hours, and consultation workloads.
+            Administer {staffTerm.toLowerCase()} profiles, availability status, shift hours, and service workloads.
           </p>
         </div>
 
@@ -167,7 +384,7 @@ export default function DoctorCalendarPage() {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20"
           >
             <Plus size={16} />
-            <span>Add New Doctor</span>
+            <span>Add New {staffTerm}</span>
           </button>
         </div>
       </div>
@@ -176,14 +393,14 @@ export default function DoctorCalendarPage() {
       <div className="p-4 rounded-2xl bg-[var(--color-glass)] border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center font-bold">
-            <Stethoscope size={16} />
+            <UserCheck size={16} />
           </div>
           <div>
-            <span className="font-bold text-[var(--color-text)]">Doctor Management vs Doctor Slots</span>
+            <span className="font-bold text-[var(--color-text)]">{staffTerm} Management vs Shift Calendar</span>
             <p className="text-[11px] text-[var(--color-text-muted)]">
-              This page manages doctor availability and team profiles. For drag-and-drop appointment slot scheduling, open{' '}
+              This page manages {staffTerm.toLowerCase()} availability and team profiles. For drag-and-drop appointment slot scheduling, open{' '}
               <Link href="/calendar" className="text-blue-400 font-bold hover:underline inline-flex items-center gap-0.5">
-                <Calendar size={11} className="inline" /> Doctor Calendar & Slots &rarr;
+                <Calendar size={11} className="inline" /> Calendar & Slots &rarr;
               </Link>
             </p>
           </div>
@@ -195,7 +412,7 @@ export default function DoctorCalendarPage() {
         {/* Left Column: Doctor Profile Cards */}
         <div className="lg:col-span-5 space-y-3">
           <h2 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-            Active Doctors ({doctors.length})
+            Active {staffTerm} Profiles ({doctors.length})
           </h2>
 
           {doctors.map((doc) => {

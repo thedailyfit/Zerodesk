@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
+
 interface SupportTicket {
   id: string;
   ticketNumber: string;
@@ -27,53 +30,149 @@ interface SupportTicket {
   createdAt: string;
 }
 
-const STORAGE_KEY = 'zerodesk_support_tickets';
-
-const INITIAL_TICKETS: SupportTicket[] = [
-  {
-    id: 't-1',
-    ticketNumber: 'ZD-2026-041',
-    subject: 'Assistance with custom WhatsApp prompt calibration',
-    category: 'AI Knowledge Hub',
-    priority: 'Medium',
-    status: 'In Progress',
-    createdAt: 'Today, 11:30 AM'
-  },
-  {
-    id: 't-2',
-    ticketNumber: 'ZD-2026-029',
-    subject: 'Twilio SIP Trunk configuration verification',
-    category: 'Voice Telephony',
-    priority: 'High',
-    status: 'Resolved',
-    createdAt: '2 days ago'
-  }
-];
+const DEFAULT_TICKETS_BY_NICHE: Record<NicheId, SupportTicket[]> = {
+  skin: [
+    {
+      id: 't-sk-1',
+      ticketNumber: 'ZD-2026-041',
+      subject: 'Assistance with custom HydraFacial prompt calibration',
+      category: 'AI Knowledge Hub',
+      priority: 'Medium',
+      status: 'In Progress',
+      createdAt: 'Today, 11:30 AM'
+    },
+    {
+      id: 't-sk-2',
+      ticketNumber: 'ZD-2026-029',
+      subject: 'Twilio SIP Trunk configuration verification for Laser OPD',
+      category: 'Voice Telephony',
+      priority: 'High',
+      status: 'Resolved',
+      createdAt: '2 days ago'
+    }
+  ],
+  dental: [
+    {
+      id: 't-dt-1',
+      ticketNumber: 'ZD-2026-104',
+      subject: 'Integration with digital RVG sensor & X-ray patient viewer',
+      category: 'Technical Integration',
+      priority: 'High',
+      status: 'In Progress',
+      createdAt: 'Today, 10:15 AM'
+    },
+    {
+      id: 't-dt-2',
+      ticketNumber: 'ZD-2026-088',
+      subject: 'Invisalign 3D scan booking webhook parameter mapping',
+      category: 'AI Knowledge Hub',
+      priority: 'Medium',
+      status: 'Resolved',
+      createdAt: '3 days ago'
+    }
+  ],
+  spa: [
+    {
+      id: 't-sp-1',
+      ticketNumber: 'ZD-2026-205',
+      subject: 'Configure dual therapist assignment rule for couple sanctuary suite',
+      category: 'Operations Setup',
+      priority: 'Medium',
+      status: 'In Progress',
+      createdAt: 'Today, 09:45 AM'
+    },
+    {
+      id: 't-sp-2',
+      ticketNumber: 'ZD-2026-172',
+      subject: 'WhatsApp Ayurvedic intake questionnaire automated dispatch',
+      category: 'AI Knowledge Hub',
+      priority: 'High',
+      status: 'Resolved',
+      createdAt: 'Yesterday'
+    }
+  ],
+  salon: [
+    {
+      id: 't-sl-1',
+      ticketNumber: 'ZD-2026-312',
+      subject: 'Tiered commission rate rule for Master Stylists & Senior Colorists',
+      category: 'Billing & Staff',
+      priority: 'High',
+      status: 'In Progress',
+      createdAt: 'Today, 12:00 PM'
+    },
+    {
+      id: 't-sl-2',
+      ticketNumber: 'ZD-2026-290',
+      subject: 'Bridal package advance token payment gateway link setup',
+      category: 'Billing & Staff',
+      priority: 'Medium',
+      status: 'Resolved',
+      createdAt: '4 days ago'
+    }
+  ],
+  realestate: [
+    {
+      id: 't-re-1',
+      ticketNumber: 'ZD-2026-401',
+      subject: 'Automated 99acres and MagicBricks lead webhook routing test',
+      category: 'CRM & Integrations',
+      priority: 'High',
+      status: 'In Progress',
+      createdAt: 'Today, 11:00 AM'
+    }
+  ],
+  hotel: [
+    {
+      id: 't-ht-1',
+      ticketNumber: 'ZD-2026-508',
+      subject: 'PMS room availability live synchronization webhook check',
+      category: 'Technical Integration',
+      priority: 'High',
+      status: 'In Progress',
+      createdAt: 'Today, 08:30 AM'
+    }
+  ],
+  auto: [
+    {
+      id: 't-au-1',
+      ticketNumber: 'ZD-2026-614',
+      subject: 'Test drive GPS tracking link SMS template registration',
+      category: 'AI Telephony',
+      priority: 'Medium',
+      status: 'In Progress',
+      createdAt: 'Today, 10:00 AM'
+    }
+  ]
+};
 
 export default function GetLiveHelpPage() {
-  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_TICKETS);
+  const { currentNiche } = useNiche();
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => DEFAULT_TICKETS_BY_NICHE[currentNiche] || DEFAULT_TICKETS_BY_NICHE.skin);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoBooked, setVideoBooked] = useState(false);
 
-  // Load from localStorage
+  // Load from localStorage or defaults
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(`zerodesk_support_tickets_${currentNiche}`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setTickets(parsed);
+          return;
         }
       }
     } catch (e) {
       console.error('Failed to load support tickets', e);
     }
-  }, []);
+    setTickets(DEFAULT_TICKETS_BY_NICHE[currentNiche] || DEFAULT_TICKETS_BY_NICHE.skin);
+  }, [currentNiche]);
 
   const saveTickets = (newTickets: SupportTicket[]) => {
     setTickets(newTickets);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newTickets));
+      localStorage.setItem(`zerodesk_support_tickets_${currentNiche}`, JSON.stringify(newTickets));
     } catch (e) {
       console.error('Failed to save support tickets', e);
     }

@@ -25,35 +25,37 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const AVAILABLE_AGENTS = [
-  {
-    id: 'agent_1',
-    name: 'DermAI Receptionist (Jubilee Hills)',
-    provider: 'Vapi.ai',
-    agentId: 'vapi_agent_hyderabad_v4',
-    voiceName: 'Kavita Soft Tone (ElevenLabs)',
-    phone: '+91 40 1234 5678',
-    status: 'ACTIVE'
-  },
-  {
-    id: 'agent_2',
-    name: 'VIP Concierge Agent (Banjara Hills)',
-    provider: 'Vapi.ai',
-    agentId: 'vapi_agent_vip_v2',
-    voiceName: 'Priya Professional (ElevenLabs)',
-    phone: '+91 40 8765 4321',
-    status: 'ACTIVE'
-  },
-  {
-    id: 'agent_3',
-    name: 'After-Hours Outbound Agent (Retell AI)',
-    provider: 'Retell AI',
-    agentId: 'retell_agent_afterhours_99a',
-    voiceName: 'Dr. Meenakshi Assist (Sarvam Voice)',
-    phone: '+91 40 5555 9999',
-    status: 'STANDBY'
-  }
-];
+import { useState, useEffect } from 'react';
+import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
+
+const DEFAULT_AGENTS_BY_NICHE: Record<NicheId, { id: string; name: string; provider: string; agentId: string; voiceName: string; phone: string; status: string }[]> = {
+  skin: [
+    { id: 'ag_sk_1', name: 'DermAI Receptionist (Main Branch)', provider: 'Vapi.ai', agentId: 'vapi_derm_v4', voiceName: 'Kavita Soft Tone (ElevenLabs)', phone: '+91 40 1234 5678', status: 'ACTIVE' },
+    { id: 'ag_sk_2', name: 'VIP Concierge Agent', provider: 'Vapi.ai', agentId: 'vapi_vip_v2', voiceName: 'Priya Professional (ElevenLabs)', phone: '+91 40 8765 4321', status: 'ACTIVE' },
+  ],
+  dental: [
+    { id: 'ag_dt_1', name: 'DentAI Frontdesk Specialist', provider: 'Vapi.ai', agentId: 'vapi_dental_v4', voiceName: 'Dr. Sharma Assistant (ElevenLabs)', phone: '+91 40 2345 6789', status: 'ACTIVE' },
+    { id: 'ag_dt_2', name: 'Emergency Tooth Pain Hotline Agent', provider: 'Retell AI', agentId: 'retell_dental_urgent', voiceName: 'Priya Reassuring (Sarvam Voice)', phone: '+91 40 9876 5432', status: 'ACTIVE' },
+  ],
+  spa: [
+    { id: 'ag_sp_1', name: 'WellnessAI Sanctuary Hostess', provider: 'Vapi.ai', agentId: 'vapi_spa_v4', voiceName: 'Ananya Serene Tone (ElevenLabs)', phone: '+91 40 3456 7890', status: 'ACTIVE' },
+    { id: 'ag_sp_2', name: 'Ayurvedic Retreat Booking Agent', provider: 'Vapi.ai', agentId: 'vapi_ayurveda_v2', voiceName: 'Maya Calm (ElevenLabs)', phone: '+91 40 8765 1234', status: 'ACTIVE' },
+  ],
+  salon: [
+    { id: 'ag_sl_1', name: 'SalonAI Styling Concierge', provider: 'Vapi.ai', agentId: 'vapi_salon_v4', voiceName: 'Zara Chic Tone (ElevenLabs)', phone: '+91 40 4567 8901', status: 'ACTIVE' },
+    { id: 'ag_sl_2', name: 'Bridal Booking Specialist Agent', provider: 'Retell AI', agentId: 'retell_bridal_v1', voiceName: 'Tanya Glam Voice (ElevenLabs)', phone: '+91 40 7654 3210', status: 'ACTIVE' },
+  ],
+  realestate: [
+    { id: 'ag_re_1', name: 'RealtyAI Site Visit Coordinator', provider: 'Vapi.ai', agentId: 'vapi_realty_v4', voiceName: 'Vikram Executive (ElevenLabs)', phone: '+91 40 5678 9012', status: 'ACTIVE' },
+  ],
+  hotel: [
+    { id: 'ag_ht_1', name: 'HospitalityAI Front Desk Agent', provider: 'Vapi.ai', agentId: 'vapi_hotel_v4', voiceName: 'Kabir Warm Host (ElevenLabs)', phone: '+91 40 6789 0123', status: 'ACTIVE' },
+  ],
+  auto: [
+    { id: 'ag_au_1', name: 'AutoAI Test Drive Assistant', provider: 'Vapi.ai', agentId: 'vapi_auto_v4', voiceName: 'Suresh Pro Advisor (ElevenLabs)', phone: '+91 40 7890 1234', status: 'ACTIVE' },
+  ],
+};
 
 const personalities = [
   { id: 'receptionist', label: 'Receptionist', desc: 'Warm, welcoming, moderate pace', icon: '👋' },
@@ -64,75 +66,143 @@ const personalities = [
   { id: 'doctor_assistant', label: 'Doctor Assistant', desc: 'Calm, reassuring, precise', icon: '🩺' },
 ];
 
-const INITIAL_CALLS = [
-  { 
-    id: '1', 
-    customer: 'Rajesh Kumar', 
-    phone: '+91 98765 43210', 
-    type: 'inbound', 
-    duration: '4:32', 
-    status: 'completed', 
-    resolution: 'AI_RESOLVED', 
-    time: '14:30 Today',
-    transcript: "AI: Hello Rajesh, welcome to Glow Skin Clinic! How can I help you today?\nRajesh: Hi, I wanted to ask about laser hair removal pricing and availability.\nAI: Of course! Our laser hair removal packages start at ₹3,000. Dr. Meenakshi has openings this Friday at 4 PM. Should I reserve that slot for you?\nRajesh: Yes please, book Friday 4 PM.\nAI: Perfect! I've confirmed your slot and sent details to your WhatsApp."
-  },
-  { 
-    id: '2', 
-    customer: 'Priya Sharma', 
-    phone: '+91 87654 32109', 
-    type: 'outbound', 
-    duration: '2:15', 
-    status: 'completed', 
-    resolution: 'AI_RESOLVED', 
-    time: '13:45 Today',
-    transcript: "AI: Hi Priya, this is Glow Clinic calling to remind you of your Chemical Peel session tomorrow at 11 AM.\nPriya: Thanks for calling! Is there any prep needed?\nAI: Please avoid heavy sun exposure and active serums tonight. See you tomorrow at 11 AM!"
-  },
-  { 
-    id: '3', 
-    customer: 'Ankit Rawat', 
-    phone: '+91 76543 21098', 
-    type: 'inbound', 
-    duration: '0:00', 
-    status: 'missed', 
-    resolution: 'MISSED', 
-    time: '13:20 Today',
-    transcript: "[Call Missed — Auto-triggered WhatsApp Follow-up sent to patient]"
-  },
-  { 
-    id: '4', 
-    customer: 'Amit Patel', 
-    phone: '+91 65432 10987', 
-    type: 'inbound', 
-    duration: '6:12', 
-    status: 'transferred', 
-    resolution: 'HUMAN_RESOLVED', 
-    time: '12:10 Today',
-    transcript: "AI: Hello Amit, welcome to Glow Clinic!\nAmit: I have severe skin allergies from a medication and need urgent doctor advice.\nAI: I understand completely. Let me immediately connect you to our senior dermatologist Dr. Meenakshi..."
-  },
-  { 
-    id: '5', 
-    customer: 'Sneha Reddy', 
-    phone: '+91 54321 09876', 
-    type: 'outbound', 
-    duration: '3:40', 
-    status: 'completed', 
-    resolution: 'AI_RESOLVED', 
-    time: 'Yesterday',
-    transcript: "AI: Hello Sneha! Checking in regarding your Full Body Package enquiry.\nSneha: Yes, can you send the treatment schedule?\nAI: Absolutely! Sent to your WhatsApp now."
-  }
-];
+const DEFAULT_CALLS_BY_NICHE: Record<NicheId, any[]> = {
+  skin: [
+    { 
+      id: 'c-sk-1', 
+      customer: 'Rajesh Kumar', 
+      phone: '+91 98765 43210', 
+      type: 'inbound', 
+      duration: '4:32', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '14:30 Today',
+      transcript: "AI: Hello Rajesh, welcome to Glow Skin Clinic! How can I help you today?\nRajesh: Hi, I wanted to ask about laser hair removal pricing and availability.\nAI: Of course! Our laser hair removal packages start at ₹3,000. Dr. Meenakshi has openings this Friday at 4 PM. Should I reserve that slot for you?\nRajesh: Yes please, book Friday 4 PM.\nAI: Perfect! I've confirmed your slot and sent details to your WhatsApp."
+    },
+    { 
+      id: 'c-sk-2', 
+      customer: 'Priya Sharma', 
+      phone: '+91 87654 32109', 
+      type: 'outbound', 
+      duration: '2:15', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '13:45 Today',
+      transcript: "AI: Hi Priya, this is Glow Clinic calling to remind you of your Chemical Peel session tomorrow at 11 AM.\nPriya: Thanks for calling! Is there any prep needed?\nAI: Please avoid heavy sun exposure and active serums tonight. See you tomorrow at 11 AM!"
+    }
+  ],
+  dental: [
+    { 
+      id: 'c-dt-1', 
+      customer: 'Ananya Reddy', 
+      phone: '+91 91234 56780', 
+      type: 'inbound', 
+      duration: '3:45', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '14:15 Today',
+      transcript: "AI: Namaste Ananya! Welcome to Dental Care Excellence. How may I assist your smile today?\nAnanya: Hi, I have sharp pain in my lower molar and wanted to see if Dr. Sharma is free today.\nAI: I understand tooth pain is uncomfortable. Dr. Arvind Sharma has an emergency root canal slot today at 3:30 PM. Shall I book that for you?\nAnanya: Yes, please book 3:30 PM right away.\nAI: Confirmed! We have reserved 3:30 PM. Please arrive 10 minutes early."
+    },
+    { 
+      id: 'c-dt-2', 
+      customer: 'Karthik Menon', 
+      phone: '+91 91234 56781', 
+      type: 'outbound', 
+      duration: '2:10', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '12:30 Today',
+      transcript: "AI: Hello Karthik, calling from Dental Care regarding your Invisible Aligners 3D smile scan results.\nKarthik: Oh great, is the digital plan ready?\nAI: Yes! Dr. Priya has approved your 12-month aligner roadmap. Would you like to review it in-clinic tomorrow at 11 AM?\nKarthik: Yes, tomorrow 11 AM works perfect."
+    }
+  ],
+  spa: [
+    { 
+      id: 'c-sp-1', 
+      customer: 'Meera Kapoor', 
+      phone: '+91 99887 76655', 
+      type: 'inbound', 
+      duration: '4:10', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '15:00 Today',
+      transcript: "AI: Namaste Meera, welcome to Serenity Wellness Spa. How can I guide your relaxation journey?\nMeera: Hello, do you have a couple suite available this Saturday evening for an Ayurvedic Abhyanga massage?\nAI: Yes, we have our private Lotus Couple Sanctuary open at 5:30 PM on Saturday with Master Somchai and Ananya. Would you like me to hold that suite for you?\nMeera: Yes please, that sounds wonderful.\nAI: Done! Your sanctuary booking is confirmed with herbal steam bath included."
+    }
+  ],
+  salon: [
+    { 
+      id: 'c-sl-1', 
+      customer: 'Divya Nair', 
+      phone: '+91 98123 45670', 
+      type: 'inbound', 
+      duration: '3:20', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '14:50 Today',
+      transcript: "AI: Hey Divya! Welcome to Luxury Couture Salon. How can we make you glow today?\nDivya: Hi! I wanted to check Master Stylist Zara's availability for a Keratin treatment and Balayage color this Sunday.\nAI: Zara has a combined 3-hour VIP styling slot this Sunday at 11:00 AM. Should I lock that in for you?\nDivya: Yes please, lock Sunday 11 AM.\nAI: Fantastic! Zara is booked for you and we have sent the appointment pass to your WhatsApp."
+    }
+  ],
+  realestate: [
+    { 
+      id: 'c-re-1', 
+      customer: 'Rajesh Gupta', 
+      phone: '+91 90011 22334', 
+      type: 'inbound', 
+      duration: '5:15', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '11:20 Today',
+      transcript: "AI: Good morning Mr. Gupta, thank you for calling ZeroRealty Luxury Living. How can I assist your property search?\nRajesh: Hi, I saw your 4BHK Villa project and wanted to schedule a site visit this Saturday morning.\nAI: Excellent choice! Our Senior Property Advisor Vikram is hosting private guided walkthroughs this Saturday at 10:30 AM with chauffeur pickup. Shall I schedule your tour?\nRajesh: Yes, please book 10:30 AM.\nAI: Confirmed! We have sent the GPS location and gate pass to your phone."
+    }
+  ],
+  hotel: [
+    { 
+      id: 'c-ht-1', 
+      customer: 'Amit Patel', 
+      phone: '+91 97766 55443', 
+      type: 'inbound', 
+      duration: '3:05', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '10:05 Today',
+      transcript: "AI: Welcome to Grand Hotel & Luxury Suites, Amit. How may concierge assist your stay?\nAmit: Hi, I'm arriving at 11 AM today. Can I request an early check-in for the Executive King Suite?\nAI: Yes Mr. Patel! Suite 401 is inspected and ready. I have activated your digital keycard and notified Chief Concierge Kabir of your arrival.\nAmit: Excellent, thank you!"
+    }
+  ],
+  auto: [
+    { 
+      id: 'c-au-1', 
+      customer: 'Suresh Kumar', 
+      phone: '+91 96655 44332', 
+      type: 'inbound', 
+      duration: '4:00', 
+      status: 'completed', 
+      resolution: 'AI_RESOLVED', 
+      time: '09:40 Today',
+      transcript: "AI: Hello Suresh! Welcome to Zero Motors Experience Center. How can I assist you with your vehicle journey?\nSuresh: Hi, I'd like to book a 45-minute test drive for the new flagship 4x4 SUV this afternoon.\nAI: We have the SUV prepped and available at 2:00 PM today with Senior Advisor Suresh Ghosh. Would you like me to register your test drive?\nSuresh: Yes, please register 2 PM.\nAI: Great! Please bring your driving license. We've texted your booking confirmation."
+    }
+  ]
+};
 
 export default function VoicePage() {
+  const { currentNiche } = useNiche();
   const [isVoiceActive, setIsVoiceActive] = useState(true);
-  const [selectedAgentId, setSelectedAgentId] = useState('agent_1');
+  const availableAgents = DEFAULT_AGENTS_BY_NICHE[currentNiche] || DEFAULT_AGENTS_BY_NICHE.skin;
+  const [selectedAgentId, setSelectedAgentId] = useState(() => availableAgents[0]?.id || 'ag_sk_1');
   const [showEditAgentModal, setShowEditAgentModal] = useState(false);
-  const [selectedPersonality, setSelectedPersonality] = useState('doctor_assistant');
-  const [calls, setCalls] = useState(INITIAL_CALLS);
+  const [selectedPersonality, setSelectedPersonality] = useState('receptionist');
+  const [calls, setCalls] = useState(() => DEFAULT_CALLS_BY_NICHE[currentNiche] || DEFAULT_CALLS_BY_NICHE.skin);
   const [searchCall, setSearchCall] = useState('');
   const [activeCallId, setActiveCallId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const currentAgent = AVAILABLE_AGENTS.find(a => a.id === selectedAgentId) || AVAILABLE_AGENTS[0];
+  useEffect(() => {
+    setCalls(DEFAULT_CALLS_BY_NICHE[currentNiche] || DEFAULT_CALLS_BY_NICHE.skin);
+    const agents = DEFAULT_AGENTS_BY_NICHE[currentNiche] || DEFAULT_AGENTS_BY_NICHE.skin;
+    if (agents.length > 0) {
+      setSelectedAgentId(agents[0].id);
+    }
+  }, [currentNiche]);
+
+  const currentAgent = availableAgents.find(a => a.id === selectedAgentId) || availableAgents[0];
 
   const filteredCalls = calls.filter(c => 
     c.customer.toLowerCase().includes(searchCall.toLowerCase()) || 

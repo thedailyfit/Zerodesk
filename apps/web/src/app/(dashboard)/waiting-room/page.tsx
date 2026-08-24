@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import { useNiche } from '@/components/providers/niche-provider';
 
+import type { NicheId } from '@/config/niches/types';
+
 const COLUMNS = [
   { id: 'checked-in', title: 'Checked In', color: 'blue' },
   { id: 'waiting', title: 'Waiting', color: 'amber' },
@@ -28,26 +30,93 @@ interface PatientItem {
   vip: boolean;
 }
 
-const INITIAL_PATIENTS: PatientItem[] = [
-  { id: '1', pid: 'ID-8492', name: 'Rajesh K.', time: '10:00 AM', service: 'Consultation', elapsed: '2 min', col: 'checked-in', vip: false },
-  { id: '2', pid: 'ID-1042', name: 'Priya S.', time: '10:15 AM', service: 'Primary Session', elapsed: '5 min', col: 'checked-in', vip: true },
-  { id: '3', pid: 'ID-3829', name: 'Sneha R.', time: '09:45 AM', service: 'VIP Care', elapsed: '15 min', col: 'waiting', vip: false },
-  { id: '4', pid: 'ID-5712', name: 'Amit P.', time: '09:30 AM', service: 'Assessment', elapsed: '20 min', col: 'waiting', vip: false },
-  { id: '5', pid: 'ID-9201', name: 'Ananya I.', time: '09:50 AM', service: 'Specialist Session', elapsed: '12 min', col: 'waiting', vip: true },
-  { id: '6', pid: 'ID-4482', name: 'Deepak M.', time: '09:15 AM', service: 'Dedicated Procedure', elapsed: '45 min', col: 'with-doctor', vip: true },
-  { id: '7', pid: 'ID-6310', name: 'Meera J.', time: '09:20 AM', service: 'Review & Care', elapsed: '30 min', col: 'with-doctor', vip: false },
-  { id: '8', pid: 'ID-7193', name: 'Kiran T.', time: '08:30 AM', service: 'Follow-up Session', elapsed: '1h 15m', col: 'treatment', vip: false },
-  { id: '9', pid: 'ID-2054', name: 'Rahul B.', time: '09:00 AM', service: 'Express Service', elapsed: '5 min', col: 'checkout', vip: false },
-];
+const DEFAULT_WAITING_ROOM_BY_NICHE: Record<NicheId, PatientItem[]> = {
+  skin: [
+    { id: 'sk-w1', pid: 'SK-1001', name: 'Priya Sharma', time: '10:00 AM', service: 'HydraFacial Deep Cleanse', elapsed: '2 min', col: 'checked-in', vip: true },
+    { id: 'sk-w2', pid: 'SK-1002', name: 'Vikram Singh', time: '10:15 AM', service: 'Laser Hair Removal', elapsed: '5 min', col: 'checked-in', vip: false },
+    { id: 'sk-w3', pid: 'SK-1003', name: 'Sneha Patel', time: '09:45 AM', service: 'Chemical Peel & Glow', elapsed: '15 min', col: 'waiting', vip: false },
+    { id: 'sk-w4', pid: 'SK-1004', name: 'Rahul Desai', time: '09:15 AM', service: 'Dermatology Consultation', elapsed: '45 min', col: 'with-doctor', vip: false },
+    { id: 'sk-w5', pid: 'SK-1005', name: 'Anjali Verma', time: '08:30 AM', service: 'PRP Hair Therapy', elapsed: '1h 15m', col: 'treatment', vip: true },
+    { id: 'sk-w6', pid: 'SK-1006', name: 'Deepak Menon', time: '09:00 AM', service: 'Post-Laser Checkout', elapsed: '5 min', col: 'checkout', vip: false },
+  ],
+  dental: [
+    { id: 'dt-w1', pid: 'DT-2001', name: 'Ananya Reddy', time: '10:00 AM', service: 'Invisalign 3D Scan', elapsed: '3 min', col: 'checked-in', vip: true },
+    { id: 'dt-w2', pid: 'DT-2002', name: 'Karthik Menon', time: '10:15 AM', service: 'Implant Placement Prep', elapsed: '8 min', col: 'checked-in', vip: false },
+    { id: 'dt-w3', pid: 'DT-2003', name: 'Neha Gupta', time: '09:45 AM', service: 'Teeth Whitening Sitting', elapsed: '12 min', col: 'waiting', vip: false },
+    { id: 'dt-w4', pid: 'DT-2004', name: 'Rohit Sharma', time: '09:15 AM', service: 'Root Canal Sitting 2', elapsed: '35 min', col: 'with-doctor', vip: true },
+    { id: 'dt-w5', pid: 'DT-2005', name: 'Pooja Iyer', time: '08:45 AM', service: 'Scaling & Fluoride Polish', elapsed: '50 min', col: 'treatment', vip: false },
+    { id: 'dt-w6', pid: 'DT-2006', name: 'Vikram Seth', time: '09:00 AM', service: 'Crown Delivery Billing', elapsed: '4 min', col: 'checkout', vip: false },
+  ],
+  spa: [
+    { id: 'sp-w1', pid: 'SP-3001', name: 'Meera Kapoor', time: '10:00 AM', service: 'Ayurvedic Abhyanga Massage', elapsed: '4 min', col: 'checked-in', vip: true },
+    { id: 'sp-w2', pid: 'SP-3002', name: 'Aman Verma', time: '10:15 AM', service: 'Deep Tissue Recovery', elapsed: '6 min', col: 'checked-in', vip: false },
+    { id: 'sp-w3', pid: 'SP-3003', name: 'Simran Kaur', time: '09:50 AM', service: 'Aromatherapy Body Wrap', elapsed: '14 min', col: 'waiting', vip: false },
+    { id: 'sp-w4', pid: 'SP-3004', name: 'Karan Patel', time: '09:20 AM', service: 'Hot Stone Thermal Therapy', elapsed: '40 min', col: 'with-doctor', vip: true },
+    { id: 'sp-w5', pid: 'SP-3005', name: 'Anita Desai', time: '08:30 AM', service: 'Panchakarma Steam Therapy', elapsed: '1h 10m', col: 'treatment', vip: true },
+    { id: 'sp-w6', pid: 'SP-3006', name: 'Rohan Bose', time: '09:00 AM', service: 'Herbal Tea & Bill Settlement', elapsed: '5 min', col: 'checkout', vip: false },
+  ],
+  salon: [
+    { id: 'sl-w1', pid: 'SL-4001', name: 'Divya Nair', time: '10:00 AM', service: 'Balayage Color & Gloss', elapsed: '5 min', col: 'checked-in', vip: true },
+    { id: 'sl-w2', pid: 'SL-4002', name: 'Sameer Khan', time: '10:15 AM', service: 'Keratin Hair Smoothening', elapsed: '7 min', col: 'checked-in', vip: false },
+    { id: 'sl-w3', pid: 'SL-4003', name: 'Riya Sharma', time: '09:40 AM', service: 'Bridal Trial Makeup', elapsed: '20 min', col: 'waiting', vip: true },
+    { id: 'sl-w4', pid: 'SL-4004', name: 'Arjun Singh', time: '09:15 AM', service: 'Nail Extensions Sculpting', elapsed: '45 min', col: 'with-doctor', vip: false },
+    { id: 'sl-w5', pid: 'SL-4005', name: 'Kavita Joshi', time: '08:45 AM', service: 'Moroccan Foot Spa Pedicure', elapsed: '55 min', col: 'treatment', vip: false },
+    { id: 'sl-w6', pid: 'SL-4006', name: 'Pooja Bhatt', time: '09:00 AM', service: 'Blowdry & Styling Invoice', elapsed: '6 min', col: 'checkout', vip: false },
+  ],
+  realestate: [
+    { id: 're-w1', pid: 'RE-5001', name: 'Rajesh Gupta', time: '10:00 AM', service: 'Villa Guided Site Tour Briefing', elapsed: '3 min', col: 'checked-in', vip: true },
+    { id: 're-w2', pid: 'RE-5002', name: 'Sunita Reddy', time: '10:15 AM', service: 'Commercial Floor Plan Review', elapsed: '10 min', col: 'waiting', vip: false },
+    { id: 're-w3', pid: 'RE-5003', name: 'Ravi Kumar', time: '09:30 AM', service: 'NRI Video Call Walkthrough', elapsed: '30 min', col: 'with-doctor', vip: true },
+    { id: 're-w4', pid: 'RE-5004', name: 'Alok Mishra', time: '09:00 AM', service: 'Allotment Token Clearance', elapsed: '5 min', col: 'checkout', vip: false },
+  ],
+  hotel: [
+    { id: 'ht-w1', pid: 'HT-6001', name: 'Amit Patel', time: '10:00 AM', service: 'Executive Suite Check-in & Keycard', elapsed: '2 min', col: 'checked-in', vip: true },
+    { id: 'ht-w2', pid: 'HT-6002', name: 'Shruti Hasan', time: '10:15 AM', service: 'Presidential Suite Concierge Brief', elapsed: '8 min', col: 'waiting', vip: true },
+    { id: 'ht-w3', pid: 'HT-6003', name: 'Vikas Khanna', time: '09:30 AM', service: 'Banquet Hall Tasting & Review', elapsed: '35 min', col: 'with-doctor', vip: false },
+    { id: 'ht-w4', pid: 'HT-6004', name: 'Neha Sharma', time: '09:00 AM', service: 'Express Checkout & Airport Cab', elapsed: '4 min', col: 'checkout', vip: false },
+  ],
+  auto: [
+    { id: 'au-w1', pid: 'AU-7001', name: 'Suresh Kumar', time: '10:00 AM', service: 'SUV Test Drive Handover', elapsed: '3 min', col: 'checked-in', vip: true },
+    { id: 'au-w2', pid: 'AU-7002', name: 'Meenakshi Iyer', time: '10:15 AM', service: 'Periodic Service Intake Inspection', elapsed: '10 min', col: 'waiting', vip: false },
+    { id: 'au-w3', pid: 'AU-7003', name: 'Gaurav Singh', time: '09:20 AM', service: 'Ceramic Detailing Bay Inspection', elapsed: '40 min', col: 'with-doctor', vip: false },
+    { id: 'au-w4', pid: 'AU-7004', name: 'Preeti Desai', time: '09:00 AM', service: 'Insurance Handover & Gate Pass', elapsed: '5 min', col: 'checkout', vip: false },
+  ],
+};
 
-const BOOKED_APPOINTMENTS = [
-  { pid: 'ID-9104', name: 'Vikram Malhotra', time: '11:00 AM', service: 'Standard Service Session', vip: true },
-  { pid: 'ID-6291', name: 'Sunita Kapoor', time: '11:30 AM', service: 'Primary Assessment', vip: false },
-  { pid: 'ID-3305', name: 'Arjun Das', time: '12:00 PM', service: 'Custom Treatment', vip: false },
-  { pid: 'ID-5519', name: 'Pooja Hegde', time: '12:15 PM', service: 'Consultation & Review', vip: true },
-  { pid: 'ID-8840', name: 'Rohan Sharma', time: '12:30 PM', service: 'Specialist Booking', vip: false },
-  { pid: 'ID-4128', name: 'Neha Gupta', time: '01:00 PM', service: 'Follow-up Check', vip: false },
-];
+const DEFAULT_BOOKED_BY_NICHE: Record<NicheId, { pid: string; name: string; time: string; service: string; vip: boolean }[]> = {
+  skin: [
+    { pid: 'SK-1007', name: 'Kiran Thapar', time: '11:00 AM', service: 'Botox Anti-Aging Consult', vip: true },
+    { pid: 'SK-1008', name: 'Pooja Hegde', time: '11:30 AM', service: 'Acne Scar Subcision', vip: false },
+    { pid: 'SK-1009', name: 'Rohan Mehra', time: '12:00 PM', service: 'Dermabrasion Glow', vip: false },
+  ],
+  dental: [
+    { pid: 'DT-2007', name: 'Meera Nambiar', time: '11:00 AM', service: 'Aligner Review Checkup', vip: true },
+    { pid: 'DT-2008', name: 'Arunav Roy', time: '11:30 AM', service: 'Wisdom Tooth Consultation', vip: false },
+    { pid: 'DT-2009', name: 'Shweta Nanda', time: '12:00 PM', service: 'Zirconia Bridge Trial', vip: false },
+  ],
+  spa: [
+    { pid: 'SP-3007', name: 'Tara Alisha', time: '11:00 AM', service: 'Shirodhara Mind Calm', vip: true },
+    { pid: 'SP-3008', name: 'Devendra Rao', time: '11:30 AM', service: 'Foot Reflexology & Herbal Soak', vip: false },
+    { pid: 'SP-3009', name: 'Kavita Menon', time: '12:00 PM', service: 'Balinese Relaxation Therapy', vip: true },
+  ],
+  salon: [
+    { pid: 'SL-4007', name: 'Sunita Sharma', time: '11:00 AM', service: 'Hair Spa Deep Moisture', vip: false },
+    { pid: 'SL-4008', name: 'Rahul Verma', time: '11:30 AM', service: 'Precision Fade & Beard Sculpt', vip: false },
+    { pid: 'SL-4009', name: 'Simran Kaur', time: '12:00 PM', service: 'Global Color Touch-up', vip: true },
+  ],
+  realestate: [
+    { pid: 'RE-5005', name: 'Nandini Das', time: '11:00 AM', service: 'Luxury Penthouse Preview', vip: true },
+    { pid: 'RE-5006', name: 'Gautam Adani', time: '11:30 AM', service: 'Commercial Lease Agreement', vip: true },
+  ],
+  hotel: [
+    { pid: 'HT-6005', name: 'Rahul Bajaj', time: '11:00 AM', service: 'Weekend Dining & Spa Pass', vip: true },
+    { pid: 'HT-6006', name: 'Rajinikanth', time: '11:30 AM', service: 'Royal Suite Check-in', vip: true },
+  ],
+  auto: [
+    { pid: 'AU-7005', name: 'Aditya Chawla', time: '11:00 AM', service: 'Pre-Delivery Vehicle Handover', vip: true },
+    { pid: 'AU-7006', name: 'Rohan Mehra', time: '11:30 AM', service: 'EV Test Drive & Fast Charging', vip: false },
+  ],
+};
 
 const COLOR_MAP: Record<string, string> = {
   blue: 'border-l-blue-500 bg-blue-500/5',
@@ -66,8 +135,14 @@ const BORDER_MAP: Record<string, string> = {
 };
 
 export default function WaitingRoomPage() {
-  const { nicheConfig } = useNiche();
-  const [patients, setPatients] = useState<PatientItem[]>(INITIAL_PATIENTS);
+  const { currentNiche, nicheConfig } = useNiche();
+  const [patients, setPatients] = useState<PatientItem[]>(() => DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin);
+
+  useEffect(() => {
+    setPatients(DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin);
+  }, [currentNiche]);
+
+  const bookedAppointments = DEFAULT_BOOKED_BY_NICHE[currentNiche] || DEFAULT_BOOKED_BY_NICHE.skin;
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeMoveMenu, setActiveMoveMenu] = useState<string | null>(null);
@@ -86,7 +161,7 @@ export default function WaitingRoomPage() {
 
   // Filter booked appointments not already checked in
   const existingPids = new Set(patients.map(p => p.pid));
-  const availableBookings = BOOKED_APPOINTMENTS.filter(b => !existingPids.has(b.pid));
+  const availableBookings = bookedAppointments.filter(b => !existingPids.has(b.pid));
   
   const filteredBookings = availableBookings.filter(b => 
     b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +169,7 @@ export default function WaitingRoomPage() {
     b.service.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCheckInPatient = (booking: typeof BOOKED_APPOINTMENTS[0]) => {
+  const handleCheckInPatient = (booking: typeof bookedAppointments[0]) => {
     const newPatient: PatientItem = {
       id: Date.now().toString(),
       pid: booking.pid,

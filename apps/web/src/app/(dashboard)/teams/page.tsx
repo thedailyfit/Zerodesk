@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { NicheId } from '@/config/niches/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -40,7 +41,7 @@ export interface TeamMember {
   availability: Record<string, boolean>;
 }
 
-const DEPARTMENTS_BY_NICHE: Record<string, string[]> = {
+const DEPARTMENTS_BY_NICHE: Record<NicheId, string[]> = {
   skin: ['Dermatology', 'Aesthetics', 'Laser', 'Hair Restoration', 'Front Desk', 'Billing', 'Nursing'],
   dental: ['Endodontics', 'Prosthodontics', 'Orthodontics', 'Oral Surgery', 'Hygiene', 'Front Desk', 'Billing'],
   spa: ['Massage', 'Body Treatments', 'Facial Therapy', 'Aromatherapy', 'Front Desk', 'Guest Relations'],
@@ -50,78 +51,302 @@ const DEPARTMENTS_BY_NICHE: Record<string, string[]> = {
   auto: ['Sales', 'Service Center', 'Spare Parts', 'Finance & Insurance', 'Marketing', 'Admin'],
 };
 
-const INITIAL_TEAM: TeamMember[] = [
-  { 
-    id: '1', 
-    name: 'Dr. Meenakshi Rao', 
-    role: 'Lead Dermatologist', 
-    department: 'Dermatology', 
-    email: 'meenakshi@glowclinic.com', 
-    phone: '+91 98765 43210', 
-    userRole: 'MANAGER', 
-    shiftStatus: 'In Surgery', 
-    isActive: true, 
-    specialization: 'Laser & Acne Specialist', 
-    metrics: { monthlyAppts: 142, rating: 4.9, efficiency: '98%', revenue: '₹11.2L' },
-    availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
-  },
-  { 
-    id: '2', 
-    name: 'Dr. Arun Krishnan', 
-    role: 'Hair Transplant Surgeon', 
-    department: 'Hair Restoration', 
-    email: 'arun@glowclinic.com', 
-    phone: '+91 87654 32109', 
-    userRole: 'MANAGER', 
-    shiftStatus: 'On Duty', 
-    isActive: true, 
-    specialization: 'FUE Hair Restoration', 
-    metrics: { monthlyAppts: 86, rating: 4.8, efficiency: '95%', revenue: '₹9.8L' },
-    availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
-  },
-  { 
-    id: '3', 
-    name: 'Kavita Menon', 
-    role: 'Senior Aesthetic Therapist', 
-    department: 'Aesthetics', 
-    email: 'kavita@glowclinic.com', 
-    phone: '+91 76543 21098', 
-    userRole: 'STAFF', 
-    shiftStatus: 'On Duty', 
-    isActive: true, 
-    specialization: 'Body Contouring & Peels', 
-    metrics: { monthlyAppts: 110, rating: 4.9, efficiency: '99%', revenue: '₹3.2L' },
-    availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false } 
-  },
-  { 
-    id: '4', 
-    name: 'Rekha Pillai', 
-    role: 'Aesthetician', 
-    department: 'Aesthetics', 
-    email: 'rekha@glowclinic.com', 
-    phone: '+91 65432 10987', 
-    userRole: 'STAFF', 
-    shiftStatus: 'Off Duty', 
-    isActive: true, 
-    specialization: 'Facials & Medi-Spas', 
-    metrics: { monthlyAppts: 72, rating: 4.7, efficiency: '94%', revenue: '₹1.6L' },
-    availability: { mon: true, tue: false, wed: true, thu: true, fri: true, sat: true, sun: false } 
-  },
-  { 
-    id: '5', 
-    name: 'Sanjay Gupta', 
-    role: 'Front Desk Lead', 
-    department: 'Front Desk', 
-    email: 'sanjay@glowclinic.com', 
-    phone: '+91 54321 09876', 
-    userRole: 'STAFF', 
-    shiftStatus: 'On Duty', 
-    isActive: true, 
-    specialization: 'Patient Relations & Billing', 
-    metrics: { monthlyAppts: 310, rating: 4.9, efficiency: '100%', revenue: 'N/A' },
-    availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
-  },
-];
+const DEFAULT_TEAMS_BY_NICHE: Record<NicheId, TeamMember[]> = {
+  skin: [
+    { 
+      id: 'tm-sk-1', 
+      name: 'Dr. Meenakshi Rao', 
+      role: 'Lead Dermatologist', 
+      department: 'Dermatology', 
+      email: 'meenakshi@glowclinic.com', 
+      phone: '+91 98765 43210', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'In Surgery', 
+      isActive: true, 
+      specialization: 'Laser & Acne Specialist', 
+      metrics: { monthlyAppts: 142, rating: 4.9, efficiency: '98%', revenue: '₹11.2L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sk-2', 
+      name: 'Dr. Arun Krishnan', 
+      role: 'Hair Transplant Surgeon', 
+      department: 'Hair Restoration', 
+      email: 'arun@glowclinic.com', 
+      phone: '+91 87654 32109', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'FUE Hair Restoration', 
+      metrics: { monthlyAppts: 86, rating: 4.8, efficiency: '95%', revenue: '₹9.8L' },
+      availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sk-3', 
+      name: 'Kavita Menon', 
+      role: 'Senior Aesthetic Therapist', 
+      department: 'Aesthetics', 
+      email: 'kavita@glowclinic.com', 
+      phone: '+91 76543 21098', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Body Contouring & Peels', 
+      metrics: { monthlyAppts: 110, rating: 4.9, efficiency: '99%', revenue: '₹3.2L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false } 
+    },
+    { 
+      id: 'tm-sk-4', 
+      name: 'Pooja Hegde', 
+      role: 'Frontdesk Manager', 
+      department: 'Front Desk', 
+      email: 'pooja@glowclinic.com', 
+      phone: '+91 54321 09876', 
+      userRole: 'ORG_ADMIN', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Patient Relations & Billing', 
+      metrics: { monthlyAppts: 310, rating: 4.9, efficiency: '100%', revenue: 'N/A' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ],
+  dental: [
+    { 
+      id: 'tm-dt-1', 
+      name: 'Dr. Arvind Sharma', 
+      role: 'Chief Endodontist', 
+      department: 'Endodontics', 
+      email: 'dr.sharma@dentalcare.com', 
+      phone: '+91 91234 11111', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'In Surgery', 
+      isActive: true, 
+      specialization: 'Rotary RCT & Micro-Endo', 
+      metrics: { monthlyAppts: 128, rating: 4.95, efficiency: '97%', revenue: '₹14.5L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-dt-2', 
+      name: 'Dr. Priya Nair', 
+      role: 'Orthodontist Specialist', 
+      department: 'Orthodontics', 
+      email: 'dr.priya@dentalcare.com', 
+      phone: '+91 91234 22222', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Clear Aligners & Braces', 
+      metrics: { monthlyAppts: 94, rating: 4.9, efficiency: '96%', revenue: '₹18.2L' },
+      availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-dt-3', 
+      name: 'Dr. Rohan Verma', 
+      role: 'Implantologist & Cosmetic Lead', 
+      department: 'Prosthodontics', 
+      email: 'dr.rohan@dentalcare.com', 
+      phone: '+91 91234 33333', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Titanium Implants & Zirconia', 
+      metrics: { monthlyAppts: 72, rating: 4.85, efficiency: '94%', revenue: '₹12.0L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false } 
+    },
+    { 
+      id: 'tm-dt-4', 
+      name: 'Sarah Hygienist', 
+      role: 'Lead Dental Hygienist', 
+      department: 'Hygiene', 
+      email: 'sarah@dentalcare.com', 
+      phone: '+91 91234 44444', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Deep Scaling & Preventive Polish', 
+      metrics: { monthlyAppts: 160, rating: 4.9, efficiency: '99%', revenue: '₹2.8L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ],
+  spa: [
+    { 
+      id: 'tm-sp-1', 
+      name: 'Master Somchai', 
+      role: 'Master Deep Tissue Therapist', 
+      department: 'Massage', 
+      email: 'somchai@serenityspa.com', 
+      phone: '+91 99887 11111', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Hot Stone & Deep Tissue Recovery', 
+      metrics: { monthlyAppts: 135, rating: 4.98, efficiency: '99%', revenue: '₹5.4L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sp-2', 
+      name: 'Ananya Healer', 
+      role: 'Ayurvedic Physician (BAMS)', 
+      department: 'Body Treatments', 
+      email: 'ananya@serenityspa.com', 
+      phone: '+91 99887 22222', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Panchakarma & Abhyanga Detox', 
+      metrics: { monthlyAppts: 110, rating: 4.9, efficiency: '96%', revenue: '₹6.1L' },
+      availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sp-3', 
+      name: 'Maya Sen', 
+      role: 'Senior Aromatherapist', 
+      department: 'Aromatherapy', 
+      email: 'maya@serenityspa.com', 
+      phone: '+91 99887 33333', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Organic Herbal Wraps & Scrubs', 
+      metrics: { monthlyAppts: 92, rating: 4.85, efficiency: '95%', revenue: '₹3.8L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false } 
+    }
+  ],
+  salon: [
+    { 
+      id: 'tm-sl-1', 
+      name: 'Zara Khan', 
+      role: 'Master Creative Director', 
+      department: 'Hair Styling', 
+      email: 'zara@luxurysalon.com', 
+      phone: '+91 98123 11111', 
+      userRole: 'ORG_ADMIN', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Precision Couture Cuts & Keratin', 
+      metrics: { monthlyAppts: 154, rating: 4.96, efficiency: '98%', revenue: '₹9.4L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sl-2', 
+      name: 'Rohit Mehra', 
+      role: 'Senior Colorist & Balayage Lead', 
+      department: 'Hair Color', 
+      email: 'rohit@luxurysalon.com', 
+      phone: '+91 98123 22222', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Balayage, Babylights & Olaplex', 
+      metrics: { monthlyAppts: 118, rating: 4.9, efficiency: '96%', revenue: '₹8.1L' },
+      availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-sl-3', 
+      name: 'Tanya Roy', 
+      role: 'Lead Bridal Artist', 
+      department: 'Bridal', 
+      email: 'tanya@luxurysalon.com', 
+      phone: '+91 98123 33333', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Celebrity HD Airbrush Glam', 
+      metrics: { monthlyAppts: 45, rating: 4.95, efficiency: '100%', revenue: '₹6.8L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ],
+  realestate: [
+    { 
+      id: 'tm-re-1', 
+      name: 'Vikram Aditya', 
+      role: 'Senior Luxury Property Advisor', 
+      department: 'Sales', 
+      email: 'vikram@zerorealty.com', 
+      phone: '+91 90011 11111', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Luxury Villas & Penthouse Closures', 
+      metrics: { monthlyAppts: 48, rating: 4.9, efficiency: '95%', revenue: '₹85.0L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-re-2', 
+      name: 'Rajesh Gupta', 
+      role: 'Commercial Portfolio Head', 
+      department: 'Leasing', 
+      email: 'rajesh@zerorealty.com', 
+      phone: '+91 90011 22222', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Grade-A Commercial Space & RERA Title', 
+      metrics: { monthlyAppts: 36, rating: 4.85, efficiency: '92%', revenue: '₹1.2Cr' },
+      availability: { mon: true, tue: true, wed: false, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ],
+  hotel: [
+    { 
+      id: 'tm-ht-1', 
+      name: 'Kabir Mehta', 
+      role: 'Chief Concierge & VIP Relations', 
+      department: 'Concierge', 
+      email: 'kabir@grandhotel.com', 
+      phone: '+91 97766 11111', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Luxury Stay Protocol & Guest Delight', 
+      metrics: { monthlyAppts: 220, rating: 4.98, efficiency: '99%', revenue: '₹24.0L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-ht-2', 
+      name: 'Sunita Rao', 
+      role: 'Front Office Hostess Head', 
+      department: 'Front Office', 
+      email: 'sunita@grandhotel.com', 
+      phone: '+91 97766 22222', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Express PMS Check-in & Folios', 
+      metrics: { monthlyAppts: 450, rating: 4.92, efficiency: '100%', revenue: 'N/A' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ],
+  auto: [
+    { 
+      id: 'tm-au-1', 
+      name: 'Suresh Kumar', 
+      role: 'Senior Sales Lead', 
+      department: 'Sales', 
+      email: 'suresh@zeroshowroom.com', 
+      phone: '+91 96655 11111', 
+      userRole: 'MANAGER', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'SUV Specialist & Corporate Sales', 
+      metrics: { monthlyAppts: 64, rating: 4.9, efficiency: '96%', revenue: '₹1.8Cr' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    },
+    { 
+      id: 'tm-au-2', 
+      name: 'Gaurav Singh', 
+      role: 'Master Service Lead', 
+      department: 'Service Center', 
+      email: 'gaurav@zeroshowroom.com', 
+      phone: '+91 96655 22222', 
+      userRole: 'STAFF', 
+      shiftStatus: 'On Duty', 
+      isActive: true, 
+      specialization: 'Diagnostics, Detailing & Warranty', 
+      metrics: { monthlyAppts: 180, rating: 4.88, efficiency: '95%', revenue: '₹14.2L' },
+      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
+    }
+  ]
+};
 
 const roleColors: Record<string, string> = {
   ORG_ADMIN: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
@@ -140,11 +365,16 @@ const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 export default function TeamsPage() {
   const { currentNiche } = useNiche();
-  const [teamList, setTeamList] = useState<TeamMember[]>(INITIAL_TEAM);
+  const [teamList, setTeamList] = useState<TeamMember[]>(() => DEFAULT_TEAMS_BY_NICHE[currentNiche] || DEFAULT_TEAMS_BY_NICHE.skin);
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  useEffect(() => {
+    setTeamList(DEFAULT_TEAMS_BY_NICHE[currentNiche] || DEFAULT_TEAMS_BY_NICHE.skin);
+    setSelectedDept('All');
+  }, [currentNiche]);
+
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
