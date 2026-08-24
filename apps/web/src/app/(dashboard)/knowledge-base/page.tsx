@@ -377,20 +377,20 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
       {/* Top Banner: Dedicated AI Agent & Knowledge Coverage with Retrain Refresh Button */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Dedicated AI Agent Card with Refresh / Learn Button */}
-        <div className="md:col-span-7 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900 border border-blue-500/30 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="md:col-span-7 p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-blue-500/30 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-300 shrink-0 shadow-inner">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 shrink-0 shadow-inner">
               <Bot size={24} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-sm sm:text-base text-white truncate">
-                  {agentName} <span className="text-xs text-blue-300 font-normal">(Dedicated Tenant AI)</span>
+                <h2 className="font-bold text-sm sm:text-base text-[var(--color-text)] truncate">
+                  {agentName} <span className="text-xs text-blue-500 font-normal">(Dedicated Tenant AI)</span>
                 </h2>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Indexed: <strong className="text-blue-300 font-mono">{documents.reduce((s, d) => s + (d.isActive ? d.chunks : 0), 0)} Chunks</strong> · Engine: <span className="text-emerald-400 font-mono">pgvector + GPT-4o</span>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                Indexed: <strong className="text-blue-500 font-mono">{documents.reduce((s, d) => s + (d.isActive ? d.chunks : 0), 0)} Chunks</strong> · Engine: <span className="text-emerald-500 font-mono">pgvector + GPT-4o</span>
               </p>
             </div>
           </div>
@@ -402,8 +402,8 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
             className={cn(
               "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border",
               isRetraining
-                ? "bg-blue-900/50 text-blue-300 border-blue-700 cursor-wait"
-                : "bg-blue-600 hover:bg-blue-500 text-white border-blue-400 shadow-md shadow-blue-900/40 active:scale-95"
+                ? "bg-blue-600/30 text-blue-400 border-blue-500/50 cursor-wait"
+                : "bg-blue-600 hover:bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-600/20 active:scale-95"
             )}
             title="Click to have AI Agent instantly learn and vectorize all documents"
           >
@@ -413,17 +413,17 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
         </div>
 
         {/* Live AI Knowledge Coverage Score with Status Indicator */}
-        <div className="md:col-span-5 p-5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 backdrop-blur-xl shadow-lg flex items-center justify-between">
+        <div className="md:col-span-5 p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-emerald-500/30 backdrop-blur-xl shadow-lg flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AI Knowledge Coverage Score</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1 flex items-center gap-2">
-              96% <span className="text-xs font-semibold text-slate-200 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">Fully Trained</span>
+            <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">AI Knowledge Coverage Score</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500 mt-1 flex items-center gap-2">
+              96% <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Fully Trained</span>
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
               Synced across Voice AI, WhatsApp & Web Receptionist.
             </p>
           </div>
-          <Sparkles size={30} className="text-emerald-400 opacity-70 shrink-0" />
+          <Sparkles size={30} className="text-emerald-500 opacity-70 shrink-0" />
         </div>
       </div>
 
@@ -465,7 +465,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3.5 bg-slate-950/80 border border-blue-500/30 rounded-xl font-mono text-xs text-blue-200 whitespace-pre-wrap leading-relaxed shadow-inner"
+            className="p-3.5 bg-[var(--color-surface)] border border-blue-500/30 rounded-xl font-mono text-xs text-blue-600 dark:text-blue-200 whitespace-pre-wrap leading-relaxed shadow-inner"
           >
             {ragOutput}
           </motion.div>
@@ -478,35 +478,40 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Search documents or SOP content..."
+            placeholder="Search documents by title, keyword, or snippet..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)] shadow-sm"
           />
         </div>
 
-        <div className="flex gap-1.5 flex-wrap">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={cn(
-                "px-3 py-1.5 text-xs rounded-xl border font-medium transition-all",
-                categoryFilter === cat
-                  ? "bg-blue-600 text-white border-blue-500 shadow"
-                  : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
-              )}
-            >
-              {cat === 'ALL' ? 'All Documents' : categoryConfig[cat]?.label || cat}
-            </button>
-          ))}
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
+          {categories.map((cat) => {
+            const isSelected = categoryFilter === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border shrink-0",
+                  isSelected
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                )}
+              >
+                {cat === 'ALL' ? 'All Documents' : categoryConfig[cat]?.label || cat}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Google Docs Box Format Style Grid (As Requested) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Document Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {filtered.map((doc, i) => {
           const cat = categoryConfig[doc.category] || categoryConfig.SOP;
+
           return (
             <motion.div
               key={doc.id}
@@ -516,34 +521,34 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               className={cn(
                 "rounded-2xl border transition-all flex flex-col justify-between overflow-hidden group shadow-md hover:shadow-xl hover:border-blue-500/50",
                 doc.isActive
-                  ? "bg-[var(--color-glass)] backdrop-blur border-[var(--color-glass-border)]"
-                  : "bg-slate-950/40 border-slate-800/60 opacity-60"
+                  ? "bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
+                  : "bg-[var(--color-surface)]/50 border-[var(--color-border)] opacity-60"
               )}
             >
               {/* Google Docs Document Preview Container (Top Box) */}
               <div 
                 onClick={() => openEditModal(doc)}
-                className="p-4 bg-slate-950/70 border-b border-[var(--color-border)] relative cursor-pointer min-h-[140px] flex flex-col justify-between group-hover:bg-slate-900/80 transition-colors"
+                className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] relative cursor-pointer min-h-[140px] flex flex-col justify-between group-hover:bg-[var(--color-surface-hover)] transition-colors"
               >
                 {/* Category Badge Top */}
                 <div className="flex items-center justify-between gap-2">
                   <span className={cn("px-2 py-0.5 text-[10px] font-bold rounded-md border", cat.color)}>
                     {cat.badge}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
                     {doc.chunks} chunks
                   </span>
                 </div>
 
                 {/* Simulated Google Doc Content Snippet Lines */}
                 <div className="space-y-1.5 my-2">
-                  <p className="text-[11px] font-sans text-slate-300 line-clamp-3 leading-relaxed">
+                  <p className="text-[11px] font-sans text-[var(--color-text-secondary)] line-clamp-3 leading-relaxed">
                     {doc.content}
                   </p>
                 </div>
 
                 {/* Subtle Hover Edit Prompt */}
-                <div className="text-[10px] font-semibold text-blue-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="text-[10px] font-semibold text-blue-500 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Edit2 size={11} />
                   <span>Click to edit document</span>
                 </div>
@@ -552,13 +557,13 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               {/* Document Meta Bottom Bar (Google Docs Footer Style) */}
               <div className="p-3.5 flex flex-col justify-between gap-2.5">
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0 mt-0.5">
                     <FileText size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 
                       onClick={() => openEditModal(doc)}
-                      className="font-bold text-xs text-[var(--color-text)] truncate hover:text-blue-400 cursor-pointer"
+                      className="font-bold text-xs text-[var(--color-text)] truncate hover:text-blue-500 cursor-pointer"
                       title={doc.title}
                     >
                       {doc.title}
@@ -579,8 +584,8 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                     className={cn(
                       "px-2.5 py-0.5 text-[10px] font-bold rounded-md border transition-colors",
                       doc.isActive
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                        : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
+                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
+                        : "bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
                     {doc.isActive ? 'Active in AI' : 'Paused'}
@@ -589,14 +594,14 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => openEditModal(doc)}
-                      className="p-1.5 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-blue-500/10 text-[var(--color-text-muted)] hover:text-blue-500 rounded-lg transition-colors"
                       title="Edit Document"
                     >
                       <Edit2 size={13} />
                     </button>
                     <button
                       onClick={() => handleDeleteDoc(doc.id)}
-                      className="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-500 rounded-lg transition-colors"
                       title="Delete Document"
                     >
                       <Trash2 size={13} />
@@ -633,7 +638,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                     </p>
                   </div>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setIsModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
                 </button>
               </div>
@@ -671,7 +676,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               <form onSubmit={handleSaveDocument} className="space-y-3.5 text-xs">
                 {modalTab === 'upload' && (
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Upload Attachment Document</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Upload Attachment Document</label>
                     <div
                       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                       onDragLeave={() => setIsDragging(false)}
@@ -697,7 +702,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-xs text-[var(--color-text)] truncate">{uploadedFile.name}</p>
-                              <p className="text-[10px] text-blue-400 font-medium">{uploadedFile.size} • {uploadedFile.type} • Ready for Vectorization</p>
+                              <p className="text-[10px] text-blue-500 font-medium">{uploadedFile.size} • {uploadedFile.type} • Ready for Vectorization</p>
                             </div>
                           </div>
                           <button
@@ -706,14 +711,14 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                               e.stopPropagation();
                               setUploadedFile(null);
                             }}
-                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-1.5 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
                       ) : (
                         <div className="space-y-1.5 py-2">
-                          <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                          <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
                             <Upload size={18} />
                           </div>
                           <p className="font-bold text-xs text-[var(--color-text)]">
@@ -730,19 +735,19 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Document Title *</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Document Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Laser Treatment Standard Operating Procedure"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Category *</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Category *</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as any)}
@@ -760,8 +765,8 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-slate-300 font-semibold">Document Content / Text *</label>
-                    <span className="text-[10px] text-blue-400 font-medium">
+                    <label className="block text-[var(--color-text)] font-semibold">Document Content / Text *</label>
+                    <span className="text-[10px] text-blue-500 font-medium">
                       Estimated chunks: ~{Math.max(1, Math.ceil((content.length || 1) / 120))}
                     </span>
                   </div>
@@ -771,20 +776,20 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                     placeholder="Write or paste full SOP text, pricing details, safety rules, or treatment protocols..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
                   <span className="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1">
-                    <CheckCircle2 size={12} className="text-emerald-400" />
+                    <CheckCircle2 size={12} className="text-emerald-500" />
                     Indexed into pgvector on save
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                      className="px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface)]"
                     >
                       Cancel
                     </button>

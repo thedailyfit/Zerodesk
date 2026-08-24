@@ -160,12 +160,12 @@ export default function CreateTemplatePage() {
           <form onSubmit={handleSave} className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-md space-y-4 text-xs">
             {/* Channel Selector */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1.5">Communication Channel *</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1.5">Communication Channel *</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'WHATSAPP', label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-400' },
-                  { id: 'EMAIL', label: 'Email', icon: Mail, color: 'text-blue-400' },
-                  { id: 'VOICE', label: 'Voice Script', icon: PhoneCall, color: 'text-amber-400' },
+                  { id: 'WHATSAPP', label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-500' },
+                  { id: 'EMAIL', label: 'Email', icon: Mail, color: 'text-blue-500' },
+                  { id: 'VOICE', label: 'Voice Script', icon: PhoneCall, color: 'text-amber-500' },
                 ].map(ch => (
                   <button
                     key={ch.id}
@@ -174,7 +174,7 @@ export default function CreateTemplatePage() {
                     className={cn(
                       "flex items-center justify-center gap-2 p-2.5 rounded-xl border font-bold transition-all",
                       channel === ch.id
-                        ? "bg-blue-600/10 border-blue-500 text-blue-400 shadow-sm"
+                        ? "bg-blue-600/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
                         : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
                     )}
                   >
@@ -188,19 +188,19 @@ export default function CreateTemplatePage() {
             {/* Title & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Template Name *</label>
+                <label className="block text-[var(--color-text)] font-semibold mb-1">Template Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. 24-Hour Pre-Appointment Reminder"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Workflow Category *</label>
+                <label className="block text-[var(--color-text)] font-semibold mb-1">Workflow Category *</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -219,14 +219,14 @@ export default function CreateTemplatePage() {
             {/* Email Subject (if channel === EMAIL) */}
             {channel === 'EMAIL' && (
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Email Subject Line *</label>
+                <label className="block text-[var(--color-text)] font-semibold mb-1">Email Subject Line *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Important instructions regarding your upcoming {{service}} session"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
                 />
               </div>
             )}
@@ -234,8 +234,8 @@ export default function CreateTemplatePage() {
             {/* Dynamic Variable Chips */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-slate-300 font-semibold flex items-center gap-1">
-                  <Sparkles size={12} className="text-blue-400" />
+                <label className="block text-[var(--color-text)] font-semibold flex items-center gap-1">
+                  <Sparkles size={12} className="text-blue-500" />
                   <span>Insert Dynamic Variables</span>
                 </label>
                 <span className="text-[10px] text-[var(--color-text-muted)]">Click chip to inject into text</span>
@@ -246,7 +246,7 @@ export default function CreateTemplatePage() {
                     key={v.token}
                     type="button"
                     onClick={() => handleInsertVariable(v.token)}
-                    className="px-2 py-1 text-[11px] bg-[var(--color-bg-secondary)] hover:bg-blue-600/20 hover:text-blue-400 border border-[var(--color-border)] rounded-lg font-mono text-[var(--color-text-secondary)] transition-colors"
+                    className="px-2 py-1 text-[11px] bg-[var(--color-bg-secondary)] hover:bg-blue-600/20 hover:text-blue-500 border border-[var(--color-border)] rounded-lg font-mono text-[var(--color-text-secondary)] transition-colors"
                     title={`Inserts example: ${v.example}`}
                   >
                     + {v.token}
@@ -257,22 +257,22 @@ export default function CreateTemplatePage() {
 
             {/* Template Body */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Message Content / Script *</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Message Content / Script *</label>
               <textarea
                 rows={7}
                 required
                 placeholder="Dear {{customer_name}}, this is a quick reminder for your {{service}} tomorrow at {{appointment_time}} with {{staff_name}}..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+                className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
             {/* Document / Media Attachment Dropzone */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1.5 flex items-center justify-between">
+              <label className="block text-[var(--color-text)] font-semibold mb-1.5 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Paperclip size={13} className="text-blue-400" />
+                  <Paperclip size={13} className="text-blue-500" />
                   <span>Media / Document Attachment (PDF, Image, Video)</span>
                 </span>
                 <span className="text-[10px] text-[var(--color-text-muted)]">Optional for WhatsApp & Email</span>
@@ -293,7 +293,7 @@ export default function CreateTemplatePage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-xs text-[var(--color-text)] truncate">{attachedFile.name}</p>
-                        <p className="text-[10px] text-blue-400">{attachedFile.size} • {mediaAttachment} Attachment</p>
+                        <p className="text-[10px] text-blue-500">{attachedFile.size} • {mediaAttachment} Attachment</p>
                       </div>
                     </div>
                     <button
@@ -303,14 +303,14 @@ export default function CreateTemplatePage() {
                         setAttachedFile(null);
                         setMediaAttachment('NONE');
                       }}
-                      className="p-1 text-slate-400 hover:text-red-400"
+                      className="p-1 text-[var(--color-text-muted)] hover:text-red-500"
                     >
                       <Trash2 size={13} />
                     </button>
                   </div>
                 ) : (
                   <div className="text-center py-2 space-y-1">
-                    <Upload size={18} className="mx-auto text-blue-400 opacity-80" />
+                    <Upload size={18} className="mx-auto text-blue-500 opacity-80" />
                     <p className="font-semibold text-xs text-[var(--color-text)]">Click or Drag & Drop Attachment</p>
                     <p className="text-[10px] text-[var(--color-text-muted)]">Attach PDF brochure, pre-care guides, or treatment image</p>
                   </div>

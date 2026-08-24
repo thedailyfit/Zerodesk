@@ -282,7 +282,7 @@ export default function PreinstalledTemplatesPage() {
                       onClick={() => handleToggleUseIt(t.id)}
                       className={cn(
                         "w-9 h-5 rounded-full transition-colors relative p-0.5 focus:outline-none",
-                        t.isActive ? "bg-blue-600" : "bg-slate-700"
+                        t.isActive ? "bg-blue-600" : "bg-zinc-300 dark:bg-zinc-700"
                       )}
                       title={t.isActive ? "Click to disable this template" : "Click to activate this template"}
                     >
@@ -303,7 +303,7 @@ export default function PreinstalledTemplatesPage() {
 
                 {/* Email Subject if available */}
                 {t.subject && (
-                  <p className="text-[11px] text-blue-400 font-semibold bg-blue-500/5 px-2.5 py-1 rounded-lg border border-blue-500/10 truncate">
+                  <p className="text-[11px] text-blue-500 font-semibold bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 truncate">
                     Subject: {t.subject}
                   </p>
                 )}
@@ -315,7 +315,7 @@ export default function PreinstalledTemplatesPage() {
 
                 {/* Media attachment indicator */}
                 {t.mediaAttachment && t.mediaAttachment !== 'NONE' && (
-                  <div className="flex items-center gap-1.5 text-[10px] text-blue-400 font-medium">
+                  <div className="flex items-center gap-1.5 text-[10px] text-blue-500 font-medium">
                     <Paperclip size={12} />
                     <span>Includes {t.mediaAttachment} Attachment slot</span>
                   </div>
@@ -327,7 +327,7 @@ export default function PreinstalledTemplatesPage() {
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(t)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-surface)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text)] font-semibold rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] text-[var(--color-text)] font-semibold rounded-lg transition-colors"
                 >
                   <Edit3 size={13} className="text-blue-500" />
                   <span>Edit Template</span>
@@ -340,8 +340,8 @@ export default function PreinstalledTemplatesPage() {
                 >
                   {copiedId === t.id ? (
                     <>
-                      <Check size={13} className="text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">Copied</span>
+                      <Check size={13} className="text-emerald-500" />
+                      <span className="text-emerald-500 font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
@@ -368,7 +368,7 @@ export default function PreinstalledTemplatesPage() {
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg">
+                  <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-lg">
                     <Edit3 size={18} />
                   </div>
                   <div>
@@ -376,18 +376,18 @@ export default function PreinstalledTemplatesPage() {
                       Customize Pre-installed Template
                     </h2>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      Channel: <strong className="text-blue-400">{editingTemplate.channel}</strong> • Category: {editingTemplate.category}
+                      Channel: <strong className="text-blue-500">{editingTemplate.channel}</strong> • Category: {editingTemplate.category}
                     </p>
                   </div>
                 </div>
-                <button onClick={() => setEditingTemplate(null)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setEditingTemplate(null)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
                 </button>
               </div>
 
               <form onSubmit={handleSaveEdit} className="space-y-3.5 text-xs">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Template Title *</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Template Title *</label>
                   <input
                     type="text"
                     required
@@ -399,7 +399,7 @@ export default function PreinstalledTemplatesPage() {
 
                 {editingTemplate.channel === 'EMAIL' && (
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Email Subject Line *</label>
+                    <label className="block text-[var(--color-text)] font-semibold mb-1">Email Subject Line *</label>
                     <input
                       type="text"
                       required
@@ -411,13 +411,13 @@ export default function PreinstalledTemplatesPage() {
                 )}
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Message Script / Text *</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Message Script / Text *</label>
                   <textarea
                     rows={7}
                     required
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
@@ -425,7 +425,7 @@ export default function PreinstalledTemplatesPage() {
                   <button
                     type="button"
                     onClick={() => setEditingTemplate(null)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                    className="px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface)]"
                   >
                     Cancel
                   </button>

@@ -479,15 +479,15 @@ export default function VoiceKnowledgeHubPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className={cn(
                         "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded",
-                        selectedTone === tone.id ? "bg-blue-500 text-white" : "bg-slate-800 text-slate-400"
+                        selectedTone === tone.id ? "bg-blue-600 text-white" : "bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                       )}>
                         {tone.tag || 'Style'}
                       </span>
                       {selectedTone === tone.id && (
-                        <CheckCircle2 size={16} className="text-emerald-400" />
+                        <CheckCircle2 size={16} className="text-emerald-500" />
                       )}
                     </div>
-                    <h3 className="font-bold text-xs sm:text-sm text-[var(--color-text)] group-hover:text-blue-400 transition-colors">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--color-text)] group-hover:text-blue-500 transition-colors">
                       {tone.name}
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1.5 leading-snug">
@@ -496,7 +496,7 @@ export default function VoiceKnowledgeHubPage() {
                   </div>
 
                   {tone.greeting && (
-                    <div className="mt-3 pt-2.5 border-t border-slate-800 text-[11px] text-cyan-400/90 font-mono line-clamp-2">
+                    <div className="mt-3 pt-2.5 border-t border-[var(--color-border)] text-[11px] text-cyan-600 dark:text-cyan-400 font-mono line-clamp-2">
                       💬 "{tone.greeting}"
                     </div>
                   )}
@@ -511,12 +511,12 @@ export default function VoiceKnowledgeHubPage() {
           <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={20} className="text-emerald-400" />
+                <ShieldCheck size={20} className="text-emerald-500" />
                 <h2 className="text-base font-bold text-[var(--color-text)]">AI Policy Rules</h2>
               </div>
               <button
                 onClick={openAddRule}
-                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-lg text-xs font-semibold transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 dark:text-blue-300 rounded-lg text-xs font-semibold transition-colors"
               >
                 <Plus size={14} />
                 <span>Add Rule</span>
@@ -535,10 +535,10 @@ export default function VoiceKnowledgeHubPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 cursor-pointer" onClick={() => openEditRule(r)}>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-blue-300 border border-blue-500/20">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
                         {r.category || 'Policy'}
                       </span>
-                      <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-blue-300 transition-colors">
+                      <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-blue-500 transition-colors">
                         {r.title}
                       </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
@@ -549,14 +549,14 @@ export default function VoiceKnowledgeHubPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => openEditRule(r)}
-                        className="p-1.5 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-blue-500/20 text-[var(--color-text-muted)] hover:text-blue-500 rounded-lg transition-colors"
                         title="Edit rule"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={() => handleDeleteRule(r.id)}
-                        className="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-red-500/20 text-[var(--color-text-muted)] hover:text-red-500 rounded-lg transition-colors"
                         title="Delete rule"
                       >
                         <Trash2 size={13} />
@@ -582,34 +582,34 @@ export default function VoiceKnowledgeHubPage() {
               className="w-full max-w-md bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl p-6 shadow-2xl space-y-4 text-xs"
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-400" />
+                <h3 className="font-bold text-sm text-[var(--color-text)] flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-500" />
                   <span>{editingRuleId ? 'Edit AI Rule' : 'Add AI Policy Rule'}</span>
                 </h3>
-                <button onClick={() => setIsRuleModalOpen(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setIsRuleModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={16} />
                 </button>
               </div>
 
               <form onSubmit={handleSaveRule} className="space-y-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Rule Title</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Rule Title</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. No Medical Prescriptions"
                     value={ruleTitle}
                     onChange={(e) => setRuleTitle(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Category</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Category</label>
                   <select
                     value={ruleCategory}
                     onChange={(e) => setRuleCategory(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Safety">Safety & Compliance</option>
                     <option value="Clinical SOP">Clinical SOP</option>
@@ -620,14 +620,14 @@ export default function VoiceKnowledgeHubPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Rule Instruction / Constraint</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Rule Instruction / Constraint</label>
                   <textarea
                     rows={4}
                     required
                     placeholder="Explain the boundary or instruction the Voice AI must obey..."
                     value={ruleContent}
                     onChange={(e) => setRuleContent(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-[var(--color-border)] rounded-xl text-white font-sans focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-sans focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)] leading-relaxed"
                   />
                 </div>
 
@@ -635,15 +635,15 @@ export default function VoiceKnowledgeHubPage() {
                   <button
                     type="button"
                     onClick={() => setIsRuleModalOpen(false)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                    className="px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface)]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl"
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-md"
                   >
-                    Save Rule
+                    {editingRuleId ? 'Update Rule' : 'Save Rule'}
                   </button>
                 </div>
               </form>
@@ -663,51 +663,51 @@ export default function VoiceKnowledgeHubPage() {
               className="w-full max-w-md bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl p-6 shadow-2xl space-y-4 text-xs"
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <Braces size={16} className="text-cyan-400" />
+                <h3 className="font-bold text-sm text-[var(--color-text)] flex items-center gap-2">
+                  <Braces size={16} className="text-cyan-500" />
                   <span>{editingVarToken ? 'Edit Variable Token' : 'Add Variable Token'}</span>
                 </h3>
-                <button onClick={() => setIsVarModalOpen(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setIsVarModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={16} />
                 </button>
               </div>
 
               <form onSubmit={handleSaveVar} className="space-y-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Variable Token Name *</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Variable Token Name *</label>
                   <div className="flex items-center gap-1">
-                    <span className="text-blue-400 font-mono text-sm">{`{{`}</span>
+                    <span className="text-blue-500 font-mono text-sm">{`{{`}</span>
                     <input
                       type="text"
                       required
                       placeholder="e.g. discount_code"
                       value={varToken}
                       onChange={(e) => setVarToken(e.target.value)}
-                      className="flex-1 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)]"
                     />
-                    <span className="text-blue-400 font-mono text-sm">{`}}`}</span>
+                    <span className="text-blue-500 font-mono text-sm">{`}}`}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Description / Label</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Description / Label</label>
                   <input
                     type="text"
                     placeholder="e.g. Promotional discount code"
                     value={varLabel}
                     onChange={(e) => setVarLabel(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Default / Fallback Value</label>
+                  <label className="block text-[var(--color-text)] font-semibold mb-1">Default / Fallback Value</label>
                   <input
                     type="text"
                     placeholder="e.g. None"
                     value={varFallback}
                     onChange={(e) => setVarFallback(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)]"
                   />
                 </div>
 
@@ -715,13 +715,13 @@ export default function VoiceKnowledgeHubPage() {
                   <button
                     type="button"
                     onClick={() => setIsVarModalOpen(false)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                    className="px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface)]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl"
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-md"
                   >
                     Save Token
                   </button>

@@ -215,7 +215,7 @@ export default function HumanHandoffPromptsPage() {
               rows={3}
               value={voiceTransferPhrase}
               onChange={(e) => setVoiceTransferPhrase(e.target.value)}
-              className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+              className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
             />
           </div>
 
@@ -223,10 +223,10 @@ export default function HumanHandoffPromptsPage() {
           <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-md space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
-                <MessageSquare size={15} className="text-emerald-400" />
+                <MessageSquare size={15} className="text-emerald-500" />
                 <span>WhatsApp AI Hand-off Message</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold">
                 Sent in WhatsApp chat
               </span>
             </div>
@@ -237,7 +237,7 @@ export default function HumanHandoffPromptsPage() {
               rows={3}
               value={whatsappTransferPhrase}
               onChange={(e) => setWhatsappTransferPhrase(e.target.value)}
-              className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+              className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
             />
           </div>
 
@@ -245,10 +245,10 @@ export default function HumanHandoffPromptsPage() {
           <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-md space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
-                <Bot size={15} className="text-blue-400" />
+                <Bot size={15} className="text-blue-500" />
                 <span>WebChat Live Agent Queue Notice</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 font-bold">
                 Website Widget
               </span>
             </div>
@@ -259,7 +259,7 @@ export default function HumanHandoffPromptsPage() {
               rows={3}
               value={webchatTransferPhrase}
               onChange={(e) => setWebchatTransferPhrase(e.target.value)}
-              className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+              className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
             />
           </div>
         </div>
@@ -270,10 +270,10 @@ export default function HumanHandoffPromptsPage() {
           <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-md space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider flex items-center gap-1.5">
-                <Zap size={14} className="text-amber-400" />
+                <Zap size={14} className="text-amber-500" />
                 <span>Escalation Triggers</span>
               </span>
-              <span className="text-[10px] text-blue-400 font-semibold">{triggers.filter(t => t.isEnabled).length} Active</span>
+              <span className="text-[10px] text-blue-500 font-semibold">{triggers.filter(t => t.isEnabled).length} Active</span>
             </div>
 
             <div className="space-y-2.5">
@@ -290,7 +290,7 @@ export default function HumanHandoffPromptsPage() {
                     <div className="flex items-center gap-2">
                       <span className={cn(
                         "text-[9px] px-1.5 py-0.5 rounded font-bold uppercase",
-                        t.priority === 'CRITICAL' ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                        t.priority === 'CRITICAL' ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-blue-500/10 text-blue-500 border border-blue-500/20"
                       )}>
                         {t.priority}
                       </span>
@@ -299,7 +299,7 @@ export default function HumanHandoffPromptsPage() {
                         onClick={() => handleToggleTrigger(t.id)}
                         className={cn(
                           "w-8 h-4 rounded-full transition-colors relative p-0.5 focus:outline-none",
-                          t.isEnabled ? "bg-blue-600" : "bg-slate-700"
+                          t.isEnabled ? "bg-blue-600" : "bg-zinc-300 dark:bg-zinc-700"
                         )}
                       >
                         <div
@@ -326,17 +326,17 @@ export default function HumanHandoffPromptsPage() {
                 <Bell size={14} className="text-blue-500" />
                 <span>On-Call Staff Alerts</span>
               </span>
-              <span className="text-[10px] text-emerald-400 font-bold">Live Routing</span>
+              <span className="text-[10px] text-emerald-500 font-bold">Live Routing</span>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Escalation Receiver Phone Number</label>
+                <label className="block text-[var(--color-text)] font-semibold mb-1">Escalation Receiver Phone Number</label>
                 <input
                   type="text"
                   value={staffPhone}
                   onChange={(e) => setStaffPhone(e.target.value)}
-                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono placeholder:text-[var(--color-text-muted)]"
                 />
               </div>
 

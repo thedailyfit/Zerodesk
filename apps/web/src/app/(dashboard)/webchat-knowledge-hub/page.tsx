@@ -458,7 +458,7 @@ export default function WebChatKnowledgeHubPage() {
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" checked={proactiveGreeting} onChange={(e) => setProactiveGreeting(e.target.checked)} />
-                      <div className="w-9 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                      <div className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
                     </label>
                   </div>
                   <p className="text-[10px] text-[var(--color-text-muted)] mb-3">Auto-open chat after delay (seconds)</p>
@@ -578,7 +578,7 @@ export default function WebChatKnowledgeHubPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 cursor-pointer" onClick={() => openEditRule(r)}>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-blue-400 border border-blue-500/20 dark:text-blue-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
                         {r.category || 'Policy'}
                       </span>
                       <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-blue-400 transition-colors">

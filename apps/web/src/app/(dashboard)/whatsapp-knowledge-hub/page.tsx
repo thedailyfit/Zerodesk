@@ -488,7 +488,7 @@ export default function WhatsAppKnowledgeHubPage() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={businessHoursEnabled} onChange={(e) => setBusinessHoursEnabled(e.target.checked)} />
-                    <div className="w-9 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    <div className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                   </label>
                 </div>
                 <textarea
@@ -584,7 +584,7 @@ export default function WhatsAppKnowledgeHubPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 cursor-pointer" onClick={() => openEditRule(r)}>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-green-400 border border-green-500/20 dark:text-green-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
                         {r.category || 'Policy'}
                       </span>
                       <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-green-400 transition-colors">

@@ -279,7 +279,7 @@ export default function ToneCheckPage() {
               rows={4}
               value={deescalationPrompt}
               onChange={(e) => setDeescalationPrompt(e.target.value)}
-              className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+              className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-xs text-[var(--color-text)] font-sans focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
             />
           </div>
 
@@ -287,7 +287,7 @@ export default function ToneCheckPage() {
           <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-md space-y-3 text-xs">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle size={14} className="text-amber-400" />
+                <AlertTriangle size={14} className="text-amber-500" />
                 <span>Negative Sentiment Keywords ({negativeKeywords.length})</span>
               </span>
               <span className="text-[10px] text-[var(--color-text-muted)]">Triggers instant sentiment check</span>
@@ -299,11 +299,11 @@ export default function ToneCheckPage() {
                 value={newKeyword}
                 onChange={(e) => setNewKeyword(e.target.value)}
                 placeholder="Add negative phrase (e.g. false advertising, cheat)..."
-                className="flex-1 p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-[var(--color-text-muted)]"
               />
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors flex items-center gap-1"
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors flex items-center gap-1 shadow-sm"
               >
                 <Plus size={13} />
                 <span>Add</span>
@@ -314,13 +314,13 @@ export default function ToneCheckPage() {
               {negativeKeywords.map(kw => (
                 <span
                   key={kw}
-                  className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-[11px] font-medium flex items-center gap-1.5"
+                  className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-300 text-[11px] font-medium flex items-center gap-1.5"
                 >
                   <span>{kw}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveKeyword(kw)}
-                    className="hover:text-white"
+                    className="hover:text-red-700 dark:hover:text-white"
                   >
                     <Trash2 size={10} />
                   </button>
@@ -335,22 +335,22 @@ export default function ToneCheckPage() {
           <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-red-500/30 shadow-lg space-y-4 text-xs">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider flex items-center gap-1.5">
-                <Activity size={14} className="text-red-400" />
+                <Activity size={14} className="text-red-500" />
                 <span>Sentiment Analysis Sandbox</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-mono font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-500 font-mono font-bold">
                 Live Simulator
               </span>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-slate-300 font-semibold">Test Angry / Frustrated Customer Message:</label>
+              <label className="block text-[var(--color-text)] font-semibold">Test Angry / Frustrated Customer Message:</label>
               <textarea
                 rows={3}
                 value={testPhrase}
                 onChange={(e) => setTestPhrase(e.target.value)}
                 placeholder="Type an angry message to test sentiment analysis trigger..."
-                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:ring-2 focus:ring-red-500 focus:outline-none resize-none"
+                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:ring-2 focus:ring-red-500 focus:outline-none resize-none placeholder:text-[var(--color-text-muted)]"
               />
 
               <div className="flex justify-end">
@@ -388,7 +388,7 @@ export default function ToneCheckPage() {
                     <span className="text-[10px] text-[var(--color-text-muted)] block">Sentiment</span>
                     <span className={cn(
                       "text-base font-bold font-mono",
-                      simResult.sentimentScore < 35 ? "text-red-400" : "text-emerald-400"
+                      simResult.sentimentScore < 35 ? "text-red-500" : "text-emerald-500"
                     )}>
                       {simResult.sentimentScore}%
                     </span>
@@ -396,14 +396,14 @@ export default function ToneCheckPage() {
 
                   <div className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
                     <span className="text-[10px] text-[var(--color-text-muted)] block">Frustration</span>
-                    <span className="text-base font-bold font-mono text-amber-400">
+                    <span className="text-base font-bold font-mono text-amber-500">
                       {simResult.frustrationLevel}%
                     </span>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
                     <span className="text-[10px] text-[var(--color-text-muted)] block">Urgency SLA</span>
-                    <span className="text-base font-bold font-mono text-blue-400">
+                    <span className="text-base font-bold font-mono text-blue-500">
                       {simResult.urgencyLevel}%
                     </span>
                   </div>
@@ -411,10 +411,10 @@ export default function ToneCheckPage() {
 
                 {/* Triggered Protocol Actions */}
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl space-y-1.5">
-                  <span className="text-[11px] font-bold text-red-300 block uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-red-600 dark:text-red-300 block uppercase tracking-wider">
                     Triggered Protocol Actions
                   </span>
-                  <div className="space-y-1 text-[11px] text-red-200">
+                  <div className="space-y-1 text-[11px] text-red-600 dark:text-red-200">
                     {simResult.triggeredActions.map((act, i) => (
                       <p key={i} className="font-medium">{act}</p>
                     ))}
@@ -424,10 +424,10 @@ export default function ToneCheckPage() {
                 {/* De-escalation Speech Output */}
                 <div className="space-y-1.5">
                   <span className="text-[11px] font-bold text-[var(--color-text)] flex items-center gap-1.5">
-                    <Bot size={13} className="text-blue-400" />
+                    <Bot size={13} className="text-blue-500" />
                     <span>Empathy Response Sent by AI:</span>
                   </span>
-                  <div className="p-3 bg-slate-950 rounded-xl border border-[var(--color-border)] text-slate-200 text-xs italic leading-relaxed">
+                  <div className="p-3 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] text-[var(--color-text)] text-xs italic leading-relaxed">
                     "{simResult.aiResponse}"
                   </div>
                 </div>

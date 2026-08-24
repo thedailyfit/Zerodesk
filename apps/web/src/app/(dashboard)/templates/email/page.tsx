@@ -271,60 +271,60 @@ export default function EmailTemplatesPage() {
 
             {/* Subject */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Subject Line</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Subject Line</label>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
             {/* Preheader */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Inbox Preheader (Snippet Preview)</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Inbox Preheader (Snippet Preview)</label>
               <input
                 type="text"
                 value={preheader}
                 onChange={(e) => setPreheader(e.target.value)}
-                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
             {/* Body */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Email Body Content</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Email Body Content</label>
               <textarea
                 rows={9}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
+                className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
             {/* CTA Button Text */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Call-To-Action (CTA) Button</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Call-To-Action (CTA) Button</label>
               <input
                 type="text"
                 value={ctaText}
                 onChange={(e) => setCtaText(e.target.value)}
                 placeholder="e.g. View Appointment Details"
-                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
             {/* Attachment */}
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Attachment File</label>
+              <label className="block text-[var(--color-text)] font-semibold mb-1">Attachment File</label>
               <div className="flex items-center gap-2 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
-                <Paperclip size={15} className="text-blue-400 shrink-0" />
+                <Paperclip size={15} className="text-blue-500 shrink-0" />
                 <input
                   type="text"
                   value={attachedFile || ''}
                   onChange={(e) => setAttachedFile(e.target.value)}
                   placeholder="e.g. Treatment_Receipt.pdf (or leave empty)"
-                  className="w-full bg-transparent text-[var(--color-text)] text-xs focus:outline-none"
+                  className="w-full bg-transparent text-[var(--color-text)] text-xs focus:outline-none placeholder:text-[var(--color-text-muted)]"
                 />
               </div>
             </div>
