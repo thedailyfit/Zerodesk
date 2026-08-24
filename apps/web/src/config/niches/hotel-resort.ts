@@ -81,6 +81,8 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
 
     { name: 'Backend AI', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
+    { name: 'WebChat Knowledge Hub', href: '/webchat-knowledge-hub', icon: MessageSquare, roles: ['ADMIN'] },
+    { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] },
     { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
     { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] }
   ],
