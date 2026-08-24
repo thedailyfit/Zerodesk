@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 
@@ -8,6 +8,7 @@ export class KnowledgeService {
 
   constructor(
     private prisma: PrismaService,
+    @Inject(forwardRef(() => AiService))
     private aiService: AiService,
   ) {}
 
