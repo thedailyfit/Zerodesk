@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
+import type { NicheId } from '@/config/niches/types';
 import { 
   Megaphone, 
   Plus, 
@@ -32,9 +33,6 @@ import {
   UserCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-import { useState, useEffect } from 'react';
-import type { NicheId } from '@/config/niches/types';
 
 // --- Types ---
 interface CampaignStat {
