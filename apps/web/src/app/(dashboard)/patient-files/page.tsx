@@ -9,6 +9,7 @@ import { useRole } from '@/components/providers/role-provider';
 import { useNiche } from '@/components/providers/niche-provider';
 import { usePatients, type PatientRecord, type UploadedFile } from '@/lib/patients-store';
 import { useInvoices } from '@/lib/invoices-store';
+import { PatientSearchInput } from '@/components/ui/patient-search-input';
 
 const FILE_CATEGORIES = [
   'Prescription',
@@ -254,20 +255,12 @@ export default function PatientFilesPage() {
                 <form onSubmit={handleUploadSubmit} className="space-y-4">
                   {!selected && (
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">Select Profile</label>
-                      <select
-                        value={selectedPatientId}
-                        onChange={(e) => setSelectedPatientId(e.target.value)}
-                        className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="" disabled>Select a profile...</option>
-                        {patients.map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} (Age {p.age || 'N/A'})
-                          </option>
-                        ))}
-                      </select>
+                      <PatientSearchInput
+                        label="Search Patient by ID or Full Name"
+                        placeholder="Type Patient ID (e.g. PID-0001) or name..."
+                        selectedPatientId={selectedPatientId}
+                        onSelect={(patient) => setSelectedPatientId(patient.id)}
+                      />
                     </div>
                   )}
 

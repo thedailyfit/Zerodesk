@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { useServices, type ServiceOffering } from '@/lib/services-store';
 import { usePatients } from '@/lib/patients-store';
 import { useInvoices } from '@/lib/invoices-store';
+import { PatientSearchInput } from '@/components/ui/patient-search-input';
 
 export default function BillingPage() {
   const { currentNiche } = useNiche();
@@ -243,16 +244,11 @@ export default function BillingPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-sm space-y-6">
             
             <div>
-              <label className="block font-bold text-sm text-[var(--color-text)] mb-2">Patient Details</label>
-              <select 
-                value={selectedPatientId}
-                onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {patients.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} (ID: #{p.id}) - {p.phone}</option>
-                ))}
-              </select>
+              <PatientSearchInput
+                label="Patient Details / Search by ID or Name"
+                selectedPatientId={selectedPatientId}
+                onSelect={(patient) => setSelectedPatientId(patient.id)}
+              />
             </div>
 
             <div className="space-y-3">
@@ -433,19 +429,19 @@ export default function BillingPage() {
               <div className="p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-[var(--color-text)] flex items-center gap-1.5 opacity-90">
-                    <Percent size={13} className="text-purple-400" /> Discount
+                    <Percent size={13} className="text-blue-400" /> Discount
                   </span>
                   
                   <div className="flex bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-0.5 text-[10px] font-bold">
                     <button
                       onClick={() => setDiscountMode('percent')}
-                      className={cn("px-2 py-0.5 rounded transition-all", discountMode === 'percent' ? "bg-purple-600 text-white" : "text-[var(--color-text-muted)]")}
+                      className={cn("px-2 py-0.5 rounded transition-all", discountMode === 'percent' ? "bg-blue-600 text-white" : "text-[var(--color-text-muted)]")}
                     >
                       %
                     </button>
                     <button
                       onClick={() => setDiscountMode('amount')}
-                      className={cn("px-2 py-0.5 rounded transition-all", discountMode === 'amount' ? "bg-purple-600 text-white" : "text-[var(--color-text-muted)]")}
+                      className={cn("px-2 py-0.5 rounded transition-all", discountMode === 'amount' ? "bg-blue-600 text-white" : "text-[var(--color-text-muted)]")}
                     >
                       ₹ Flat
                     </button>

@@ -19,16 +19,18 @@ import {
   Send,
   Phone,
   MessageCircle,
-  Mail,
   UserCheck,
   Zap,
-  PhoneOutgoing
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Flame
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import posthog from 'posthog-js';
-
 import { useNiche } from '@/components/providers/niche-provider';
+import { useServices } from '@/lib/services-store';
 
 interface AppointmentItem {
   id: string;
@@ -42,27 +44,27 @@ interface AppointmentItem {
   status: 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   source: 'AI_VOICE' | 'AI_WHATSAPP' | 'AI_WEB' | 'STORE_VISIT' | 'REFERRAL' | 'MANUAL';
   priority?: 'VIP' | 'HIGH' | 'MEDIUM' | 'STANDARD';
-  confirmationStatus?: string; // e.g. "Confirmed via WhatsApp AI at 14:32"
+  confirmationStatus?: string;
   confirmationSent?: boolean;
 }
 
 const INITIAL_APPOINTMENTS: AppointmentItem[] = [
-  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Consultation & Procedure', staff: 'Specialist In-Charge', scheduledAt: '2026-08-05T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI at 09:15 AM', confirmationSent: true },
-  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Primary Treatment Session', staff: 'Associate Specialist', scheduledAt: '2026-08-05T11:00:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call at 10:00 AM', confirmationSent: true },
-  { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'VIP Service Package', staff: 'Senior Specialist', scheduledAt: '2026-08-05T12:30:00', duration: 60, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in at Front Desk', confirmationSent: true },
-  { id: '4', customer: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', service: 'Standard Consultation', staff: 'Lead Coordinator', scheduledAt: '2026-08-05T14:00:00', duration: 20, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
-  { id: '5', customer: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', service: 'Follow-up Review', staff: 'Clinical Assistant', scheduledAt: '2026-08-05T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Client', confirmationSent: true },
-  { id: '6', customer: 'Deepak Menon', phone: '+91 32109 87654', email: 'deepak@email.com', service: 'Consultation & Roadmap', staff: 'Specialist In-Charge', scheduledAt: '2026-08-06T10:00:00', duration: 30, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
-  { id: '7', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'Advanced Therapy Session', staff: 'Lead Coordinator', scheduledAt: '2026-08-06T11:30:00', duration: 60, status: 'SCHEDULED', source: 'AI_WEB', priority: 'HIGH', confirmationStatus: 'WhatsApp Confirmation Sent', confirmationSent: true },
-  { id: '8', customer: 'Meera Joshi', phone: '+91 99887 76655', email: 'meera@email.com', service: 'Maintenance Care', staff: 'Associate Specialist', scheduledAt: '2026-08-12T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
+  { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh@email.com', service: 'Consultation & Procedure', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T10:00:00', duration: 45, status: 'CONFIRMED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Confirmed via WhatsApp AI', confirmationSent: true },
+  { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', email: 'priya@email.com', service: 'Primary Treatment Session', staff: 'Dr. Arun', scheduledAt: '2026-08-24T11:30:00', duration: 30, status: 'CONFIRMED', source: 'AI_WHATSAPP', priority: 'HIGH', confirmationStatus: 'Confirmed via Voice AI Call', confirmationSent: true },
+  { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', email: 'sneha@email.com', service: 'VIP Service Package', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-24T14:00:00', duration: 60, status: 'IN_PROGRESS', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Confirmed Walk-in Desk', confirmationSent: true },
+  { id: '4', customer: 'Amit Patel', phone: '+91 76543 21098', email: 'amit@email.com', service: 'Standard Consultation', staff: 'Dr. Arun', scheduledAt: '2026-08-25T10:00:00', duration: 30, status: 'COMPLETED', source: 'MANUAL', priority: 'STANDARD', confirmationStatus: 'Completed', confirmationSent: true },
+  { id: '5', customer: 'Ananya Iyer', phone: '+91 43210 98765', email: 'ananya@email.com', service: 'Follow-up Review', staff: 'Clinical Assistant', scheduledAt: '2026-08-25T15:00:00', duration: 45, status: 'CANCELLED', source: 'REFERRAL', priority: 'HIGH', confirmationStatus: 'Cancelled by Client', confirmationSent: true },
+  { id: '6', customer: 'Deepak Menon', phone: '+91 32109 87654', email: 'deepak@email.com', service: 'Consultation & Roadmap', staff: 'Dr. Meenakshi', scheduledAt: '2026-08-26T10:00:00', duration: 30, status: 'SCHEDULED', source: 'AI_VOICE', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
+  { id: '7', customer: 'Vikram Singh', phone: '+91 54321 09876', email: 'vikram@email.com', service: 'Advanced Therapy Session', staff: 'Dr. Arun', scheduledAt: '2026-08-27T11:30:00', duration: 60, status: 'SCHEDULED', source: 'AI_WEB', priority: 'HIGH', confirmationStatus: 'WhatsApp Confirmation Sent', confirmationSent: true },
+  { id: '8', customer: 'Meera Joshi', phone: '+91 99887 76655', email: 'meera@email.com', service: 'Maintenance Care', staff: 'Clinical Assistant', scheduledAt: '2026-08-28T14:00:00', duration: 45, status: 'SCHEDULED', source: 'STORE_VISIT', priority: 'VIP', confirmationStatus: 'Awaiting Response', confirmationSent: false },
 ];
 
 const statusConfig: Record<string, { icon: typeof CheckCircle2; label: string; style: string }> = {
   SCHEDULED: { icon: Clock, label: 'Scheduled', style: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  CONFIRMED: { icon: CheckCircle2, label: 'Booking Confirmed', style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  CONFIRMED: { icon: CheckCircle2, label: 'Confirmed', style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   IN_PROGRESS: { icon: AlertCircle, label: 'In Progress', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
   COMPLETED: { icon: CheckCircle2, label: 'Completed', style: 'bg-green-500/10 text-green-400 border-green-500/20' },
-  CANCELLED: { icon: XCircle, label: 'Cancelled', style: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  CANCELLED: { icon: XCircle, label: 'Cancelled', style: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
   NO_SHOW: { icon: XCircle, label: 'No Show', style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
 };
 
@@ -71,35 +73,27 @@ const sourceLabels: Record<string, string> = {
   AI_WHATSAPP: '💬 AI WhatsApp', 
   AI_WEB: '🌐 AI Chat', 
   STORE_VISIT: '🏬 Store Visit', 
-  REFERRAL: '🤝 Referral',
-  MANUAL: '✍️ Manual Walk-in' 
+  REFERRAL: '🤝 Referral', 
+  MANUAL: '✍️ Manual' 
 };
 
-import { useServices } from '@/lib/services-store';
-
 export default function AppointmentsPage() {
-  const { currentNiche, nicheConfig } = useNiche();
+  const { nicheConfig } = useNiche();
   const { activeServices } = useServices();
   const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
-  const [viewMode, setViewMode] = useState<'list' | 'month'>('list');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [calendarSubView, setCalendarSubView] = useState<'month' | 'day'>('month');
+  const [selectedDate, setSelectedDate] = useState<number>(24);
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<AppointmentItem | null>(null);
   const [confirmationTriggeredId, setConfirmationTriggeredId] = useState<string | null>(null);
 
-  const SERVICES = activeServices.map(s => ({
-    name: s.name,
-    duration: s.duration,
-    price: s.price
-  }));
-
-  // Manual Walk-in Booking Form State
+  // Booking Form State
   const [customer, setCustomer] = useState('');
   const [phone, setPhone] = useState('');
-  const [service, setService] = useState(SERVICES[0]?.name || 'General Consultation');
-  const [isCustomService, setIsCustomService] = useState(false);
+  const [service, setService] = useState(activeServices[0]?.name || 'General Consultation');
   const [doctor, setDoctor] = useState('Lead Specialist');
-  const [therapist, setTherapist] = useState('');
-  const [date, setDate] = useState('2026-08-14');
+  const [date, setDate] = useState('2026-08-24');
   const [time, setTime] = useState('10:00');
   const [duration, setDuration] = useState('45');
   const [source, setSource] = useState<AppointmentItem['source']>('MANUAL');
@@ -115,19 +109,15 @@ export default function AppointmentsPage() {
       customer,
       phone: phone || '+91 98765 00000',
       service,
-      staff: `${doctor} ${therapist ? `& ${therapist}` : ''}`,
+      staff: doctor,
       scheduledAt,
       duration: parseInt(duration) || 30,
       status: 'CONFIRMED',
       source,
       priority,
-      confirmationStatus: 'Booking Confirmed (Staff Walk-in Entry)',
+      confirmationStatus: 'Booking Confirmed (Staff Entry)',
       confirmationSent: true,
     };
-
-    if (typeof window !== 'undefined') {
-      posthog.capture('appointment_booked', { service, doctor, therapist, source, priority });
-    }
 
     setAppointments([created, ...appointments]);
     setIsBookModalOpen(false);
@@ -137,514 +127,465 @@ export default function AppointmentsPage() {
 
   const handleSendConfirmationRequest = (apptId: string) => {
     setConfirmationTriggeredId(apptId);
-    if (typeof window !== 'undefined') {
-      posthog.capture('ai_confirmation_workflow_triggered', { apptId });
-    }
-    
-    // Simulate AI 2-Step Confirmation Workflow: WhatsApp -> Voice Call (10 mins later) -> Auto Confirmed
     setTimeout(() => {
       setAppointments(prev => prev.map(a => {
         if (a.id === apptId) {
           return {
             ...a,
             status: 'CONFIRMED',
-            confirmationStatus: 'Booking Confirmed via AI WhatsApp & Voice Call',
+            confirmationStatus: 'Booking Confirmed via AI Engine',
             confirmationSent: true
           };
         }
         return a;
       }));
       setConfirmationTriggeredId(null);
-      if (selectedAppt?.id === apptId) {
-        setSelectedAppt(prev => prev ? { ...prev, status: 'CONFIRMED', confirmationStatus: 'Booking Confirmed via AI WhatsApp & Voice Call' } : null);
-      }
-    }, 2000);
+    }, 1500);
   };
 
+  // Selected date appointments
+  const selectedDateAppts = appointments.filter(a => {
+    const d = new Date(a.scheduledAt);
+    return d.getDate() === selectedDate;
+  });
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <span>{nicheConfig.terminology?.appointments || 'Appointments'} & Scheduling</span>
-            <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
               AI 2-Step Confirmation Engine
             </span>
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Manual {nicheConfig.terminology?.customer?.toLowerCase() || 'customer'} bookings and automated 2-step AI confirmation.
+          <p className="text-[var(--color-text-muted)] text-xs mt-1">
+            Calendar view of customer sittings with automated 2-step voice and WhatsApp confirmation.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* View Switcher: List vs Monthly Calendar */}
+          {/* View Switcher: Calendar vs List */}
           <div className="flex items-center bg-[var(--color-surface)] p-1 rounded-xl border border-[var(--color-border)]">
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                viewMode === 'calendar'
+                  ? "bg-blue-600 text-white shadow-sm font-bold"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              )}
+            >
+              <CalendarDays size={14} />
+              Calendar
+            </button>
             <button
               onClick={() => setViewMode('list')}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                 viewMode === 'list'
-                  ? "bg-purple-600 text-white shadow"
+                  ? "bg-blue-600 text-white shadow-sm font-bold"
                   : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
               )}
             >
               <ListFilter size={14} />
               List View
             </button>
-            <button
-              onClick={() => setViewMode('month')}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                viewMode === 'month'
-                  ? "bg-purple-600 text-white shadow"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              )}
-            >
-              <CalendarDays size={14} />
-              Monthly Calendar
-            </button>
           </div>
 
           <button
             onClick={() => setIsBookModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20 shrink-0"
           >
             <Plus size={16} />
-            Book Walk-in / Manual
+            <span>Book Appointment</span>
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Bookings', count: appointments.length, color: 'text-blue-400' },
-          { label: 'Booking Confirmed', count: appointments.filter(a => a.status === 'CONFIRMED').length, color: 'text-emerald-400' },
-          { label: 'Store Visit / Walk-ins', count: appointments.filter(a => a.source === 'STORE_VISIT' || a.source === 'MANUAL').length, color: 'text-amber-400' },
-          { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-purple-400' },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm"
-          >
-            <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">{stat.label}</p>
-            <p className={cn("text-2xl font-bold mt-1", stat.color)}>{stat.count}</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* LIST VIEW */}
-      {viewMode === 'list' && (
-        <div className="space-y-3">
-          {appointments.map((appt, i) => {
-            const status = statusConfig[appt.status] || statusConfig.SCHEDULED;
-            const StatusIcon = status.icon;
-            const apptDate = new Date(appt.scheduledAt);
-            return (
-              <motion.div
-                key={appt.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => setSelectedAppt(appt)}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl hover:border-purple-500/40 transition-all cursor-pointer gap-4 shadow-sm group"
-              >
-                <div className="flex items-center gap-4">
-                  <Avatar3D name={appt.customer} size="md" />
-
-                  <div className="text-center w-16 shrink-0 bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    <p className="text-xs font-bold text-purple-300 font-mono">
-                      {apptDate.getHours().toString().padStart(2, '0')}:{apptDate.getMinutes().toString().padStart(2, '0')}
-                    </p>
-                    <p className="text-[10px] text-slate-400">{appt.duration} min</p>
-                  </div>
-
-                  <div className="w-px h-8 bg-[var(--color-border)] hidden sm:block" />
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-sm text-[var(--color-text)] group-hover:text-purple-300 transition-colors">{appt.service}</p>
-                      <span className={cn("px-2.5 py-0.5 text-[10px] rounded-full border flex items-center gap-1 font-semibold", status.style)}>
-                        <StatusIcon size={10} />
-                        {status.label}
-                      </span>
-                      {appt.priority === 'VIP' && <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold">VIP 🌟</span>}
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
-                      <span>Patient: <strong className="text-slate-200">{appt.customer}</strong></span>
-                      <span>•</span>
-                      <span>Staff: <strong className="text-purple-300">{appt.staff}</strong></span>
-                      <span>•</span>
-                      <span className="text-slate-300 font-medium">{sourceLabels[appt.source]}</span>
-                    </div>
-                  </div>
+      {/* Main Grid: Dominant Big Calendar (Left) + Vertical Stats Panel (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Column: Big Dominant Calendar / List */}
+        <div className="lg:col-span-9 space-y-4">
+          {viewMode === 'calendar' ? (
+            <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-3xl p-6 shadow-xl space-y-4">
+              {/* Calendar Controls (Month / Day Toggle like reference screenshot) */}
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
+                    <CalIcon size={18} className="text-blue-400" />
+                    <span>August 2026</span>
+                  </h2>
+                  <span className="text-xs text-[var(--color-text-muted)] font-medium">Asia/Calcutta</span>
                 </div>
 
-                {/* Confirmation Status Details */}
-                <div className="flex items-center gap-3 self-end sm:self-center">
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-emerald-400 flex items-center justify-end gap-1">
-                      <UserCheck size={13} />
-                      {appt.confirmationStatus || 'Booking Confirmed'}
-                    </p>
-                    <p className="text-[10px] text-[var(--color-text-muted)]">Click card to view popup & workflow</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-[var(--color-surface)] p-0.5 rounded-lg border border-[var(--color-border)] text-xs">
+                    <button
+                      onClick={() => setCalendarSubView('month')}
+                      className={cn(
+                        "px-3 py-1 rounded-md font-semibold transition-all",
+                        calendarSubView === 'month' ? "bg-blue-600 text-white" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      )}
+                    >
+                      Month
+                    </button>
+                    <button
+                      onClick={() => setCalendarSubView('day')}
+                      className={cn(
+                        "px-3 py-1 rounded-md font-semibold transition-all",
+                        calendarSubView === 'day' ? "bg-blue-600 text-white" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      )}
+                    >
+                      Day
+                    </button>
                   </div>
                 </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
+              </div>
 
-      {/* MONTHLY CALENDAR GRID VIEW */}
-      {viewMode === 'month' && (
-        <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-            <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-              <CalIcon size={18} className="text-purple-400" />
-              August 2026 Monthly Calendar
-            </h3>
-            <span className="text-xs text-[var(--color-text-muted)] font-mono">Click date card for popups</span>
-          </div>
-
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-[var(--color-text-muted)] border-b border-[var(--color-border)] pb-2">
-            <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
-          </div>
-
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 31 }, (_, i) => {
-              const dayNum = i + 1;
-              const dateStr = `2026-08-${dayNum.toString().padStart(2, '0')}`;
-              const dayAppts = appointments.filter(a => a.scheduledAt.startsWith(dateStr));
-              return (
-                <div
-                  key={dayNum}
-                  className={cn(
-                    "min-h-[85px] p-2 rounded-xl border flex flex-col justify-between transition-all cursor-pointer hover:border-purple-500",
-                    dayAppts.length > 0
-                      ? "bg-purple-950/20 border-purple-500/40"
-                      : "bg-[var(--color-surface)] border-[var(--color-border)]"
-                  )}
-                  onClick={() => dayAppts.length > 0 && setSelectedAppt(dayAppts[0])}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300">{dayNum}</span>
-                    {dayAppts.length > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    )}
+              {/* Month View Grid */}
+              {calendarSubView === 'month' && (
+                <div>
+                  <div className="grid grid-cols-7 text-center font-bold text-xs text-[var(--color-text-muted)] mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                      <div key={d} className="py-2">{d}</div>
+                    ))}
                   </div>
 
-                  <div className="space-y-1 mt-1">
-                    {dayAppts.slice(0, 2).map(a => (
-                      <div key={a.id} className="text-[9px] bg-purple-600/30 text-purple-200 p-1 rounded font-medium truncate border border-purple-500/30">
-                        {a.customer} ({a.service.split(' ')[0]})
+                  <div className="grid grid-cols-7 gap-2">
+                    {/* Padding days from July */}
+                    {[26, 27, 28, 29, 30, 31].map(d => (
+                      <div key={`prev-${d}`} className="min-h-[90px] p-2 rounded-2xl border border-transparent text-slate-700 dark:text-slate-800 text-xs font-semibold">
+                        {d}
                       </div>
                     ))}
-                    {dayAppts.length > 2 && (
-                      <p className="text-[9px] text-purple-400 font-bold">+{dayAppts.length - 2} more</p>
-                    )}
+
+                    {/* August Days 1 to 31 */}
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                      const isSelected = selectedDate === day;
+                      const dayAppts = appointments.filter(a => new Date(a.scheduledAt).getDate() === day);
+
+                      return (
+                        <div
+                          key={day}
+                          onClick={() => setSelectedDate(day)}
+                          className={cn(
+                            "min-h-[100px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group",
+                            isSelected
+                              ? "bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/30"
+                              : "bg-[var(--color-surface)]/50 border-[var(--color-border)] hover:border-blue-500/30 hover:bg-[var(--color-surface)]"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                              isSelected 
+                                ? "bg-blue-600 text-white shadow-sm" 
+                                : "text-[var(--color-text)]"
+                            )}>
+                              {day}
+                            </span>
+                            {dayAppts.length > 0 && (
+                              <span className="text-[10px] font-mono text-blue-400 font-bold">
+                                {dayAppts.length} {dayAppts.length === 1 ? 'sitting' : 'sittings'}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-1 my-1">
+                            {dayAppts.slice(0, 2).map((a) => (
+                              <div
+                                key={a.id}
+                                className={cn(
+                                  "p-1 rounded-md text-[10px] truncate font-medium",
+                                  a.status === 'CONFIRMED' ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                                  a.status === 'IN_PROGRESS' ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
+                                  "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                )}
+                              >
+                                {a.customer.split(' ')[0]} - {a.service}
+                              </div>
+                            ))}
+                            {dayAppts.length > 2 && (
+                              <span className="text-[9px] text-[var(--color-text-muted)] font-semibold block text-center">
+                                +{dayAppts.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })}
+              )}
+
+              {/* Day View Timeline */}
+              {calendarSubView === 'day' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between bg-[var(--color-surface)] p-3 rounded-2xl border border-[var(--color-border)]">
+                    <span className="text-xs font-bold text-[var(--color-text)]">
+                      Day Schedule: August {selectedDate}, 2026 ({selectedDateAppts.length} appointments)
+                    </span>
+                    <button
+                      onClick={() => setCalendarSubView('month')}
+                      className="text-xs text-blue-400 font-semibold hover:underline"
+                    >
+                      ← Back to Month
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'].map(hour => {
+                      const hourAppts = selectedDateAppts.filter(a => {
+                        const h = new Date(a.scheduledAt).getHours().toString().padStart(2, '0');
+                        return `${h}:00` === hour;
+                      });
+
+                      return (
+                        <div key={hour} className="flex gap-3 p-3 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] items-start">
+                          <span className="font-mono text-xs text-[var(--color-text-muted)] font-bold w-16 pt-1">{hour}</span>
+                          <div className="flex-1 space-y-1.5">
+                            {hourAppts.length > 0 ? (
+                              hourAppts.map(appt => (
+                                <div key={appt.id} className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+                                  <div>
+                                    <span className="font-bold text-xs text-[var(--color-text)]">{appt.customer}</span>
+                                    <span className="text-[11px] text-[var(--color-text-muted)] block">{appt.service} • {appt.staff}</span>
+                                  </div>
+                                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                                    {appt.status}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <span className="text-[11px] text-[var(--color-text-muted)] italic">No booking scheduled</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* List View */
+            <div className="space-y-3">
+              {appointments.map((appt) => {
+                const status = statusConfig[appt.status] || statusConfig.SCHEDULED;
+                const StatusIcon = status.icon;
+                const apptDate = new Date(appt.scheduledAt);
+                return (
+                  <div
+                    key={appt.id}
+                    onClick={() => setSelectedAppt(appt)}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl hover:border-blue-500/40 transition-all cursor-pointer gap-4 shadow-sm group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar3D name={appt.customer} size="md" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-sm text-[var(--color-text)] group-hover:text-blue-400 transition-colors">{appt.service}</p>
+                          <span className={cn("px-2.5 py-0.5 text-[10px] rounded-full border flex items-center gap-1 font-semibold", status.style)}>
+                            <StatusIcon size={10} />
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
+                          <span>Patient: <strong className="text-slate-200">{appt.customer}</strong></span>
+                          <span>•</span>
+                          <span>Staff: <strong className="text-blue-400">{appt.staff}</strong></span>
+                          <span>•</span>
+                          <span className="text-slate-300 font-medium">{sourceLabels[appt.source]}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-blue-400 font-mono">
+                        {apptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {apptDate.getHours().toString().padStart(2, '0')}:{apptDate.getMinutes().toString().padStart(2, '0')}
+                      </p>
+                      <span className="text-[10px] text-emerald-400 font-medium">{appt.confirmationStatus}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Vertical Compact Stats Panel + Selected Date Details (Reference Screenshot Style) */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* Vertical Stacked Stats Cards */}
+          <div className="space-y-3">
+            {[
+              { label: 'Total Bookings', count: appointments.length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+              { label: 'Booking Confirmed', count: appointments.filter(a => a.status === 'CONFIRMED').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { label: 'Store Visit / Walk-ins', count: appointments.filter(a => a.source === 'STORE_VISIT' || a.source === 'MANUAL').length, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+              { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-1"
+              >
+                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold">{stat.label}</p>
+                <div className="flex items-baseline justify-between">
+                  <p className={cn("text-2xl font-extrabold font-mono", stat.color)}>{stat.count}</p>
+                  <span className="text-[10px] text-[var(--color-text-muted)]">Active sittings</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Selected Date Inspector Card */}
+          <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
+              <span className="text-xs font-bold text-[var(--color-text)]">Selected Date</span>
+              <span className="text-xs font-mono font-bold text-blue-400">Aug {selectedDate}, 2026</span>
+            </div>
+
+            {selectedDateAppts.length > 0 ? (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {selectedDateAppts.map(a => (
+                  <div key={a.id} className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[var(--color-text)]">{a.customer}</span>
+                      <span className="font-mono text-[10px] text-blue-400">
+                        {new Date(a.scheduledAt).getHours().toString().padStart(2, '0')}:00
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)] truncate">{a.service}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-emerald-400 font-medium">● {a.status}</span>
+                      {!a.confirmationSent && (
+                        <button
+                          onClick={() => handleSendConfirmationRequest(a.id)}
+                          className="text-[10px] text-blue-400 font-bold hover:underline"
+                        >
+                          Send Recall
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-xs text-[var(--color-text-muted)] space-y-1">
+                <p>No appointments on this date.</p>
+                <button
+                  onClick={() => setIsBookModalOpen(true)}
+                  className="text-xs text-blue-400 font-bold hover:underline"
+                >
+                  + Add new booking
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* APPOINTMENT DETAILED POPUP MODAL */}
-      <AnimatePresence>
-        {selectedAppt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 text-[var(--color-text)] space-y-5 shadow-2xl"
-            >
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-                <div className="flex items-center gap-3">
-                  <Avatar3D name={selectedAppt.customer} size="md" />
-                  <div>
-                    <h3 className="font-bold text-base text-[var(--color-text)]">{selectedAppt.customer}</h3>
-                    <p className="text-xs text-[var(--color-text-muted)] font-mono">{selectedAppt.phone || '+91 98765 43210'}</p>
-                  </div>
-                </div>
-                <button onClick={() => setSelectedAppt(null)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Appointment Details Grid */}
-              <div className="grid grid-cols-2 gap-3 p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs space-y-1">
-                <div>
-                  <span className="text-[var(--color-text-muted)] block mb-0.5">Treatment / Service</span>
-                  <span className="font-bold text-[var(--color-text)] text-sm">{selectedAppt.service}</span>
-                </div>
-                <div>
-                  <span className="text-[var(--color-text-muted)] block mb-0.5">Assigned Staff Doctor</span>
-                  <span className="font-bold text-purple-500 text-sm">{selectedAppt.staff}</span>
-                </div>
-                <div className="pt-2">
-                  <span className="text-[var(--color-text-muted)] block mb-0.5">Scheduled Date & Time</span>
-                  <span className="font-mono text-[var(--color-text)] font-semibold">{selectedAppt.scheduledAt.replace('T', ' at ')}</span>
-                </div>
-                <div className="pt-2">
-                  <span className="text-[var(--color-text-muted)] block mb-0.5">Booking Channel Source</span>
-                  <span className="font-semibold text-[var(--color-text)]">{sourceLabels[selectedAppt.source]}</span>
-                </div>
-              </div>
-
-              {/* Booking Confirmation Status Box */}
-              <div className="p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap size={16} className="text-purple-400" />
-                    <span className="font-bold text-xs uppercase tracking-wider text-[var(--color-text)]">Autonomous WhatsApp Sequence</span>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20">
-                    Engine Active
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
-                    <p className="text-[var(--color-text-muted)]">Step 1</p>
-                    <p className="text-xs font-bold text-[var(--color-text)]">WhatsApp Sent</p>
-                  </div>
-                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
-                    <p className="text-[var(--color-text-muted)]">Step 2</p>
-                    <p className="text-xs font-bold text-[var(--color-text)]">Voice Follow-up</p>
-                  </div>
-                  <div className="p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
-                    <p className="text-[var(--color-text-muted)]">Step 3</p>
-                    <p className="text-xs font-bold text-[var(--color-text)]">Auto Confirmed</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => handleSendConfirmationRequest(selectedAppt.id)}
-                    disabled={confirmationTriggeredId === selectedAppt.id}
-                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
-                  >
-                    {confirmationTriggeredId === selectedAppt.id ? (
-                      <>
-                        <Check size={14} className="text-white animate-bounce" />
-                        <span>Sequence Dispatched!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        <span>Send WhatsApp Confirmation</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md">
-                    <PhoneOutgoing size={14} />
-                    <span>Trigger Voice Call</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2 border-t border-[var(--color-border)]">
-                <button
-                  onClick={() => setSelectedAppt(null)}
-                  className="px-4 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] text-[var(--color-text)] text-xs rounded-xl font-medium"
-                >
-                  Close Window
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MANUAL WALK-IN BOOKING MODAL */}
+      {/* Book Appointment Modal */}
       <AnimatePresence>
         {isBookModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 text-[var(--color-text)] space-y-4 shadow-2xl"
+              className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-3xl p-6 w-full max-w-lg shadow-2xl space-y-4"
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-                <h3 className="font-bold text-base flex items-center gap-2 text-[var(--color-text)]">
-                  <CalIcon size={18} className="text-purple-500" />
-                  Book Manual Walk-in Appointment
+                <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
+                  <Plus size={18} className="text-blue-400" />
+                  Book Walk-in / Customer Appointment
                 </h3>
-                <button onClick={() => setIsBookModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                <button onClick={() => setIsBookModalOpen(false)} className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleBookAppointment} className="space-y-3">
+              <form onSubmit={handleBookAppointment} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Patient Full Name *</label>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Customer / Patient Name *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Ramesh Verma"
                     value={customer}
                     onChange={(e) => setCustomer(e.target.value)}
-                    placeholder="e.g. Vikram Singh"
-                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-[var(--color-text-muted)]"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Phone Number</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98765 00000"
-                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Doctor *</label>
-                    <select
-                      value={doctor}
-                      onChange={(e) => setDoctor(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-medium"
-                    >
-                      <option value="Dr. Meenakshi">Dr. Meenakshi</option>
-                      <option value="Dr. Arun">Dr. Arun</option>
-                      <option value="Dr. Kavitha">Dr. Kavitha</option>
-                      <option value="Dr. Ramesh">Dr. Ramesh</option>
-                      <option value="">None</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Therapist *</label>
-                    <select
-                      value={therapist}
-                      onChange={(e) => setTherapist(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] font-medium"
-                    >
-                      <option value="Kavita">Kavita</option>
-                      <option value="Rekha">Rekha</option>
-                      <option value="Sunita">Sunita</option>
-                      <option value="Priya">Priya</option>
-                      <option value="">None</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Mobile Phone (For 2-Step Confirmation)</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Treatment / Service *</label>
-                  <select
-                    value={isCustomService ? 'custom' : service}
-                    onChange={(e) => {
-                      if (e.target.value === 'custom') {
-                        setIsCustomService(true);
-                        setService('');
-                      } else {
-                        setIsCustomService(false);
-                        setService(e.target.value);
-                        const found = SERVICES.find(s => s.name === e.target.value);
-                        if (found) setDuration(found.duration.toString());
-                      }
-                    }}
-                    className="w-full px-3.5 py-2 mb-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)]"
-                  >
-                    {SERVICES.map(s => (
-                      <option key={s.name} value={s.name}>{s.name} ({s.duration} min, ₹{s.price.toLocaleString()})</option>
-                    ))}
-                    <option value="custom">Custom Service (Manual Entry)</option>
-                  </select>
-                  {isCustomService && (
-                    <input
-                      type="text"
-                      required
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Service</label>
+                    <select
                       value={service}
                       onChange={(e) => setService(e.target.value)}
-                      placeholder="Enter custom service"
-                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                    />
-                  )}
-                </div>
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                      {activeServices.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </div>
 
-                <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Date</label>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Assigned Specialist</label>
                     <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Time</label>
-                    <input
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Duration (Mins)</label>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                      type="text"
+                      value={doctor}
+                      onChange={(e) => setDoctor(e.target.value)}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Channel Source</label>
-                    <select
-                      value={source}
-                      onChange={(e) => setSource(e.target.value as any)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                    >
-                      <option value="MANUAL">✍️ Manual Walk-in</option>
-                      <option value="STORE_VISIT">🏬 Store Visit</option>
-                      <option value="REFERRAL">🤝 Referral</option>
-                      <option value="AI_VOICE">📞 AI Voice</option>
-                      <option value="AI_WHATSAPP">💬 AI WhatsApp</option>
-                    </select>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Priority Tag</label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as any)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
-                    >
-                      <option value="VIP">VIP 🌟</option>
-                      <option value="HIGH">High 🔴</option>
-                      <option value="MEDIUM">Medium 🟡</option>
-                      <option value="STANDARD">Standard ⚪</option>
-                    </select>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Time</label>
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsBookModalOpen(false)}
-                    className="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-lg font-medium"
+                    className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-lg font-medium transition-colors"
+                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25"
                   >
                     Confirm Booking
                   </button>

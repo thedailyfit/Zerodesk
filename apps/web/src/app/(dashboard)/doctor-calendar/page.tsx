@@ -1,382 +1,444 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, 
   Coffee, 
-  UserCheck, 
-  UserX, 
-  Activity, 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles,
-  AlertCircle,
-  Edit2,
-  Lock
+  Plus, 
+  Stethoscope, 
+  Phone, 
+  X,
+  Calendar
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
-import { useRole } from '@/components/providers/role-provider';
 
-export type ShiftType = 'consultation' | 'surgery' | 'lunch' | 'leave';
-
-export interface DoctorShiftBlock {
-  type: ShiftType;
-  startHour: number;
-  endHour: number;
-  label?: string;
-}
-
-export interface DoctorMember {
+export interface DoctorProfile {
   id: string;
   name: string;
-  role: string;
   specialty: string;
   avatar: string;
   phone: string;
   email: string;
-  status: 'Active' | 'On Break' | 'In Surgery' | 'Off Shift';
-  shifts: DoctorShiftBlock[];
-  workingHoursStr: string;
-  lunchHoursStr: string;
+  status: 'Active' | 'On Break' | 'In Surgery' | 'Off Duty';
+  hours: string;
+  bookedHours: number;
+  totalHours: number;
+  todayAppointments: number;
 }
 
-const SHIFT_LEGEND = [
-  { 
-    type: 'consultation' as ShiftType, 
-    label: 'Consultation', 
-    color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', 
-    barColor: 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/50 text-emerald-100',
-    dot: 'bg-emerald-400',
-    icon: UserCheck 
-  },
-  { 
-    type: 'surgery' as ShiftType, 
-    label: 'Surgery Block', 
-    color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', 
-    barColor: 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400/50 text-purple-100',
-    dot: 'bg-purple-400',
-    icon: Activity 
-  },
-  { 
-    type: 'lunch' as ShiftType, 
-    label: 'Lunch Break', 
-    color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', 
-    barColor: 'bg-gradient-to-r from-amber-600 to-yellow-600 border-amber-400/50 text-amber-100',
-    dot: 'bg-amber-400',
-    icon: Coffee 
-  },
-  { 
-    type: 'leave' as ShiftType, 
-    label: 'On Leave', 
-    color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', 
-    barColor: 'bg-gradient-to-r from-rose-600 to-red-600 border-rose-400/50 text-rose-100',
-    dot: 'bg-rose-400',
-    icon: UserX 
-  },
-];
-
-const INITIAL_DOCTORS: DoctorMember[] = [
+const INITIAL_DOCTORS: DoctorProfile[] = [
   {
-    id: 'doc_1',
-    name: 'Dr. Meenakshi',
-    role: 'Senior Consultant',
-    specialty: 'Dermatology',
-    avatar: 'DM',
-    phone: '+91 98765 11111',
-    email: 'meenakshi@zerodesk.com',
+    id: 'doc-1',
+    name: 'Dr. Meenakshi Rao',
+    specialty: 'Senior Dermatologist & Aesthetician',
+    avatar: 'MR',
+    phone: '+91 98765 43210',
+    email: 'meenakshi@glowclinic.com',
     status: 'Active',
-    workingHoursStr: '9:00 AM - 5:00 PM',
-    lunchHoursStr: '1:00 PM - 2:00 PM',
-    shifts: [
-      { type: 'consultation', startHour: 9.0, endHour: 13.0, label: 'Morning Consultations' },
-      { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
-      { type: 'surgery', startHour: 14.0, endHour: 17.0, label: 'Procedure Duty' }
-    ]
+    hours: '09:00 AM - 05:00 PM',
+    bookedHours: 6.5,
+    totalHours: 8,
+    todayAppointments: 8
   },
   {
-    id: 'doc_2',
-    name: 'Dr. Arun',
-    role: 'Chief Surgeon',
-    specialty: 'Cosmetology',
-    avatar: 'DA',
-    phone: '+91 98765 22222',
-    email: 'arun@zerodesk.com',
+    id: 'doc-2',
+    name: 'Dr. Arun Kumar',
+    specialty: 'Hair Restoration & Cosmetologist',
+    avatar: 'AK',
+    phone: '+91 98123 45678',
+    email: 'arun@glowclinic.com',
     status: 'In Surgery',
-    workingHoursStr: '10:00 AM - 6:00 PM',
-    lunchHoursStr: '2:00 PM - 3:00 PM',
-    shifts: [
-      { type: 'surgery', startHour: 10.0, endHour: 14.0, label: 'Surgery OT Duty' },
-      { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
-      { type: 'consultation', startHour: 15.0, endHour: 18.0, label: 'Post-Op Rounds' }
-    ]
+    hours: '10:00 AM - 06:00 PM',
+    bookedHours: 7,
+    totalHours: 8,
+    todayAppointments: 5
   },
+  {
+    id: 'doc-3',
+    name: 'Dr. Kavita Reddy',
+    specialty: 'Clinical Dermatology Specialist',
+    avatar: 'KR',
+    phone: '+91 97654 32109',
+    email: 'kavita@glowclinic.com',
+    status: 'On Break',
+    hours: '09:30 AM - 04:30 PM',
+    bookedHours: 4.5,
+    totalHours: 7,
+    todayAppointments: 6
+  }
 ];
-
-function formatDecimalHour(hr: number): string {
-  const h = Math.floor(hr);
-  const m = Math.round((hr - h) * 60);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
-  const displayM = m < 10 ? `0${m}` : m;
-  return `${displayH}:${displayM} ${period}`;
-}
 
 export default function DoctorCalendarPage() {
-  const { currentNiche, nicheConfig } = useNiche();
-  const { role } = useRole();
-  const terminology = nicheConfig.terminology.staff || 'Doctor';
-
-  const [doctors, setDoctors] = useState<DoctorMember[]>(INITIAL_DOCTORS);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState('Today');
-  const [editingDoctor, setEditingDoctor] = useState<DoctorMember | null>(null);
+  const { nicheConfig } = useNiche();
+  const [doctors, setDoctors] = useState<DoctorProfile[]>(INITIAL_DOCTORS);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(INITIAL_DOCTORS[0]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_doctor_schedule_${currentNiche}`);
-    if (saved) {
-      try {
-        setDoctors(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse saved schedule');
+    try {
+      const saved = localStorage.getItem('zerodesk_doctors');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDoctors(parsed);
+          setSelectedDoctor(parsed[0]);
+        }
       }
+    } catch (e) {
+      console.error('Failed to load doctors from localStorage', e);
     }
-  }, [currentNiche]);
+  }, []);
 
-  // Save to localStorage
-  const saveSchedule = (updatedDoctors: DoctorMember[]) => {
-    setDoctors(updatedDoctors);
-    localStorage.setItem(`zerodesk_doctor_schedule_${currentNiche}`, JSON.stringify(updatedDoctors));
-    setEditingDoctor(null);
+  const saveDoctors = (updated: DoctorProfile[]) => {
+    setDoctors(updated);
+    try {
+      localStorage.setItem('zerodesk_doctors', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save doctors to localStorage', e);
+    }
   };
 
-  const handleSaveEdit = (e: React.FormEvent<HTMLFormElement>) => {
+  // New Doctor Form
+  const [docName, setDocName] = useState('');
+  const [docSpecialty, setDocSpecialty] = useState('');
+  const [docPhone, setDocPhone] = useState('');
+  const [docEmail, setDocEmail] = useState('');
+  const [docHours, setDocHours] = useState('09:00 AM - 05:00 PM');
+
+  const handleAddDoctor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingDoctor) return;
-    
-    // Quick mock save: just updating the basic hours strings for demo
-    // A real implementation would parse the times and recreate the shift blocks
-    const formData = new FormData(e.currentTarget);
-    const workHours = formData.get('workHours') as string;
-    const lunchHours = formData.get('lunchHours') as string;
-    
-    const updated = doctors.map(d => 
-      d.id === editingDoctor.id ? { 
-        ...d, 
-        workingHoursStr: workHours,
-        lunchHoursStr: lunchHours
-      } : d
-    );
-    saveSchedule(updated);
+    if (!docName || !docSpecialty) return;
+
+    const initials = docName.replace('Dr.', '').trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'DR';
+
+    const newDoc: DoctorProfile = {
+      id: `doc-${Date.now()}`,
+      name: docName.startsWith('Dr.') ? docName : `Dr. ${docName}`,
+      specialty: docSpecialty,
+      avatar: initials,
+      phone: docPhone || '+91 98000 00000',
+      email: docEmail || 'doctor@glowclinic.com',
+      status: 'Active',
+      hours: docHours,
+      bookedHours: 0,
+      totalHours: 8,
+      todayAppointments: 0
+    };
+
+    const updated = [...doctors, newDoc];
+    saveDoctors(updated);
+    setIsAddModalOpen(false);
+    setDocName('');
+    setDocSpecialty('');
+    setDocPhone('');
+    setDocEmail('');
   };
 
-  const timelineHours = Array.from({ length: 13 }, (_, i) => i + 8);
-
-  const filteredDoctors = useMemo(() => {
-    return doctors.filter(s => 
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      s.role.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [doctors, searchQuery]);
-
-  // Access Control
-  if (role === 'STAFF') {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <Lock className="w-16 h-16 text-rose-500/50" />
-        <h2 className="text-2xl font-bold text-[var(--color-text)]">Access Denied</h2>
-        <p className="text-[var(--color-text-muted)] text-sm">
-          Only Managers and Administrators can view and edit the {terminology} schedule.
-        </p>
-      </div>
-    );
-  }
+  const handleToggleStatus = (id: string, newStatus: DoctorProfile['status']) => {
+    const updated = doctors.map(d => d.id === id ? { ...d, status: newStatus } : d);
+    saveDoctors(updated);
+    if (selectedDoctor.id === id) {
+      setSelectedDoctor(prev => ({ ...prev, status: newStatus }));
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--color-text)] flex items-center gap-3 mt-1 tracking-tight">
-            <div className="p-2.5 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-emerald-400">
-              <Users className="w-7 h-7" />
-            </div>
-            {terminology} Schedule & Availability
+          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
+            <span>Doctor & Specialist Management</span>
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
+              {nicheConfig?.label ? `${nicheConfig.label} Hub` : 'Medical Team Hub'}
+            </span>
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Manage consultations, surgery blocks, and availability.
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            Administer doctor profiles, availability status, clinical hours, and consultation workloads.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-[var(--color-surface)] p-2 rounded-2xl border border-[var(--color-border)] shadow-sm">
-          <button className="p-2 hover:bg-[var(--color-bg)] rounded-xl text-[var(--color-text-muted)] transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm font-bold text-[var(--color-text)] px-2">{selectedDate}</span>
-          <button className="p-2 hover:bg-[var(--color-bg)] rounded-xl text-[var(--color-text-muted)] transition-colors">
-            <ChevronRight size={18} />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20"
+          >
+            <Plus size={16} />
+            <span>Add New Doctor</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative w-full md:w-80">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-          <input
-            type="text"
-            placeholder={`Search ${terminology.toLowerCase()}...`}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl pl-9 pr-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
-          />
+      {/* Distinction Info Card */}
+      <div className="p-4 rounded-2xl bg-[var(--color-glass)] border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center font-bold">
+            <Stethoscope size={16} />
+          </div>
+          <div>
+            <span className="font-bold text-[var(--color-text)]">Doctor Management vs Doctor Slots</span>
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              This page manages doctor availability and team profiles. For drag-and-drop appointment slot scheduling, open{' '}
+              <Link href="/calendar" className="text-blue-400 font-bold hover:underline inline-flex items-center gap-0.5">
+                <Calendar size={11} className="inline" /> Doctor Calendar & Slots &rarr;
+              </Link>
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          {SHIFT_LEGEND.map(leg => {
-            const Icon = leg.icon;
+      {/* Main Grid: Left = Doctors List, Right = Selected Doctor Schedule & Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Doctor Profile Cards */}
+        <div className="lg:col-span-5 space-y-3">
+          <h2 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+            Active Doctors ({doctors.length})
+          </h2>
+
+          {doctors.map((doc) => {
+            const isSelected = selectedDoctor.id === doc.id;
+            const utilPercent = Math.round((doc.bookedHours / doc.totalHours) * 100);
+
             return (
-              <div key={leg.type} className={cn("px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2", leg.color)}>
-                <Icon size={14} />
-                <span>{leg.label}</span>
+              <div
+                key={doc.id}
+                onClick={() => setSelectedDoctor(doc)}
+                className={cn(
+                  "p-4 rounded-2xl border transition-all cursor-pointer space-y-3 group",
+                  isSelected
+                    ? "bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/30"
+                    : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-blue-500/30"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-md">
+                      {doc.avatar}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-[var(--color-text)] group-hover:text-blue-400 transition-colors">
+                        {doc.name}
+                      </h3>
+                      <p className="text-[11px] text-[var(--color-text-muted)]">{doc.specialty}</p>
+                    </div>
+                  </div>
+
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                    doc.status === 'Active' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                    doc.status === 'In Surgery' ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
+                    doc.status === 'On Break' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                    "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                  )}>
+                    {doc.status}
+                  </span>
+                </div>
+
+                {/* Utilization Progress Bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] text-[var(--color-text-muted)]">
+                    <span>Today&apos;s Booked Slots</span>
+                    <span className="font-mono font-bold text-[var(--color-text)]">{doc.bookedHours}h / {doc.totalHours}h ({utilPercent}%)</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-[var(--color-bg)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 rounded-full"
+                      style={{ width: `${utilPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-[var(--color-text-muted)] pt-1 border-t border-[var(--color-border)]/50">
+                  <span className="flex items-center gap-1 font-mono"><Phone size={11} /> {doc.phone}</span>
+                  <span className="font-bold text-blue-400">{doc.todayAppointments} appointments</span>
+                </div>
               </div>
             );
           })}
         </div>
-      </div>
 
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <div className="min-w-[1000px]">
-            <div className="grid grid-cols-13 border-b border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-              <div className="col-span-3 font-bold text-xs text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-2">
-                <Users size={16} className="text-emerald-400" />
-                {terminology} Profile
+        {/* Right Column: Selected Doctor Deep-Dive & Quick Status Controls */}
+        <div className="lg:col-span-7 space-y-5">
+          <div className="p-6 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-base flex items-center justify-center shadow-lg">
+                  {selectedDoctor.avatar}
+                </div>
+                <div>
+                  <h2 className="font-bold text-base text-[var(--color-text)]">{selectedDoctor.name}</h2>
+                  <p className="text-xs text-[var(--color-text-muted)]">{selectedDoctor.specialty} • {selectedDoctor.hours}</p>
+                </div>
               </div>
-              <div className="col-span-10 grid grid-cols-12 text-center items-center">
-                {timelineHours.slice(0, 12).map((h) => (
-                  <span key={h} className="text-[11px] font-mono font-bold text-[var(--color-text-muted)]">
-                    {formatDecimalHour(h)}
-                  </span>
+
+              {/* Status Selector */}
+              <div className="flex items-center gap-1 bg-[var(--color-surface)] p-1 rounded-xl border border-[var(--color-border)] text-xs">
+                {(['Active', 'On Break', 'In Surgery', 'Off Duty'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => handleToggleStatus(selectedDoctor.id, st)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all",
+                      selectedDoctor.status === st
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    )}
+                  >
+                    {st}
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="divide-y divide-[var(--color-border)]">
-              {filteredDoctors.length === 0 ? (
-                <div className="p-12 text-center text-[var(--color-text-muted)] space-y-2">
-                  <AlertCircle className="w-8 h-8 mx-auto text-emerald-400 opacity-60" />
-                  <p className="text-sm font-medium">No results found.</p>
-                </div>
-              ) : (
-                filteredDoctors.map((doc) => (
-                  <div key={doc.id} className="grid grid-cols-13 p-4 items-center hover:bg-[var(--color-bg)]/50 transition-colors group">
-                    <div className="col-span-3 flex items-start justify-between pr-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center font-bold text-white text-xs">
-                          {doc.avatar}
-                        </div>
-                        <div>
-                          <div className="font-bold text-sm text-[var(--color-text)]">{doc.name}</div>
-                          <div className="text-xs text-[var(--color-text-muted)]">{doc.specialty}</div>
-                          <div className="text-[10px] text-emerald-400 mt-1">{doc.workingHoursStr}</div>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setEditingDoctor(doc)}
-                        className="p-1.5 text-[var(--color-text-muted)] hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Edit Schedule"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                    </div>
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
+                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Today&apos;s Load</span>
+                <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor.todayAppointments} Patients</span>
+              </div>
 
-                    <div className="col-span-10 relative h-12 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-1 overflow-hidden">
-                      <div className="absolute inset-0 grid grid-cols-12 pointer-events-none">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <div key={i} className="border-r border-[var(--color-border)] h-full" />
-                        ))}
-                      </div>
+              <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
+                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Working Shift</span>
+                <span className="text-sm font-bold font-mono text-blue-400 mt-1 block">{selectedDoctor.hours.split(' - ')[0]} - {selectedDoctor.hours.split(' - ')[1]}</span>
+              </div>
 
-                      {doc.shifts.map((block, idx) => {
-                        const totalSpan = 12; 
-                        const startOffset = Math.max(0, block.startHour - 8);
-                        const duration = block.endHour - block.startHour;
-                        
-                        const leftPct = (startOffset / totalSpan) * 100;
-                        const widthPct = (duration / totalSpan) * 100;
+              <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
+                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Clinical Room</span>
+                <span className="text-sm font-bold text-emerald-400 mt-1 block">Consult OT 1</span>
+              </div>
+            </div>
 
-                        const legendItem = SHIFT_LEGEND.find(l => l.type === block.type);
+            {/* Today's Shift Schedule Timeline */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider">
+                Today&apos;s Time Allocation & Blocks
+              </h3>
 
-                        return (
-                          <div
-                            key={idx}
-                            style={{ left: `\${leftPct}%`, width: `\${widthPct}%` }}
-                            className={cn(
-                              "absolute top-1 bottom-1 rounded-lg px-2 flex flex-col justify-center overflow-hidden",
-                              legendItem?.barColor
-                            )}
-                          >
-                            <div className="flex items-center gap-1 text-[10px] font-bold truncate">
-                              <span>{block.label || legendItem?.label}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+              <div className="space-y-2 text-xs">
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    <span className="font-bold text-[var(--color-text)]">Morning Consultations Block</span>
                   </div>
-                ))
-              )}
+                  <span className="font-mono text-[var(--color-text-muted)] font-semibold">09:00 AM - 01:00 PM</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coffee size={14} className="text-amber-400" />
+                    <span className="font-bold text-[var(--color-text)]">Lunch & Charting Break</span>
+                  </div>
+                  <span className="font-mono text-[var(--color-text-muted)] font-semibold">01:00 PM - 02:00 PM</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                    <span className="font-bold text-[var(--color-text)]">Procedures & Follow-ups</span>
+                  </div>
+                  <span className="font-mono text-[var(--color-text-muted)] font-semibold">02:00 PM - 05:00 PM</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Add New Doctor Modal */}
       <AnimatePresence>
-        {editingDoctor && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
-              <h3 className="text-lg font-bold text-[var(--color-text)] mb-4">Edit Schedule: {editingDoctor.name}</h3>
-              
-              <form onSubmit={handleSaveEdit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Working Hours (String format)</label>
-                  <input 
-                    name="workHours"
-                    defaultValue={editingDoctor.workingHoursStr}
-                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-[var(--color-text)] focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Lunch Window (String format)</label>
-                  <input 
-                    name="lunchHours"
-                    defaultValue={editingDoctor.lunchHoursStr}
-                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-[var(--color-text)] focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-                {/* Real implementation would parse individual shift times, simplified for demo */}
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
+                  <Plus size={18} className="text-blue-400" />
+                  Add New Doctor / Specialist
+                </h3>
+                <button onClick={() => setIsAddModalOpen(false)} className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                  <X size={18} />
+                </button>
+              </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+              <form onSubmit={handleAddDoctor} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Doctor Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. Rajesh Khanna"
+                    value={docName}
+                    onChange={(e) => setDocName(e.target.value)}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Medical Specialty / Department *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Trichology & Hair Transplant"
+                    value={docSpecialty}
+                    onChange={(e) => setDocSpecialty(e.target.value)}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      placeholder="+91 98765 00000"
+                      value={docPhone}
+                      onChange={(e) => setDocPhone(e.target.value)}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Email</label>
+                    <input
+                      type="email"
+                      placeholder="dr@clinic.com"
+                      value={docEmail}
+                      onChange={(e) => setDocEmail(e.target.value)}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Working Hours</label>
+                  <input
+                    type="text"
+                    value={docHours}
+                    onChange={(e) => setDocHours(e.target.value)}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
                   <button
                     type="button"
-                    onClick={() => setEditingDoctor(null)}
-                    className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] transition-colors"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25"
                   >
-                    Save Changes
+                    Add Doctor
                   </button>
                 </div>
               </form>

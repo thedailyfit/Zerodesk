@@ -1,8 +1,8 @@
 import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
-  CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
+  CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming,
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -28,7 +28,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     patientFiles: 'Dental Records',
     calendar: 'Chair Scheduler',
     billing: 'Invoice',
-    overview: 'Dental Practice Overview'
+    overview: 'Business Health'
   },
 
   roles: [
@@ -39,7 +39,8 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   ],
 
   navItems: [
-    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Appointments', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
@@ -57,6 +58,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
@@ -67,7 +69,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
-    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
@@ -87,6 +89,8 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
 
     { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
+    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN'] },
     { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],

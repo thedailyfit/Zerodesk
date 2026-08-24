@@ -305,19 +305,6 @@ export default function DoctorSlotsPage() {
         </div>
       </div>
 
-      {/* Reschedule Drag & Quick Shift Info Banner */}
-      <div className="bg-purple-500/10 dark:bg-purple-900/30 border border-purple-500/30 rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs text-purple-950 dark:text-purple-200">
-        <div className="flex items-center gap-2">
-          <Move size={15} className="text-purple-600 dark:text-cyan-400 animate-bounce" />
-          <span className="font-semibold">Interactive Slots:</span>
-          <span>Click any appointment card to open Quick Edit Modal or use instant <b>+15m / +30m</b> buttons below.</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-[11px] font-mono font-bold text-purple-700 dark:text-purple-300">+15m / +30m</span>
-          <span className="font-medium">Time Shifting Active</span>
-        </div>
-      </div>
-
       {/* Main Calendar View Container */}
       <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-3xl overflow-hidden shadow-2xl">
         <AnimatePresence mode="wait">

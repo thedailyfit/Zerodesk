@@ -1,9 +1,9 @@
 import type { NicheConfig } from './types';
 import { 
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
-  MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard, 
-  CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles
+  MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, 
+  CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming, 
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones
 } from 'lucide-react';
 
 export const REAL_ESTATE_CONFIG: NicheConfig = {
@@ -11,10 +11,10 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
   label: 'Real Estate',
   tagline: 'High-Conversion Property Sales OS',
   icon: 'Building2', // We will assume an icon exists in the UI but string is fine for config if not strict type
-  accentColor: 'amber-600',
+  accentColor: 'text-amber-600',
   accentColorRGB: '217, 119, 6',
-  gradientFrom: 'amber-500',
-  gradientTo: 'orange-600',
+  gradientFrom: 'from-amber-500',
+  gradientTo: 'to-orange-600',
 
   terminology: {
     customer: 'Lead',
@@ -28,7 +28,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     patientFiles: 'Lead Profiles',
     calendar: 'Site Visit Calendar',
     billing: 'Token/Booking',
-    overview: 'Portfolio Overview',
+    overview: 'Business Health',
   },
 
   roles: [
@@ -38,7 +38,8 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
   ],
 
   navItems: [
-    { name: 'Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Site Visits', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
@@ -55,6 +56,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
@@ -64,7 +66,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
-    { name: 'Lead Management', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Lead LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
@@ -82,6 +84,8 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
 
     { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
+    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN'] },
     { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
   ],

@@ -4,49 +4,30 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserButton, OrganizationSwitcher, useClerk } from '@clerk/nextjs';
+import { UserButton, useClerk } from '@clerk/nextjs';
 import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  Users, 
-  Target, 
-  Calendar, 
-  BookOpen, 
-  BarChart3, 
-  Phone, 
-  MessageCircle, 
-  Workflow, 
-  Settings,
   Bell,
   Sun,
   Moon,
   Search,
   Menu,
   ChevronLeft,
-  FileText,
-  Rocket,
-  Receipt,
-  TrendingUp,
-  CreditCard,
-  CalendarDays,
-  Clock,
-  Shield,
   ChevronDown,
   LogOut,
-  AlertTriangle,
-  IndianRupee,
-  Heart,
-  SmilePlus,
-  Cpu,
-  PhoneIncoming,
-  Megaphone,
-  Activity,
+  Sparkles,
+  Users,
+  Headphones,
+  Volume2,
+  Sliders,
+  Check,
+  X,
   Laptop
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
+import { useNotifications } from '@/lib/notifications-store';
 import type { NicheId } from '@/config/niches/types';
 
 const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
@@ -59,7 +40,7 @@ const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
 ];
 
 const ROLE_COLORS: Record<string, string> = {
-  ADMIN: 'bg-purple-500',
+  ADMIN: 'bg-blue-600',
   MANAGER: 'bg-amber-500',
   STAFF: 'bg-emerald-500',
 };
@@ -68,7 +49,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { signOut } = useClerk();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCmdkOpen, setIsCmdkOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { currentNiche, setNiche, nicheConfig } = useNiche();
+  const { settings, updateSetting } = useNotifications();
   const [demoRole, setDemoRole] = useState<string>('ADMIN');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [nicheDropdownOpen, setNicheDropdownOpen] = useState(false);
@@ -100,36 +83,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-4 flex items-center justify-between h-16 border-b border-[var(--color-border)]">
           {isSidebarOpen ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-bold text-xl tracking-tight text-[var(--color-text)] flex items-center gap-2.5">
-              <svg className={cn("w-7 h-7 shrink-0", theme === 'dark' ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" : "text-indigo-600")} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg className={cn("w-7 h-7 shrink-0", theme === 'dark' ? "text-blue-400 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" : "text-blue-600")} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" strokeDasharray="200 40" strokeLinecap="round" />
                 <path d="M32 50L45 63L68 37" stroke={theme === 'dark' ? "url(#gradDark)" : "url(#gradLight)"} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
                 <defs>
                   <linearGradient id="gradDark" x1="32" y1="50" x2="68" y2="50" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#22d3ee" />
-                    <stop offset="1" stopColor="#a855f7" />
+                    <stop stopColor="#60a5fa" />
+                    <stop offset="1" stopColor="#2563eb" />
                   </linearGradient>
                   <linearGradient id="gradLight" x1="32" y1="50" x2="68" y2="50" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#4f46e5" />
-                    <stop offset="1" stopColor="#7c3aed" />
+                    <stop stopColor="#2563eb" />
+                    <stop offset="1" stopColor="#1d4ed8" />
                   </linearGradient>
                 </defs>
               </svg>
-              <span className={cn("bg-clip-text text-transparent font-extrabold tracking-wider", theme === 'dark' ? "bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 drop-shadow-[0_0_10px_rgba(139,92,246,0.3)]" : "bg-gradient-to-r from-indigo-700 via-purple-700 to-violet-700")}>
+              <span className={cn("bg-clip-text text-transparent font-extrabold tracking-wider", theme === 'dark' ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.3)]" : "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800")}>
                 ZERODESK
               </span>
             </motion.div>
           ) : (
-            <svg className={cn("w-7 h-7 mx-auto shrink-0", theme === 'dark' ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" : "text-indigo-600")} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className={cn("w-7 h-7 mx-auto shrink-0", theme === 'dark' ? "text-blue-400 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" : "text-blue-600")} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" strokeDasharray="200 40" strokeLinecap="round" />
               <path d="M32 50L45 63L68 37" stroke={theme === 'dark' ? "url(#gradDarkMini)" : "url(#gradLightMini)"} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
               <defs>
                 <linearGradient id="gradDarkMini" x1="32" y1="50" x2="68" y2="50" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="1" stopColor="#a855f7" />
+                  <stop stopColor="#60a5fa" />
+                  <stop offset="1" stopColor="#2563eb" />
                 </linearGradient>
                 <linearGradient id="gradLightMini" x1="32" y1="50" x2="68" y2="50" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#4f46e5" />
-                  <stop offset="1" stopColor="#7c3aed" />
+                  <stop stopColor="#2563eb" />
+                  <stop offset="1" stopColor="#1d4ed8" />
                 </linearGradient>
               </defs>
             </svg>
@@ -143,12 +126,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        {/* Dynamic Niche / Dashboard Switcher Widget (For Fast Testing & Recording) */}
+        {/* Dynamic Niche / Dashboard Switcher Widget */}
         <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/40 relative">
           <button
             onClick={() => setNicheDropdownOpen(!nicheDropdownOpen)}
             className={cn(
-              "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary-light)] bg-[var(--color-bg)] transition-all group shadow-sm",
+              "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] hover:border-blue-500/50 bg-[var(--color-bg)] transition-all group shadow-sm",
               isSidebarOpen ? "px-3 py-2" : "px-2 py-2 justify-center"
             )}
           >
@@ -158,13 +141,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="text-xs font-bold text-[var(--color-text)] truncate">
                     {NICHE_OPTIONS.find(n => n.id === currentNiche)?.name || nicheConfig.label}
                   </span>
-                  <span className="text-[10px] font-semibold text-[var(--color-primary-light)] tracking-wide uppercase flex items-center gap-1">
+                  <span className="text-[10px] font-semibold text-blue-400 tracking-wide uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
                     Switch Dashboard
                   </span>
                 </div>
               ) : (
-                <span className="text-xs font-extrabold text-[var(--color-primary-light)]">
+                <span className="text-xs font-extrabold text-blue-400">
                   {currentNiche.slice(0, 2).toUpperCase()}
                 </span>
               )}
@@ -189,7 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-text-muted)] border-b border-[var(--color-border)] mb-1 flex items-center justify-between">
                   <span>Select Niche OS</span>
-                  <span className="text-[9px] bg-[var(--color-primary-100)] text-[var(--color-primary-light)] px-1.5 py-0.5 rounded font-mono">Instant Test</span>
+                  <span className="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-mono">Instant Switch</span>
                 </div>
                 {NICHE_OPTIONS.map((niche) => {
                   const isSelected = currentNiche === niche.id;
@@ -203,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className={cn(
                         "w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition-all text-left group",
                         isSelected 
-                          ? "bg-[var(--color-primary)] text-white shadow-md font-bold" 
+                          ? "bg-blue-600 text-white shadow-md font-bold" 
                           : "text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                       )}
                     >
@@ -222,13 +205,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </AnimatePresence>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-hide">
+        {/* Navigation Items */}
+        <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1 scrollbar-hide">
           {filteredNavItems.map((item, idx) => {
             if (item.divider) {
               return (
-                <div key={`div-${idx}`} className={cn("pt-4 pb-1", isSidebarOpen ? "px-3" : "px-0 text-center")}>
+                <div key={`div-${idx}`} className={cn("pt-3 pb-1", isSidebarOpen ? "px-3" : "px-0 text-center")}>
                   {isSidebarOpen ? (
-                    <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{item.name}</span>
+                    <span className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{item.name}</span>
                   ) : (
                     <div className="w-4 h-px bg-[var(--color-border)] mx-auto" />
                   )}
@@ -241,24 +225,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return (
               <Link key={item.name} href={item.href || '#'}>
                 <div className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all relative group",
+                  "flex items-center gap-3 px-3 py-2 rounded-xl transition-all relative group text-xs font-medium",
                   isActive 
-                    ? "text-white bg-[var(--color-primary-200)]" 
+                    ? "text-white bg-blue-600 shadow-md shadow-blue-600/20 font-bold" 
                     : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
                 )}>
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-nav"
-                      className="absolute left-0 w-1 h-full bg-[var(--color-primary)] rounded-r-full shadow-[var(--shadow-glow)]"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  {Icon && <Icon size={20} className={cn("shrink-0", isActive ? "text-[var(--color-primary-light)]" : "")} />}
+                  {Icon && <Icon size={18} className={cn("shrink-0", isActive ? "text-white" : "")} />}
                   {isSidebarOpen && (
-                    <span className="text-sm font-medium">{item.name}</span>
+                    <span className="truncate">{item.name}</span>
                   )}
                   {!isSidebarOpen && (
-                    <div className="absolute left-14 px-2 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 backdrop-blur-md">
+                    <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 backdrop-blur-md shadow-lg">
                       {item.name}
                     </div>
                   )}
@@ -268,11 +245,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </div>
 
-        <div className="p-4 border-t border-[var(--color-border)] flex flex-col gap-4">
+        {/* Pinned Bottom Links: Manage Team & Get Live Help */}
+        <div className="px-3 py-2 border-t border-[var(--color-border)] space-y-1 bg-[var(--color-surface)]/30">
+          <Link href="/manage-team">
+            <div className={cn(
+              "flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all group relative",
+              pathname === '/manage-team' ? "bg-blue-600 text-white font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+            )}>
+              <Users size={16} className="shrink-0" />
+              {isSidebarOpen && <span className="truncate">Manage Team</span>}
+            </div>
+          </Link>
+          <Link href="/get-live-help">
+            <div className={cn(
+              "flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all group relative",
+              pathname === '/get-live-help' ? "bg-blue-600 text-white font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+            )}>
+              <Headphones size={16} className="shrink-0" />
+              {isSidebarOpen && <span className="truncate">Get Live Help</span>}
+            </div>
+          </Link>
+        </div>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-[var(--color-border)] flex flex-col gap-3">
           <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 text-xs font-semibold text-[var(--color-text)]", !isSidebarOpen && "justify-center")}>
             <div className="w-2 h-2 rounded-full bg-[var(--color-success)] animate-pulse shrink-0" />
             {isSidebarOpen && (
-              <span className="truncate">
+              <span className="truncate text-[11px]">
                 {nicheConfig?.label || 'ZeroDesk OS'}
               </span>
             )}
@@ -283,9 +283,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button
                 onClick={() => signOut({ redirectUrl: '/' })}
                 aria-label="Logout"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
               >
-                <LogOut size={14} />
+                <LogOut size={13} />
                 <span>Logout</span>
               </button>
             ) : (
@@ -295,7 +295,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 aria-label="Logout"
                 className="p-1.5 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
               >
-                <LogOut size={14} />
+                <LogOut size={13} />
               </button>
             )}
           </div>
@@ -308,22 +308,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex-1 flex items-center gap-4">
             <button
               onClick={() => setIsCmdkOpen(true)}
-              className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md px-3 py-1.5 w-64 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 w-64 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               <Search size={16} />
-              <span>Search...</span>
-              <kbd className="ml-auto text-xs border border-[var(--color-border)] rounded px-1.5 bg-[var(--color-bg)]">⌘K</kbd>
+              <span className="text-xs">Search...</span>
+              <kbd className="ml-auto text-[10px] border border-[var(--color-border)] rounded px-1.5 bg-[var(--color-bg)] font-mono">⌘K</kbd>
             </button>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Demo Role Switcher */}
             <div className="relative">
               <button 
                 onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-[var(--color-border)] hover:bg-[var(--color-surface)] rounded-md transition-colors text-xs font-semibold text-[var(--color-text)]"
+                className="flex items-center gap-2 px-3 py-1.5 border border-[var(--color-border)] hover:bg-[var(--color-surface)] rounded-xl transition-colors text-xs font-semibold text-[var(--color-text)]"
               >
-                <div className={cn("w-2 h-2 rounded-full shadow-[var(--shadow-glow)]", ROLE_COLORS[demoRole] || 'bg-purple-500')} />
+                <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[demoRole] || 'bg-blue-600')} />
                 {nicheConfig.roles.find(r => r.id === demoRole)?.label || demoRole}
                 <ChevronDown size={12} className="text-[var(--color-text-muted)]" />
               </button>
@@ -334,7 +334,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-md shadow-lg overflow-hidden z-50"
+                    className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-xl shadow-lg overflow-hidden z-50 p-1 space-y-1"
                   >
                     {nicheConfig.roles.map(role => (
                       <button
@@ -343,9 +343,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           setDemoRole(role.id);
                           setRoleDropdownOpen(false);
                         }}
-                        className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
+                        className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
                       >
-                        <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[role.id] || 'bg-purple-500')} />
+                        <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[role.id] || 'bg-blue-600')} />
                         {role.label}
                       </button>
                     ))}
@@ -361,13 +361,114 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button 
-              aria-label="Notifications"
-              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-full hover:bg-[var(--color-surface)] transition-colors relative"
-            >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+
+            {/* Notification Bell with Settings Modal Popover */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                aria-label="Notifications"
+                className={cn(
+                  "p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-full hover:bg-[var(--color-surface)] transition-colors relative",
+                  isNotifOpen && "bg-[var(--color-surface)] text-[var(--color-text)]"
+                )}
+              >
+                <Bell size={18} />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+              </button>
+
+              {/* Notification Settings Modal (Exact layout from user screenshot) */}
+              <AnimatePresence>
+                {isNotifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    className="absolute right-0 top-full mt-2 w-96 bg-[var(--color-bg-elevated)] backdrop-blur-2xl border border-[var(--color-border)] rounded-3xl shadow-2xl p-5 z-50 space-y-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                          <Bell size={18} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-sm text-[var(--color-text)]">Notifications</h3>
+                          <p className="text-[11px] text-[var(--color-text-muted)] leading-tight">
+                            You get a popup and sound for new calls, messages, bookings, and tickets.
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setIsNotifOpen(false)}
+                        className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-2.5 divide-y divide-[var(--color-border)]/50">
+                      {/* In-app popups */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="pr-4">
+                          <p className="text-xs font-bold text-[var(--color-text)]">In-app popups</p>
+                          <p className="text-[11px] text-[var(--color-text-muted)]">Show a popup in the dashboard when something arrives.</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settings.inAppPopups}
+                          onChange={(e) => updateSetting('inAppPopups', e.target.checked)}
+                          className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Sound */}
+                      <div className="flex items-center justify-between pt-2.5">
+                        <div className="pr-4">
+                          <p className="text-xs font-bold text-[var(--color-text)]">Sound</p>
+                          <p className="text-[11px] text-[var(--color-text-muted)]">Play a sound with each notification alert.</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settings.sound}
+                          onChange={(e) => updateSetting('sound', e.target.checked)}
+                          className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Notification sound selector */}
+                      <div className="flex items-center justify-between pt-2.5">
+                        <div>
+                          <p className="text-xs font-bold text-[var(--color-text)]">Notification sound</p>
+                        </div>
+                        <select
+                          value={settings.soundChoice}
+                          onChange={(e) => updateSetting('soundChoice', e.target.value as any)}
+                          className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-1.5 text-xs text-[var(--color-text)] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="Bird Chirp">Bird Chirp</option>
+                          <option value="Chime">Chime</option>
+                          <option value="Ping">Ping</option>
+                          <option value="Soft Bell">Soft Bell</option>
+                        </select>
+                      </div>
+
+                      {/* Desktop notifications */}
+                      <div className="flex items-center justify-between pt-2.5">
+                        <div className="pr-4">
+                          <p className="text-xs font-bold text-[var(--color-text)]">Desktop notifications</p>
+                          <p className="text-[11px] text-[var(--color-text-muted)]">Get an alert on screen when tab is in background.</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settings.desktopNotifications}
+                          onChange={(e) => updateSetting('desktopNotifications', e.target.checked)}
+                          className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 

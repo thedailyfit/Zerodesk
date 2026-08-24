@@ -780,3 +780,15 @@ export function usePatients() {
     resetToDefaults
   };
 }
+
+export function searchPatients(query: string, patientsList: PatientRecord[]): PatientRecord[] {
+  if (!query || !query.trim()) return [];
+  const q = query.toLowerCase().trim();
+  return patientsList.filter(p => 
+    p.id.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q) ||
+    p.phone.toLowerCase().includes(q) ||
+    (p.email && p.email.toLowerCase().includes(q))
+  );
+}
+

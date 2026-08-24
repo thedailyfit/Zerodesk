@@ -369,7 +369,7 @@ export default function StaffCalendarPage() {
             className={cn(
               "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border",
               selectedDept === 'All'
-                ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-500/20"
+                ? "bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20"
                 : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white"
             )}
           >
@@ -382,7 +382,7 @@ export default function StaffCalendarPage() {
               className={cn(
                 "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border",
                 selectedDept === dept
-                  ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-500/20"
+                  ? "bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20"
                   : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white"
               )}
             >
@@ -399,30 +399,8 @@ export default function StaffCalendarPage() {
             placeholder="Search staff name or role..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </div>
-      </div>
-
-      {/* Legend for Shift Types */}
-      <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
-        <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles size={14} className="text-purple-400" />
-          Shift Types Legend:
-        </span>
-        <div className="flex items-center gap-3 flex-wrap">
-          {SHIFT_LEGEND.map(leg => {
-            const Icon = leg.icon;
-            return (
-              <div 
-                key={leg.type}
-                className={cn("px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2", leg.color)}
-              >
-                <Icon size={14} />
-                <span>{leg.label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
 
@@ -590,6 +568,28 @@ export default function StaffCalendarPage() {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Legend for Shift Types (Moved to Bottom) */}
+      <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
+        <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles size={14} className="text-blue-400" />
+          Shift Types Legend:
+        </span>
+        <div className="flex items-center gap-3 flex-wrap">
+          {SHIFT_LEGEND.map(leg => {
+            const Icon = leg.icon;
+            return (
+              <div 
+                key={leg.type}
+                className={cn("px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2", leg.color)}
+              >
+                <Icon size={14} />
+                <span>{leg.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

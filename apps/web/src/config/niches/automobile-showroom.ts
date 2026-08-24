@@ -1,8 +1,8 @@
 import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
-  MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
-  CalendarDays, Clock, Shield, IndianRupee, Heart, SmilePlus, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Car
+  MessageCircle, Workflow, Settings, FileText, Receipt, TrendingUp, CreditCard,
+  CalendarDays, Clock, Cpu, PhoneIncoming,
+  Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -28,7 +28,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     patientFiles: 'Customer Files',
     calendar: 'Showroom Calendar',
     billing: 'Sales & Invoicing',
-    overview: 'Showroom Overview'
+    overview: 'Business Health'
   },
 
   roles: [
@@ -40,10 +40,11 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
   ],
 
   navItems: [
-    { name: 'Showroom Overview', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales & CRM', roles: ['ADMIN', 'MANAGER', 'SALES'], divider: true },
-    { name: 'Buyer Pipeline', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'SALES'] },
+    { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'Test Drives & Bookings', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Showroom Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Customer Lounge', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
@@ -51,6 +52,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Customer Files', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     
     { name: 'Services & Finance', roles: ['ADMIN', 'MANAGER', 'FINANCE_MANAGER', 'SERVICE'], divider: true },
+    { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Services & Packages', href: '/services', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'SERVICE'] },
     { name: 'Quick Billing', href: '/billing', icon: Receipt, roles: ['ADMIN', 'MANAGER', 'FINANCE_MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'MANAGER', 'FINANCE_MANAGER'] },
@@ -80,6 +82,8 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] },
 
     { name: 'System', roles: ['ADMIN'], divider: true },
+    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
+    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
     { name: 'Book Test Drive', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'SALES', 'SERVICE'] },
     { name: 'Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER'] }

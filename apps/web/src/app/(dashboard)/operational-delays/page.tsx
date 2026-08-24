@@ -6,10 +6,13 @@ import {
   AlertTriangle, 
   Activity, 
   Users, 
-  Stethoscope, 
-  Syringe, 
-  Scissors, 
-  PhoneCall 
+  Sparkles, 
+  CheckCircle2, 
+  AlertCircle,
+  Eye,
+  ShieldCheck,
+  Zap,
+  TrendingDown
 } from "lucide-react";
 import { 
   BarChart, 
@@ -21,33 +24,65 @@ import {
   ResponsiveContainer, 
   Cell
 } from "recharts";
+import { cn } from "@/lib/utils";
 
 const hourlyData = [
-  { time: "09:00", delay: 5 },
-  { time: "10:00", delay: 12 },
-  { time: "11:00", delay: 25 },
-  { time: "12:00", delay: 18 },
-  { time: "13:00", delay: 8 },
-  { time: "14:00", delay: 35 },
-  { time: "15:00", delay: 22 },
-  { time: "16:00", delay: 15 },
-  { time: "17:00", delay: 10 },
-  { time: "18:00", delay: 4 }
-];
-
-const bottlenecks = [
-  { name: "Dermatology", icon: Stethoscope, delay: "15 min avg", severity: "medium", color: "var(--color-primary)" },
-  { name: "Cosmetology", icon: Syringe, delay: "25 min avg", severity: "high", color: "var(--color-danger)" },
-  { name: "Hair Restoration", icon: Scissors, delay: "10 min avg", severity: "low", color: "var(--color-success)" },
-  { name: "Front Desk", icon: PhoneCall, delay: "5 min avg", severity: "low", color: "var(--color-success)" }
+  { time: "09:00", delay: 4 },
+  { time: "10:00", delay: 10 },
+  { time: "11:00", delay: 16 },
+  { time: "12:00", delay: 12 },
+  { time: "13:00", delay: 6 },
+  { time: "14:00", delay: 24 },
+  { time: "15:00", delay: 18 },
+  { time: "16:00", delay: 12 },
+  { time: "17:00", delay: 8 },
+  { time: "18:00", delay: 3 }
 ];
 
 const topCauses = [
-  { cause: "Late Patient Arrivals", percentage: 45 },
-  { cause: "Extended Consultation Times", percentage: 30 },
-  { cause: "Room Preparation Delay", percentage: 15 },
-  { cause: "Equipment Setup", percentage: 7 },
-  { cause: "Staff Breaks", percentage: 3 }
+  { cause: "Late Patient Arrivals", percentage: 42, note: "AI sends automatic 15-min pre-arrival WhatsApp nudge" },
+  { cause: "Extended Consultation / Procedure", percentage: 28, note: "Slot buffer auto-adjusted to +15m" },
+  { cause: "Treatment Room Sanitization", percentage: 16, note: "Turnover time within normal 8m SLA" },
+  { cause: "Walk-in Priority Squeeze", percentage: 9, note: "Frontdesk walk-in slot balancing active" },
+  { cause: "Staff Shift Transitions", percentage: 5, note: "Doctor shift overlap optimal" }
+];
+
+const aiWatchlistItems = [
+  {
+    title: "Appointment Gap & Slot Waste (> 30 min)",
+    status: "Healthy",
+    statusType: "success",
+    detail: "ZeroDesk AI filled 2 afternoon slot gaps today via WhatsApp flash recall.",
+    metric: "0 empty gaps"
+  },
+  {
+    title: "Late Patient Arrivals Pattern",
+    status: "Monitoring",
+    statusType: "warning",
+    detail: "3 patients arrived 10+ mins past schedule between 1:30 PM - 3:00 PM.",
+    metric: "3 flagged today"
+  },
+  {
+    title: "Treatment Room & Chair Turnover Time",
+    status: "Optimal",
+    statusType: "success",
+    detail: "Average chair sanitization and prep turnaround is 7.5 minutes (Target: < 10 min).",
+    metric: "7.5 min avg"
+  },
+  {
+    title: "Peak Hour Wait Time Surge (2:00 PM Spike)",
+    status: "Alert",
+    statusType: "alert",
+    detail: "Consultation queue reached +14 mins at 2:00 PM due to complex VIP procedure.",
+    metric: "+14 min peak"
+  },
+  {
+    title: "Staff Frontdesk Response SLA",
+    status: "Optimal",
+    statusType: "success",
+    detail: "Frontdesk check-in time averaged 2.4 minutes per patient entry.",
+    metric: "2.4 min avg"
+  }
 ];
 
 export default function OperationalDelaysPage() {
@@ -55,182 +90,240 @@ export default function OperationalDelaysPage() {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
+      transition: { staggerChildren: 0.08 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0 }
   };
 
   return (
-    <div className="p-8 space-y-8 min-h-screen" style={{ color: "var(--color-text)" }}>
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Operational Delays & Bottlenecks</h1>
-          <p className="opacity-70">Monitor real-time clinic efficiency and identify workflow issues.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              Operations Monitor
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Operations & Delay Watchlist</h1>
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            Monitor real-time clinic efficiency, wait times, and automated AI bottleneck resolution.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            AI Autonomous Watch Active
+          </span>
         </div>
       </div>
 
+      {/* 4 Clean Operational KPI Cards */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        <motion.div variants={itemVariants} className="p-6 rounded-2xl border" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <div className="flex justify-between items-start mb-4">
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm opacity-70 mb-1">Avg Wait Time</p>
-              <h3 className="text-3xl font-bold">18 <span className="text-lg font-normal opacity-70">min</span></h3>
+              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Average Wait Time</p>
+              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
+                12 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
+              </h3>
             </div>
-            <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
-              <Clock size={24} />
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <Clock size={20} />
             </div>
           </div>
-          <p className="text-sm text-orange-500 flex items-center mt-2">
-            <AlertTriangle size={14} className="mr-1" />
-            +3 min from yesterday
+          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+            <TrendingDown size={14} />
+            -4 min compared to last week
           </p>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="p-6 rounded-2xl border" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <div className="flex justify-between items-start mb-4">
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm opacity-70 mb-1">Avg Treatment Delay</p>
-              <h3 className="text-3xl font-bold">8 <span className="text-lg font-normal opacity-70">min</span></h3>
+              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Turnover Time</p>
+              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
+                7.5 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
+              </h3>
             </div>
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
-              <Activity size={24} />
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Activity size={20} />
             </div>
           </div>
-          <p className="text-sm text-green-500 flex items-center mt-2">
-            -2 min from yesterday
+          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+            <CheckCircle2 size={13} />
+            Within 10m target SLA
           </p>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="p-6 rounded-2xl border" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <div className="flex justify-between items-start mb-4">
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm opacity-70 mb-1">Staff Response Time</p>
-              <h3 className="text-3xl font-bold">3 <span className="text-lg font-normal opacity-70">min</span></h3>
+              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Staff Frontdesk SLA</p>
+              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
+                2.4 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
+              </h3>
             </div>
-            <div className="p-3 rounded-xl bg-green-500/10 text-green-500">
-              <Users size={24} />
+            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <Users size={20} />
             </div>
           </div>
-          <p className="text-sm text-green-500 flex items-center mt-2">
-            On target
+          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+            <CheckCircle2 size={13} />
+            Fast Check-in Flow
           </p>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="p-6 rounded-2xl border" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <div className="flex justify-between items-start mb-4">
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm opacity-70 mb-1">Patient Turnaround</p>
-              <h3 className="text-3xl font-bold">52 <span className="text-lg font-normal opacity-70">min</span></h3>
+              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Patient Turnaround</p>
+              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
+                44 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
+              </h3>
             </div>
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
-              <Clock size={24} />
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Clock size={20} />
             </div>
           </div>
-          <p className="text-sm text-orange-500 flex items-center mt-2">
-            <AlertTriangle size={14} className="mr-1" />
-            Slightly above avg
+          <p className="text-xs text-amber-400 font-semibold flex items-center gap-1">
+            <AlertCircle size={13} />
+            Slight afternoon surge
           </p>
         </motion.div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-2 p-6 rounded-2xl border" 
-          style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}
-        >
-          <h3 className="text-lg font-semibold mb-6">Hourly Delay Timeline (9 AM - 6 PM)</h3>
-          <div className="h-[300px] w-full">
+      {/* Hourly Delay Timeline & Top Causes */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Hourly Delay Timeline (09:00 - 18:00)</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">Average waiting minutes per scheduled time block</p>
+            </div>
+            <span className="text-xs font-mono font-bold text-blue-400">Peak: 14:00 (24m)</span>
+          </div>
+
+          <div className="h-[260px] w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.4} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
                 <XAxis 
                   dataKey="time" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: 'var(--color-text)', opacity: 0.7 }}
-                  dy={10}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                  dy={8}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: 'var(--color-text)', opacity: 0.7 }}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                 />
                 <Tooltip 
-                  cursor={{ fill: 'var(--color-border)', opacity: 0.2 }}
-                  contentStyle={{ backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
+                  cursor={{ fill: 'var(--color-border)', opacity: 0.3 }}
+                  contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '8px', color: 'var(--color-text)' }}
                 />
                 <Bar dataKey="delay" radius={[4, 4, 0, 0]}>
                   {hourlyData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.delay > 20 ? 'rgb(249, 115, 22)' : 'rgb(59, 130, 246)'} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.delay > 20 ? '#f97316' : entry.delay > 12 ? '#3b82f6' : '#10b981'} 
+                    />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-6"
-        >
-          <div className="p-6 rounded-2xl border h-full" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-            <h3 className="text-lg font-semibold mb-6">Top 5 Delay Causes</h3>
-            <div className="space-y-5">
-              {topCauses.map((cause, idx) => (
-                <div key={idx}>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium">{cause.cause}</span>
-                    <span className="opacity-70">{cause.percentage}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${cause.percentage}%` }}
-                      transition={{ duration: 1, delay: 0.5 + idx * 0.1 }}
-                      className="h-full bg-orange-500 rounded-full"
-                    />
-                  </div>
+        {/* Top Causes */}
+        <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
+          <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Delay Drivers Breakdown</h3>
+          <div className="space-y-4">
+            {topCauses.map((cause, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-[var(--color-text)]">{cause.cause}</span>
+                  <span className="font-mono font-bold text-blue-400">{cause.percentage}%</span>
                 </div>
-              ))}
-            </div>
+                <div className="h-1.5 w-full bg-[var(--color-bg)] rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      idx === 0 ? "bg-amber-500" : "bg-blue-600"
+                    )}
+                    style={{ width: `${cause.percentage}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-[var(--color-text-muted)]">{cause.note}</p>
+              </div>
+            ))}
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <h3 className="text-lg font-semibold mb-4 mt-8">Department Bottlenecks</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bottlenecks.map((dept, idx) => (
-            <div key={idx} className="p-5 rounded-2xl border flex items-center space-x-4" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-              <div className={`p-3 rounded-full ${dept.severity === 'high' ? 'bg-red-500/10 text-red-500' : dept.severity === 'medium' ? 'bg-orange-500/10 text-orange-500' : 'bg-green-500/10 text-green-500'}`}>
-                <dept.icon size={24} />
+      {/* ZeroDesk AI Watchlist Section (Replacing Department Bottlenecks) */}
+      <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-6 shadow-xl space-y-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
+              <Eye size={18} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+                ZeroDesk AI Operational Watchlist
+              </h2>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Autonomous parameters watched 24/7 by AI assistant to ensure smooth client operations.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full font-bold">
+            Live Stream
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+          {aiWatchlistItems.map((item, i) => (
+            <div
+              key={i}
+              className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-2 hover:border-blue-500/40 transition-all"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs font-bold text-[var(--color-text)] leading-tight">{item.title}</span>
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
+                  item.statusType === 'success' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                  item.statusType === 'warning' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                  "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                )}>
+                  {item.status}
+                </span>
               </div>
-              <div>
-                <h4 className="font-semibold">{dept.name}</h4>
-                <p className="text-sm opacity-70">{dept.delay}</p>
+
+              <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+                {item.detail}
+              </p>
+
+              <div className="pt-2 border-t border-[var(--color-border)]/60 flex items-center justify-between text-[10px]">
+                <span className="text-[var(--color-text-muted)]">Metric Status</span>
+                <span className="font-mono font-bold text-blue-400">{item.metric}</span>
               </div>
             </div>
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

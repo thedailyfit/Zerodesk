@@ -1,12 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Target,
   TrendingUp,
   Users,
   Award,
-  Crown
+  Crown,
+  IndianRupee,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Save,
+  Check
 } from "lucide-react";
 import { 
   BarChart, 
@@ -16,9 +24,9 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  Legend,
   Cell
 } from "recharts";
+import { formatCurrency, cn } from "@/lib/utils";
 
 const monthlyData = [
   { month: "June", revenue: 2200000, target: 2500000 },
@@ -43,205 +51,234 @@ const topTreatments = [
 ];
 
 export default function MonthlySalesPage() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
+  const [monthlyTarget, setMonthlyTarget] = useState<number>(3000000);
+  const [weeklyTarget, setWeeklyTarget] = useState<number>(750000);
+  const [currentAugustRevenue, setCurrentAugustRevenue] = useState<number>(2580000);
+  const [isSaved, setIsSaved] = useState(false);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+  const progressPercent = Math.min(100, Math.round((currentAugustRevenue / monthlyTarget) * 100));
+
+  const weeklyBreakdown = [
+    { week: "Week 1 (Aug 1 - 7)", revenue: 680000, target: weeklyTarget, status: "Behind" },
+    { week: "Week 2 (Aug 8 - 14)", revenue: 810000, target: weeklyTarget, status: "Achieved" },
+    { week: "Week 3 (Aug 15 - 21)", revenue: 790000, target: weeklyTarget, status: "Achieved" },
+    { week: "Week 4 (Aug 22 - 31)", revenue: 300000, target: weeklyTarget, status: "In Progress" },
+  ];
+
+  const handleSaveGoals = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
   return (
-    <div className="p-8 space-y-8 min-h-screen" style={{ color: "var(--color-text)" }}>
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Monthly Sales Performance</h1>
-          <p className="opacity-70">Analyze revenue trends, targets, and top-performing categories for August.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
+            <span>Monthly Sales & Goal Tracker</span>
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
+              August 2026
+            </span>
+          </h1>
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            Track business target achievement, weekly pace, and treatment category revenue.
+          </p>
         </div>
       </div>
 
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
-      >
-        <motion.div variants={itemVariants} className="md:col-span-2 p-6 rounded-2xl border relative overflow-hidden" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
+      {/* Main Grid: Left = Analytics & Breakdown, Right = Set Monthly Goals Options */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Column: Charts & Performance Tables */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* August Target Progress Card */}
+          <div className="p-6 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm opacity-70 mb-1">August Target Progress</p>
-                <div className="flex items-baseline space-x-2">
-                  <h3 className="text-4xl font-bold text-primary">₹25.8L</h3>
-                  <span className="text-lg opacity-70">/ ₹30L</span>
+                <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">August Target Achievement Pace</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono">
+                    {formatCurrency(currentAugustRevenue)}
+                  </h3>
+                  <span className="text-xs text-[var(--color-text-muted)] font-mono">
+                    / {formatCurrency(monthlyTarget)} Target
+                  </span>
                 </div>
               </div>
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Target size={32} />
+
+              <div className="text-right">
+                <span className="text-2xl font-extrabold text-blue-400 font-mono">{progressPercent}%</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] block">Achieved</span>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm font-semibold">
-                <span>86% Achieved</span>
-                <span>14% Remaining</span>
-              </div>
-              <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '86%' }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-blue-500 to-primary rounded-full relative"
-                >
-                  <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}></div>
-                </motion.div>
-              </div>
-              <p className="text-xs opacity-70 text-right mt-1">4 days remaining in month</p>
+
+            {/* Progress Bar */}
+            <div className="h-3 w-full bg-[var(--color-bg)] rounded-full overflow-hidden p-0.5 border border-[var(--color-border)]">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500 shadow-md shadow-blue-500/20"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-1">
+              <span>Remaining: <strong className="text-[var(--color-text)] font-mono">{formatCurrency(monthlyTarget - currentAugustRevenue)}</strong></span>
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <TrendingUp size={14} /> On pace to reach {formatCurrency(monthlyTarget)} by Aug 31
+              </span>
             </div>
           </div>
-        </motion.div>
 
-        <motion.div variants={itemVariants} className="p-6 rounded-2xl border flex flex-col justify-center" style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}>
-          <h3 className="text-lg font-semibold mb-6 flex items-center">
-            <Users size={18} className="mr-2 text-blue-500" />
-            Patient Revenue Split
-          </h3>
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-blue-500">Returning Patients</span>
-                <span className="font-bold">65% (₹16.7L)</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 1 }} className="h-full bg-blue-500 rounded-full" />
+          {/* Historical Revenue vs Target Bar Chart */}
+          <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Quarterly Revenue vs Goals</h3>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-600" /> Revenue</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-700" /> Target</span>
               </div>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-green-500">New Patients</span>
-                <span className="font-bold">35% (₹9.1L)</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '35%' }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-green-500 rounded-full" />
-              </div>
+
+            <div className="h-[240px] w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '8px', color: 'var(--color-text)' }}
+                    formatter={(val: any) => formatCurrency(Number(val))}
+                  />
+                  <Bar dataKey="target" fill="#334155" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="p-6 rounded-2xl border" 
-          style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}
-        >
-          <h3 className="text-lg font-semibold mb-6">3-Month Comparison</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.4} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text)', opacity: 0.7 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val/100000}L`} tick={{ fill: 'var(--color-text)', opacity: 0.7 }} />
-                <Tooltip 
-                  cursor={{ fill: 'var(--color-border)', opacity: 0.1 }}
-                  contentStyle={{ backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
-                  formatter={(value: number) => [`₹${(value/100000).toFixed(1)}L`]}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="revenue" name="Actual Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey="target" name="Target" fill="#94a3b8" fillOpacity={0.3} radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="p-6 rounded-2xl border" 
-          style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}
-        >
-          <h3 className="text-lg font-semibold mb-6">Revenue by Category</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart layout="vertical" data={categoryData} margin={{ top: 10, right: 30, left: 40, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.4} />
-                <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val/100000}L`} tick={{ fill: 'var(--color-text)', opacity: 0.7 }} />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text)', fontWeight: 500 }} width={120} />
-                <Tooltip 
-                  cursor={{ fill: 'var(--color-border)', opacity: 0.1 }}
-                  contentStyle={{ backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
-                  formatter={(value: number) => [`₹${(value/100000).toFixed(1)}L`, 'Revenue']}
-                />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(var(--color-primary-h, 221), 83%, ${53 + index * 8}%)`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-      </div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="p-6 rounded-2xl border" 
-        style={{ backgroundColor: "var(--color-glass)", borderColor: "var(--color-border)" }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Award className="mr-2 text-yellow-500" size={20} />
-            Top Performing Treatments
-          </h3>
-          <button className="text-sm text-primary hover:underline">View All</button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                <th className="pb-3 font-medium opacity-70">Treatment Name</th>
-                <th className="pb-3 font-medium opacity-70">Sessions Completed</th>
-                <th className="pb-3 font-medium opacity-70">Revenue Generated</th>
-                <th className="pb-3 font-medium opacity-70">MoM Growth</th>
-              </tr>
-            </thead>
-            <tbody>
+          {/* Top Treatments Revenue Table */}
+          <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Top Performing Procedures & Services</h3>
+            <div className="divide-y divide-[var(--color-border)] text-xs">
               {topTreatments.map((item, idx) => (
-                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors" style={{ borderColor: "var(--color-border)" }}>
-                  <td className="py-4 flex items-center font-medium">
-                    {idx === 0 && <Crown size={16} className="text-yellow-500 mr-2" />}
-                    {idx === 1 && <Crown size={16} className="text-gray-400 mr-2" />}
-                    {idx === 2 && <Crown size={16} className="text-amber-700 mr-2" />}
-                    {idx > 2 && <span className="w-4 mr-2"></span>}
-                    {item.name}
-                  </td>
-                  <td className="py-4">{item.count}</td>
-                  <td className="py-4 font-bold">{item.revenue}</td>
-                  <td className="py-4">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${item.growth.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                      {item.growth.startsWith('+') ? <TrendingUp size={12} className="mr-1" /> : null}
-                      {item.growth}
+                <div key={idx} className="py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-400 font-bold text-[10px] flex items-center justify-center font-mono">
+                      {idx + 1}
                     </span>
-                  </td>
-                </tr>
+                    <div>
+                      <p className="font-bold text-[var(--color-text)]">{item.name}</p>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">{item.count} sessions completed</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-[var(--color-text)] font-mono">{item.revenue}</p>
+                    <span className={cn("text-[10px] font-semibold", item.growth.startsWith('+') ? "text-emerald-400" : "text-rose-400")}>
+                      {item.growth} vs last month
+                    </span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
-      </motion.div>
+
+        {/* Right Column: Set Monthly Goals Options Panel (As Requested) */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="p-6 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-xl space-y-5">
+            <div className="flex items-center gap-2.5 border-b border-[var(--color-border)] pb-3">
+              <div className="p-2 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                <Target size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Set Business Goals</h3>
+                <p className="text-[11px] text-[var(--color-text-muted)]">Configure monthly & weekly revenue quotas</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveGoals} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Monthly Revenue Target (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    step="50000"
+                    value={monthlyTarget}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setMonthlyTarget(val);
+                      setWeeklyTarget(Math.round(val / 4));
+                    }}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl pl-8 pr-3 py-2.5 text-xs font-mono font-bold text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <span className="text-[10px] text-[var(--color-text-muted)] mt-1 block">Formatted: {formatCurrency(monthlyTarget)}</span>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Minimum Weekly Sales Target (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    step="10000"
+                    value={weeklyTarget}
+                    onChange={(e) => setWeeklyTarget(Number(e.target.value))}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl pl-8 pr-3 py-2.5 text-xs font-mono font-bold text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <span className="text-[10px] text-[var(--color-text-muted)] mt-1 block">Auto-calculated: ~25% of monthly goal</span>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5"
+              >
+                {isSaved ? (
+                  <>
+                    <Check size={14} className="text-white" />
+                    <span>Goals Updated Successfully</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} />
+                    <span>Save & Update Targets</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Weekly Target Breakdown Status */}
+            <div className="pt-3 border-t border-[var(--color-border)] space-y-2.5">
+              <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider block">
+                Weekly Target Pace
+              </span>
+
+              {weeklyBreakdown.map((w, i) => (
+                <div key={i} className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-1 text-xs">
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-[var(--color-text)]">{w.week.split(' (')[0]}</span>
+                    <span className={cn(
+                      "text-[10px] font-bold px-1.5 py-0.2 rounded",
+                      w.status === 'Achieved' ? "bg-emerald-500/10 text-emerald-400" :
+                      w.status === 'Behind' ? "bg-rose-500/10 text-rose-400" :
+                      "bg-blue-500/10 text-blue-400"
+                    )}>
+                      {w.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-[var(--color-text-muted)] font-mono">
+                    <span>{formatCurrency(w.revenue)}</span>
+                    <span>Target: {formatCurrency(w.target)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
