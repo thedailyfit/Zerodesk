@@ -47,6 +47,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
@@ -58,20 +59,20 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Book Appointment', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Book Appointment', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Customers / Patients', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
     { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Human Handoff Requests', href: '/human-handoff-requests', icon: UserCheck, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
 
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },

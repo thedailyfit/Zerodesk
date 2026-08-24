@@ -46,6 +46,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
+    { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
@@ -57,18 +58,18 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Schedule Visit', href: '/book-appointment', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
     { name: 'Properties & Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Schedule Visit', href: '/book-appointment', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
     { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Human Handoff Requests', href: '/human-handoff-requests', icon: UserCheck, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },

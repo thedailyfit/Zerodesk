@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Receipt, TrendingUp, CreditCard,
-  CalendarDays, Clock, Cpu, PhoneIncoming,
+  CalendarDays, Clock, Cpu, PhoneIncoming, Heart,
   Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones, UserCheck
 } from 'lucide-react';
 import type { NicheConfig } from './types';
@@ -44,6 +44,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales & CRM', roles: ['ADMIN', 'MANAGER', 'SALES'], divider: true },
+    { name: 'Customer LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'Test Drives & Bookings', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Showroom Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
@@ -62,6 +63,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Voice AI', href: '/voice', icon: Cpu, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'WebChat', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'SALES'] },
+    { name: 'Human Handoff Requests', href: '/human-handoff-requests', icon: UserCheck, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
