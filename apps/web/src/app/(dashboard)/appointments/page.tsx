@@ -224,15 +224,9 @@ export default function AppointmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>{nicheConfig.terminology?.appointments || 'Appointments'} & Scheduling</span>
-            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              AI 2-Step Confirmation Engine
-            </span>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">
+            {nicheConfig.terminology?.appointments || 'Appointments'} & Scheduling
           </h1>
-          <p className="text-[var(--color-text-muted)] text-xs mt-1">
-            Calendar view of customer sittings with automated 2-step voice and WhatsApp confirmation.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">

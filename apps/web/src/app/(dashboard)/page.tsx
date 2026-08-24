@@ -51,17 +51,9 @@ export default function BusinessHealthPage() {
       {/* Top Banner: Business Health Overview & Health Score */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              {nicheConfig.label} Operating System
-            </span>
-          </div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">
             Business Health & Operations
           </h1>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Real-time operational pulse, AI frontdesk workload, and revenue velocity.
-          </p>
         </div>
 
         {/* Business Health Score Card */}

@@ -123,7 +123,6 @@ export default function AnalyticsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Analytics & Performance Insights</h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">Multi-channel performance analytics up to 90 days retention.</p>
         </div>
 
         {/* Predefined Analytics Filters: 1D, 7D, 15D, 30D, 45D, 90D, Custom */}
