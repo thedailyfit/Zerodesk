@@ -1,6 +1,25 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Calendar as CalIcon, 
+  Filter, 
+  Plus, 
+  Clock, 
+  Edit3, 
+  Move, 
+  X, 
+  Check, 
+  Sparkles,
+  Stethoscope,
+  Scissors,
+  HeartPulse,
+  RotateCcw
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
 
