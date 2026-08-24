@@ -70,6 +70,9 @@ function SidebarNavItemRow({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  
   const Icon = item.icon as any;
   const hasChildren = Boolean(item.children && item.children.length > 0);
 
@@ -78,6 +81,9 @@ function SidebarNavItemRow({
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (itemRef.current) {
+      setRect(itemRef.current.getBoundingClientRect());
+    }
     setIsHovered(true);
   };
 
@@ -101,7 +107,7 @@ function SidebarNavItemRow({
           {Icon && <Icon size={18} className={cn('shrink-0', isActive ? 'text-white' : '')} />}
           {isSidebarOpen && <span className="truncate">{item.name}</span>}
           {!isSidebarOpen && (
-            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 backdrop-blur-md shadow-lg">
+            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[999] backdrop-blur-md shadow-lg">
               {item.name}
             </div>
           )}
@@ -112,6 +118,7 @@ function SidebarNavItemRow({
 
   return (
     <div
+      ref={itemRef}
       className="relative group/parent"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -139,25 +146,27 @@ function SidebarNavItemRow({
             />
           )}
           {!isSidebarOpen && (
-            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover/parent:opacity-100 group-hover/parent:visible transition-all whitespace-nowrap z-40 backdrop-blur-md shadow-lg">
+            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover/parent:opacity-100 group-hover/parent:visible transition-all whitespace-nowrap z-[999] backdrop-blur-md shadow-lg">
               {item.name}
             </div>
           )}
         </div>
       </Link>
 
-      {/* Floating Side View Flyout Sub-menu */}
+      {/* Floating Side View Flyout Sub-menu (Fixed Position to break out of overflow bounds) */}
       <AnimatePresence>
-        {isHovered && (
+        {isHovered && rect && (
           <motion.div
             initial={{ opacity: 0, x: -6, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -6, scale: 0.96 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className={cn(
-              'absolute z-50 w-56 p-2 rounded-xl bg-[var(--color-bg-elevated)]/95 backdrop-blur-xl border border-[var(--color-border)] shadow-2xl shadow-black/20',
-              isSidebarOpen ? 'left-[calc(100%+8px)] top-0' : 'left-16 top-0'
-            )}
+            style={{
+              position: 'fixed',
+              top: rect.top,
+              left: isSidebarOpen ? 256 + 8 : 80 + 8,
+            }}
+            className="z-[9999] w-56 p-2 rounded-xl bg-[var(--color-bg-elevated)]/95 backdrop-blur-xl border border-[var(--color-border)] shadow-2xl shadow-black/20"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
