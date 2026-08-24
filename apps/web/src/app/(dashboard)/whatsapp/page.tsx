@@ -8,7 +8,7 @@ const stats = [
   { label: 'Messages Today', value: 128, icon: MessageCircle, color: 'text-green-400' },
   { label: 'AI Resolved', value: '92%', icon: CheckCircle2, color: 'text-emerald-400' },
   { label: 'Avg Response', value: '0.8s', icon: Clock, color: 'text-blue-400' },
-  { label: 'Templates Sent', value: 34, icon: Send, color: 'text-purple-400' },
+  { label: 'Templates Sent', value: 34, icon: Send, color: 'text-indigo-400' },
 ];
 
 const recentMessages = [

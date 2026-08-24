@@ -166,7 +166,7 @@ export default function DoctorSlotsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--color-text)] flex items-center gap-3 tracking-tight">
-            <div className="p-2.5 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-2xl text-purple-400">
+            <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-2xl text-blue-400">
               <CalIcon className="w-7 h-7" />
             </div>
             Doctor Slots & Appointments
@@ -178,7 +178,7 @@ export default function DoctorSlotsPage() {
 
         <button
           onClick={() => handleOpenNewAppt(0, 9.0)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all active:scale-95 self-start md:self-auto"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all active:scale-95 self-start md:self-auto"
         >
           <Plus size={18} />
           Book Slot
@@ -208,7 +208,7 @@ export default function DoctorSlotsPage() {
                 className={cn(
                   "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
                   active
-                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 scale-[1.02]"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 scale-[1.02]"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                 )}
               >
@@ -229,7 +229,7 @@ export default function DoctorSlotsPage() {
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="font-mono text-purple-300 font-bold min-w-[110px] text-center">
+            <span className="font-mono text-blue-300 font-bold min-w-[110px] text-center">
               {formatTime(focusHour)} - {formatTime(focusHour + (viewMode === '2h' ? 2 : 4))}
             </span>
             <button 
@@ -252,7 +252,7 @@ export default function DoctorSlotsPage() {
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-bold transition-all border shrink-0",
               selectedStaff === 'All Staff'
-                ? "bg-purple-600 border-purple-500 text-white"
+                ? "bg-blue-600 border-blue-500 text-white"
                 : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
             )}
           >
@@ -265,7 +265,7 @@ export default function DoctorSlotsPage() {
               className={cn(
                 "px-3 py-1.5 rounded-full text-xs font-bold transition-all border shrink-0",
                 selectedStaff === st
-                  ? "bg-purple-600 border-purple-500 text-white"
+                  ? "bg-blue-600 border-blue-500 text-white"
                   : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
               )}
             >
@@ -295,7 +295,7 @@ export default function DoctorSlotsPage() {
               className={cn(
                 "text-xs px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition-all",
                 cfg.badge,
-                selectedType === key ? "ring-2 ring-purple-400 scale-105" : "opacity-80 hover:opacity-100"
+                selectedType === key ? "ring-2 ring-blue-500 scale-105" : "opacity-80 hover:opacity-100"
               )}
             >
               <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
@@ -420,7 +420,7 @@ function DetailHoursView({
       <div className="flex items-center justify-between border-b border-[var(--color-glass-border)] pb-4">
         <div>
           <h3 className="font-bold text-lg text-[var(--color-text)] flex items-center gap-2">
-            <Clock className="text-purple-400" size={18} />
+            <Clock className="text-blue-400" size={18} />
             High Resolution {intervalMinutes}m Slot Breakdown
           </h3>
           <p className="text-xs text-[var(--color-text-muted)]">
@@ -441,7 +441,7 @@ function DetailHoursView({
             <div key={staffName} className="bg-[var(--color-surface)]/60 border border-[var(--color-border)] rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between border-b border-[var(--color-border)]/50 pb-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
                     {staffName.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
@@ -462,7 +462,7 @@ function DetailHoursView({
                         "p-2.5 rounded-xl border flex flex-col justify-between min-h-[90px] transition-all relative group",
                         matched 
                           ? TYPE_CONFIG[matched.type].color
-                          : "bg-[var(--color-bg)]/40 border-[var(--color-border)] hover:border-purple-500/50 hover:bg-purple-500/5"
+                          : "bg-[var(--color-bg)]/40 border-[var(--color-border)] hover:border-blue-500/50 hover:bg-blue-500/5"
                       )}
                     >
                       <div className="flex items-center justify-between text-[10px] font-mono text-[var(--color-text-muted)]">
@@ -503,7 +503,7 @@ function DetailHoursView({
                             });
                             setIsModalOpen(true);
                           }}
-                          className="flex flex-col items-center justify-center text-center my-auto cursor-pointer text-[var(--color-text-muted)] hover:text-purple-300 py-1"
+                          className="flex flex-col items-center justify-center text-center my-auto cursor-pointer text-[var(--color-text-muted)] hover:text-blue-300 py-1"
                         >
                           <Plus size={14} />
                           <span className="text-[9px] font-medium mt-0.5">Available</span>
@@ -519,7 +519,7 @@ function DetailHoursView({
                               onShift(matched.id, -15);
                             }}
                             title="-15m"
-                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-purple-600 hover:text-white font-mono transition-colors"
+                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-blue-600 hover:text-white font-mono transition-colors"
                           >
                             -15m
                           </button>
@@ -529,7 +529,7 @@ function DetailHoursView({
                               onShift(matched.id, 15);
                             }}
                             title="+15m"
-                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-purple-600 hover:text-white font-mono transition-colors"
+                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-blue-600 hover:text-white font-mono transition-colors"
                           >
                             +15m
                           </button>
@@ -539,7 +539,7 @@ function DetailHoursView({
                               onShift(matched.id, 30);
                             }}
                             title="+30m"
-                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-purple-600 hover:text-white font-mono transition-colors ml-auto"
+                            className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-surface)] hover:bg-blue-600 hover:text-white font-mono transition-colors ml-auto"
                           >
                             +30m
                           </button>
@@ -605,7 +605,7 @@ function FullDayView({
               <div key={staff} className="py-4 flex items-start gap-4">
                 <div className="w-40 shrink-0 space-y-1">
                   <div className="font-bold text-sm text-[var(--color-text)]">{staff}</div>
-                  <span className="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
                     {staffAppts.length} appointments
                   </span>
                 </div>
@@ -688,7 +688,7 @@ function WeeklyGridMode({
         </div>
         {DAYS_SHORT.map((day, idx) => (
           <div key={day} className="p-4 text-center border-r border-[var(--color-glass-border)] last:border-0 bg-[var(--color-surface)]/40">
-            <span className="text-xs font-bold text-purple-400 block">{day}</span>
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block">{day}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Aug {idx + 3}</span>
           </div>
         ))}
@@ -719,10 +719,10 @@ function WeeklyGridMode({
                   });
                   setIsModalOpen(true);
                 }}
-                className="border-r border-[var(--color-glass-border)] last:border-0 relative hover:bg-purple-500/5 transition-colors cursor-pointer group"
+                className="border-r border-[var(--color-glass-border)] last:border-0 relative hover:bg-blue-500/5 transition-colors cursor-pointer group"
               >
                 <div className="opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center">
-                  <Plus size={14} className="text-purple-400" />
+                  <Plus size={14} className="text-blue-400" />
                 </div>
               </div>
             ))}
@@ -778,7 +778,7 @@ function WeeklyGridMode({
                       onShift(appt.id, 15);
                     }}
                     title="Shift +15m"
-                    className="text-[8px] px-1 py-0.5 rounded bg-purple-600 text-white font-mono"
+                    className="text-[8px] px-1 py-0.5 rounded bg-blue-600 text-white font-mono"
                   >
                     +15m
                   </button>
@@ -788,7 +788,7 @@ function WeeklyGridMode({
                       onShift(appt.id, 30);
                     }}
                     title="Shift +30m"
-                    className="text-[8px] px-1 py-0.5 rounded bg-purple-600 text-white font-mono"
+                    className="text-[8px] px-1 py-0.5 rounded bg-blue-600 text-white font-mono"
                   >
                     +30m
                   </button>
@@ -827,7 +827,7 @@ function FifteenDaysMatrixMode({
     >
       <div>
         <h3 className="font-bold text-lg text-[var(--color-text)] flex items-center gap-2">
-          <CalIcon className="text-purple-400" size={18} />
+          <CalIcon className="text-blue-400" size={18} />
           15-Day Strategic Doctor Schedule Overview
         </h3>
         <p className="text-xs text-[var(--color-text-muted)]">
@@ -841,12 +841,12 @@ function FifteenDaysMatrixMode({
           return (
             <div 
               key={d.dayIndex}
-              className="bg-[var(--color-surface)]/60 border border-[var(--color-border)] rounded-2xl p-3.5 space-y-2 hover:border-purple-500/50 transition-all flex flex-col justify-between min-h-[140px]"
+              className="bg-[var(--color-surface)]/60 border border-[var(--color-border)] rounded-2xl p-3.5 space-y-2 hover:border-blue-500/50 transition-all flex flex-col justify-between min-h-[140px]"
             >
               <div>
                 <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2 mb-2">
                   <span className="font-bold text-sm text-[var(--color-text)]">{d.dateStr}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">
                     {dayAppts.length} slots
                   </span>
                 </div>
@@ -892,7 +892,7 @@ function FifteenDaysMatrixMode({
                   });
                   setIsModalOpen(true);
                 }}
-                className="w-full text-center py-1 text-[10px] font-bold text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg transition-colors border border-purple-500/20 mt-2"
+                className="w-full text-center py-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors border border-blue-500/20 mt-2"
               >
                 + Add Slot
               </button>
@@ -958,7 +958,7 @@ function QuickEditModal({
                 setFormData(prev => ({ ...prev, startTime: newStart }));
                 onShift(formData.id, -30);
               }}
-              className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold transition-all"
+              className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-mono font-bold transition-all"
             >
               -30 Min
             </button>
@@ -969,7 +969,7 @@ function QuickEditModal({
                 setFormData(prev => ({ ...prev, startTime: newStart }));
                 onShift(formData.id, -15);
               }}
-              className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold transition-all"
+              className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-mono font-bold transition-all"
             >
               -15 Min
             </button>
@@ -980,7 +980,7 @@ function QuickEditModal({
                 setFormData(prev => ({ ...prev, startTime: newStart }));
                 onShift(formData.id, 15);
               }}
-              className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold transition-all"
+              className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-mono font-bold transition-all"
             >
               +15 Min
             </button>
@@ -991,7 +991,7 @@ function QuickEditModal({
                 setFormData(prev => ({ ...prev, startTime: newStart }));
                 onShift(formData.id, 30);
               }}
-              className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold transition-all"
+              className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-mono font-bold transition-all"
             >
               +30 Min
             </button>
@@ -1006,7 +1006,7 @@ function QuickEditModal({
               <select
                 value={formData.staff}
                 onChange={e => setFormData(prev => ({ ...prev, staff: e.target.value }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 {STAFF_LIST.map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -1019,7 +1019,7 @@ function QuickEditModal({
               <select
                 value={formData.type}
                 onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="consult">Skin Checkup / Consult</option>
                 <option value="surgery">Surgery</option>
@@ -1036,7 +1036,7 @@ function QuickEditModal({
                 type="text"
                 value={formData.patient}
                 onChange={e => setFormData(prev => ({ ...prev, patient: e.target.value }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
@@ -1045,7 +1045,7 @@ function QuickEditModal({
               <select
                 value={formData.status}
                 onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="Confirmed">Confirmed</option>
                 <option value="Pending">Pending</option>
@@ -1065,7 +1065,7 @@ function QuickEditModal({
                 max="21"
                 value={formData.startTime}
                 onChange={e => setFormData(prev => ({ ...prev, startTime: parseFloat(e.target.value) || 9.0 }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-mono font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-mono font-bold focus:ring-2 focus:ring-blue-500 outline-none"
               />
               <span className="text-[10px] text-[var(--color-text-muted)] font-mono block mt-1">
                 = {formatTime(formData.startTime)}
@@ -1081,7 +1081,7 @@ function QuickEditModal({
                 max="8"
                 value={formData.duration}
                 onChange={e => setFormData(prev => ({ ...prev, duration: parseFloat(e.target.value) || 1.0 }))}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-mono font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-mono font-bold focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
           </div>
@@ -1092,7 +1092,7 @@ function QuickEditModal({
               type="text"
               value={formData.service}
               onChange={e => setFormData(prev => ({ ...prev, service: e.target.value }))}
-              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
         </div>
@@ -1109,7 +1109,7 @@ function QuickEditModal({
           <button
             type="button"
             onClick={() => onSave(formData)}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition-all"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition-all"
           >
             <Check size={16} />
             Save Changes

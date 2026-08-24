@@ -100,7 +100,7 @@ const INITIAL_DOCUMENTS: DocumentItem[] = [
 const categoryConfig: Record<string, { color: string; label: string; badge: string }> = {
   SOP: { color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', label: 'Standard Operating Procedure', badge: 'SOP' },
   PRICING: { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', label: 'Pricing Sheet', badge: 'Pricing' },
-  FAQ: { color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', label: 'FAQ', badge: 'FAQ' },
+  FAQ: { color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', label: 'FAQ', badge: 'FAQ' },
   SCRIPTS: { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', label: 'Sales & Call Scripts', badge: 'Scripts' },
   RESTRICTED_GUIDELINES: { color: 'text-red-400 bg-red-500/10 border-red-500/20', label: 'Restricted Guidelines', badge: 'Safety' },
   SERVICE: { color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20', label: 'Service Guide', badge: 'Service' },
@@ -303,7 +303,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <span>Company Knowledge Base</span>
-            <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
               Live Embeddings
             </span>
           </h1>
@@ -315,7 +315,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
         <div className="flex items-center gap-2">
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold transition-all shadow-md shrink-0"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold transition-all shadow-md shrink-0"
           >
             <Plus size={16} />
             <span>Add Knowledge Document</span>
@@ -326,20 +326,20 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
       {/* Top Banner: Dedicated AI Agent & Knowledge Coverage with Retrain Refresh Button */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Dedicated AI Agent Card with Refresh / Learn Button */}
-        <div className="md:col-span-7 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-purple-950/30 to-slate-900 border border-purple-500/30 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="md:col-span-7 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900 border border-blue-500/30 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0 shadow-inner">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-300 shrink-0 shadow-inner">
               <Bot size={24} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="font-bold text-sm sm:text-base text-white truncate">
-                  {agentName} <span className="text-xs text-purple-300 font-normal">(Dedicated Tenant AI)</span>
+                  {agentName} <span className="text-xs text-blue-300 font-normal">(Dedicated Tenant AI)</span>
                 </h2>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                Indexed: <strong className="text-purple-300 font-mono">{documents.reduce((s, d) => s + (d.isActive ? d.chunks : 0), 0)} Chunks</strong> · Engine: <span className="text-emerald-400 font-mono">pgvector + GPT-4o</span>
+                Indexed: <strong className="text-blue-300 font-mono">{documents.reduce((s, d) => s + (d.isActive ? d.chunks : 0), 0)} Chunks</strong> · Engine: <span className="text-emerald-400 font-mono">pgvector + GPT-4o</span>
               </p>
             </div>
           </div>
@@ -351,12 +351,12 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
             className={cn(
               "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border",
               isRetraining
-                ? "bg-purple-900/50 text-purple-300 border-purple-700 cursor-wait"
-                : "bg-purple-600 hover:bg-purple-500 text-white border-purple-400 shadow-md shadow-purple-900/40 active:scale-95"
+                ? "bg-blue-900/50 text-blue-300 border-blue-700 cursor-wait"
+                : "bg-blue-600 hover:bg-blue-500 text-white border-blue-400 shadow-md shadow-blue-900/40 active:scale-95"
             )}
             title="Click to have AI Agent instantly learn and vectorize all documents"
           >
-            <RotateCw size={14} className={cn(isRetraining && "animate-spin text-purple-200")} />
+            <RotateCw size={14} className={cn(isRetraining && "animate-spin text-blue-200")} />
             <span>{isRetraining ? 'Learning Content...' : retrainSuccess ? 'AI Updated! ✓' : 'Learn Knowledge Base'}</span>
           </button>
         </div>
@@ -377,10 +377,10 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
       </div>
 
       {/* Test RAG Query Playground (MOVED TO TOP as requested) */}
-      <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
+      <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-blue-500/30 rounded-2xl space-y-4 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cpu size={18} className="text-purple-400" />
+            <Cpu size={18} className="text-blue-400" />
             <h2 className="text-sm font-bold text-[var(--color-text)]">Test RAG Query Playground</h2>
           </div>
           <span className="text-[11px] text-emerald-400 font-mono font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
@@ -398,12 +398,12 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
             placeholder="Type a test question (e.g. 'What is the price of standard treatment?' or 'What are pre-care rules?')..."
             value={testQuery}
             onChange={(e) => setTestQuery(e.target.value)}
-            className="flex-1 px-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 px-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
             disabled={isTestingRag}
-            className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all shrink-0"
+            className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all shrink-0"
           >
             <Send size={14} className={cn(isTestingRag && "animate-pulse")} />
             <span>{isTestingRag ? 'Querying...' : 'Test AI'}</span>
@@ -414,7 +414,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3.5 bg-slate-950/80 border border-purple-500/30 rounded-xl font-mono text-xs text-purple-200 whitespace-pre-wrap leading-relaxed shadow-inner"
+            className="p-3.5 bg-slate-950/80 border border-blue-500/30 rounded-xl font-mono text-xs text-blue-200 whitespace-pre-wrap leading-relaxed shadow-inner"
           >
             {ragOutput}
           </motion.div>
@@ -430,7 +430,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
             placeholder="Search documents or SOP content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -442,7 +442,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               className={cn(
                 "px-3 py-1.5 text-xs rounded-xl border font-medium transition-all",
                 categoryFilter === cat
-                  ? "bg-purple-600 text-white border-purple-500 shadow"
+                  ? "bg-blue-600 text-white border-blue-500 shadow"
                   : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
               )}
             >
@@ -463,7 +463,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03 }}
               className={cn(
-                "rounded-2xl border transition-all flex flex-col justify-between overflow-hidden group shadow-md hover:shadow-xl hover:border-purple-500/50",
+                "rounded-2xl border transition-all flex flex-col justify-between overflow-hidden group shadow-md hover:shadow-xl hover:border-blue-500/50",
                 doc.isActive
                   ? "bg-[var(--color-glass)] backdrop-blur border-[var(--color-glass-border)]"
                   : "bg-slate-950/40 border-slate-800/60 opacity-60"
@@ -492,7 +492,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                 </div>
 
                 {/* Subtle Hover Edit Prompt */}
-                <div className="text-[10px] font-semibold text-purple-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="text-[10px] font-semibold text-blue-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Edit2 size={11} />
                   <span>Click to edit document</span>
                 </div>
@@ -501,13 +501,13 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
               {/* Document Meta Bottom Bar (Google Docs Footer Style) */}
               <div className="p-3.5 flex flex-col justify-between gap-2.5">
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0 mt-0.5">
                     <FileText size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 
                       onClick={() => openEditModal(doc)}
-                      className="font-bold text-xs text-[var(--color-text)] truncate hover:text-purple-400 cursor-pointer"
+                      className="font-bold text-xs text-[var(--color-text)] truncate hover:text-blue-400 cursor-pointer"
                       title={doc.title}
                     >
                       {doc.title}
@@ -538,7 +538,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => openEditModal(doc)}
-                      className="p-1.5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors"
                       title="Edit Document"
                     >
                       <Edit2 size={13} />
@@ -570,7 +570,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-lg">
+                  <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg">
                     <BookOpen size={18} />
                   </div>
                   <div>
@@ -596,7 +596,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                     placeholder="e.g. Diode Laser Standard Operating Procedure 2026"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -605,7 +605,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as any)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="SOP">Standard Operating Procedure (SOP)</option>
                     <option value="PRICING">Pricing Sheet & Menu</option>
@@ -624,7 +624,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                     placeholder="Write or paste full SOP text, pricing details, safety rules, or treatment protocols..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-purple-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none leading-relaxed"
+                    className="w-full p-3 bg-slate-950/80 border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
                   />
                 </div>
 
@@ -638,7 +638,7 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
+                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
                   >
                     <Save size={14} />
                     <span>{editingDocId ? 'Update & Retrain' : 'Add Document'}</span>

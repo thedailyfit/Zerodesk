@@ -10,7 +10,7 @@ function WidgetContent() {
   const searchParams = useSearchParams();
   
   const botName = searchParams.get('botName') || 'ZeroDesk Assistant';
-  const primaryColor = searchParams.get('color') || '#8b5cf6';
+  const primaryColor = searchParams.get('color') || '#2563eb';
   const tone = searchParams.get('tone') || 'empathetic';
   const welcomeMessage = searchParams.get('welcomeMessage') || undefined;
 
@@ -29,7 +29,7 @@ export default function StandaloneWidgetPage() {
   return (
     <div className="bg-transparent min-h-screen">
       <Suspense fallback={
-        <div className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-purple-600 animate-pulse flex items-center justify-center text-white" />
+        <div className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 animate-pulse flex items-center justify-center text-white" />
       }>
         <WidgetContent />
       </Suspense>

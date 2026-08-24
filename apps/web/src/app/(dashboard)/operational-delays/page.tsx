@@ -174,7 +174,7 @@ export default function OperationalDelaysPage() {
                 2.4 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
               </h3>
             </div>
-            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
               <Users size={20} />
             </div>
           </div>

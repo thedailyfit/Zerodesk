@@ -241,7 +241,7 @@ export default function BookAppointmentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <BookOpen className="text-purple-500" size={24} />
+            <BookOpen className="text-blue-500" size={24} />
             <span>Book {customerLabel} Appointment</span>
           </h1>
           <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -268,7 +268,7 @@ export default function BookAppointmentPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/20">
+                <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center border border-blue-500/20">
                   1
                 </span>
                 <h2 className="font-bold text-sm text-[var(--color-text)]">
@@ -283,7 +283,7 @@ export default function BookAppointmentPage() {
                   className={cn(
                     "px-3 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer",
                     !isNewCustomer
-                      ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                      ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                       : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border-[var(--color-border)]"
                   )}
                 >
@@ -295,7 +295,7 @@ export default function BookAppointmentPage() {
                   className={cn(
                     "px-3 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1",
                     isNewCustomer
-                      ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                      ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                       : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border-[var(--color-border)]"
                   )}
                 >
@@ -317,7 +317,7 @@ export default function BookAppointmentPage() {
                         placeholder={`Search existing ${customerLabel.toLowerCase()} by Name, Phone Number, or ID (e.g. Priya / 98765 / PID-8421)...`}
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-9 pr-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
@@ -337,7 +337,7 @@ export default function BookAppointmentPage() {
                                 <p className="text-[10px] text-[var(--color-text-muted)] font-mono">{patient.phone} · {patient.id}</p>
                               </div>
                             </div>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
                               Select ➔
                             </span>
                           </div>
@@ -351,7 +351,7 @@ export default function BookAppointmentPage() {
                         <button
                           type="button"
                           onClick={handleToggleNewCustomer}
-                          className="mt-1.5 text-xs text-purple-500 font-semibold hover:underline cursor-pointer"
+                          className="mt-1.5 text-xs text-blue-500 font-semibold hover:underline cursor-pointer"
                         >
                           + Register as New {customerLabel}
                         </button>
@@ -360,13 +360,13 @@ export default function BookAppointmentPage() {
                   </div>
                 ) : (
                   /* Selected Patient Card */
-                  <div className="p-3.5 bg-purple-500/5 border border-purple-500/20 rounded-xl flex items-center justify-between">
+                  <div className="p-3.5 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar3D name={selectedCustomer.name} size="md" />
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-sm text-[var(--color-text)]">{selectedCustomer.name}</h3>
-                          <span className="px-2 py-0.5 bg-purple-500/10 text-purple-500 text-[10px] font-mono font-bold rounded">
+                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-mono font-bold rounded">
                             {selectedCustomer.id}
                           </span>
                         </div>
@@ -379,7 +379,7 @@ export default function BookAppointmentPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedCustomer(null)}
-                      className="text-xs text-[var(--color-text-muted)] hover:text-purple-500 underline font-medium cursor-pointer"
+                      className="text-xs text-[var(--color-text-muted)] hover:text-blue-500 underline font-medium cursor-pointer"
                     >
                       Change
                     </button>
@@ -402,7 +402,7 @@ export default function BookAppointmentPage() {
                       placeholder="e.g. Ramesh Varma"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -416,7 +416,7 @@ export default function BookAppointmentPage() {
                       placeholder="+91 98765 00000"
                       value={newPhone}
                       onChange={(e) => setNewPhone(e.target.value)}
-                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export default function BookAppointmentPage() {
                     <select
                       value={gender}
                       onChange={(e: any) => setGender(e.target.value)}
-                      className="w-full px-2.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-2.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="Female">Female</option>
                       <option value="Male">Male</option>
@@ -442,7 +442,7 @@ export default function BookAppointmentPage() {
                       placeholder="28"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     />
                   </div>
 
@@ -453,7 +453,7 @@ export default function BookAppointmentPage() {
                       placeholder="name@email.com"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function BookAppointmentPage() {
                         className={cn(
                           "py-1.5 px-2 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
                           priority === p.value
-                            ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                            ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                             : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                         )}
                       >
@@ -487,17 +487,17 @@ export default function BookAppointmentPage() {
 
                 {/* New Patient Registration Fee Checkbox for Clinics */}
                 {isClinic && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl flex items-center justify-between">
+                  <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-center justify-between">
                     <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--color-text)]">
                       <input
                         type="checkbox"
                         checked={includeRegFee}
                         onChange={(e) => setIncludeRegFee(e.target.checked)}
-                        className="rounded text-purple-600 focus:ring-purple-500"
+                        className="rounded text-blue-600 focus:ring-blue-500"
                       />
                       <span>Apply One-Time New Patient Registration & Case Sheet Fee (+₹{registrationFee})</span>
                     </label>
-                    <span className="text-xs font-bold text-purple-500 font-mono">₹{registrationFee}</span>
+                    <span className="text-xs font-bold text-blue-500 font-mono">₹{registrationFee}</span>
                   </div>
                 )}
               </div>
@@ -508,7 +508,7 @@ export default function BookAppointmentPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/20">
+                <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center border border-blue-500/20">
                   2
                 </span>
                 <h2 className="font-bold text-sm text-[var(--color-text)]">
@@ -553,7 +553,7 @@ export default function BookAppointmentPage() {
                 <select
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {displayServices.length > 0 ? displayServices.map((srv) => (
                     <option key={srv.id} value={srv.id}>
@@ -566,7 +566,7 @@ export default function BookAppointmentPage() {
                 {selectedService && (
                   <div className="mt-1.5">
                     <p className="text-[11px] text-[var(--color-text-muted)]">
-                      Category: <span className="font-semibold text-purple-500">{selectedService.category}</span> · Duration: <span className="font-semibold text-[var(--color-text)]">{selectedService.duration} mins</span>
+                      Category: <span className="font-semibold text-blue-500">{selectedService.category}</span> · Duration: <span className="font-semibold text-[var(--color-text)]">{selectedService.duration} mins</span>
                     </p>
                     {selectedService.isPackage && (
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
@@ -588,7 +588,7 @@ export default function BookAppointmentPage() {
                 <select
                   value={selectedDoctor}
                   onChange={(e) => setSelectedDoctor(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Dr. Meenakshi (Senior Consultant)">Dr. Meenakshi (Senior Consultant)</option>
                   <option value="Dr. Arun (Specialist)">Dr. Arun (Specialist)</option>
@@ -614,7 +614,7 @@ export default function BookAppointmentPage() {
                     className={cn(
                       "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
                       packagePaymentMode === 'FULL'
-                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                         : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
@@ -626,7 +626,7 @@ export default function BookAppointmentPage() {
                     className={cn(
                       "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
                       packagePaymentMode === 'PER_SESSION'
-                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                         : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
@@ -638,7 +638,7 @@ export default function BookAppointmentPage() {
                     className={cn(
                       "py-2 px-2 text-xs font-semibold rounded-lg border transition-all text-center cursor-pointer",
                       packagePaymentMode === 'CUSTOM'
-                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                         : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
@@ -652,7 +652,7 @@ export default function BookAppointmentPage() {
                       placeholder="Enter custom payment amount..."
                       value={customPaymentAmount}
                       onChange={(e) => setCustomPaymentAmount(e.target.value)}
-                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 )}
@@ -663,7 +663,7 @@ export default function BookAppointmentPage() {
           {/* SECTION 3: Date & Interactive Time Slot Selector */}
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-3">
-              <span className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/20">
+              <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center border border-blue-500/20">
                 3
               </span>
               <h2 className="font-bold text-sm text-[var(--color-text)]">
@@ -681,7 +681,7 @@ export default function BookAppointmentPage() {
                   required
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -698,7 +698,7 @@ export default function BookAppointmentPage() {
                       className={cn(
                         "py-2 px-1 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
                         !useCustomTime && selectedSlot === slot
-                          ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                          ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                           : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                       )}
                     >
@@ -711,7 +711,7 @@ export default function BookAppointmentPage() {
                     className={cn(
                       "py-2 px-1 text-[11px] font-semibold rounded-lg border transition-all text-center cursor-pointer",
                       useCustomTime
-                        ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                         : "bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
                     )}
                   >
@@ -728,7 +728,7 @@ export default function BookAppointmentPage() {
                       required={useCustomTime}
                       value={customTime}
                       onChange={(e) => setCustomTime(e.target.value)}
-                      className="w-full sm:w-1/2 px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full sm:w-1/2 px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 )}
@@ -745,7 +745,7 @@ export default function BookAppointmentPage() {
                 placeholder="e.g. Walk-in consultation, allergic to latex, VIP client referral"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -757,7 +757,7 @@ export default function BookAppointmentPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4 sticky top-20">
             <h3 className="font-bold text-sm text-[var(--color-text)] border-b border-[var(--color-border)] pb-3 flex items-center justify-between">
               <span>Booking Summary</span>
-              <Receipt size={16} className="text-purple-500" />
+              <Receipt size={16} className="text-blue-500" />
             </h3>
 
             <div className="space-y-2.5 text-xs">
@@ -780,7 +780,7 @@ export default function BookAppointmentPage() {
 
               <div className="pt-2 border-t border-[var(--color-border)] flex justify-between items-baseline font-bold text-sm text-[var(--color-text)]">
                 <span>Total Amount</span>
-                <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 font-mono">
+                <span className="text-xl font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                   {formatCurrency(totalPayable)}
                 </span>
               </div>
@@ -796,7 +796,7 @@ export default function BookAppointmentPage() {
                   className={cn(
                     "py-2 text-xs font-semibold rounded-xl border transition-all text-center cursor-pointer",
                     paymentOption === 'PAY_LATER'
-                      ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                      ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                       : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border-[var(--color-border)]"
                   )}
                 >
@@ -808,7 +808,7 @@ export default function BookAppointmentPage() {
                   className={cn(
                     "py-2 text-xs font-semibold rounded-xl border transition-all text-center cursor-pointer",
                     paymentOption === 'PAY_NOW'
-                      ? "bg-purple-600 text-white border-purple-500 shadow-sm"
+                      ? "bg-blue-600 text-white border-blue-500 shadow-sm"
                       : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border-[var(--color-border)]"
                   )}
                 >
@@ -824,7 +824,7 @@ export default function BookAppointmentPage() {
                   type="checkbox"
                   checked={sendWhatsApp}
                   onChange={(e) => setSendWhatsApp(e.target.checked)}
-                  className="rounded text-purple-600 focus:ring-purple-500"
+                  className="rounded text-blue-600 focus:ring-blue-500"
                 />
                 <span className="flex items-center gap-1">
                   <MessageSquare size={13} className="text-emerald-500" />
@@ -836,7 +836,7 @@ export default function BookAppointmentPage() {
             {/* Big Confirm Button */}
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Confirm & Check-in to Waiting Room</span>
               <ArrowRight size={15} />
@@ -855,7 +855,7 @@ export default function BookAppointmentPage() {
                 <div key={b.token} className="p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl flex items-center justify-between text-xs">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-purple-500 text-[11px]">{b.token}</span>
+                      <span className="font-mono font-bold text-blue-500 text-[11px]">{b.token}</span>
                       <span className="font-bold text-[var(--color-text)]">{b.name}</span>
                     </div>
                     <p className="text-[10px] text-[var(--color-text-muted)]">{b.service} · {b.time}</p>
@@ -885,7 +885,7 @@ export default function BookAppointmentPage() {
               </div>
 
               <div>
-                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">
                   TOKEN #{confirmedBooking.tokenNumber}
                 </span>
                 <h2 className="text-xl font-bold text-[var(--color-text)] mt-2">
@@ -911,7 +911,7 @@ export default function BookAppointmentPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--color-text-muted)]">{staffLabel}:</span>
-                  <span className="font-bold text-purple-500">{confirmedBooking.doctorName}</span>
+                  <span className="font-bold text-blue-500">{confirmedBooking.doctorName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--color-text-muted)]">Scheduled Time:</span>
@@ -937,7 +937,7 @@ export default function BookAppointmentPage() {
                 <button
                   type="button"
                   onClick={() => { setConfirmedBooking(null); handleResetForm(); }}
-                  className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md cursor-pointer"
                 >
                   Next Walk-in Entry
                 </button>

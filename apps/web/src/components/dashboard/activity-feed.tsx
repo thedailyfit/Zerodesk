@@ -6,9 +6,9 @@ import { timeAgo } from '@/lib/utils';
 
 const mockActivities = [
   { id: 1, type: 'call', user: 'Rahul Sharma', action: 'completed an AI screening call', status: 'Booked', time: new Date(Date.now() - 1000 * 60 * 5).toISOString(), icon: Phone, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  { id: 2, type: 'whatsapp', user: 'Priya Patel', action: 'sent a WhatsApp message', status: 'Resolved', time: new Date(Date.now() - 1000 * 60 * 15).toISOString(), icon: MessageCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
-  { id: 3, type: 'web', user: 'Amit Kumar', action: 'booked appointment via web', status: 'Confirmed', time: new Date(Date.now() - 1000 * 60 * 45).toISOString(), icon: Globe, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-  { id: 4, type: 'system', user: 'System', action: 'synced 15 CRM records', status: 'Success', time: new Date(Date.now() - 1000 * 60 * 120).toISOString(), icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  { id: 2, type: 'whatsapp', user: 'Priya Patel', action: 'sent a WhatsApp message', status: 'Resolved', time: new Date(Date.now() - 1000 * 60 * 15).toISOString(), icon: MessageCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  { id: 3, type: 'web', user: 'Amit Kumar', action: 'booked appointment via web', status: 'Confirmed', time: new Date(Date.now() - 1000 * 60 * 45).toISOString(), icon: Globe, color: 'text-sky-500', bg: 'bg-sky-500/10' },
+  { id: 4, type: 'system', user: 'System', action: 'synced 15 CRM records', status: 'Success', time: new Date(Date.now() - 1000 * 60 * 120).toISOString(), icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-600/10' },
 ];
 
 export function ActivityFeed() {

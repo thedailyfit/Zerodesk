@@ -64,9 +64,9 @@ const SHIFT_LEGEND = [
   { 
     type: 'oncall' as ShiftType, 
     label: 'On Call', 
-    color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', 
-    barColor: 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400/50 text-purple-100',
-    dot: 'bg-purple-400',
+    color: 'bg-blue-500/20 text-blue-300 border-blue-500/40', 
+    barColor: 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400/50 text-blue-100',
+    dot: 'bg-blue-400',
     icon: PhoneCall 
   },
   { 
@@ -287,12 +287,12 @@ export default function StaffCalendarPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold">
               Admin & Manager Portal
             </span>
           </div>
           <h1 className="text-3xl font-extrabold text-[var(--color-text)] flex items-center gap-3 mt-1 tracking-tight">
-            <div className="p-2.5 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-2xl text-purple-400">
+            <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-2xl text-blue-400">
               <Users className="w-7 h-7" />
             </div>
             Staff Working Calendar
@@ -319,7 +319,7 @@ export default function StaffCalendarPage() {
         <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-4 rounded-2xl shadow-lg space-y-1">
           <span className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Total Staff</span>
           <div className="text-2xl font-extrabold text-[var(--color-text)]">{stats.total}</div>
-          <span className="text-[10px] text-purple-400 font-semibold block">Across 4 Departments</span>
+          <span className="text-[10px] text-blue-400 font-semibold block">Across 4 Departments</span>
         </div>
 
         <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl shadow-lg space-y-1">
@@ -340,13 +340,13 @@ export default function StaffCalendarPage() {
           <span className="text-[10px] text-amber-400/80 font-medium block">1 Hr Staggered Slots</span>
         </div>
 
-        <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-2xl shadow-lg space-y-1">
-          <div className="flex items-center justify-between text-purple-400">
+        <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-2xl shadow-lg space-y-1">
+          <div className="flex items-center justify-between text-blue-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">On Call</span>
             <PhoneCall size={16} />
           </div>
-          <div className="text-2xl font-extrabold text-purple-300">{stats.onCallCount}</div>
-          <span className="text-[10px] text-purple-400/80 font-medium block">Emergency Standby</span>
+          <div className="text-2xl font-extrabold text-blue-300">{stats.onCallCount}</div>
+          <span className="text-[10px] text-blue-400/80 font-medium block">Emergency Standby</span>
         </div>
 
         <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl shadow-lg space-y-1 col-span-2 sm:col-span-1">
@@ -411,7 +411,7 @@ export default function StaffCalendarPage() {
             {/* Grid Header with Time Columns */}
             <div className="grid grid-cols-13 border-b border-[var(--color-glass-border)] bg-[var(--color-surface)]/40 p-4">
               <div className="col-span-3 font-bold text-xs text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-2">
-                <Users size={16} className="text-purple-400" />
+                <Users size={16} className="text-blue-400" />
                 Staff Member & Department
               </div>
               <div className="col-span-10 grid grid-cols-12 text-center items-center">
@@ -427,7 +427,7 @@ export default function StaffCalendarPage() {
             <div className="divide-y divide-[var(--color-glass-border)]">
               {filteredStaff.length === 0 ? (
                 <div className="p-12 text-center text-[var(--color-text-muted)] space-y-2">
-                  <AlertCircle className="w-8 h-8 mx-auto text-purple-400 opacity-60" />
+                  <AlertCircle className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
                   <p className="text-sm font-medium">No staff members found matching search filter.</p>
                 </div>
               ) : (
@@ -444,24 +444,24 @@ export default function StaffCalendarPage() {
                       className="col-span-3 flex items-center gap-3 cursor-pointer pr-3"
                     >
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-md">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-md">
                           {staff.avatar}
                         </div>
                         <span className={cn(
                           "absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[var(--color-bg)]",
                           staff.status === 'Active' ? "bg-emerald-500" :
                           staff.status === 'On Break' ? "bg-amber-500" :
-                          staff.status === 'On Call' ? "bg-purple-500" : "bg-rose-500"
+                          staff.status === 'On Call' ? "bg-blue-500" : "bg-rose-500"
                         )} />
                       </div>
 
                       <div className="min-w-0">
-                        <div className="font-bold text-sm text-[var(--color-text)] truncate group-hover:text-purple-300 transition-colors">
+                        <div className="font-bold text-sm text-[var(--color-text)] truncate group-hover:text-blue-300 transition-colors">
                           {staff.name}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] truncate">{staff.role}</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20 font-medium">
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20 font-medium">
                             {staff.department}
                           </span>
                           <span className="text-[10px] text-amber-300 font-mono">
@@ -508,7 +508,7 @@ export default function StaffCalendarPage() {
                             <div className="flex items-center justify-between text-[10px] font-bold truncate">
                               <span className="flex items-center gap-1">
                                 {block.type === 'lunch' && <Coffee size={12} className="shrink-0 text-amber-200" />}
-                                {block.type === 'oncall' && <PhoneCall size={12} className="shrink-0 text-purple-200" />}
+                                {block.type === 'oncall' && <PhoneCall size={12} className="shrink-0 text-blue-200" />}
                                 {block.type === 'leave' && <UserX size={12} className="shrink-0 text-rose-200" />}
                                 {block.label || legendItem?.label}
                               </span>
@@ -605,7 +605,7 @@ export default function StaffCalendarPage() {
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-white text-base shadow-lg">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-base shadow-lg">
                     {selectedStaffDetail.avatar}
                   </div>
                   <div>
@@ -626,37 +626,37 @@ export default function StaffCalendarPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[var(--color-text-muted)]">Duty Start</label>
-                      <input type="time" value={editForm.dutyStart} onChange={e => setEditForm(prev => ({...prev, dutyStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                      <input type="time" value={editForm.dutyStart} onChange={e => setEditForm(prev => ({...prev, dutyStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[var(--color-text-muted)]">Duty End</label>
-                      <input type="time" value={editForm.dutyEnd} onChange={e => setEditForm(prev => ({...prev, dutyEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                      <input type="time" value={editForm.dutyEnd} onChange={e => setEditForm(prev => ({...prev, dutyEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[var(--color-text-muted)]">Lunch Start</label>
-                      <input type="time" value={editForm.lunchStart} onChange={e => setEditForm(prev => ({...prev, lunchStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                      <input type="time" value={editForm.lunchStart} onChange={e => setEditForm(prev => ({...prev, lunchStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[var(--color-text-muted)]">Lunch End</label>
-                      <input type="time" value={editForm.lunchEnd} onChange={e => setEditForm(prev => ({...prev, lunchEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                      <input type="time" value={editForm.lunchEnd} onChange={e => setEditForm(prev => ({...prev, lunchEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
                   <div className="space-y-3 pt-2 border-t border-[var(--color-border)]">
                     <label className="flex items-center gap-2 text-xs font-bold text-[var(--color-text)] cursor-pointer">
-                      <input type="checkbox" checked={editForm.hasOnCall} onChange={e => setEditForm(prev => ({...prev, hasOnCall: e.target.checked}))} className="rounded text-purple-600 bg-[var(--color-surface)] border-[var(--color-border)] focus:ring-purple-500" />
+                      <input type="checkbox" checked={editForm.hasOnCall} onChange={e => setEditForm(prev => ({...prev, hasOnCall: e.target.checked}))} className="rounded text-blue-600 bg-[var(--color-surface)] border-[var(--color-border)] focus:ring-blue-500" />
                       Add On-Call Shift
                     </label>
                     {editForm.hasOnCall && (
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-[var(--color-text-muted)]">On-Call Start</label>
-                          <input type="time" value={editForm.onCallStart} onChange={e => setEditForm(prev => ({...prev, onCallStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                          <input type="time" value={editForm.onCallStart} onChange={e => setEditForm(prev => ({...prev, onCallStart: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-[var(--color-text-muted)]">On-Call End</label>
-                          <input type="time" value={editForm.onCallEnd} onChange={e => setEditForm(prev => ({...prev, onCallEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500" />
+                          <input type="time" value={editForm.onCallEnd} onChange={e => setEditForm(prev => ({...prev, onCallEnd: e.target.value}))} className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500" />
                         </div>
                       </div>
                     )}
@@ -727,7 +727,7 @@ export default function StaffCalendarPage() {
                       });
                       setIsEditingSchedule(true);
                     }}
-                    className="px-4 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-purple-500/10 hover:text-purple-400 text-[var(--color-text)] font-bold text-xs transition-colors"
+                    className="px-4 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-blue-500/10 hover:text-blue-400 text-[var(--color-text)] font-bold text-xs transition-colors"
                   >
                     Edit Schedule
                   </button>
@@ -779,7 +779,7 @@ export default function StaffCalendarPage() {
                         setSelectedStaffDetail(updatedStaff);
                         setIsEditingSchedule(false);
                       }}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all"
                     >
                       Save Changes
                     </button>
@@ -790,7 +790,7 @@ export default function StaffCalendarPage() {
                       setSelectedStaffDetail(null);
                       setIsEditingSchedule(false);
                     }}
-                    className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all ml-auto"
+                    className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all ml-auto"
                   >
                     Close Inspector
                   </button>

@@ -122,7 +122,7 @@ export default function InboundCallsPage() {
         </div>
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
           <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Human Handoffs</p>
-          <p className="text-2xl font-extrabold text-purple-400 mt-1">3 Calls (Clinical)</p>
+          <p className="text-2xl font-extrabold text-blue-400 mt-1">3 Calls (Clinical)</p>
         </div>
     </div>
 
@@ -135,14 +135,14 @@ export default function InboundCallsPage() {
             placeholder="Search patient name, phone, or branch..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
           />
         </div>
 
         {/* Disposition Enum Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 text-xs">
           <span className="text-slate-400 font-semibold flex items-center gap-1 shrink-0">
-            <Filter size={13} className="text-purple-400" /> Disposition:
+            <Filter size={13} className="text-blue-400" /> Disposition:
           </span>
           {['ALL', 'AI_RESOLVED', 'HANDED_OFF_TO_HUMAN', 'MISSED_AUTO_WHATSAPP'].map((disp) => (
             <button
@@ -154,7 +154,7 @@ export default function InboundCallsPage() {
                   setCalls(INBOUND_CALL_LOGS.filter(c => c.resolution === disp));
                 }
               }}
-              className="px-3 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all shrink-0 bg-slate-900 border-slate-800 text-slate-300 hover:border-purple-500/50"
+              className="px-3 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all shrink-0 bg-slate-900 border-slate-800 text-slate-300 hover:border-blue-500/50"
             >
               {disp === 'ALL' ? 'Show All' : disp.replace('_', ' ')}
             </button>
@@ -167,13 +167,13 @@ export default function InboundCallsPage() {
         {filteredCalls.map((call) => (
           <div
             key={call.id}
-            className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-purple-500/40 shadow-sm"
+            className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-blue-500/40 shadow-sm"
           >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shrink-0",
                 call.resolution === 'AI_RESOLVED' ? "bg-emerald-600 shadow-lg shadow-emerald-500/20" :
-                call.resolution === 'HANDED_OFF_TO_HUMAN' ? "bg-purple-600 shadow-lg shadow-purple-500/20" : "bg-red-600"
+                call.resolution === 'HANDED_OFF_TO_HUMAN' ? "bg-blue-600 shadow-lg shadow-blue-500/20" : "bg-red-600"
               )}>
                 <PhoneIncoming size={20} />
               </div>
@@ -189,7 +189,7 @@ export default function InboundCallsPage() {
                     </span>
                   )}
                   {call.resolution === 'HANDED_OFF_TO_HUMAN' && (
-                    <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold uppercase">
+                    <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold uppercase">
                       ⚠️ Doctor Handoff
                     </span>
                   )}
@@ -203,7 +203,7 @@ export default function InboundCallsPage() {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)] mt-1 font-mono">
                   <span>📍 {call.branch}</span>
                   <span>•</span>
-                  <span>🤖 Agent: <strong className="text-purple-300">{call.agent}</strong></span>
+                  <span>🤖 Agent: <strong className="text-blue-300">{call.agent}</strong></span>
                   <span>•</span>
                   <span>⏱️ Duration: <strong>{call.duration}</strong></span>
                 </div>
@@ -230,7 +230,7 @@ export default function InboundCallsPage() {
 
               <button
                 onClick={() => setActiveCallId(call.id)}
-                className="px-3.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
               >
                 <FileText size={13} />
                 <span>View Full Transcript</span>
@@ -248,11 +248,11 @@ export default function InboundCallsPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-purple-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-slate-900 border border-blue-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <FileText size={18} className="text-purple-400" />
+                  <FileText size={18} className="text-blue-400" />
                   Transcript: {calls.find(c => c.id === activeCallId)?.customer}
                 </h3>
                 <button onClick={() => setActiveCallId(null)} className="text-slate-400 hover:text-white">

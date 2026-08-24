@@ -78,7 +78,7 @@ const STEP_ICONS: Record<string, any> = {
 
 const STEP_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   TRIGGER: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
-  CONDITION: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30' },
+  CONDITION: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/30' },
   ACTION: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30' },
   DELAY: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
 };
@@ -378,7 +378,7 @@ export default function AutomationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <span>Workflow Automations</span>
-            <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
               Zapier-Style Pipeline Engine
             </span>
           </h1>
@@ -394,12 +394,12 @@ export default function AutomationsPage() {
               {workflows.filter(w => w.isActive).length} Active Pipelines
             </span>
             <span>•</span>
-            <span className="text-purple-300 font-bold">{workflows.reduce((s, w) => s + w.runs24h, 0)} runs in 24h</span>
+            <span className="text-blue-300 font-bold">{workflows.reduce((s, w) => s + w.runs24h, 0)} runs in 24h</span>
           </div>
 
           <button
             onClick={openCreateNewCanvas}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
           >
             <Plus size={18} />
             <span>Create Automation Sequence</span>
@@ -410,7 +410,7 @@ export default function AutomationsPage() {
       {/* Preset Automation Templates */}
       <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
             <Sparkles size={14} />
             1-Click Pre-Installed Workflow Sequences ({nicheConfig?.label || 'Industry Best Practices'})
           </h2>
@@ -448,18 +448,18 @@ export default function AutomationsPage() {
                 setIsNewWorkflow(true);
                 setIsEditorOpen(true);
               }}
-              className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-purple-500/50 text-left transition-all group relative overflow-hidden"
+              className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-blue-500/50 text-left transition-all group relative overflow-hidden"
             >
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
                 {tmpl.category}
               </span>
-              <h3 className="font-bold text-xs text-[var(--color-text)] mt-2 group-hover:text-purple-400 transition-colors">
+              <h3 className="font-bold text-xs text-[var(--color-text)] mt-2 group-hover:text-blue-400 transition-colors">
                 {tmpl.title}
               </h3>
               <p className="text-[11px] text-[var(--color-text-muted)] mt-1 line-clamp-2">
                 {tmpl.desc}
               </p>
-              <div className="mt-2.5 text-[10px] font-semibold text-purple-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="mt-2.5 text-[10px] font-semibold text-blue-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span>Open in Canvas Editor →</span>
               </div>
             </button>
@@ -477,7 +477,7 @@ export default function AutomationsPage() {
             transition={{ delay: i * 0.04 }}
             onClick={() => openCanvasEditor(wf)}
             className={cn(
-              "p-5 rounded-2xl border transition-all space-y-4 group shadow-sm cursor-pointer hover:shadow-xl hover:border-purple-500/60 relative",
+              "p-5 rounded-2xl border transition-all space-y-4 group shadow-sm cursor-pointer hover:shadow-xl hover:border-blue-500/60 relative",
               wf.isActive
                 ? "bg-[var(--color-glass)] backdrop-blur border-[var(--color-glass-border)]"
                 : "bg-slate-950/40 border-slate-800/60 opacity-70"
@@ -488,16 +488,16 @@ export default function AutomationsPage() {
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "p-2.5 rounded-xl shrink-0 border",
-                  wf.isActive ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-slate-800 text-slate-500 border-slate-700"
+                  wf.isActive ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-slate-800 text-slate-500 border-slate-700"
                 )}>
                   <Workflow size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h3 className="font-bold text-base text-[var(--color-text)] group-hover:text-purple-300 transition-colors">
+                    <h3 className="font-bold text-base text-[var(--color-text)] group-hover:text-blue-300 transition-colors">
                       {wf.name}
                     </h3>
-                    <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                    <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
                       {wf.triggerEvent}
                     </span>
                   </div>
@@ -522,7 +522,7 @@ export default function AutomationsPage() {
                   {wf.isActive ? 'Active (ON)' : 'Paused (OFF)'}
                 </button>
 
-                <div className="p-2 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-xl transition-colors">
+                <div className="p-2 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-xl transition-colors">
                   <Edit3 size={15} />
                 </div>
               </div>
@@ -538,7 +538,7 @@ export default function AutomationsPage() {
                 return (
                   <div key={step.id || idx} className="flex flex-1 md:flex-initial items-center gap-2 min-w-[210px]">
                     <div className={cn(
-                      "flex-1 p-3 rounded-xl border bg-[var(--color-surface)] relative space-y-1 group-hover:border-purple-500/40 transition-colors shadow-sm",
+                      "flex-1 p-3 rounded-xl border bg-[var(--color-surface)] relative space-y-1 group-hover:border-blue-500/40 transition-colors shadow-sm",
                       conf.border
                     )}>
                       <div className="flex items-center justify-between text-[10px]">
@@ -558,7 +558,7 @@ export default function AutomationsPage() {
 
                     {/* Connecting Connector Arrow between steps */}
                     {!isLast && (
-                      <div className="hidden md:flex items-center justify-center text-purple-400/70 shrink-0">
+                      <div className="hidden md:flex items-center justify-center text-blue-400/70 shrink-0">
                         <ArrowRight size={16} />
                       </div>
                     )}
@@ -568,7 +568,7 @@ export default function AutomationsPage() {
             </div>
 
             {/* Bottom prompt */}
-            <div className="flex items-center justify-between pt-1 text-[11px] text-purple-400 font-semibold">
+            <div className="flex items-center justify-between pt-1 text-[11px] text-blue-400 font-semibold">
               <span className="flex items-center gap-1">
                 <Sliders size={12} />
                 Click to open interactive Zapier Sequence Canvas & edit steps
@@ -587,12 +587,12 @@ export default function AutomationsPage() {
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              className="w-full max-w-5xl bg-[#0b0f17] border border-purple-500/40 rounded-3xl p-6 sm:p-8 text-white space-y-6 shadow-2xl my-8 max-h-[92vh] flex flex-col justify-between overflow-hidden"
+              className="w-full max-w-5xl bg-[#0b0f17] border border-blue-500/40 rounded-3xl p-6 sm:p-8 text-white space-y-6 shadow-2xl my-8 max-h-[92vh] flex flex-col justify-between overflow-hidden"
             >
               {/* Canvas Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-purple-600/20 border border-purple-500/40 text-purple-400">
+                  <div className="p-3 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-400">
                     <Workflow size={24} />
                   </div>
                   <div>
@@ -601,7 +601,7 @@ export default function AutomationsPage() {
                         type="text"
                         value={activeWorkflow.name}
                         onChange={(e) => setActiveWorkflow({ ...activeWorkflow, name: e.target.value })}
-                        className="font-bold text-lg sm:text-xl text-white bg-transparent border-b border-transparent hover:border-slate-700 focus:border-purple-500 focus:outline-none transition-colors px-1 py-0.5"
+                        className="font-bold text-lg sm:text-xl text-white bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:outline-none transition-colors px-1 py-0.5"
                         placeholder="Sequence Name..."
                       />
                       <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
@@ -653,7 +653,7 @@ export default function AutomationsPage() {
                       <select
                         value={activeWorkflow.triggerEvent}
                         onChange={(e) => setActiveWorkflow({ ...activeWorkflow, triggerEvent: e.target.value })}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-amber-300 font-bold focus:border-purple-500 focus:outline-none"
+                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-amber-300 font-bold focus:border-blue-500 focus:outline-none"
                       >
                         <option value="👤 New Registration / Lead Created">👤 New Registration / Lead Created in CRM</option>
                         <option value="🏷️ Procedure / Service Completed">🏷️ Procedure / Service Completed in Clinic</option>
@@ -698,14 +698,14 @@ export default function AutomationsPage() {
                       type="text"
                       value={activeWorkflow.description}
                       onChange={(e) => setActiveWorkflow({ ...activeWorkflow, description: e.target.value })}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:border-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
                       placeholder="Brief summary of this automation pipeline..."
                     />
                   </div>
                 </div>
 
                 {/* Zapier Vertical Connected Flow Builder */}
-                <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-[19px] sm:before:left-[27px] before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-purple-500 before:via-cyan-500 before:to-emerald-500">
+                <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-[19px] sm:before:left-[27px] before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-cyan-500 before:to-emerald-500">
                   {activeWorkflow.steps.map((step, idx) => {
                     const conf = STEP_COLORS[step.type] || STEP_COLORS.ACTION;
                     const Icon = STEP_ICONS[step.actionType || step.type] || Zap;
@@ -718,7 +718,7 @@ export default function AutomationsPage() {
                           "absolute -left-[27px] sm:-left-[35px] top-4 w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center bg-slate-950 z-10",
                           isSimActive
                             ? "border-emerald-400 bg-emerald-500 ring-4 ring-emerald-500/30 scale-125"
-                            : "border-purple-500 group-hover:scale-110 group-hover:border-purple-400"
+                            : "border-blue-500 group-hover:scale-110 group-hover:border-blue-400"
                         )}>
                           {isSimActive && <Check size={10} className="text-slate-950 stroke-[3]" />}
                         </div>
@@ -727,8 +727,8 @@ export default function AutomationsPage() {
                         <div 
                           onClick={() => openStepEditor(idx, step)}
                           className={cn(
-                            "p-4 rounded-2xl border bg-slate-900/90 transition-all cursor-pointer shadow-lg space-y-2 hover:border-purple-500/70 relative",
-                            editingStepIndex === idx ? "border-purple-500 ring-2 ring-purple-500/30" : "border-slate-800",
+                            "p-4 rounded-2xl border bg-slate-900/90 transition-all cursor-pointer shadow-lg space-y-2 hover:border-blue-500/70 relative",
+                            editingStepIndex === idx ? "border-blue-500 ring-2 ring-blue-500/30" : "border-slate-800",
                             isSimActive && "border-emerald-500 bg-emerald-950/20"
                           )}
                         >
@@ -743,7 +743,7 @@ export default function AutomationsPage() {
                             <div className="flex items-center gap-1.5">
                               <button
                                 onClick={(e) => { e.stopPropagation(); openStepEditor(idx, step); }}
-                                className="p-1 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-lg transition-colors text-[10px] flex items-center gap-1 font-semibold"
+                                className="p-1 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors text-[10px] flex items-center gap-1 font-semibold"
                               >
                                 <Edit3 size={12} />
                                 <span>Configure</span>
@@ -774,7 +774,7 @@ export default function AutomationsPage() {
                           <button
                             type="button"
                             onClick={() => handleAddStepToCanvas(idx)}
-                            className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-purple-600 border border-purple-500/30 hover:border-purple-400 text-purple-300 hover:text-white rounded-full text-[10px] font-bold shadow-md transition-all hover:scale-105"
+                            className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-blue-600 border border-blue-500/30 hover:border-blue-400 text-blue-300 hover:text-white rounded-full text-[10px] font-bold shadow-md transition-all hover:scale-105"
                           >
                             <Plus size={11} />
                             <span>Add Step After</span>
@@ -790,11 +790,11 @@ export default function AutomationsPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border border-purple-500/50 space-y-4 shadow-xl text-xs"
+                    className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border border-blue-500/50 space-y-4 shadow-xl text-xs"
                   >
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
-                        <Sliders size={16} className="text-purple-400" />
+                        <Sliders size={16} className="text-blue-400" />
                         <h4 className="font-bold text-sm text-white">Configure Step #{editingStepIndex + 1}</h4>
                       </div>
                       <button onClick={() => setEditingStepIndex(null)} className="text-slate-400 hover:text-white">
@@ -808,7 +808,7 @@ export default function AutomationsPage() {
                         <select
                           value={stepType}
                           onChange={(e) => setStepType(e.target.value as any)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
                         >
                           <option value="TRIGGER">TRIGGER (Event Starter)</option>
                           <option value="ACTION">ACTION (Perform Task)</option>
@@ -822,7 +822,7 @@ export default function AutomationsPage() {
                         <select
                           value={stepActionType}
                           onChange={(e) => setStepActionType(e.target.value as any)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
                         >
                           <option value="WHATSAPP">💬 WhatsApp Message DM</option>
                           <option value="VOICE_CALL">📞 Voice AI Outbound Call</option>
@@ -840,7 +840,7 @@ export default function AutomationsPage() {
                           type="text"
                           value={stepLabel}
                           onChange={(e) => setStepLabel(e.target.value)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
                           placeholder="e.g. Action 1: Send WhatsApp Aftercare"
                         />
                       </div>
@@ -862,7 +862,7 @@ export default function AutomationsPage() {
                               setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
                             }}
                             placeholder="https://hooks.zapier.com/..."
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-purple-500"
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-blue-500"
                           />
                         </div>
                         <div>
@@ -877,7 +877,7 @@ export default function AutomationsPage() {
                               };
                               setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
                             }}
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-purple-500"
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-blue-500"
                           >
                             <option value="POST">POST</option>
                             <option value="GET">GET</option>
@@ -896,7 +896,7 @@ export default function AutomationsPage() {
                               };
                               setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
                             }}
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono focus:border-purple-500"
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono focus:border-blue-500"
                           />
                         </div>
                       </div>
@@ -920,7 +920,7 @@ export default function AutomationsPage() {
                               setStepDetail(selectedTemp.content);
                             }
                           }}
-                          className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-purple-500"
+                          className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-blue-500"
                         >
                           <option value="">-- Custom Message (Type below) --</option>
                           {nicheConfig?.templates
@@ -938,7 +938,7 @@ export default function AutomationsPage() {
                         rows={3}
                         value={stepDetail}
                         onChange={(e) => setStepDetail(e.target.value)}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-purple-500 focus:outline-none leading-relaxed font-mono text-[11px]"
+                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none leading-relaxed font-mono text-[11px]"
                         placeholder="Write exact action parameters, delay duration (e.g. 'Wait 24h'), or message template..."
                       />
                     </div>
@@ -954,7 +954,7 @@ export default function AutomationsPage() {
                       <button
                         type="button"
                         onClick={handleSaveStepDetails}
-                        className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-md"
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md"
                       >
                         Apply Step Changes
                       </button>
@@ -977,7 +977,7 @@ export default function AutomationsPage() {
                   <button
                     type="button"
                     onClick={handleSaveActiveWorkflow}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/25 transition-all hover:scale-105"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
                   >
                     <Save size={15} />
                     <span>Save & Deploy Sequence</span>

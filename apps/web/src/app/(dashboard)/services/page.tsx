@@ -225,7 +225,7 @@ export default function ServicesPage() {
 
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
           >
             <Plus size={15} />
             <span>Add Service</span>
@@ -243,7 +243,7 @@ export default function ServicesPage() {
             placeholder="Search services by name, category, or role..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
+            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
           />
         </div>
 
@@ -254,7 +254,7 @@ export default function ServicesPage() {
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
               selectedCategory === 'ALL'
-                ? "bg-purple-600 text-white shadow-sm"
+                ? "bg-blue-600 text-white shadow-sm"
                 : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
             )}
           >
@@ -269,7 +269,7 @@ export default function ServicesPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
                   selectedCategory === cat
-                    ? "bg-purple-600 text-white shadow-sm"
+                    ? "bg-blue-600 text-white shadow-sm"
                     : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                 )}
               >
@@ -291,7 +291,7 @@ export default function ServicesPage() {
             className={cn(
               "p-5 rounded-2xl border transition-all relative flex flex-col justify-between group shadow-sm bg-[var(--color-surface)]",
               service.isActive 
-                ? "border-[var(--color-border)] hover:border-purple-500/40" 
+                ? "border-[var(--color-border)] hover:border-blue-500/40" 
                 : "border-[var(--color-border)] opacity-60 bg-[var(--color-bg)]"
             )}
           >
@@ -299,7 +299,7 @@ export default function ServicesPage() {
               {/* Header: Title & Active Status */}
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <span className="text-[11px] font-semibold text-purple-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">
                     {service.category}
                   </span>
                   <h3 className="font-bold text-base text-[var(--color-text)] mt-0.5">
@@ -341,7 +341,7 @@ export default function ServicesPage() {
                   </span>
                 )}
                 {service.isPackage && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
                     📦 Package · {service.totalSessions} Sessions
                   </span>
                 )}
@@ -366,7 +366,7 @@ export default function ServicesPage() {
                 <button
                   onClick={() => handleOpenEditModal(service)}
                   title="Edit Service"
-                  className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-purple-600 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   <Edit3 size={14} />
                 </button>
@@ -381,7 +381,7 @@ export default function ServicesPage() {
 
               <Link
                 href="/billing"
-                className="flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:opacity-80 transition-opacity bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20 cursor-pointer"
+                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 cursor-pointer"
               >
                 <Receipt size={12} />
                 <span>Quick Bill</span>
@@ -393,12 +393,12 @@ export default function ServicesPage() {
 
         {filteredServices.length === 0 && (
           <div className="col-span-full text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
-            <Sparkles size={32} className="mx-auto text-purple-500 mb-2 opacity-60" />
+            <Sparkles size={32} className="mx-auto text-blue-500 mb-2 opacity-60" />
             <h3 className="text-sm font-bold text-[var(--color-text)]">No services found</h3>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">Try adjusting your search query or add a new service.</p>
             <button
               onClick={handleOpenAddModal}
-              className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
             >
               <Plus size={14} />
               Add Service
@@ -440,7 +440,7 @@ export default function ServicesPage() {
                     placeholder="e.g. Full Face Laser / RCT / Villa Tour"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -451,7 +451,7 @@ export default function ServicesPage() {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {(SERVICE_CATEGORIES_BY_NICHE[currentNiche] || []).map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -464,7 +464,7 @@ export default function ServicesPage() {
                           placeholder="Enter custom category"
                           value={customCategory}
                           onChange={(e) => setCustomCategory(e.target.value)}
-                          className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       )}
                     </div>
@@ -477,7 +477,7 @@ export default function ServicesPage() {
                       placeholder="e.g. Specialist In-Charge"
                       value={staffRole}
                       onChange={(e) => setStaffRole(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -494,7 +494,7 @@ export default function ServicesPage() {
                         placeholder="3500"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -510,7 +510,7 @@ export default function ServicesPage() {
                         placeholder="45"
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
-                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-8 pr-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -523,7 +523,7 @@ export default function ServicesPage() {
                         type="checkbox"
                         checked={gstEnabled}
                         onChange={(e) => setGstEnabled(e.target.checked)}
-                        className="rounded text-purple-600 focus:ring-purple-500"
+                        className="rounded text-blue-600 focus:ring-blue-500"
                       />
                       <span>Apply GST</span>
                     </label>
@@ -534,7 +534,7 @@ export default function ServicesPage() {
                       <select
                         value={gstRate}
                         onChange={(e) => setGstRate(e.target.value)}
-                        className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="0">0%</option>
                         <option value="5">5%</option>
@@ -552,7 +552,7 @@ export default function ServicesPage() {
                       type="checkbox"
                       checked={isPackage}
                       onChange={(e) => setIsPackage(e.target.checked)}
-                      className="rounded text-purple-600 focus:ring-purple-500"
+                      className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <span>Is Treatment Package</span>
                   </label>
@@ -566,7 +566,7 @@ export default function ServicesPage() {
                           min="1"
                           value={totalSessions}
                           onChange={(e) => setTotalSessions(e.target.value)}
-                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -576,7 +576,7 @@ export default function ServicesPage() {
                           min="1"
                           value={sessionDuration}
                           onChange={(e) => setSessionDuration(e.target.value)}
-                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -586,7 +586,7 @@ export default function ServicesPage() {
                           min="1"
                           value={packageValidityDays}
                           onChange={(e) => setPackageValidityDays(e.target.value)}
-                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -597,7 +597,7 @@ export default function ServicesPage() {
                           max="100"
                           value={packageDiscount}
                           onChange={(e) => setPackageDiscount(e.target.value)}
-                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -611,7 +611,7 @@ export default function ServicesPage() {
                     placeholder="Brief description of the service..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />
                 </div>
 
@@ -621,7 +621,7 @@ export default function ServicesPage() {
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
-                      className="rounded text-purple-600 focus:ring-purple-500"
+                      className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <span>Active in catalog</span>
                   </label>
@@ -636,7 +636,7 @@ export default function ServicesPage() {
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md cursor-pointer"
+                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md cursor-pointer"
                     >
                       {editingService ? 'Save Changes' : 'Create Service'}
                     </button>

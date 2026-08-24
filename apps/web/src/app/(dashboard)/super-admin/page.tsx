@@ -26,7 +26,7 @@ export default function SuperAdminDashboardPage() {
 
   const getPlanColor = (plan: string) => {
     switch(plan) {
-      case 'Enterprise': return '#8B5CF6'; // purple
+      case 'Enterprise': return '#4F46E5'; // indigo
       case 'Growth': return '#3B82F6'; // blue
       case 'Starter': return '#10B981'; // green
       default: return '#6B7280'; // gray

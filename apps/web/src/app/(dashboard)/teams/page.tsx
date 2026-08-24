@@ -124,7 +124,7 @@ const INITIAL_TEAM: TeamMember[] = [
 ];
 
 const roleColors: Record<string, string> = {
-  ORG_ADMIN: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+  ORG_ADMIN: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
   MANAGER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   STAFF: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
 };
@@ -294,7 +294,7 @@ export default function TeamsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <Users className="text-purple-600 dark:text-purple-400" /> Teams & Resource Management
+            <Users className="text-blue-600 dark:text-blue-400" /> Teams & Resource Management
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
             Manage clinic practitioners, staff schedules, performance metrics, and access tiers.
@@ -303,7 +303,7 @@ export default function TeamsPage() {
 
         <button
           onClick={openAddModal}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-lg shrink-0 cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-lg shrink-0 cursor-pointer"
         >
           <Plus size={16} />
           Add Team Member
@@ -321,8 +321,8 @@ export default function TeamsPage() {
               className={cn(
                 "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all",
                 selectedDept === dept
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-[var(--color-text-muted)] hover:text-purple-600 dark:hover:text-white hover:bg-[var(--color-bg)]"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-[var(--color-text-muted)] hover:text-blue-600 dark:hover:text-white hover:bg-[var(--color-bg)]"
               )}
             >
               {dept}
@@ -338,7 +338,7 @@ export default function TeamsPage() {
             placeholder="Search by name, role..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+            className="w-full pl-9 pr-4 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
           />
         </div>
       </div>
@@ -352,7 +352,7 @@ export default function TeamsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             className={cn(
-              "p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-sm hover:border-purple-500/40 transition-all flex flex-col justify-between space-y-4 relative group",
+              "p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-sm hover:border-blue-500/40 transition-all flex flex-col justify-between space-y-4 relative group",
               !member.isActive && "opacity-60 bg-[var(--color-bg)]"
             )}
           >
@@ -363,7 +363,7 @@ export default function TeamsPage() {
                   {member.photoUrl ? (
                     <img src={member.photoUrl} alt={member.name} className="w-12 h-12 rounded-2xl object-cover shrink-0 shadow-md border border-[var(--color-border)]" />
                   ) : (
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-base font-extrabold shadow-md shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-base font-extrabold shadow-md shrink-0">
                       {getInitials(member.name)}
                     </div>
                   )}
@@ -372,7 +372,7 @@ export default function TeamsPage() {
                       {member.name}
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)]">{member.role}</p>
-                    <span className="inline-block text-[10px] text-purple-600 dark:text-purple-300 font-semibold mt-0.5">
+                    <span className="inline-block text-[10px] text-blue-600 dark:text-blue-300 font-semibold mt-0.5">
                       {member.department}
                     </span>
                   </div>
@@ -426,7 +426,7 @@ export default function TeamsPage() {
                 </div>
                 <div>
                   <p className="text-[10px] text-[var(--color-text-muted)] font-medium">Revenue</p>
-                  <p className="text-xs font-bold text-purple-600 dark:text-purple-300 font-mono mt-0.5">{member.metrics.revenue}</p>
+                  <p className="text-xs font-bold text-blue-600 dark:text-blue-300 font-mono mt-0.5">{member.metrics.revenue}</p>
                 </div>
               </div>
             </div>
@@ -444,7 +444,7 @@ export default function TeamsPage() {
                 <a
                   href={`mailto:${member.email}`}
                   title={`Email ${member.name}`}
-                  className="p-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-purple-500 transition-colors"
+                  className="p-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-blue-500 transition-colors"
                 >
                   <Mail size={14} />
                 </a>
@@ -488,7 +488,7 @@ export default function TeamsPage() {
                       className={cn(
                         "w-8 h-7 rounded-lg text-[9px] font-bold flex items-center justify-center uppercase transition-all shadow-sm cursor-pointer",
                         isAvailable
-                          ? "bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/40 hover:scale-105"
+                          ? "bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/40 hover:scale-105"
                           : "bg-[var(--color-bg)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]"
                       )}
                     >
@@ -514,7 +514,7 @@ export default function TeamsPage() {
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <h3 className="font-bold text-base flex items-center gap-2">
-                  <User size={18} className="text-purple-500" /> {editingMemberId ? 'Edit Team Member' : 'Add New Team Member'}
+                  <User size={18} className="text-blue-500" /> {editingMemberId ? 'Edit Team Member' : 'Add New Team Member'}
                 </h3>
                 <button onClick={() => setIsModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
@@ -526,7 +526,7 @@ export default function TeamsPage() {
                 <div className="flex flex-col items-center justify-center">
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-full border-2 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center text-[var(--color-text-muted)] cursor-pointer hover:border-purple-500 hover:text-purple-500 transition-colors overflow-hidden bg-[var(--color-bg)]"
+                    className="w-20 h-20 rounded-full border-2 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center text-[var(--color-text-muted)] cursor-pointer hover:border-blue-500 hover:text-blue-500 transition-colors overflow-hidden bg-[var(--color-bg)]"
                   >
                     {photoUrl ? (
                       <img src={photoUrl} alt="Preview" className="w-full h-full object-cover" />
@@ -554,7 +554,7 @@ export default function TeamsPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Dr. Sunita Kapoor"
-                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -627,7 +627,7 @@ export default function TeamsPage() {
                     value={specialization}
                     onChange={(e) => setSpecialization(e.target.value)}
                     placeholder="e.g. Anti-Aging & Laser Surgery"
-                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -641,7 +641,7 @@ export default function TeamsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-colors"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-colors"
                   >
                     {editingMemberId ? 'Save Changes' : 'Add Member'}
                   </button>

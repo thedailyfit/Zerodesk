@@ -30,8 +30,8 @@ export function Avatar3D({ name, gender = 'female', size = 'md', className }: Av
       className={cn(
         "rounded-full flex items-center justify-center font-bold text-white shadow-lg border border-white/20 shrink-0 relative overflow-hidden group transition-all",
         isFemale
-          ? "bg-gradient-to-tr from-pink-600 via-purple-600 to-indigo-500 shadow-purple-500/30"
-          : "bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 shadow-blue-500/30",
+          ? "bg-gradient-to-tr from-blue-700 via-blue-600 to-sky-500 shadow-blue-500/25"
+          : "bg-gradient-to-tr from-blue-800 via-blue-600 to-indigo-600 shadow-blue-500/25",
         sizeClasses,
         className
       )}

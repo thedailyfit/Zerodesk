@@ -456,7 +456,7 @@ export default function BillingPage() {
                       value={discountValue || ''}
                       onChange={(e) => setDiscountValue(Number(e.target.value))}
                       placeholder="0"
-                      className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 font-mono text-[var(--color-text)] text-xs focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 font-mono text-[var(--color-text)] text-xs focus:outline-none focus:border-blue-500" 
                     />
                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--color-text-muted)]">
                       {discountMode === 'percent' ? '%' : '₹'}
@@ -464,7 +464,7 @@ export default function BillingPage() {
                   </div>
 
                   <div className="text-right">
-                    <p className="font-mono font-bold text-purple-400">-₹{calculatedDiscount.toLocaleString()}</p>
+                    <p className="font-mono font-bold text-blue-400">-₹{calculatedDiscount.toLocaleString()}</p>
                     <p className="text-[9px] text-[var(--color-text-muted)]">({Math.round(calculatedDiscountPercent)}% OFF)</p>
                   </div>
                 </div>
@@ -769,7 +769,7 @@ export default function BillingPage() {
                     </div>
 
                     {calculatedDiscount > 0 && (
-                      <div className="flex justify-between text-purple-700 font-medium">
+                      <div className="flex justify-between text-blue-700 font-medium">
                         <span>Discount ({Math.round(calculatedDiscountPercent)}%)</span>
                         <span className="font-mono">-₹{calculatedDiscount.toLocaleString()}</span>
                       </div>

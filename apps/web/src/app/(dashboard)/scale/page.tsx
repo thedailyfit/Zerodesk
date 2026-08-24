@@ -52,23 +52,23 @@ export default function ScalePage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto py-4">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-r from-purple-900/60 via-indigo-900/40 to-slate-900 border border-purple-500/30 shadow-2xl backdrop-blur-xl">
+      <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-r from-blue-900/60 via-indigo-900/40 to-slate-900 border border-blue-500/30 shadow-2xl backdrop-blur-xl">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <Rocket size={240} className="text-purple-400" />
+          <Rocket size={240} className="text-blue-400" />
         </div>
         <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider">
             <Zap size={14} className="text-yellow-400 animate-pulse" />
             Ready to Scale Upgrade Hub
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-            Scale Your Clinic to <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">Multi-Branch Autopilot</span>
+            Scale Your Clinic to <span className="bg-gradient-to-r from-blue-400 via-sky-400 to-indigo-300 bg-clip-text text-transparent">Multi-Branch Autopilot</span>
           </h1>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
             Unlock enterprise-grade AI capabilities, custom LLM fine-tuning, dedicated voice gateways, and multi-location management built for high-growth businesses.
           </p>
           <div className="pt-2 flex items-center gap-4">
-            <button className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <button className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg transition-all flex items-center gap-2">
               Book Scale Consultation
               <ArrowRight size={16} />
             </button>
@@ -86,18 +86,18 @@ export default function ScalePage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="p-6 rounded-xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] hover:border-purple-500/40 transition-all flex flex-col justify-between group shadow-md"
+              className="p-6 rounded-xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] hover:border-blue-500/40 transition-all flex flex-col justify-between group shadow-md"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 group-hover:scale-110 transition-transform">
+                  <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:scale-110 transition-transform">
                     <Icon size={22} />
                   </div>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-purple-300 font-mono border border-slate-700">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-blue-300 font-mono border border-slate-700">
                     {feat.tag}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-[var(--color-text)] mb-2 group-hover:text-purple-300 transition-colors">
+                <h3 className="text-lg font-bold text-[var(--color-text)] mb-2 group-hover:text-blue-300 transition-colors">
                   {feat.title}
                 </h3>
                 <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
@@ -110,7 +110,7 @@ export default function ScalePage() {
                   <CheckCircle2 size={14} />
                   {feat.status}
                 </span>
-                <button className="text-xs text-purple-400 hover:text-purple-300 font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                <button className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                   Enable Feature →
                 </button>
               </div>

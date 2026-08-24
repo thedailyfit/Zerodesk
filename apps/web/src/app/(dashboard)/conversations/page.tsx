@@ -11,7 +11,7 @@ import { useNiche } from '@/components/providers/niche-provider';
 const channelConfig: Record<string, { icon: typeof Phone; label: string; color: string }> = {
   VOICE: { icon: Phone, label: 'Voice Call', color: 'text-blue-400' },
   WHATSAPP: { icon: MessageCircle, label: 'WhatsApp', color: 'text-emerald-400' },
-  WEB_CHAT: { icon: Globe, label: 'Web Chat', color: 'text-purple-400' },
+  WEB_CHAT: { icon: Globe, label: 'Web Chat', color: 'text-sky-400' },
 };
 
 const statusConfig: Record<string, { label: string; style: string }> = {
@@ -132,8 +132,8 @@ export default function ConversationsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate font-medium">{conv.lastMessage}</p>
-                    <p className="text-[11px] text-purple-300 mt-1 italic flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                    <p className="text-[11px] text-blue-400 mt-1 italic flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                       {conv.aiSummary}
                     </p>
                   </div>

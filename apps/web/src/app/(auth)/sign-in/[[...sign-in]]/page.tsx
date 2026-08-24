@@ -7,7 +7,7 @@ export default function SignInPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="mb-8 relative z-10 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
           <span className="text-white text-xl font-bold">Z</span>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text)]">ZeroDesk AI</h1>

@@ -13,12 +13,12 @@ import type { NicheId } from '@/config/niches/types';
 type Step = 1 | 2 | 3;
 
 const NICHES = [
-  { id: 'skin', title: 'Skin & Dermatology Clinic', tagline: 'Advanced care for healthy skin', emoji: '🏥', accent: 'from-purple-500 to-fuchsia-500', color: 'purple' },
+  { id: 'skin', title: 'Skin & Dermatology Clinic', tagline: 'Advanced care for healthy skin', emoji: '🏥', accent: 'from-blue-600 to-indigo-600', color: 'blue' },
   { id: 'spa', title: 'Spa & Wellness Center', tagline: 'Relaxation and holistic wellness', emoji: '🧖', accent: 'from-emerald-500 to-teal-500', color: 'emerald' },
   { id: 'salon', title: 'Luxury Salon & Grooming', tagline: 'Premium hair and beauty services', emoji: '💇', accent: 'from-rose-500 to-pink-500', color: 'rose' },
   { id: 'realestate', title: 'Real Estate & Property', tagline: 'Connecting people with dream homes', emoji: '🏢', accent: 'from-amber-500 to-orange-500', color: 'amber' },
   { id: 'dental', title: 'Dental Clinic', tagline: 'Expert dental care and surgery', emoji: '🦷', accent: 'from-cyan-500 to-blue-500', color: 'cyan' },
-  { id: 'hotel', title: 'Hotel & Resort', tagline: 'Unforgettable stays and hospitality', emoji: '🏨', accent: 'from-indigo-500 to-violet-500', color: 'indigo' },
+  { id: 'hotel', title: 'Hotel & Resort', tagline: 'Unforgettable stays and hospitality', emoji: '🏨', accent: 'from-indigo-500 to-blue-600', color: 'indigo' },
   { id: 'auto', title: 'Automobile Showroom', tagline: 'Test drives, service bookings & sales CRM', emoji: '🚗', accent: 'from-amber-500 to-yellow-500', color: 'amber' },
 ] as const;
 
@@ -283,7 +283,7 @@ export default function OnboardingPage() {
                     <button
                       onClick={handleSubmit}
                       disabled={!formData.role}
-                      className="flex items-center gap-2 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold transition-all shadow-xl shadow-purple-500/25"
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold transition-all shadow-xl shadow-blue-500/25"
                     >
                       Launch Dashboard 🚀
                     </button>

@@ -101,7 +101,7 @@ export default function PatientLTVPage() {
               <p className="text-sm opacity-70 mb-1">Highest LTV</p>
               <h3 className="text-3xl font-bold">₹1.45L</h3>
             </div>
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
+            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
               <TrendingUp size={24} />
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function PatientLTVPage() {
               {topPatients.map((patient, idx) => (
                 <tr key={idx} className="border-b last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors" style={{ borderColor: "var(--color-border)" }}>
                   <td className="py-4 flex items-center font-medium">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-purple-500 text-white flex items-center justify-center text-xs font-bold mr-3 shadow-md">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold mr-3 shadow-md">
                       {patient.name.charAt(0)}
                     </div>
                     {patient.name}

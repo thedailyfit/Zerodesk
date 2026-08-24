@@ -11,7 +11,7 @@ const COLUMNS = [
   { id: 'checked-in', title: 'Checked In', color: 'blue' },
   { id: 'waiting', title: 'Waiting', color: 'amber' },
   { id: 'with-doctor', title: 'In Service', color: 'green' },
-  { id: 'treatment', title: 'In Progress', color: 'purple' },
+  { id: 'treatment', title: 'In Progress', color: 'indigo' },
   { id: 'checkout', title: 'Checkout', color: 'emerald' },
 ] as const;
 
@@ -53,7 +53,7 @@ const COLOR_MAP: Record<string, string> = {
   blue: 'border-l-blue-500 bg-blue-500/5',
   amber: 'border-l-amber-500 bg-amber-500/5',
   green: 'border-l-green-500 bg-green-500/5',
-  purple: 'border-l-purple-500 bg-purple-500/5',
+  indigo: 'border-l-indigo-500 bg-indigo-500/5',
   emerald: 'border-l-emerald-500 bg-emerald-500/5',
 };
 
@@ -61,7 +61,7 @@ const BORDER_MAP: Record<string, string> = {
   blue: 'border-blue-500/20 text-blue-400',
   amber: 'border-amber-500/20 text-amber-400',
   green: 'border-green-500/20 text-green-400',
-  purple: 'border-purple-500/20 text-purple-400',
+  indigo: 'border-indigo-500/20 text-indigo-400',
   emerald: 'border-emerald-500/20 text-emerald-400',
 };
 

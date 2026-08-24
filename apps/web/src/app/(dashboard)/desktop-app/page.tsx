@@ -108,13 +108,13 @@ export default function DesktopAppPage() {
         </div>
 
         {/* MSI Enterprise Installer */}
-        <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-purple-500/30 space-y-4 relative overflow-hidden group shadow-sm">
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all" />
+        <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-blue-500/30 space-y-4 relative overflow-hidden group shadow-sm">
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
               <ShieldCheck size={28} />
             </div>
-            <span className="px-2.5 py-1 rounded bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-mono text-xs font-bold">
+            <span className="px-2.5 py-1 rounded bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30 font-mono text-xs font-bold">
               MSI Enterprise Package (.msi)
             </span>
           </div>
@@ -128,15 +128,15 @@ export default function DesktopAppPage() {
 
           <div className="space-y-2 pt-2 text-xs font-mono text-[var(--color-text)]">
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={14} className="text-purple-500" />
+              <CheckCircle2 size={14} className="text-blue-500" />
               <span>Silent Multi-PC IT Deployment</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={14} className="text-purple-500" />
+              <CheckCircle2 size={14} className="text-blue-500" />
               <span>PostgreSQL Engine Row-Level Security (RLS)</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={14} className="text-purple-500" />
+              <CheckCircle2 size={14} className="text-blue-500" />
               <span>Signed Security Certificate</span>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function DesktopAppPage() {
           <button
             onClick={() => handleDownload('msi')}
             disabled={downloading === 'msi'}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {downloading === 'msi' ? (
               <RefreshCw size={16} className="animate-spin" />
@@ -187,7 +187,7 @@ export default function DesktopAppPage() {
           </div>
 
           <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-1.5 text-xs">
-            <span className="font-mono text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase">Engine Isolation</span>
+            <span className="font-mono text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase">Engine Isolation</span>
             <p className="font-bold text-[var(--color-text)]">PostgreSQL RLS Protected</p>
             <p className="text-[11px] text-[var(--color-text-muted)]">Data queries are locked at the database layer so clinic data never leaks across tenants.</p>
           </div>

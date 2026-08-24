@@ -424,7 +424,7 @@ export default function AppointmentsPage() {
               { label: 'Total Bookings', count: appointments.length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
               { label: 'Booking Confirmed', count: appointments.filter(a => a.status === 'CONFIRMED').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
               { label: 'Store Visit / Walk-ins', count: appointments.filter(a => a.source === 'STORE_VISIT' || a.source === 'MANUAL').length, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-              { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+              { label: 'Referrals', count: appointments.filter(a => a.source === 'REFERRAL').length, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
             ].map((stat) => (
               <div
                 key={stat.label}

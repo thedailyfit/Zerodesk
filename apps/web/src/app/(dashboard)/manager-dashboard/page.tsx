@@ -57,17 +57,17 @@ export default function ManagerDashboardPage() {
 
   // Mocks
   const kpis = [
-    { label: "Today's Appointments", value: '24', icon: Calendar, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+    { label: "Today's Appointments", value: '24', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { label: "Today's Revenue", value: formatCurrency ? formatCurrency(45600) : '₹45,600', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: `Active ${customerTerm}s Waiting`, value: '3', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: `${staffTerm} On Duty`, value: '6/8', icon: Activity, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+    { label: `Active ${customerTerm}s Waiting`, value: '3', icon: Users, color: 'text-blue-600', bg: 'bg-blue-600/10' },
+    { label: `${staffTerm} On Duty`, value: '6/8', icon: Activity, color: 'text-sky-500', bg: 'bg-sky-500/10' },
     { label: 'Pending Approvals', value: '2', icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
     { label: 'AI Calls Handled Today', value: '47', icon: Bot, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
   ];
 
   const staff = [
-    { id: 1, name: 'Dr. Meenakshi', role: 'Dermatologist', initials: 'DM', apts: 12, rating: 4.8, status: 'on-duty', avatarColor: 'bg-violet-500' },
-    { id: 2, name: 'Dr. Rajiv', role: 'Cosmetologist', initials: 'DR', apts: 9, rating: 4.5, status: 'on-break', avatarColor: 'bg-pink-500' },
+    { id: 1, name: 'Dr. Meenakshi', role: 'Dermatologist', initials: 'DM', apts: 12, rating: 4.8, status: 'on-duty', avatarColor: 'bg-blue-600' },
+    { id: 2, name: 'Dr. Rajiv', role: 'Cosmetologist', initials: 'DR', apts: 9, rating: 4.5, status: 'on-break', avatarColor: 'bg-sky-600' },
     { id: 3, name: 'Priya S.', role: 'Wellness Expert', initials: 'PS', apts: 14, rating: 4.9, status: 'on-duty', avatarColor: 'bg-emerald-500' },
     { id: 4, name: 'Amit K.', role: 'Physiotherapist', initials: 'AK', apts: 7, rating: 4.6, status: 'off-duty', avatarColor: 'bg-gray-500' }
   ];
@@ -86,9 +86,9 @@ export default function ManagerDashboardPage() {
   ];
 
   const departments = [
-    { name: 'Dermatology', util: 92, color: 'bg-violet-500' },
+    { name: 'Dermatology', util: 92, color: 'bg-blue-600' },
     { name: 'Wellness', util: 85, color: 'bg-emerald-500' },
-    { name: 'Cosmetology', util: 78, color: 'bg-pink-500' },
+    { name: 'Cosmetology', util: 78, color: 'bg-sky-500' },
     { name: 'Front Desk', util: 65, color: 'bg-blue-500' }
   ];
 
@@ -140,10 +140,10 @@ export default function ManagerDashboardPage() {
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 flex flex-col shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Users className="text-violet-500" />
+                  <Users className="text-blue-500" />
                   Staff On Duty
                 </h2>
-                <button className="text-sm text-violet-500 hover:text-violet-600 font-medium flex items-center gap-1 transition-colors">
+                <button className="text-sm text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 transition-colors">
                   View Roster <ArrowUpRight size={16} />
                 </button>
               </div>

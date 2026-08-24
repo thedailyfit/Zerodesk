@@ -206,7 +206,7 @@ export default function SettingsPage() {
             type="button"
             onClick={() => verifyKey(id)}
             disabled={verifyingKeys[id]}
-            className="px-3 py-1 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 rounded-lg text-[10px] font-bold transition-all border border-purple-500/20 flex items-center gap-1 disabled:opacity-50"
+            className="px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-bold transition-all border border-blue-500/20 flex items-center gap-1 disabled:opacity-50"
           >
             {verifyingKeys[id] ? <Loader2 size={12} className="animate-spin" /> : null}
             Verify Connection
@@ -251,11 +251,11 @@ export default function SettingsPage() {
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left border",
                   isActive
-                    ? "bg-purple-600/10 border-purple-500 text-purple-300 font-semibold shadow-sm"
+                    ? "bg-blue-600/10 border-blue-500 text-blue-300 font-semibold shadow-sm"
                     : "bg-[var(--color-surface)] border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]"
                 )}
               >
-                <Icon size={16} className={isActive ? "text-purple-400" : "text-[var(--color-text-muted)]"} />
+                <Icon size={16} className={isActive ? "text-blue-400" : "text-[var(--color-text-muted)]"} />
                 {tab.label}
               </button>
             );
@@ -285,27 +285,27 @@ export default function SettingsPage() {
               </div>
 
               {/* Mandatory Fields Note */}
-              <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
-                <AlertCircle size={15} className="shrink-0 text-purple-400" />
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0 text-blue-400" />
                 <span>All profile fields below are <strong>mandatory</strong> to ensure proper AI response routing, except GST Number which is optional.</span>
               </div>
 
               {/* Branding Section (Merged) */}
               <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-4">
                 <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
-                  <Palette size={16} className="text-purple-400" />
+                  <Palette size={16} className="text-blue-400" />
                   Clinic Branding & Identity
                 </h3>
 
                 <div className="flex items-center gap-6">
                   <div>
                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-2">Clinic Logo *</label>
-                    <label className="w-24 h-24 border-2 border-dashed border-purple-500/40 hover:border-purple-500 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all bg-[var(--color-bg)] overflow-hidden relative group">
+                    <label className="w-24 h-24 border-2 border-dashed border-blue-500/40 hover:border-blue-500 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all bg-[var(--color-bg)] overflow-hidden relative group">
                       {logoPreview ? (
                         <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <div className="flex flex-col items-center text-center p-2">
-                          <Upload size={20} className="text-purple-400 mb-1" />
+                          <Upload size={20} className="text-blue-400 mb-1" />
                           <span className="text-[10px] text-[var(--color-text-muted)] font-medium">Upload Logo</span>
                         </div>
                       )}
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                     required
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                     required
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -364,7 +364,7 @@ export default function SettingsPage() {
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -375,7 +375,7 @@ export default function SettingsPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -386,7 +386,7 @@ export default function SettingsPage() {
                     required
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -397,7 +397,7 @@ export default function SettingsPage() {
                     required
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -408,7 +408,7 @@ export default function SettingsPage() {
                     required
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -419,7 +419,7 @@ export default function SettingsPage() {
                     value={gstNumber}
                     onChange={(e) => setGstNumber(e.target.value)}
                     placeholder="e.g. 22AAAAA0000A1Z5"
-                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3.5 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -427,7 +427,7 @@ export default function SettingsPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md"
                 >
                   Save Business Profile
                 </button>
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                           onClick={() => toggleDay(day)}
                           className={cn(
                             "w-9 h-5 rounded-full transition-colors relative p-0.5 cursor-pointer border",
-                            item.enabled ? "bg-purple-600 border-purple-500" : "bg-slate-800 border-slate-700"
+                            item.enabled ? "bg-blue-600 border-blue-500" : "bg-slate-800 border-slate-700"
                           )}
                         >
                           <div
@@ -553,7 +553,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <div>
                   <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <Phone size={20} className="text-purple-400" />
+                    <Phone size={20} className="text-blue-400" />
                     Voice AI Subpage Settings
                   </h2>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Configure phone call AI features, voice character gender, and preferred languages.</p>
@@ -606,7 +606,7 @@ export default function SettingsPage() {
                         className={cn(
                           "p-3 rounded-lg border text-left transition-all flex items-center justify-between",
                           voiceGender === vc.id
-                            ? "bg-purple-600/10 border-purple-500 text-white"
+                            ? "bg-blue-600/10 border-blue-500 text-white"
                             : "bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)]"
                         )}
                       >
@@ -617,7 +617,7 @@ export default function SettingsPage() {
                           </p>
                           <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{vc.desc}</p>
                         </div>
-                        {voiceGender === vc.id && <Check size={14} className="text-purple-400" />}
+                        {voiceGender === vc.id && <Check size={14} className="text-blue-400" />}
                       </button>
                     ))}
                   </div>
@@ -859,7 +859,7 @@ export default function SettingsPage() {
                              type="checkbox"
                              checked={paymentMethods[method as keyof typeof paymentMethods]}
                              onChange={() => setPaymentMethods(p => ({ ...p, [method]: !p[method as keyof typeof paymentMethods] }))}
-                             className="rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500"
+                             className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                            />
                            <span className="text-sm text-[var(--color-text)] capitalize">{method}</span>
                         </label>
@@ -1006,17 +1006,17 @@ export default function SettingsPage() {
                          <div className="col-span-6 text-sm font-medium text-[var(--color-text)]">{item.label}</div>
                          <div className="col-span-2 flex justify-center">
                             {item.channels.includes('inApp') && (
-                              <input type="checkbox" checked={(notifSettings as any)[item.id].inApp} onChange={() => toggleNotif(item.id as any, 'inApp')} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                              <input type="checkbox" checked={(notifSettings as any)[item.id].inApp} onChange={() => toggleNotif(item.id as any, 'inApp')} className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500" />
                             )}
                          </div>
                          <div className="col-span-2 flex justify-center">
                             {item.channels.includes('email') && (
-                              <input type="checkbox" checked={(notifSettings as any)[item.id].email} onChange={() => toggleNotif(item.id as any, 'email')} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                              <input type="checkbox" checked={(notifSettings as any)[item.id].email} onChange={() => toggleNotif(item.id as any, 'email')} className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500" />
                             )}
                          </div>
                          <div className="col-span-2 flex justify-center">
                             {(item.channels.includes('whatsapp') || item.channels.includes('sms')) && (
-                              <input type="checkbox" checked={(notifSettings as any)[item.id][item.channels.includes('whatsapp') ? 'whatsapp' : 'sms']} onChange={() => toggleNotif(item.id as any, item.channels.includes('whatsapp') ? 'whatsapp' : 'sms' as any)} className="w-4 h-4 rounded border-[var(--color-border)] text-purple-600 focus:ring-purple-500" />
+                              <input type="checkbox" checked={(notifSettings as any)[item.id][item.channels.includes('whatsapp') ? 'whatsapp' : 'sms']} onChange={() => toggleNotif(item.id as any, item.channels.includes('whatsapp') ? 'whatsapp' : 'sms' as any)} className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500" />
                             )}
                          </div>
                       </div>
@@ -1089,7 +1089,7 @@ const TONE_OPTIONS = [
 
 function WidgetSettingsView() {
   const [botName, setBotName] = useState('Glow AI Assistant');
-  const [primaryColor, setPrimaryColor] = useState('#8b5cf6');
+  const [primaryColor, setPrimaryColor] = useState('#2563eb');
   const [selectedTone, setSelectedTone] = useState('empathetic');
   const [copied, setCopied] = useState(false);
 
@@ -1116,7 +1116,7 @@ function WidgetSettingsView() {
         <div className="lg:col-span-7 space-y-6">
           <div className="space-y-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
             <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
               Bot Identity & Custom Name
             </h3>
             <div>
@@ -1150,7 +1150,7 @@ function WidgetSettingsView() {
                     className={cn(
                       "p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between group",
                       isSelected
-                        ? "bg-purple-600/10 border-purple-500 text-white"
+                        ? "bg-blue-600/10 border-blue-500 text-white"
                         : "bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)]"
                     )}
                   >
@@ -1159,7 +1159,7 @@ function WidgetSettingsView() {
                         <span>{tone.icon}</span>
                         {tone.label}
                       </span>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />}
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />}
                     </div>
                     <p className="text-[10px] text-[var(--color-text-muted)] leading-relaxed">{tone.desc}</p>
                   </button>
@@ -1175,7 +1175,7 @@ function WidgetSettingsView() {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-medium transition-colors"
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium transition-colors"
               >
                 {copied ? '✓ Copied!' : 'Copy Code'}
               </button>

@@ -120,7 +120,7 @@ export default function TodaysRevenuePage() {
               <p className="text-sm opacity-70 mb-1">Average Bill</p>
               <h3 className="text-3xl font-bold">₹6,542</h3>
             </div>
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
+            <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500">
               <CreditCard size={24} />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function TodaysRevenuePage() {
               <p className="text-sm opacity-70 mb-1">Walk-ins vs Booked</p>
               <h3 className="text-3xl font-bold">4 <span className="text-lg font-normal opacity-70">/ 8</span></h3>
             </div>
-            <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
+            <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500">
               <Banknote size={24} />
             </div>
           </div>
@@ -160,8 +160,8 @@ export default function TodaysRevenuePage() {
               <AreaChart data={hourlyRevenue} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgb(34, 197, 94)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="rgb(34, 197, 94)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="rgb(79, 70, 229)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="rgb(79, 70, 229)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.4} />
@@ -185,7 +185,7 @@ export default function TodaysRevenuePage() {
                 <Area 
                   type="monotone" 
                   dataKey="revenue" 
-                  stroke="rgb(34, 197, 94)" 
+                  stroke="rgb(79, 70, 229)" 
                   strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorRevenue)" 
@@ -215,8 +215,8 @@ export default function TodaysRevenuePage() {
                 <p className="text-xs opacity-70">UPI</p>
               </div>
               <div className="p-4 rounded-xl border border-dashed text-center" style={{ borderColor: "var(--color-border)" }}>
-                <CreditCard className="mx-auto mb-2 opacity-70 text-purple-500" size={20} />
-                <p className="text-2xl font-bold text-purple-500">28%</p>
+                <CreditCard className="mx-auto mb-2 opacity-70 text-indigo-500" size={20} />
+                <p className="text-2xl font-bold text-indigo-500">28%</p>
                 <p className="text-xs opacity-70">Card</p>
               </div>
               <div className="p-4 rounded-xl border border-dashed text-center" style={{ borderColor: "var(--color-border)" }}>
@@ -250,7 +250,7 @@ export default function TodaysRevenuePage() {
                     initial={{ width: 0 }}
                     animate={{ width: `${treatment.percentage}%` }}
                     transition={{ duration: 1, delay: 0.6 + idx * 0.1 }}
-                    className="h-full bg-blue-500 rounded-full"
+                    className="h-full bg-indigo-500 rounded-full"
                   />
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function TodaysRevenuePage() {
             {recentTransactions.map((tx, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                     {tx.patient.charAt(0)}
                   </div>
                   <div>

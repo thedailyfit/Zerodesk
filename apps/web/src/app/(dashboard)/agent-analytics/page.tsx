@@ -56,9 +56,9 @@ export default function AgentAnalyticsPage() {
           className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
           <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
             <span>Month-to-Date Cost</span>
-            <IndianRupee size={16} className="text-purple-400" />
+            <IndianRupee size={16} className="text-blue-400" />
           </div>
-          <p className="text-3xl font-extrabold text-purple-300 font-mono mt-2">₹2,840</p>
+          <p className="text-3xl font-extrabold text-blue-400 font-mono mt-2">₹2,840</p>
           <p className="text-[11px] text-slate-400 mt-1 font-mono">💰 ₹12.40 avg per call</p>
         </motion.div>
 
@@ -77,7 +77,7 @@ export default function AgentAnalyticsPage() {
       <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity size={20} className="text-purple-400" />
+            <Activity size={20} className="text-blue-400" />
             <h2 className="text-base font-bold text-[var(--color-text)]">Pipeline Component Latency Breakdown</h2>
           </div>
           <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
@@ -117,11 +117,11 @@ export default function AgentAnalyticsPage() {
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
               <span>3. TTS (Mouth)</span>
-              <span className="text-purple-400 font-bold">140 ms</span>
+              <span className="text-blue-400 font-bold">140 ms</span>
             </div>
             <p className="text-sm font-bold text-white">ElevenLabs Turbo</p>
             <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-              <div className="bg-purple-400 h-full w-[23%]" />
+              <div className="bg-blue-500 h-full w-[23%]" />
             </div>
             <p className="text-[10px] text-slate-400">Multilingual cloned voice stream</p>
           </div>
@@ -167,10 +167,10 @@ export default function AgentAnalyticsPage() {
             <div>
               <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
                 <span>04:00 PM - 07:00 PM (Evening Post-Work Surge)</span>
-                <span className="text-purple-400 font-bold">19 Calls (45%)</span>
+                <span className="text-blue-400 font-bold">19 Calls (45%)</span>
               </div>
               <div className="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
-                <div className="bg-purple-500 h-full w-[90%]" />
+                <div className="bg-blue-500 h-full w-[90%]" />
               </div>
             </div>
 
@@ -189,7 +189,7 @@ export default function AgentAnalyticsPage() {
         {/* Telephony Cost Breakdown */}
         <div className="p-6 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-4">
           <h2 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-            <IndianRupee size={18} className="text-purple-400" />
+            <IndianRupee size={18} className="text-blue-400" />
             API Cost Breakdown (INR ₹)
           </h2>
           <p className="text-xs text-[var(--color-text-muted)]">
@@ -211,7 +211,7 @@ export default function AgentAnalyticsPage() {
             </div>
             <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between text-xs font-mono">
               <span>🗣️ ElevenLabs Turbo Multilingual TTS</span>
-              <span className="text-purple-300 font-bold">₹5.00 / min</span>
+              <span className="text-blue-300 font-bold">₹5.00 / min</span>
             </div>
           </div>
         </div>

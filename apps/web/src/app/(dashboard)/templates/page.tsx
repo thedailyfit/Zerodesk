@@ -143,13 +143,13 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
 const channelIcons = {
   WHATSAPP: { icon: MessageSquare, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
   VOICE: { icon: PhoneCall, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
-  EMAIL: { icon: Mail, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+  EMAIL: { icon: Mail, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
 };
 
 const mediaBadge = {
   PDF: { label: 'PDF Brochure Attached', icon: FileCheck, color: 'bg-red-500/10 text-red-400 border-red-500/20' },
   IMAGE: { label: 'Image Attached', icon: ImageIcon, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  VIDEO: { label: 'Video Demo Attached', icon: Video, color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+  VIDEO: { label: 'Video Demo Attached', icon: Video, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
   NONE: { label: 'Text Only', icon: FileText, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' }
 };
 
@@ -318,7 +318,7 @@ export default function TemplatesPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
             <span>Pre-Installed Templates & AI Email Scripts</span>
-            <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
               Editable & Live
             </span>
           </h1>
@@ -339,7 +339,7 @@ export default function TemplatesPage() {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md shrink-0"
           >
             <Plus size={16} />
             <span>Create Custom Template</span>
@@ -355,7 +355,7 @@ export default function TemplatesPage() {
             placeholder="Search templates, subjects or script text..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -367,7 +367,7 @@ export default function TemplatesPage() {
               className={cn(
                 "px-3.5 py-1.5 text-xs rounded-xl border font-bold transition-all",
                 channelFilter === ch
-                  ? "bg-purple-600 text-white border-purple-500 shadow"
+                  ? "bg-blue-600 text-white border-blue-500 shadow"
                   : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
               )}
             >
@@ -389,7 +389,7 @@ export default function TemplatesPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-all shadow-sm group relative"
+              className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between space-y-4 hover:border-blue-500/40 transition-all shadow-sm group relative"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -401,7 +401,7 @@ export default function TemplatesPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-sm text-[var(--color-text)] truncate">{tpl.title}</h3>
                         {tpl.isPreinstalled && (
-                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 font-semibold shrink-0">
+                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20 font-semibold shrink-0">
                             Preinstalled
                           </span>
                         )}
@@ -413,7 +413,7 @@ export default function TemplatesPage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={() => openEditModal(tpl)}
-                      className="p-2 hover:bg-purple-500/10 text-[var(--color-text-muted)] hover:text-purple-600 dark:hover:text-purple-300 rounded-xl transition-colors cursor-pointer"
+                      className="p-2 hover:bg-blue-500/10 text-[var(--color-text-muted)] hover:text-blue-600 dark:hover:text-blue-300 rounded-xl transition-colors cursor-pointer"
                       title="Edit this script/template"
                     >
                       <Edit3 size={15} />
@@ -429,9 +429,9 @@ export default function TemplatesPage() {
                 </div>
 
                 {tpl.channel === 'EMAIL' && tpl.subject && (
-                  <div className="p-2.5 bg-[var(--color-bg)] border border-purple-500/30 rounded-xl text-xs">
+                  <div className="p-2.5 bg-[var(--color-bg)] border border-blue-500/30 rounded-xl text-xs">
                     <span className="text-[var(--color-text-muted)] font-medium">Subject: </span>
-                    <span className="font-mono text-purple-700 dark:text-purple-300 font-bold">{tpl.subject}</span>
+                    <span className="font-mono text-blue-700 dark:text-blue-300 font-bold">{tpl.subject}</span>
                   </div>
                 )}
 
@@ -452,7 +452,7 @@ export default function TemplatesPage() {
 
                 <button
                   onClick={() => openEditModal(tpl)}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-500 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors cursor-pointer"
                 >
                   <Edit3 size={12} />
                   <span>Edit Script</span>
@@ -475,7 +475,7 @@ export default function TemplatesPage() {
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-lg">
+                  <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg">
                     <Edit3 size={18} />
                   </div>
                   <div>
@@ -505,7 +505,7 @@ export default function TemplatesPage() {
                       placeholder="e.g. 24h Appointment Reminder"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
                     />
                   </div>
 
@@ -516,7 +516,7 @@ export default function TemplatesPage() {
                       placeholder="e.g. Booking Confirmation, Follow Up"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -527,7 +527,7 @@ export default function TemplatesPage() {
                     <select
                       value={channel}
                       onChange={(e) => setChannel(e.target.value as any)}
-                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
                     >
                       <option value="WHATSAPP">WhatsApp Message</option>
                       <option value="EMAIL">Email Template</option>
@@ -540,7 +540,7 @@ export default function TemplatesPage() {
                     <select
                       value={mediaAttachment}
                       onChange={(e) => setMediaAttachment(e.target.value as any)}
-                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                       <option value="NONE">None (Text Only)</option>
                       <option value="PDF">PDF Brochure / Document</option>
@@ -558,7 +558,7 @@ export default function TemplatesPage() {
                       placeholder="e.g. Your confirmed booking at {{business_name}}"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 )}
@@ -566,7 +566,7 @@ export default function TemplatesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-[var(--color-text)] font-semibold">Template Script / Body Content</label>
-                    <span className="text-[10px] text-purple-600 dark:text-purple-400">Click to insert token:</span>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400">Click to insert token:</span>
                   </div>
 
                   {/* Variable insertion pills */}
@@ -576,7 +576,7 @@ export default function TemplatesPage() {
                         key={v}
                         type="button"
                         onClick={() => insertVariable(v)}
-                        className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-300 font-mono text-[10px] rounded-md transition-colors cursor-pointer"
+                        className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 dark:text-blue-300 font-mono text-[10px] rounded-md transition-colors cursor-pointer"
                       >
                         + {`{{${v}}}`}
                       </button>
@@ -589,7 +589,7 @@ export default function TemplatesPage() {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Type your message script with {{variables}}..."
-                    className="w-full p-3.5 bg-[var(--color-bg)] border border-[var(--color-border)] focus:border-purple-500 rounded-xl text-[var(--color-text)] font-mono text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none leading-relaxed"
+                    className="w-full p-3.5 bg-[var(--color-bg)] border border-[var(--color-border)] focus:border-blue-500 rounded-xl text-[var(--color-text)] font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none leading-relaxed"
                   />
                 </div>
 
@@ -603,7 +603,7 @@ export default function TemplatesPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all cursor-pointer"
                   >
                     <Save size={14} />
                     <span>{editingTemplateId ? 'Save Changes' : 'Create Template'}</span>

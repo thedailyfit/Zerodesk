@@ -308,7 +308,7 @@ export default function VoiceKnowledgeHubPage() {
 
         <button
           onClick={handleSaveAll}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
         >
           <Save size={16} />
           <span>Save AI Instructions</span>
@@ -325,7 +325,7 @@ export default function VoiceKnowledgeHubPage() {
           <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Wand2 size={20} className="text-purple-500" />
+                <Wand2 size={20} className="text-blue-500" />
                 <h2 className="text-base font-bold text-[var(--color-text)]">Voice AI "Golden System Prompt" Editor</h2>
               </div>
               
@@ -340,7 +340,7 @@ export default function VoiceKnowledgeHubPage() {
                 </button>
                 <button 
                   onClick={handleCopyPrompt}
-                  className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-purple-500 transition-colors bg-[var(--color-bg)] px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] cursor-pointer"
+                  className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-blue-500 transition-colors bg-[var(--color-bg)] px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] cursor-pointer"
                 >
                   {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                   <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -354,14 +354,14 @@ export default function VoiceKnowledgeHubPage() {
 
             {/* Quick Variable Token Inserters */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">Click to insert token into prompt:</span>
+              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">Click to insert token into prompt:</span>
               <div className="flex flex-wrap gap-1.5">
                 {inputVariables.map((v) => (
                   <button
                     key={v.token}
                     type="button"
                     onClick={() => insertTokenIntoPrompt(v.token)}
-                    className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-300 font-mono text-[10px] rounded-md transition-colors cursor-pointer"
+                    className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 font-mono text-[10px] rounded-md transition-colors cursor-pointer"
                   >
                     + {`{{${v.token}}}`}
                   </button>
@@ -374,7 +374,7 @@ export default function VoiceKnowledgeHubPage() {
                 value={goldenPrompt}
                 onChange={(e) => setGoldenPrompt(e.target.value)}
                 rows={11}
-                className="w-full p-4 rounded-xl font-mono text-xs bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-y shadow-inner leading-relaxed"
+                className="w-full p-4 rounded-xl font-mono text-xs bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-y shadow-inner leading-relaxed"
                 placeholder="Enter Voice AI Golden System Prompt instructions..."
               />
               <div className="flex items-center justify-between pt-1 px-1 text-[10px] text-[var(--color-text-muted)] font-mono">
@@ -383,8 +383,8 @@ export default function VoiceKnowledgeHubPage() {
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-purple-700 dark:text-purple-300 flex items-start gap-2">
-              <Info size={16} className="shrink-0 mt-0.5 text-purple-500" />
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+              <Info size={16} className="shrink-0 mt-0.5 text-blue-500" />
               <div>
                 <span className="font-bold">Dynamic Knowledge Base Connection:</span> Live pricing and open appointment slots from your <span className="font-semibold text-[var(--color-text)] underline">Company Knowledge Base</span> are automatically injected below this prompt on every incoming call.
               </div>
@@ -415,11 +415,11 @@ export default function VoiceKnowledgeHubPage() {
               {inputVariables.map((v) => (
                 <div 
                   key={v.token} 
-                  className="p-3.5 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs hover:border-purple-500/40 transition-all group"
+                  className="p-3.5 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs hover:border-blue-500/40 transition-all group"
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-purple-600 dark:text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                      <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
                         {`{{${v.token}}}`}
                       </span>
                       <span className="text-[var(--color-text-muted)] text-xs">
@@ -435,7 +435,7 @@ export default function VoiceKnowledgeHubPage() {
                     </span>
                     <button
                       onClick={() => openEditVar(v)}
-                      className="p-1.5 hover:bg-purple-500/20 text-[var(--color-text-muted)] hover:text-purple-500 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-blue-500/20 text-[var(--color-text-muted)] hover:text-blue-500 rounded-lg transition-colors cursor-pointer"
                       title="Edit variable"
                     >
                       <Edit2 size={13} />
@@ -471,15 +471,15 @@ export default function VoiceKnowledgeHubPage() {
                   className={cn(
                     "p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between h-full group cursor-pointer",
                     selectedTone === tone.id
-                      ? "bg-purple-500/10 border-purple-500 shadow-sm"
-                      : "bg-[var(--color-bg)] border-[var(--color-border)] hover:border-purple-500/40"
+                      ? "bg-blue-500/10 border-blue-500 shadow-sm"
+                      : "bg-[var(--color-bg)] border-[var(--color-border)] hover:border-blue-500/40"
                   )}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className={cn(
                         "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded",
-                        selectedTone === tone.id ? "bg-purple-500 text-white" : "bg-slate-800 text-slate-400"
+                        selectedTone === tone.id ? "bg-blue-500 text-white" : "bg-slate-800 text-slate-400"
                       )}>
                         {tone.tag || 'Style'}
                       </span>
@@ -487,7 +487,7 @@ export default function VoiceKnowledgeHubPage() {
                         <CheckCircle2 size={16} className="text-emerald-400" />
                       )}
                     </div>
-                    <h3 className="font-bold text-xs sm:text-sm text-[var(--color-text)] group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--color-text)] group-hover:text-blue-400 transition-colors">
                       {tone.name}
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1.5 leading-snug">
@@ -516,7 +516,7 @@ export default function VoiceKnowledgeHubPage() {
               </div>
               <button
                 onClick={openAddRule}
-                className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-lg text-xs font-semibold transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-lg text-xs font-semibold transition-colors"
               >
                 <Plus size={14} />
                 <span>Add Rule</span>
@@ -531,14 +531,14 @@ export default function VoiceKnowledgeHubPage() {
               {rules.map((r: any) => (
                 <div
                   key={r.id}
-                  className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-purple-500/40 transition-all group relative"
+                  className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-blue-500/40 transition-all group relative"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 cursor-pointer" onClick={() => openEditRule(r)}>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-purple-300 border border-purple-500/20">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-blue-300 border border-blue-500/20">
                         {r.category || 'Policy'}
                       </span>
-                      <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-purple-300 transition-colors">
+                      <h3 className="font-bold text-xs text-[var(--color-text)] mt-1.5 group-hover:text-blue-300 transition-colors">
                         {r.title}
                       </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
@@ -549,7 +549,7 @@ export default function VoiceKnowledgeHubPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => openEditRule(r)}
-                        className="p-1.5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors"
                         title="Edit rule"
                       >
                         <Edit2 size={13} />
@@ -600,7 +600,7 @@ export default function VoiceKnowledgeHubPage() {
                     placeholder="e.g. No Medical Prescriptions"
                     value={ruleTitle}
                     onChange={(e) => setRuleTitle(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -609,7 +609,7 @@ export default function VoiceKnowledgeHubPage() {
                   <select
                     value={ruleCategory}
                     onChange={(e) => setRuleCategory(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Safety">Safety & Compliance</option>
                     <option value="Clinical SOP">Clinical SOP</option>
@@ -627,7 +627,7 @@ export default function VoiceKnowledgeHubPage() {
                     placeholder="Explain the boundary or instruction the Voice AI must obey..."
                     value={ruleContent}
                     onChange={(e) => setRuleContent(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-[var(--color-border)] rounded-xl text-white font-sans focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2.5 bg-slate-950 border border-[var(--color-border)] rounded-xl text-white font-sans focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -641,7 +641,7 @@ export default function VoiceKnowledgeHubPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl"
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl"
                   >
                     Save Rule
                   </button>
@@ -676,16 +676,16 @@ export default function VoiceKnowledgeHubPage() {
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Variable Token Name *</label>
                   <div className="flex items-center gap-1">
-                    <span className="text-purple-400 font-mono text-sm">{`{{`}</span>
+                    <span className="text-blue-400 font-mono text-sm">{`{{`}</span>
                     <input
                       type="text"
                       required
                       placeholder="e.g. discount_code"
                       value={varToken}
                       onChange={(e) => setVarToken(e.target.value)}
-                      className="flex-1 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-purple-400 font-mono text-sm">{`}}`}</span>
+                    <span className="text-blue-400 font-mono text-sm">{`}}`}</span>
                   </div>
                 </div>
 
@@ -696,7 +696,7 @@ export default function VoiceKnowledgeHubPage() {
                     placeholder="e.g. Promotional discount code"
                     value={varLabel}
                     onChange={(e) => setVarLabel(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -707,7 +707,7 @@ export default function VoiceKnowledgeHubPage() {
                     placeholder="e.g. None"
                     value={varFallback}
                     onChange={(e) => setVarFallback(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 

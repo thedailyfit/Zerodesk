@@ -168,10 +168,10 @@ export default function OutboundCampaignsPage() {
                     onClick={() => setNewCampaign({ ...newCampaign, goalId: goal.id, name: newCampaign.name || goal.title })}
                     className={cn(
                       "p-4 rounded-xl border-2 cursor-pointer transition-all",
-                      isSelected ? "border-purple-500 bg-purple-500/10" : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-purple-500/50"
+                      isSelected ? "border-blue-500 bg-blue-500/10" : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-blue-500/50"
                     )}
                   >
-                    <Icon className={isSelected ? "text-purple-400" : "text-[var(--color-text-muted)]"} size={24} />
+                    <Icon className={isSelected ? "text-blue-400" : "text-[var(--color-text-muted)]"} size={24} />
                     <h4 className="font-bold text-[var(--color-text)] mt-3">{goal.title}</h4>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">{goal.desc}</p>
                   </div>
@@ -208,10 +208,10 @@ export default function OutboundCampaignsPage() {
                     }}
                     className={cn(
                       "p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-4",
-                      isSelected ? "border-purple-500 bg-purple-500/10" : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-purple-500/50"
+                      isSelected ? "border-blue-500 bg-blue-500/10" : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-blue-500/50"
                     )}
                   >
-                    <div className={cn("p-3 rounded-xl", isSelected ? "bg-purple-500/20 text-purple-400" : "bg-slate-800 text-slate-400")}>
+                    <div className={cn("p-3 rounded-xl", isSelected ? "bg-blue-500/20 text-blue-400" : "bg-slate-800 text-slate-400")}>
                       <Icon size={24} />
                     </div>
                     <div>
@@ -229,19 +229,19 @@ export default function OutboundCampaignsPage() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 flex flex-col md:flex-row gap-6">
             <div className="flex-1">
               <h3 className="text-lg font-bold text-[var(--color-text)] mb-6">Step 3: Build Outreach Sequence</h3>
-              <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-purple-500 before:to-emerald-500">
+              <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:to-emerald-500">
                 {newCampaign.sequence.map((node, idx) => (
                   <div key={node.id} className="relative">
-                    <div className="absolute -left-[31px] top-4 w-4 h-4 rounded-full border-2 border-purple-500 bg-slate-950 z-10" />
+                    <div className="absolute -left-[31px] top-4 w-4 h-4 rounded-full border-2 border-blue-500 bg-slate-950 z-10" />
                     <div 
                       onClick={() => setEditingNodeIndex(idx)}
                       className={cn(
                         "p-4 rounded-xl border cursor-pointer transition-all bg-[var(--color-surface)]",
-                        editingNodeIndex === idx ? "border-purple-500 ring-2 ring-purple-500/20" : "border-[var(--color-border)] hover:border-purple-500/50"
+                        editingNodeIndex === idx ? "border-blue-500 ring-2 ring-blue-500/20" : "border-[var(--color-border)] hover:border-blue-500/50"
                       )}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">{node.type}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{node.type}</span>
                         <span className="text-xs text-[var(--color-text-muted)]">Step {idx + 1}</span>
                       </div>
                       <h4 className="font-bold text-sm text-[var(--color-text)] mt-1">{node.label}</h4>
@@ -257,10 +257,10 @@ export default function OutboundCampaignsPage() {
                         <button 
                           onClick={() => {
                             const newSeq = [...newCampaign.sequence];
-                            newSeq.splice(idx + 1, 0, { id: `n_\${Date.now()}`, type: 'ACTION', actionType: 'WHATSAPP', label: 'New Action', config: {} });
+                            newSeq.splice(idx + 1, 0, { id: `n_${Date.now()}`, type: 'ACTION', actionType: 'WHATSAPP', label: 'New Action', config: {} });
                             setNewCampaign({ ...newCampaign, sequence: newSeq });
                           }}
-                          className="w-6 h-6 rounded-full bg-[var(--color-surface)] border border-purple-500 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors"
+                          className="w-6 h-6 rounded-full bg-[var(--color-surface)] border border-blue-500 text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors"
                         >
                           <Plus size={14} />
                         </button>
@@ -294,19 +294,19 @@ export default function OutboundCampaignsPage() {
                         <select 
                           value={node.config.source} 
                           onChange={(e) => updateNode({ config: { source: e.target.value } })}
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-purple-500"
+                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
                         >
                           <option value="csv">Upload CSV File</option>
                           <option value="crm">Select CRM Segment</option>
                         </select>
                         {node.config.source === 'csv' && (
-                          <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-purple-500">
+                          <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-blue-500">
                             <Upload className="mx-auto text-[var(--color-text-muted)] mb-2" size={20} />
                             <span className="text-xs text-[var(--color-text)]">Click to upload audience CSV</span>
                           </div>
                         )}
                         {node.config.source === 'crm' && (
-                          <select className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-purple-500">
+                          <select className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500">
                             <option>All Past 90 Days No-Shows</option>
                             <option>VIP Clients</option>
                           </select>
@@ -322,7 +322,7 @@ export default function OutboundCampaignsPage() {
                         <select 
                           value={node.config.template}
                           onChange={(e) => updateNode({ config: { template: e.target.value } })}
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-purple-500"
+                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
                         >
                           <option value="">-- Select Template --</option>
                           {nicheConfig?.templates?.filter((t:any) => t.channel === 'whatsapp').map((t:any) => (
@@ -331,7 +331,7 @@ export default function OutboundCampaignsPage() {
                         </select>
                         
                         <label className="block text-xs font-semibold text-[var(--color-text)] mt-4">Promotional Image (Optional)</label>
-                        <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-purple-500 bg-[var(--color-bg)]">
+                        <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-blue-500 bg-[var(--color-bg)]">
                           <ImageIcon className="mx-auto text-[var(--color-text-muted)] mb-2" size={20} />
                           <span className="text-xs text-[var(--color-text)]">Upload Image (1080x1080px)</span>
                         </div>
@@ -348,7 +348,7 @@ export default function OutboundCampaignsPage() {
                           value={node.config.script || ''}
                           onChange={(e) => updateNode({ config: { script: e.target.value } })}
                           placeholder="You are an AI assistant calling on behalf of..."
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-purple-500"
+                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
                         />
                       </div>
                     );
@@ -361,7 +361,7 @@ export default function OutboundCampaignsPage() {
                         <select 
                           value={node.config.duration}
                           onChange={(e) => updateNode({ config: { duration: e.target.value } })}
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-purple-500"
+                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
                         >
                           <option value="1 hour">1 Hour</option>
                           <option value="2 hours">2 Hours</option>
@@ -404,7 +404,7 @@ export default function OutboundCampaignsPage() {
                   value={newCampaign.name}
                   onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
                   placeholder="e.g. Diwali Mega Promo"
-                  className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-purple-500"
+                  className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-blue-500"
                 />
               </div>
 
@@ -415,13 +415,13 @@ export default function OutboundCampaignsPage() {
                     type="date" 
                     value={newCampaign.schedule.date}
                     onChange={(e) => setNewCampaign({ ...newCampaign, schedule: { ...newCampaign.schedule, date: e.target.value } })}
-                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-purple-500"
+                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-blue-500"
                   />
                   <input 
                     type="time" 
                     value={newCampaign.schedule.time}
                     onChange={(e) => setNewCampaign({ ...newCampaign, schedule: { ...newCampaign.schedule, time: e.target.value } })}
-                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-purple-500"
+                    className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -434,7 +434,7 @@ export default function OutboundCampaignsPage() {
                 <select 
                   value={newCampaign.schedule.traiHours}
                   onChange={(e) => setNewCampaign({ ...newCampaign, schedule: { ...newCampaign.schedule, traiHours: e.target.value } })}
-                  className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-purple-500"
+                  className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:border-blue-500"
                 >
                   <option value="day">10:00 AM to 06:00 PM (Recommended)</option>
                   <option value="evening">04:00 PM to 08:00 PM</option>
@@ -460,7 +460,7 @@ export default function OutboundCampaignsPage() {
 
         <button
           onClick={() => setIsWizardOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
         >
           <Plus size={18} />
           <span>Create Campaign</span>
@@ -485,14 +485,14 @@ export default function OutboundCampaignsPage() {
             {filteredCampaigns.map((camp) => (
               <div
                 key={camp.id}
-                className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-purple-500/40 transition-colors shadow-sm"
+                className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-blue-500/40 transition-colors shadow-sm"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h3 className="font-bold text-lg text-[var(--color-text)]">{camp.name}</h3>
                     <span className={cn(
                       "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                      camp.status === 'ACTIVE' ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
+                      camp.status === 'ACTIVE' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
                       camp.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                       camp.status === 'PAUSED' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
                       "bg-slate-500/10 text-slate-400 border-slate-500/20"
@@ -520,7 +520,7 @@ export default function OutboundCampaignsPage() {
                     <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Delivered</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-bold text-purple-400">{camp.stats.replied}</p>
+                    <p className="text-xl font-bold text-blue-400">{camp.stats.replied}</p>
                     <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Replied</p>
                   </div>
                 </div>
@@ -533,7 +533,7 @@ export default function OutboundCampaignsPage() {
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 shadow-xl">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4 mb-6">
             <h2 className="text-xl font-bold text-[var(--color-text)] flex items-center gap-2">
-              <Megaphone className="text-purple-500" /> 
+              <Megaphone className="text-blue-500" /> 
               Campaign Builder
             </h2>
             <button onClick={() => setIsWizardOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] p-2">
@@ -546,11 +546,11 @@ export default function OutboundCampaignsPage() {
               <div key={step} className="flex-1 flex flex-col gap-2">
                 <div className={cn(
                   "h-1.5 rounded-full transition-colors",
-                  wizardStep >= step ? "bg-purple-500" : "bg-[var(--color-border)]"
+                  wizardStep >= step ? "bg-blue-500" : "bg-[var(--color-border)]"
                 )} />
                 <span className={cn(
                   "text-[10px] font-bold uppercase tracking-wider",
-                  wizardStep >= step ? "text-purple-400" : "text-[var(--color-text-muted)]"
+                  wizardStep >= step ? "text-blue-400" : "text-[var(--color-text-muted)]"
                 )}>
                   Step {step}
                 </span>
@@ -590,7 +590,7 @@ export default function OutboundCampaignsPage() {
                   }
                 }}
                 disabled={(wizardStep === 1 && !newCampaign.goalId) || (wizardStep === 2 && !newCampaign.channelId)}
-                className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {wizardStep === 4 ? 'Launch Campaign' : 'Continue'} 
                 {wizardStep < 4 && <ChevronRight size={18} />}

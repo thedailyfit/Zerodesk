@@ -124,7 +124,7 @@ export default function PhoneNumbersPage() {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
         >
           <Plus size={18} />
           <span>Provision New Phone Number</span>
@@ -134,7 +134,7 @@ export default function PhoneNumbersPage() {
       {/* Stats Header */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xl">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xl">
             📞
           </div>
           <div>
@@ -163,12 +163,12 @@ export default function PhoneNumbersPage() {
             placeholder="Search phone number or agent..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-          <Info size={14} className="text-purple-400" />
+          <Info size={14} className="text-blue-400" />
           <span>Indian TRAI Regulatory KYC Status: <strong className="text-emerald-400 font-mono">VERIFIED</strong></span>
         </div>
       </div>
@@ -178,12 +178,12 @@ export default function PhoneNumbersPage() {
         {filteredNumbers.map((num) => (
           <div
             key={num.id}
-            className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-purple-500/40 shadow-sm"
+            className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-blue-500/40 shadow-sm"
           >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shrink-0",
-                num.status === 'ACTIVE' ? "bg-purple-600 shadow-lg shadow-purple-500/20" : "bg-slate-700"
+                num.status === 'ACTIVE' ? "bg-blue-600 shadow-lg shadow-blue-500/20" : "bg-slate-700"
               )}>
                 <Phone size={20} />
               </div>
@@ -192,7 +192,7 @@ export default function PhoneNumbersPage() {
                 <div className="flex items-center gap-3">
                   <h3 className="font-mono font-bold text-lg text-[var(--color-text)]">{num.number}</h3>
                   {num.isPrimary ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
                       Primary
                     </span>
                   ) : (
@@ -217,7 +217,7 @@ export default function PhoneNumbersPage() {
 
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)] font-mono">
-                    <span>🤖 Agent: <strong className="text-purple-400">{num.assignedAgent}</strong></span>
+                    <span>🤖 Agent: <strong className="text-blue-400">{num.assignedAgent}</strong></span>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ export default function PhoneNumbersPage() {
                       value={num.forwardingSource}
                       onChange={(e) => handleUpdateForwarding(num.id, e.target.value)}
                       placeholder="+91 ... (Optional)"
-                      className="text-xs bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:border-purple-500 focus:outline-none w-64"
+                      className="text-xs bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:border-blue-500 focus:outline-none w-64"
                     />
                   </div>
                 </div>
@@ -247,12 +247,12 @@ export default function PhoneNumbersPage() {
                       id="toggle"
                       checked={num.status === 'ACTIVE'}
                       onChange={() => handleToggleStatus(num.id)}
-                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:right-0 checked:border-purple-500 checked:bg-white"
+                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:right-0 checked:border-blue-500 checked:bg-white"
                       style={{ right: num.status === 'ACTIVE' ? '0' : '1.25rem', top: 0 }}
                     />
                     <div className={cn(
                       "toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors duration-200 ease-in-out",
-                      num.status === 'ACTIVE' ? "bg-purple-500" : "bg-slate-700"
+                      num.status === 'ACTIVE' ? "bg-blue-500" : "bg-slate-700"
                     )}></div>
                   </div>
                 </label>
@@ -265,7 +265,7 @@ export default function PhoneNumbersPage() {
                 <span>{copiedId === num.id ? 'Copied' : 'Webhook URL'}</span>
               </button>
 
-              <button className="px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1">
+              <button className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1">
                 <Settings size={12} />
                 <span>Configure</span>
               </button>
@@ -282,11 +282,11 @@ export default function PhoneNumbersPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-purple-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-slate-900 border border-blue-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <Plus size={18} className="text-purple-400" />
+                  <Plus size={18} className="text-blue-400" />
                   Provision Virtual Indian Phone Number
                 </h3>
                 <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
@@ -307,7 +307,7 @@ export default function PhoneNumbersPage() {
 
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Link Voice Agent ID</label>
-                  <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-purple-300 font-mono">
+                  <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-blue-300 font-mono">
                     <option value="agent_1">DermAI Receptionist (vapi_agent_hyderabad_v4)</option>
                     <option value="agent_2">VIP Concierge (vapi_agent_vip_v2)</option>
                     <option value="agent_3">After-Hours Outbound (retell_agent_99a)</option>
@@ -324,7 +324,7 @@ export default function PhoneNumbersPage() {
                 </button>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-xl font-bold shadow-lg shadow-purple-500/20"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-xl font-bold shadow-lg shadow-blue-500/20"
                 >
                   Provision Number
                 </button>

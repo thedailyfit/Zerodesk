@@ -160,9 +160,9 @@ export default function VoicePage() {
         <div className="flex items-center gap-3">
           <a
             href="/voice-knowledge-hub"
-            className="flex items-center gap-2 px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold transition-all shadow-md"
+            className="flex items-center gap-2 px-3.5 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold transition-all shadow-md"
           >
-            <Sparkles size={14} className="text-purple-400" />
+            <Sparkles size={14} className="text-blue-400" />
             <span>Voice AI Knowledge Hub & Prompts →</span>
           </a>
 
@@ -190,7 +190,7 @@ export default function VoicePage() {
       {/* Active Agent & Telephony Selector Bar */}
       <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
             🤖
           </div>
           <div>
@@ -199,7 +199,7 @@ export default function VoicePage() {
               <select 
                 value={selectedAgentId} 
                 onChange={(e) => setSelectedAgentId(e.target.value)}
-                className="bg-slate-900 border border-purple-500/40 text-purple-300 font-mono text-xs font-bold px-3 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                className="bg-slate-900 border border-blue-500/40 text-blue-300 font-mono text-xs font-bold px-3 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
                 {AVAILABLE_AGENTS.map((agent) => (
                   <option key={agent.id} value={agent.id}>
@@ -209,14 +209,14 @@ export default function VoicePage() {
               </select>
             </div>
             <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 font-mono">
-              Provider: <span className="text-cyan-400 font-semibold">{currentAgent.provider}</span> · Cloned Voice: <span className="text-emerald-400">{currentAgent.voiceName}</span> · Linked Number: <span className="text-purple-300">{currentAgent.phone}</span>
+              Provider: <span className="text-cyan-400 font-semibold">{currentAgent.provider}</span> · Cloned Voice: <span className="text-emerald-400">{currentAgent.voiceName}</span> · Linked Number: <span className="text-blue-300">{currentAgent.phone}</span>
             </p>
           </div>
         </div>
 
         <button 
           onClick={() => setShowEditAgentModal(true)}
-          className="px-3.5 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+          className="px-3.5 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
         >
           <Settings size={14} />
           <span>Edit Agent Credentials & IDs</span>
@@ -228,7 +228,7 @@ export default function VoicePage() {
         {/* Voice Personality */}
         <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl">
           <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
-            <Mic size={16} className="text-purple-400" />
+            <Mic size={16} className="text-blue-400" />
             Voice AI Personality Mode
           </h3>
           <div className="grid grid-cols-2 gap-2.5">
@@ -239,13 +239,13 @@ export default function VoicePage() {
                 className={cn(
                   "p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group",
                   selectedPersonality === p.id
-                    ? "bg-purple-600/10 border-purple-500 text-white shadow-md"
-                    : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-purple-500/30"
+                    ? "bg-blue-600/10 border-blue-500 text-white shadow-md"
+                    : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-blue-500/30"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xl">{p.icon}</span>
-                  {selectedPersonality === p.id && <Check size={14} className="text-purple-400" />}
+                  {selectedPersonality === p.id && <Check size={14} className="text-blue-400" />}
                 </div>
                 <p className="text-sm font-semibold mt-2">{p.label}</p>
                 <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-snug">{p.desc}</p>
@@ -279,7 +279,7 @@ export default function VoicePage() {
             Active Voice Greeting Script
           </h3>
           <textarea
-            className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+            className="w-full p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
             rows={3}
             defaultValue="Hello! Welcome to Glow Skin Clinic. I am Dr. Meenakshi's AI assistant. How can I help you today?"
           />
@@ -292,7 +292,7 @@ export default function VoicePage() {
           <div>
             <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
               <span>Voice Calls Past History</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
                 {filteredCalls.length} Logs
               </span>
             </h3>
@@ -306,7 +306,7 @@ export default function VoicePage() {
               placeholder="Search call logs..."
               value={searchCall}
               onChange={(e) => setSearchCall(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-8 pr-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function VoicePage() {
           {filteredCalls.map((call) => (
             <div
               key={call.id}
-              className="flex items-center justify-between p-3.5 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] hover:border-purple-500/30 transition-all group"
+              className="flex items-center justify-between p-3.5 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] hover:border-blue-500/30 transition-all group"
             >
               <div className="flex items-center gap-3.5">
                 <div className={cn(
@@ -344,7 +344,7 @@ export default function VoicePage() {
                   </span>
                 )}
                 {call.resolution === 'HUMAN_RESOLVED' && (
-                  <span className="text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
+                  <span className="text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
                     <User size={11} /> Human Handed Off
                   </span>
                 )}
@@ -377,7 +377,7 @@ export default function VoicePage() {
                 {/* View Transcript Modal */}
                 <button
                   onClick={() => setActiveCallId(call.id)}
-                  className="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs transition-colors flex items-center gap-1 border border-purple-500/30"
+                  className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-lg text-xs transition-colors flex items-center gap-1 border border-blue-500/30"
                 >
                   <FileText size={12} />
                   <span>Transcript</span>
@@ -400,7 +400,7 @@ export default function VoicePage() {
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-base flex items-center gap-2">
-                  <FileText size={18} className="text-purple-400" />
+                  <FileText size={18} className="text-blue-400" />
                   Call Transcript: {calls.find(c => c.id === activeCallId)?.customer}
                 </h3>
                 <button onClick={() => setActiveCallId(null)} className="text-slate-400 hover:text-white">
@@ -433,11 +433,11 @@ export default function VoicePage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-slate-900 border border-purple-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-slate-900 border border-blue-500/30 rounded-2xl p-6 text-white space-y-4 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <Settings size={20} className="text-purple-400" />
+                  <Settings size={20} className="text-blue-400" />
                   <h3 className="font-bold text-base text-white">Voice Agent API Credentials & Agent IDs</h3>
                 </div>
                 <button onClick={() => setShowEditAgentModal(false)} className="text-slate-400 hover:text-white">
@@ -448,7 +448,7 @@ export default function VoicePage() {
               <div className="space-y-4 text-xs">
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Select Provider Platform</label>
-                  <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-purple-500">
+                  <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-blue-500">
                     <option value="vapi">Vapi.ai (Recommended for Latency)</option>
                     <option value="retell">Retell AI</option>
                   </select>
@@ -459,7 +459,7 @@ export default function VoicePage() {
                   <input 
                     type="text" 
                     defaultValue={currentAgent.name} 
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-purple-500"
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-blue-500"
                     placeholder="e.g. DermAI Jubilee Hills Receptionist"
                   />
                 </div>
@@ -469,7 +469,7 @@ export default function VoicePage() {
                   <input 
                     type="text" 
                     defaultValue={currentAgent.agentId} 
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-purple-300 font-mono focus:border-purple-500"
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-blue-300 font-mono focus:border-blue-500"
                     placeholder="e.g. vapi_agent_hyderabad_v4 or retell_99a"
                   />
                 </div>
@@ -479,7 +479,7 @@ export default function VoicePage() {
                   <input 
                     type="text" 
                     defaultValue={currentAgent.voiceName} 
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-emerald-300 font-mono focus:border-purple-500"
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-emerald-300 font-mono focus:border-blue-500"
                     placeholder="e.g. Kavita Soft Tone (ElevenLabs Voice ID: X1yZ...)"
                   />
                 </div>
@@ -489,7 +489,7 @@ export default function VoicePage() {
                   <input 
                     type="text" 
                     defaultValue={currentAgent.phone} 
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 font-mono focus:border-purple-500"
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 font-mono focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -503,7 +503,7 @@ export default function VoicePage() {
                 </button>
                 <button
                   onClick={() => setShowEditAgentModal(false)}
-                  className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-xl font-bold shadow-lg shadow-purple-500/20"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-xl font-bold shadow-lg shadow-blue-500/20"
                 >
                   Save Agent Credentials
                 </button>

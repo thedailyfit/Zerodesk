@@ -151,7 +151,7 @@ export default function BusinessHealthPage() {
           { label: "Today's Bookings", val: "18 Sittings", sub: "8 Completed", icon: CalendarIcon, color: "text-blue-400" },
           { label: "Pending Confirmations", val: "3 Patients", sub: "WhatsApp active", icon: AlertCircle, color: "text-amber-400" },
           { label: "Revenue Collected Today", val: "₹42,800", sub: "14 Invoices", icon: IndianRupee, color: "text-emerald-400" },
-          { label: "Staff On Duty", val: "6 / 8 Active", sub: "1 on break, 1 leave", icon: Users, color: "text-purple-400" },
+          { label: "Staff On Duty", val: "6 / 8 Active", sub: "1 on break, 1 leave", icon: Users, color: "text-sky-400" },
         ].map((tile, i) => {
           const Icon = tile.icon;
           return (
@@ -203,7 +203,7 @@ export default function BusinessHealthPage() {
 
         <div className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold">
               <Bot size={18} />
             </div>
             <div>

@@ -68,7 +68,7 @@ export default function PatientSentimentPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center">
             Patient Sentiment & Satisfaction
-            <span className="ml-3 inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-500 text-xs font-semibold border border-purple-500/20">
+            <span className="ml-3 inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-semibold border border-blue-500/20">
               <Sparkles size={12} className="mr-1" />
               AI Analyzed
             </span>

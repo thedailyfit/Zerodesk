@@ -52,10 +52,10 @@ export default function SalesPage() {
       </div>
 
       {/* Target Progress Bar Card */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 shadow-xl backdrop-blur-xl">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900 border border-blue-500/30 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div>
-            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider">August 2026 Target Progress</span>
+            <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">August 2026 Target Progress</span>
             <h2 className="text-3xl font-extrabold text-white mt-1 flex items-center gap-3">
               {formatCurrency(currentMonth.revenue)}
               <span className="text-xs font-semibold text-slate-400">/ {formatCurrency(currentMonth.target)} Target</span>
@@ -74,7 +74,7 @@ export default function SalesPage() {
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, targetPct)}%` }}
             transition={{ duration: 1 }}
-            className="h-full bg-gradient-to-r from-purple-500 via-indigo-400 to-emerald-400 rounded-full shadow-lg"
+            className="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-emerald-400 rounded-full shadow-lg"
           />
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function SalesPage() {
                 formatter={(val: any) => [formatCurrency(val), 'Revenue']}
                 contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
               />
-              <Bar dataKey="revenue" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Actual Revenue" />
+              <Bar dataKey="revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Actual Revenue" />
               <Bar dataKey="target" fill="#334155" radius={[6, 6, 0, 0]} name="Monthly Target" />
             </BarChart>
           </ResponsiveContainer>
@@ -108,7 +108,7 @@ export default function SalesPage() {
         {/* Treatment Revenue Share */}
         <div className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] shadow-md space-y-4">
           <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-            <PieIcon size={18} className="text-purple-400" />
+            <PieIcon size={18} className="text-blue-400" />
             Revenue Share by Treatment
           </h3>
 
@@ -117,11 +117,11 @@ export default function SalesPage() {
               <div key={item.service} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-[var(--color-text)]">{item.service}</span>
-                  <span className="font-mono text-purple-300 font-bold">{formatCurrency(item.revenue)}</span>
+                  <span className="font-mono text-blue-300 font-bold">{formatCurrency(item.revenue)}</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
                     style={{ width: item.share }}
                   />
                 </div>
