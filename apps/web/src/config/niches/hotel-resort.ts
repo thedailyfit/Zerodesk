@@ -19,8 +19,8 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
   terminology: {
     customer: 'Guest',
     customers: 'Guests',
-    appointment: 'Check-in',
-    appointments: 'Room Bookings',
+    appointment: 'Reservation',
+    appointments: 'Reservations',
     service: 'Service / Amenity',
     services: 'Services & Amenities',
     staff: 'Hotel Staff',
@@ -42,7 +42,7 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Room Bookings', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Reservations', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
@@ -50,15 +50,17 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Hospitality', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Room Rack (Tape Chart)', href: '/room-rack', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { name: 'Housekeeping', href: '/housekeeping', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Check-in Lobby', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Room Occupancy Chart', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Guest Profiles', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Guest Profiles', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill / Folio', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
+    { name: 'Services & Amenities', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Book Room', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guests', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
@@ -67,7 +69,7 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Guest LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 

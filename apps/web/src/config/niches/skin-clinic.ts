@@ -53,7 +53,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor Slots', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor\'s Calendar', href: '/doctor-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Patient Files', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Patient Files', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
@@ -70,7 +70,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 

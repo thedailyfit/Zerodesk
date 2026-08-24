@@ -52,7 +52,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     { name: 'Wellness', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Therapy Queue', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Therapy Suites', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Guest Profiles', href: '/patient-files', icon: Heart, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Guest Profiles', href: '/profiles', icon: Heart, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
@@ -67,7 +67,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Guest LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 

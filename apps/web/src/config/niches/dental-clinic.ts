@@ -19,8 +19,8 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   terminology: {
     customer: 'Patient',
     customers: 'Patients',
-    appointment: 'Sitting',
-    appointments: 'Sittings',
+    appointment: 'Appointment',
+    appointments: 'Appointments',
     service: 'Treatment',
     services: 'Treatments',
     staff: 'Dentist',
@@ -54,7 +54,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Chair Scheduler', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor\'s Calendar', href: '/doctor-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Dental Records', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Dental Records', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
@@ -71,7 +71,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Patient LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 

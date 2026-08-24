@@ -49,7 +49,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Showroom Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Customer Lounge', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Buyer Management', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
-    { name: 'Customer Files', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
+    { name: 'Customer Files', href: '/profiles', icon: FileText, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     
     { name: 'Services & Finance', roles: ['ADMIN', 'MANAGER', 'FINANCE_MANAGER', 'SERVICE'], divider: true },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },

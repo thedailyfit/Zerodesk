@@ -50,15 +50,16 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Properties', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Sales Pipeline (Kanban)', href: '/pipeline', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Property Matrix', href: '/waiting-room', icon: Target, roles: ['ADMIN', 'STAFF'] },
     { name: 'Site Visit Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Lead Profiles', href: '/patient-files', icon: FileText, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Lead Profiles', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
+    { name: 'Properties & Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Schedule Visit', href: '/book-appointment', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
@@ -67,7 +68,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Lead LTV', href: '/patient-ltv', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
