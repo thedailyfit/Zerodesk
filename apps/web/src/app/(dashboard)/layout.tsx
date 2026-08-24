@@ -170,10 +170,6 @@ function SidebarNavItemRow({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <div className="px-2.5 py-1.5 border-b border-[var(--color-border)]/60 mb-1.5 flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[var(--color-text)] uppercase tracking-wider">{item.name}</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-600/10 text-blue-600 font-bold uppercase tracking-wider">Subpages</span>
-            </div>
             <div className="space-y-1">
               {item.children!.map((child) => {
                 const isCurrent = pathname === child.href;
