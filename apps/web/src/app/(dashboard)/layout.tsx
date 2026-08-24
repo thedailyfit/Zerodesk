@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   LogOut,
   Sparkles,
   Users,
@@ -33,7 +34,7 @@ import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useNotifications } from '@/lib/notifications-store';
-import type { NicheId } from '@/config/niches/types';
+import type { NicheId, NicheNavItem } from '@/config/niches/types';
 
 const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
   { id: 'skin', name: 'Skin Clinic', tag: 'Dermatology' },
@@ -57,6 +58,146 @@ const ROLE_COLORS: Record<string, string> = {
   MANAGER: 'bg-amber-500',
   STAFF: 'bg-emerald-500',
 };
+
+function SidebarNavItemRow({
+  item,
+  isSidebarOpen,
+  pathname,
+}: {
+  item: NicheNavItem;
+  isSidebarOpen: boolean;
+  pathname: string;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const Icon = item.icon as any;
+  const hasChildren = Boolean(item.children && item.children.length > 0);
+
+  const isChildActive = hasChildren && item.children!.some((c) => pathname === c.href);
+  const isActive = pathname === item.href || isChildActive;
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 200);
+  };
+
+  if (!hasChildren) {
+    return (
+      <Link key={item.name} href={item.href || '#'}>
+        <div
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 rounded-xl transition-all relative group text-xs font-medium',
+            isActive
+              ? 'text-white bg-blue-600 shadow-md shadow-blue-600/20 font-bold'
+              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]'
+          )}
+        >
+          {Icon && <Icon size={18} className={cn('shrink-0', isActive ? 'text-white' : '')} />}
+          {isSidebarOpen && <span className="truncate">{item.name}</span>}
+          {!isSidebarOpen && (
+            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 backdrop-blur-md shadow-lg">
+              {item.name}
+            </div>
+          )}
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="relative group/parent"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link href={item.children![0].href}>
+        <div
+          className={cn(
+            'flex items-center justify-between px-3 py-2 rounded-xl transition-all relative text-xs font-medium cursor-pointer',
+            isActive
+              ? 'text-white bg-blue-600 shadow-md shadow-blue-600/20 font-bold'
+              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]'
+          )}
+        >
+          <div className="flex items-center gap-3 truncate">
+            {Icon && <Icon size={18} className={cn('shrink-0', isActive ? 'text-white' : '')} />}
+            {isSidebarOpen && <span className="truncate">{item.name}</span>}
+          </div>
+          {isSidebarOpen && (
+            <ChevronRight
+              size={13}
+              className={cn(
+                'shrink-0 opacity-60 transition-transform duration-200',
+                isHovered ? 'translate-x-0.5 opacity-100' : ''
+              )}
+            />
+          )}
+          {!isSidebarOpen && (
+            <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover/parent:opacity-100 group-hover/parent:visible transition-all whitespace-nowrap z-40 backdrop-blur-md shadow-lg">
+              {item.name}
+            </div>
+          )}
+        </div>
+      </Link>
+
+      {/* Floating Side View Flyout Sub-menu */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, x: -6, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -6, scale: 0.96 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className={cn(
+              'absolute z-50 w-56 p-2 rounded-xl bg-[var(--color-bg-elevated)]/95 backdrop-blur-xl border border-[var(--color-border)] shadow-2xl shadow-black/20',
+              isSidebarOpen ? 'left-[calc(100%+8px)] top-0' : 'left-16 top-0'
+            )}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="px-2.5 py-1.5 border-b border-[var(--color-border)]/60 mb-1.5 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[var(--color-text)] uppercase tracking-wider">{item.name}</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-600/10 text-blue-600 font-bold uppercase tracking-wider">Subpages</span>
+            </div>
+            <div className="space-y-1">
+              {item.children!.map((child) => {
+                const isCurrent = pathname === child.href;
+                return (
+                  <Link
+                    key={child.name}
+                    href={child.href}
+                    onClick={() => setIsHovered(false)}
+                    className={cn(
+                      'w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all group/item',
+                      isCurrent
+                        ? 'bg-blue-600 text-white font-bold shadow-sm'
+                        : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]'
+                    )}
+                  >
+                    <span className="truncate">{child.name}</span>
+                    <ChevronRight
+                      size={12}
+                      className={cn(
+                        'shrink-0 transition-opacity',
+                        isCurrent ? 'opacity-100 text-white' : 'opacity-0 group-hover/item:opacity-100 text-[var(--color-text-muted)]'
+                      )}
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk();
@@ -236,27 +377,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               );
             }
 
-            const isActive = pathname === item.href;
-            const Icon = item.icon as any;
             return (
-              <Link key={item.name} href={item.href || '#'}>
-                <div className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-xl transition-all relative group text-xs font-medium",
-                  isActive 
-                    ? "text-white bg-blue-600 shadow-md shadow-blue-600/20 font-bold" 
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
-                )}>
-                  {Icon && <Icon size={18} className={cn("shrink-0", isActive ? "text-white" : "")} />}
-                  {isSidebarOpen && (
-                    <span className="truncate">{item.name}</span>
-                  )}
-                  {!isSidebarOpen && (
-                    <div className="absolute left-14 px-2.5 py-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-md text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 backdrop-blur-md shadow-lg">
-                      {item.name}
-                    </div>
-                  )}
-                </div>
-              </Link>
+              <SidebarNavItemRow 
+                key={item.name}
+                item={item}
+                isSidebarOpen={isSidebarOpen}
+                pathname={pathname}
+              />
             );
           })}
         </div>

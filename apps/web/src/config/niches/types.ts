@@ -12,6 +12,10 @@ export interface NicheNavItem {
   icon?: LucideIcon;
   roles: string[];
   divider?: boolean;
+  children?: {
+    name: string;
+    href: string;
+  }[];
 }
 
 export interface NicheKPI {

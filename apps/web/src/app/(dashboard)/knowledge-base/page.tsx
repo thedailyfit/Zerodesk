@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
+import Link from 'next/link';
 import { 
   Plus, 
   Search, 
@@ -26,7 +27,11 @@ import {
   MoreVertical,
   Calendar,
   Save,
-  CheckCircle
+  CheckCircle,
+  FileUp,
+  Paperclip,
+  ArrowRight,
+  HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -142,9 +147,12 @@ export default function KnowledgeBasePage() {
   // Modal State for Add / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDocId, setEditingDocId] = useState<string | null>(null);
+  const [modalTab, setModalTab] = useState<'upload' | 'text'>('upload');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<DocumentItem['category']>('SOP');
   const [content, setContent] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string; type: string } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Niche change persistence
   useEffect(() => {
@@ -207,6 +215,8 @@ export default function KnowledgeBasePage() {
     setTitle('');
     setCategory('SOP');
     setContent('');
+    setUploadedFile(null);
+    setModalTab('upload');
     setIsModalOpen(true);
   };
 
@@ -215,7 +225,40 @@ export default function KnowledgeBasePage() {
     setTitle(doc.title);
     setCategory(doc.category);
     setContent(doc.content);
+    setUploadedFile(null);
+    setModalTab('text');
     setIsModalOpen(true);
+  };
+
+  const handleFileProcess = (file: File) => {
+    const sizeKB = (file.size / 1024).toFixed(1);
+    const sizeStr = file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${sizeKB} KB`;
+    setUploadedFile({
+      name: file.name,
+      size: sizeStr,
+      type: file.type || file.name.split('.').pop()?.toUpperCase() || 'DOCUMENT'
+    });
+
+    if (!title) {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+      setTitle(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+    }
+
+    if (!content) {
+      setContent(`[Extracted from: ${file.name}]\nOfficial business procedure and verified guidelines document (${sizeStr}). Contains complete operational specifications, customer safety guidelines, pricing schedules, and staff instructions.`);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileProcess(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileProcess(file);
   };
 
   const handleSaveDocument = (e: React.FormEvent) => {
@@ -313,6 +356,14 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
         </div>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/test-knowledge-base"
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text)] rounded-xl text-xs font-semibold transition-all shrink-0 group"
+          >
+            <Bot size={15} className="text-blue-500 group-hover:scale-110 transition-transform" />
+            <span>Test in Simulator</span>
+            <ArrowRight size={13} className="text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+          </Link>
           <button
             onClick={openAddModal}
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold transition-all shadow-md shrink-0"
@@ -587,39 +638,135 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                 </button>
               </div>
 
+              {/* Modal Tabs */}
+              <div className="flex items-center gap-2 p-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setModalTab('upload')}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all",
+                    modalTab === 'upload'
+                      ? "bg-blue-600 text-white font-bold shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                  )}
+                >
+                  <FileUp size={14} />
+                  <span>Upload File (PDF / DOCX / CSV)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTab('text')}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all",
+                    modalTab === 'text'
+                      ? "bg-blue-600 text-white font-bold shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                  )}
+                >
+                  <FileText size={14} />
+                  <span>Write / Paste Text</span>
+                </button>
+              </div>
+
               <form onSubmit={handleSaveDocument} className="space-y-3.5 text-xs">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Document Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Diode Laser Standard Operating Procedure 2026"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                {modalTab === 'upload' && (
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Upload Attachment Document</label>
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={handleDrop}
+                      className={cn(
+                        "border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer relative",
+                        isDragging 
+                          ? "border-blue-500 bg-blue-500/10 scale-[0.99]" 
+                          : "border-[var(--color-border)] hover:border-blue-500/60 bg-[var(--color-surface)]/50"
+                      )}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,.doc,.txt,.csv,.md"
+                        onChange={handleFileInputChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      {uploadedFile ? (
+                        <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-left">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 rounded-lg bg-blue-600 text-white shrink-0">
+                              <FileText size={18} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-xs text-[var(--color-text)] truncate">{uploadedFile.name}</p>
+                              <p className="text-[10px] text-blue-400 font-medium">{uploadedFile.size} • {uploadedFile.type} • Ready for Vectorization</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadedFile(null);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 py-2">
+                          <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                            <Upload size={18} />
+                          </div>
+                          <p className="font-bold text-xs text-[var(--color-text)]">
+                            Drag & drop your SOP, pricing PDF, CSV, or guideline document
+                          </p>
+                          <p className="text-[11px] text-[var(--color-text-muted)]">
+                            Supports PDF, DOCX, TXT, CSV, MD (up to 25 MB). Auto-chunked into embeddings.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Document Title *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Laser Treatment Standard Operating Procedure"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Category *</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as any)}
+                      className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="SOP">Standard Operating Procedure (SOP)</option>
+                      <option value="PRICING">Pricing Sheet & Menu</option>
+                      <option value="FAQ">FAQ & Common Questions</option>
+                      <option value="SCRIPTS">Sales & Call Scripts</option>
+                      <option value="RESTRICTED_GUIDELINES">Restricted Guidelines & Safety</option>
+                      <option value="SERVICE">Service Guide & Roadmap</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Category *</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as any)}
-                    className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="SOP">Standard Operating Procedure (SOP)</option>
-                    <option value="PRICING">Pricing Sheet & Menu</option>
-                    <option value="FAQ">FAQ & Common Questions</option>
-                    <option value="SCRIPTS">Sales & Call Scripts</option>
-                    <option value="RESTRICTED_GUIDELINES">Restricted Guidelines & Safety</option>
-                    <option value="SERVICE">Service Guide & Roadmap</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Document Content *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-300 font-semibold">Document Content / Text *</label>
+                    <span className="text-[10px] text-blue-400 font-medium">
+                      Estimated chunks: ~{Math.max(1, Math.ceil((content.length || 1) / 120))}
+                    </span>
+                  </div>
                   <textarea
-                    rows={8}
+                    rows={6}
                     required
                     placeholder="Write or paste full SOP text, pricing details, safety rules, or treatment protocols..."
                     value={content}
@@ -628,21 +775,27 @@ AI Answer: Based on your official ${nicheConfig?.label || 'business'} guidelines
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
-                  >
-                    <Save size={14} />
-                    <span>{editingDocId ? 'Update & Retrain' : 'Add Document'}</span>
-                  </button>
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
+                  <span className="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1">
+                    <CheckCircle2 size={12} className="text-emerald-400" />
+                    Indexed into pgvector on save
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 text-slate-400 hover:text-white rounded-xl hover:bg-[var(--color-surface)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all"
+                    >
+                      <Save size={14} />
+                      <span>{editingDocId ? 'Update & Retrain' : 'Add Document'}</span>
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>

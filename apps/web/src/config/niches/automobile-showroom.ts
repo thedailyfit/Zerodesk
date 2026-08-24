@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones
+  Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones, UserCheck
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -77,10 +77,45 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Sales Overview', href: '/todays-revenue', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
 
-    { name: 'Knowledge Hub', roles: ['ADMIN'], divider: true },
-    { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
-    { name: 'WebChat Knowledge Hub', href: '/webchat-knowledge-hub', icon: MessageSquare, roles: ['ADMIN'] },
-    { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] }
+    { name: 'Backend AI', roles: ['ADMIN'], divider: true },
+    {
+      name: 'AI Knowledge Hub',
+      icon: Cpu,
+      roles: ['ADMIN'],
+      children: [
+        { name: 'Voice AI', href: '/voice-knowledge-hub' },
+        { name: 'WhatsApp AI', href: '/whatsapp-knowledge-hub' },
+        { name: 'Webchat AI', href: '/webchat-knowledge-hub' },
+      ],
+    },
+    {
+      name: 'Knowledge Base',
+      icon: BookOpen,
+      roles: ['ADMIN'],
+      children: [
+        { name: 'Company KB', href: '/knowledge-base' },
+        { name: 'Test your Knowledge Base', href: '/test-knowledge-base' },
+      ],
+    },
+    {
+      name: 'Templates',
+      icon: FileText,
+      roles: ['ADMIN'],
+      children: [
+        { name: 'Create Template', href: '/templates/create' },
+        { name: 'Pre-installed Templates', href: '/templates/pre-installed' },
+        { name: 'Email Templates/Scripts', href: '/templates/email' },
+      ],
+    },
+    {
+      name: 'Human Hand-off',
+      icon: UserCheck,
+      roles: ['ADMIN'],
+      children: [
+        { name: 'Prompts', href: '/human-handoff/prompts' },
+        { name: 'Tone Check', href: '/human-handoff/tone-check' },
+      ],
+    }
   ],
 
   kpis: [
