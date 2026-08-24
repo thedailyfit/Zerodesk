@@ -453,6 +453,8 @@ function DetailHoursView({
   onShift: (id: string, deltaMins: number) => void;
   setIsModalOpen: (open: boolean) => void;
 }) {
+  const { currentNiche } = useNiche();
+  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
   const totalHours = intervalMinutes === 15 ? 2 : 4;
   const totalSlots = (totalHours * 60) / intervalMinutes;
 
@@ -626,6 +628,8 @@ function FullDayView({
   onShift: (id: string, deltaMins: number) => void;
   setIsModalOpen: (open: boolean) => void;
 }) {
+  const { currentNiche } = useNiche();
+  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
   const startHour = mode === '12h' ? 8 : 0;
   const hoursCount = mode === '12h' ? 12 : 24;
   const hours = Array.from({ length: hoursCount }, (_, i) => startHour + i);
@@ -973,6 +977,8 @@ function QuickEditModal({
   onSave: (updated: Appointment) => void;
   onShift: (id: string, deltaMins: number) => void;
 }) {
+  const { currentNiche } = useNiche();
+  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
   const [formData, setFormData] = useState<Appointment>({ ...appointment });
 
   return (
