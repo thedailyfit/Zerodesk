@@ -46,11 +46,11 @@ const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
 ];
 
 const SYSTEM_MENU_ITEMS = [
-  { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions' },
-  { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets' },
-  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client' },
-  { name: 'Settings', href: '/settings', icon: Settings, badge: null, desc: 'Preferences & System' },
-  { name: 'Ready to Scale', href: '/scale', icon: Rocket, badge: 'Pro', desc: 'Multi-location Growth' },
+  { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions', roles: ['ADMIN'] },
+  { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client', roles: ['ADMIN'] },
+  { name: 'Settings', href: '/settings', icon: Settings, badge: null, desc: 'Preferences & System', roles: ['ADMIN'] },
+  { name: 'Ready to Scale', href: '/scale', icon: Rocket, badge: 'Pro', desc: 'Multi-location Growth', roles: ['ADMIN'] },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -232,6 +232,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return item.roles && item.roles.includes(demoRole);
     });
   }, [demoRole, nicheNavItems]);
+
+  const filteredSystemItems = useMemo(() => {
+    if (demoRole === 'ADMIN') return SYSTEM_MENU_ITEMS;
+    return SYSTEM_MENU_ITEMS.filter((item) => item.roles.includes(demoRole) || item.name === 'Get Live Help');
+  }, [demoRole]);
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
@@ -446,7 +451,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-text-muted)]">
                     System & Operations
                   </div>
-                  {SYSTEM_MENU_ITEMS.map((item) => {
+                  {filteredSystemItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
                     return (
