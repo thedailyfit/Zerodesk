@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserButton, useClerk } from '@clerk/nextjs';
+import { UserButton, useClerk, useUser } from '@clerk/nextjs';
 import { 
   Bell,
   Sun,
@@ -13,6 +13,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronDown,
+  ChevronUp,
   LogOut,
   Sparkles,
   Users,
@@ -21,7 +22,11 @@ import {
   Sliders,
   Check,
   X,
-  Laptop
+  Laptop,
+  Settings,
+  Rocket,
+  Shield,
+  ExternalLink
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
@@ -39,6 +44,14 @@ const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
   { id: 'hotel', name: 'Hotel', tag: 'Hospitality' },
 ];
 
+const SYSTEM_MENU_ITEMS = [
+  { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions' },
+  { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets' },
+  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client' },
+  { name: 'Settings', href: '/settings', icon: Settings, badge: null, desc: 'Preferences & System' },
+  { name: 'Ready to Scale', href: '/scale', icon: Rocket, badge: 'Pro', desc: 'Multi-location Growth' },
+];
+
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: 'bg-blue-600',
   MANAGER: 'bg-amber-500',
@@ -47,9 +60,12 @@ const ROLE_COLORS: Record<string, string> = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk();
+  const { user } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCmdkOpen, setIsCmdkOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { currentNiche, setNiche, nicheConfig } = useNiche();
   const { settings, updateSetting } = useNotifications();
   const [demoRole, setDemoRole] = useState<string>('ADMIN');
@@ -245,60 +261,148 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </div>
 
-        {/* Pinned Bottom Links: Manage Team & Get Live Help */}
-        <div className="px-3 py-2 border-t border-[var(--color-border)] space-y-1 bg-[var(--color-surface)]/30">
-          <Link href="/manage-team">
-            <div className={cn(
-              "flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all group relative",
-              pathname === '/manage-team' ? "bg-blue-600 text-white font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
-            )}>
-              <Users size={16} className="shrink-0" />
-              {isSidebarOpen && <span className="truncate">Manage Team</span>}
-            </div>
-          </Link>
-          <Link href="/get-live-help">
-            <div className={cn(
-              "flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all group relative",
-              pathname === '/get-live-help' ? "bg-blue-600 text-white font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
-            )}>
-              <Headphones size={16} className="shrink-0" />
-              {isSidebarOpen && <span className="truncate">Get Live Help</span>}
-            </div>
-          </Link>
-        </div>
+        {/* User Footer & System Menu Popover Trigger */}
+        <div 
+          className="p-3 border-t border-[var(--color-border)] relative bg-[var(--color-surface)]/40"
+          onMouseEnter={() => {
+            if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
+            setIsProfileMenuOpen(true);
+          }}
+          onMouseLeave={() => {
+            profileTimeoutRef.current = setTimeout(() => {
+              setIsProfileMenuOpen(false);
+            }, 250);
+          }}
+        >
+          {/* System & Profile Popover Menu */}
+          <AnimatePresence>
+            {isProfileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className={cn(
+                  "absolute z-50 bg-[var(--color-bg-elevated)] backdrop-blur-2xl border border-[var(--color-border)] rounded-2xl shadow-2xl p-2 space-y-1.5",
+                  isSidebarOpen 
+                    ? "bottom-full left-2.5 right-2.5 mb-2" 
+                    : "bottom-2 left-20 w-64"
+                )}
+              >
+                {/* Account Profile Header */}
+                <div className="p-2.5 rounded-xl bg-[var(--color-surface)]/70 border border-[var(--color-border)]/60 flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <UserButton />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-[var(--color-text)] truncate">
+                        {user?.fullName || 'Business Owner'}
+                      </p>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-blue-500/15 text-blue-500 shrink-0">
+                        {demoRole}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[var(--color-text-muted)] truncate">
+                      {user?.primaryEmailAddress?.emailAddress || 'admin@zerodesk.app'}
+                    </p>
+                  </div>
+                </div>
 
-        {/* User Footer */}
-        <div className="p-3 border-t border-[var(--color-border)] flex flex-col gap-3">
-          <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 text-xs font-semibold text-[var(--color-text)]", !isSidebarOpen && "justify-center")}>
-            <div className="w-2 h-2 rounded-full bg-[var(--color-success)] animate-pulse shrink-0" />
+                {/* System Pages List */}
+                <div className="space-y-0.5 pt-1">
+                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-text-muted)]">
+                    System & Operations
+                  </div>
+                  {SYSTEM_MENU_ITEMS.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+                    return (
+                      <Link 
+                        key={item.href} 
+                        href={item.href}
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >
+                        <div className={cn(
+                          "w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all group",
+                          isActive 
+                            ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20" 
+                            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+                        )}>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon size={16} className={cn("shrink-0", isActive ? "text-white" : "text-blue-500 group-hover:text-blue-400")} />
+                            <div className="truncate text-left">
+                              <span className="block truncate font-semibold">{item.name}</span>
+                              <span className={cn("block text-[10px] truncate", isActive ? "text-blue-100" : "text-[var(--color-text-muted)]")}>
+                                {item.desc}
+                              </span>
+                            </div>
+                          </div>
+                          {item.badge && (
+                            <span className={cn(
+                              "text-[9px] px-1.5 py-0.5 rounded-md font-bold shrink-0 ml-1",
+                              isActive 
+                                ? "bg-white/20 text-white" 
+                                : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                            )}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-[var(--color-border)] my-1" />
+
+                {/* Sign Out Button */}
+                <button
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    signOut({ redirectUrl: '/' });
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <LogOut size={16} className="shrink-0 text-rose-500 group-hover:scale-110 transition-transform" />
+                    <span>Sign Out</span>
+                  </div>
+                  <span className="text-[10px] text-rose-400/80 font-mono">End session</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Bottom Account Trigger Card */}
+          <button
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className={cn(
+              "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] hover:border-blue-500/50 bg-[var(--color-bg)] transition-all group shadow-sm",
+              isSidebarOpen ? "px-2.5 py-2" : "px-2 py-2 justify-center"
+            )}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="shrink-0">
+                <UserButton appearance={{ elements: { rootBox: cn(!isSidebarOpen && "mx-auto") } }} />
+              </div>
+              {isSidebarOpen && (
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-xs font-bold text-[var(--color-text)] truncate">
+                    {user?.fullName || 'Business Owner'}
+                  </span>
+                  <span className="text-[10px] font-semibold text-[var(--color-text-muted)] truncate flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse shrink-0" />
+                    {nicheConfig?.label || 'ZeroDesk OS'}
+                  </span>
+                </div>
+              )}
+            </div>
             {isSidebarOpen && (
-              <span className="truncate text-[11px]">
-                {nicheConfig?.label || 'ZeroDesk OS'}
-              </span>
+              <ChevronUp size={14} className={cn("text-[var(--color-text-muted)] group-hover:text-[var(--color-text)] transition-transform shrink-0", isProfileMenuOpen && "rotate-180 text-blue-500")} />
             )}
-          </div>
-          <div className={cn("flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
-            <UserButton appearance={{ elements: { rootBox: cn(!isSidebarOpen && "mx-auto") } }} />
-            {isSidebarOpen ? (
-              <button
-                onClick={() => signOut({ redirectUrl: '/' })}
-                aria-label="Logout"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
-              >
-                <LogOut size={13} />
-                <span>Logout</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => signOut({ redirectUrl: '/' })}
-                title="Logout"
-                aria-label="Logout"
-                className="p-1.5 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
-              >
-                <LogOut size={13} />
-              </button>
-            )}
-          </div>
+          </button>
         </div>
       </motion.aside>
 

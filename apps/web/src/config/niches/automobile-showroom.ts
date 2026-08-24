@@ -47,6 +47,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER', 'SALES'] },
     { name: 'Test Drives & Bookings', href: '/appointments', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Showroom Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
+    { name: 'Book Test Drive', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'SALES', 'SERVICE'] },
     { name: 'Customer Lounge', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Buyer Management', href: '/customers', icon: Users, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
     { name: 'Customer Files', href: '/profiles', icon: FileText, roles: ['ADMIN', 'MANAGER', 'SALES', 'SERVICE'] },
@@ -79,14 +80,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
     { name: 'Knowledge Hub', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
     { name: 'WebChat Knowledge Hub', href: '/webchat-knowledge-hub', icon: MessageSquare, roles: ['ADMIN'] },
-    { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] },
-
-    { name: 'System', roles: ['ADMIN'], divider: true },
-    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
-    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
-    { name: 'Book Test Drive', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'SALES', 'SERVICE'] },
-    { name: 'Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN', 'MANAGER'] }
+    { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] }
   ],
 
   kpis: [

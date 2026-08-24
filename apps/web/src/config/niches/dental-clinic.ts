@@ -73,7 +73,6 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
@@ -86,13 +85,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'WebChat Knowledge Hub', href: '/webchat-knowledge-hub', icon: MessageSquare, roles: ['ADMIN'] },
     { name: 'WhatsApp Knowledge Hub', href: '/whatsapp-knowledge-hub', icon: MessageCircle, roles: ['ADMIN'] },
     { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
-    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
-
-    { name: 'System', roles: ['ADMIN'], divider: true },
-    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
-    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] }
   ],
 
   kpis: [

@@ -70,7 +70,6 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Ready to Scale', href: '/scale', icon: Rocket, roles: ['ADMIN'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
@@ -82,13 +81,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Backend AI', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Knowledge Hub', href: '/voice-knowledge-hub', icon: Cpu, roles: ['ADMIN'] },
     { name: 'Company Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['ADMIN'] },
-    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] },
-
-    { name: 'System', roles: ['ADMIN'], divider: true },
-    { name: 'Manage Team', href: '/manage-team', icon: Users, roles: ['ADMIN'] },
-    { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, roles: ['ADMIN'] },
-    { name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] }
+    { name: 'Templates', href: '/templates', icon: FileText, roles: ['ADMIN'] }
   ],
 
   kpis: [
