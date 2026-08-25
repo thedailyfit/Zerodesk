@@ -19,7 +19,6 @@ const NICHES = [
   { id: 'realestate', title: 'Real Estate & Property', tagline: 'Connecting people with dream homes', emoji: '🏢', accent: 'from-amber-500 to-orange-500', color: 'amber' },
   { id: 'dental', title: 'Dental Clinic', tagline: 'Expert dental care and surgery', emoji: '🦷', accent: 'from-cyan-500 to-blue-500', color: 'cyan' },
   { id: 'hotel', title: 'Hotel & Resort', tagline: 'Unforgettable stays and hospitality', emoji: '🏨', accent: 'from-indigo-500 to-blue-600', color: 'indigo' },
-  { id: 'auto', title: 'Automobile Showroom', tagline: 'Test drives, service bookings & sales CRM', emoji: '🚗', accent: 'from-amber-500 to-yellow-500', color: 'amber' },
 ] as const;
 
 const ROLES = [

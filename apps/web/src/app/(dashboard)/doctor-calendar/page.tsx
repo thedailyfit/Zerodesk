@@ -253,34 +253,6 @@ const DEFAULT_STAFF_BY_NICHE: Record<NicheId, DoctorProfile[]> = {
       totalHours: 8,
       todayAppointments: 8
     }
-  ],
-  auto: [
-    {
-      id: 'doc-au-1',
-      name: 'Amitav Ghosh',
-      specialty: 'Senior Automotive Consultant & Test Drive Lead',
-      avatar: 'AG',
-      phone: '+91 96655 44332',
-      email: 'amitav@zeroshowroom.com',
-      status: 'Active',
-      hours: '09:30 AM - 06:30 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 6
-    },
-    {
-      id: 'doc-au-2',
-      name: 'Rajesh Nayak',
-      specialty: 'Master Service Advisor & Warranty Manager',
-      avatar: 'RN',
-      phone: '+91 96655 44333',
-      email: 'rajesh@zeroshowroom.com',
-      status: 'Active',
-      hours: '09:00 AM - 06:00 PM',
-      bookedHours: 6.5,
-      totalHours: 8,
-      todayAppointments: 7
-    }
   ]
 };
 

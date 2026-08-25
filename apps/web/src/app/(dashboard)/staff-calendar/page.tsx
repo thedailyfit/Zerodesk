@@ -50,7 +50,6 @@ const DEPARTMENTS_BY_NICHE: Record<NicheId, string[]> = {
   salon: ['Hair Styling', 'Color Lab', 'Bridal & Makeup', 'Nail Bar', 'Reception'],
   realestate: ['Luxury Residential', 'Commercial Advisory', 'Legal & Documentation', 'Client Relations'],
   hotel: ['Front Office', 'Concierge & VIP', 'Banquets & Events', 'Guest Experience'],
-  auto: ['Sales Advisory', 'Service & Repairs', 'Detailing Studio', 'Finance & Insurance'],
 };
 
 const SHIFT_LEGEND = [
@@ -458,42 +457,6 @@ const DEFAULT_STAFF_BY_NICHE: Record<NicheId, StaffMember[]> = {
         { type: 'duty', startHour: 12.5, endHour: 15.5, label: 'Early Arrival Keycard Issuance' }
       ]
     }
-  ],
-  auto: [
-    {
-      id: 's-au-1',
-      name: 'Suresh Senior Sales',
-      role: 'Lead Automotive Advisor',
-      department: 'Sales Advisory',
-      avatar: 'SS',
-      phone: '+91 96655 11111',
-      email: 'suresh@zeroshowroom.com',
-      status: 'Active',
-      workingHoursStr: '9:30 AM - 6:30 PM',
-      lunchHoursStr: '1:30 PM - 2:30 PM',
-      shifts: [
-        { type: 'duty', startHour: 9.5, endHour: 13.5, label: 'SUV Test Drives & Walkarounds' },
-        { type: 'lunch', startHour: 13.5, endHour: 14.5, label: 'Lunch Break' },
-        { type: 'duty', startHour: 14.5, endHour: 18.5, label: 'Delivery Key Handover Ceremony' }
-      ]
-    },
-    {
-      id: 's-au-2',
-      name: 'Gaurav Service Lead',
-      role: 'Master Service Advisor',
-      department: 'Service & Repairs',
-      avatar: 'GS',
-      phone: '+91 96655 22222',
-      email: 'gaurav@zeroshowroom.com',
-      status: 'Active',
-      workingHoursStr: '8:30 AM - 5:30 PM',
-      lunchHoursStr: '12:30 PM - 1:30 PM',
-      shifts: [
-        { type: 'duty', startHour: 8.5, endHour: 12.5, label: 'Vehicle Job Card Intake' },
-        { type: 'lunch', startHour: 12.5, endHour: 13.5, label: 'Lunch Break' },
-        { type: 'duty', startHour: 13.5, endHour: 17.5, label: 'Quality Control & Wash Inspection' }
-      ]
-    }
   ]
 };
 
@@ -528,9 +491,6 @@ const DEFAULT_LEAVE_REQUESTS_BY_NICHE: Record<NicheId, { id: string; name: strin
   ],
   hotel: [
     { id: 'lr-ht-1', name: 'Sneha Front Desk', role: 'Front Office Hostess', type: 'Comp Off', reason: 'Weekend marathon shift', dates: 'Aug 10', status: 'Pending' },
-  ],
-  auto: [
-    { id: 'lr-au-1', name: 'Gaurav Service Lead', role: 'Master Service Advisor', type: 'Casual Leave', reason: 'OEM Technical Training', dates: 'Aug 14', status: 'Pending' },
   ],
 };
 

@@ -50,9 +50,6 @@ const DEFAULT_AGENTS_BY_NICHE: Record<NicheId, { id: string; name: string; provi
   hotel: [
     { id: 'ag_ht_1', name: 'HospitalityAI Front Desk Agent', provider: 'Vapi.ai', agentId: 'vapi_hotel_v4', voiceName: 'Kabir Warm Host (ElevenLabs)', phone: '+91 40 6789 0123', status: 'ACTIVE' },
   ],
-  auto: [
-    { id: 'ag_au_1', name: 'AutoAI Test Drive Assistant', provider: 'Vapi.ai', agentId: 'vapi_auto_v4', voiceName: 'Suresh Pro Advisor (ElevenLabs)', phone: '+91 40 7890 1234', status: 'ACTIVE' },
-  ],
 };
 
 const personalities = [
@@ -163,19 +160,6 @@ const DEFAULT_CALLS_BY_NICHE: Record<NicheId, any[]> = {
       resolution: 'AI_RESOLVED', 
       time: '10:05 Today',
       transcript: "AI: Welcome to Grand Hotel & Luxury Suites, Amit. How may concierge assist your stay?\nAmit: Hi, I'm arriving at 11 AM today. Can I request an early check-in for the Executive King Suite?\nAI: Yes Mr. Patel! Suite 401 is inspected and ready. I have activated your digital keycard and notified Chief Concierge Kabir of your arrival.\nAmit: Excellent, thank you!"
-    }
-  ],
-  auto: [
-    { 
-      id: 'c-au-1', 
-      customer: 'Suresh Kumar', 
-      phone: '+91 96655 44332', 
-      type: 'inbound', 
-      duration: '4:00', 
-      status: 'completed', 
-      resolution: 'AI_RESOLVED', 
-      time: '09:40 Today',
-      transcript: "AI: Hello Suresh! Welcome to Zero Motors Experience Center. How can I assist you with your vehicle journey?\nSuresh: Hi, I'd like to book a 45-minute test drive for the new flagship 4x4 SUV this afternoon.\nAI: We have the SUV prepped and available at 2:00 PM today with Senior Advisor Suresh Ghosh. Would you like me to register your test drive?\nSuresh: Yes, please register 2 PM.\nAI: Great! Please bring your driving license. We've texted your booking confirmation."
     }
   ]
 };

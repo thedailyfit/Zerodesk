@@ -99,13 +99,6 @@ export default function TestKnowledgeBasePage() {
           'Can extra beds be added to the Ocean View Suite?',
           'What are breakfast timings at the multi-cuisine restaurant?'
         ];
-      case 'auto':
-        return [
-          'What is the waiting period for the top-end SUV model?',
-          'Can I schedule a home test drive for tomorrow 4 PM?',
-          'What exchange bonus is available on old sedans?',
-          'What is the periodic maintenance service schedule?'
-        ];
       default: // skin
         return [
           'What is the pricing for full face HydraFacial and Carbon Laser?',

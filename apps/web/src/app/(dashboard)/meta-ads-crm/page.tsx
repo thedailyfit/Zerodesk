@@ -12,10 +12,8 @@ import {
   Target,
   Activity,
   TrendingUp,
-  Calendar,
   X
 } from 'lucide-react';
-import Link from 'next/link';
 
 import type { NicheId } from '@/config/niches/types';
 
@@ -76,10 +74,6 @@ const DEFAULT_CAMPAIGNS_BY_NICHE: Record<NicheId, CampaignItem[]> = {
     { id: 'c-ht-1', name: 'Weekend Luxury Suite Staycation Pass', platform: 'Meta Ads', spend: '₹60,000', leads: 82, cpl: 240, roas: '5.8x', status: 'ACTIVE' },
     { id: 'c-ht-2', name: 'Grand Ballroom Wedding & Banquet Leads', platform: 'Google Ads', spend: '₹45,000', leads: 26, cpl: 480, roas: '11.2x', status: 'ACTIVE' },
   ],
-  auto: [
-    { id: 'c-au-1', name: 'All-New Luxury SUV Test Drive Campaign', platform: 'Meta Ads', spend: '₹75,000', leads: 64, cpl: 380, roas: '8.4x', status: 'ACTIVE' },
-    { id: 'c-au-2', name: 'EV Fast Charging & Exchange Bonus Promo', platform: 'Google Ads', spend: '₹50,000', leads: 36, cpl: 420, roas: '6.5x', status: 'ACTIVE' },
-  ],
 };
 
 const DEFAULT_LEADS_BY_NICHE: Record<NicheId, AdLead[]> = {
@@ -117,10 +111,6 @@ const DEFAULT_LEADS_BY_NICHE: Record<NicheId, AdLead[]> = {
   hotel: [
     { id: 'l-ht-1', name: 'Vikramaditya Birla', phone: '+91 97766 11111', email: 'vikram.b@example.com', campaignName: 'Grand Ballroom Wedding & Banquet Leads', adSetName: 'Wedding_Planners', source: 'Google Ads', costPerLead: 480, status: 'New', date: 'Today, 10:30 AM' },
     { id: 'l-ht-2', name: 'Shalini Passi', phone: '+91 97766 22222', email: 'shalini.p@example.com', campaignName: 'Weekend Luxury Suite Staycation Pass', adSetName: 'Staycation_Luxury', source: 'Meta Ads', costPerLead: 240, status: 'Contacted', date: 'Today, 09:15 AM' },
-  ],
-  auto: [
-    { id: 'l-au-1', name: 'Raghav Chadha', phone: '+91 96655 11111', email: 'raghav.c@example.com', campaignName: 'All-New Luxury SUV Test Drive Campaign', adSetName: 'Auto_Enthusiasts_Tier1', source: 'Meta Ads', costPerLead: 380, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-au-2', name: 'Jaspreet Bumrah', phone: '+91 96655 22222', email: 'jaspreet.b@example.com', campaignName: 'EV Fast Charging & Exchange Bonus Promo', adSetName: 'EV_Search_Keywords', source: 'Google Ads', costPerLead: 420, status: 'Contacted', date: 'Today, 09:15 AM' },
   ],
 };
 
@@ -196,7 +186,7 @@ export default function MetaAdsCrmPage() {
             <div className="p-2.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-2xl">
               <Megaphone size={22} />
             </div>
-            <span>Meta & Google Ads CRM</span>
+            <span>ADS CRM MANAGEMENT</span>
             <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               API Connected
@@ -205,16 +195,6 @@ export default function MetaAdsCrmPage() {
           <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
             Real-time automated lead capture, CPL tracking, and instant WhatsApp/Call dispatch.
           </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Link 
-            href="/appointments" 
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 flex items-center gap-2 transition-all"
-          >
-            <Calendar size={14} />
-            <span>Book to Calendar</span>
-          </Link>
         </div>
       </div>
 
@@ -415,13 +395,6 @@ export default function MetaAdsCrmPage() {
                       >
                         <Mail size={13} />
                       </a>
-                      <Link
-                        href="/appointments"
-                        title="Book Appointment"
-                        className="p-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-sm"
-                      >
-                        <Calendar size={13} />
-                      </Link>
                     </div>
                   </td>
                 </tr>
@@ -471,30 +444,23 @@ export default function MetaAdsCrmPage() {
                 </div>
 
                 {/* Quick Actions in Drawer */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <a
                     href={`tel:${selectedLead.phone}`}
-                    className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-center font-bold flex flex-col items-center gap-1"
+                    className="p-3 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-center font-bold flex items-center justify-center gap-2"
                   >
                     <Phone size={16} />
-                    <span>Call</span>
+                    <span>Direct Call</span>
                   </a>
                   <a
                     href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-center font-bold flex flex-col items-center gap-1"
+                    className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-center font-bold flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={16} />
                     <span>WhatsApp</span>
                   </a>
-                  <Link
-                    href="/appointments"
-                    className="p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-center font-bold flex flex-col items-center gap-1 shadow-md"
-                  >
-                    <Calendar size={16} />
-                    <span>Book Slot</span>
-                  </Link>
                 </div>
 
                 {/* Campaign & CPL info */}

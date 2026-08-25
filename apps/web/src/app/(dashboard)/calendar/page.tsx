@@ -81,7 +81,6 @@ const STAFF_BY_NICHE: Record<NicheId, string[]> = {
   salon: ['Zara Khan', 'Rohit Mehra', 'Tanya Roy', 'Maya Nail Artist', 'Assistant Vikrant'],
   realestate: ['Vikram Property Advisor', 'Rajesh Commercial Head', 'Legal Consultant Adv. Bose', 'Associate Priya'],
   hotel: ['Chief Concierge Kabir', 'Front Desk Hostess Sneha', 'Banquet Coordinator Ritu', 'VIP Host Daniel'],
-  auto: ['Senior Sales Exec Suresh', 'Service Lead Gaurav', 'Finance Manager Aditya', 'Advisor Deepak'],
 };
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -133,10 +132,6 @@ const DEFAULT_CALENDAR_BY_NICHE: Record<NicheId, Appointment[]> = {
     { id: 'ht-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.0, patient: 'Amit Patel', phone: '+91 97766 55443', service: 'Deluxe Suite Check-in & Keycard', type: 'consult', staff: 'Front Desk Hostess Sneha', status: 'Confirmed', room: 'Suite 401' },
     { id: 'ht-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 1.5, patient: 'Shruti Hasan', phone: '+91 97766 55444', service: 'Presidential Ocean Suite Briefing', type: 'wellness', staff: 'Chief Concierge Kabir', status: 'Confirmed', room: 'Penthouse 701' },
     { id: 'ht-c3', dayIndex: 1, dateStr: '2026-08-04', startTime: 10.0, duration: 1.0, patient: 'Vikas Khanna', phone: '+91 97766 55445', service: 'Grand Ballroom Venue Preview', type: 'surgery', staff: 'Banquet Coordinator Ritu', status: 'Confirmed', room: 'Ballroom Hall' },
-  ],
-  auto: [
-    { id: 'au-c1', dayIndex: 0, dateStr: '2026-08-03', startTime: 9.0, duration: 1.0, patient: 'Suresh Kumar', phone: '+91 96655 44332', service: 'SUV Test Drive Experience', type: 'consult', staff: 'Senior Sales Exec Suresh', status: 'Confirmed', room: 'Test Track' },
-    { id: 'au-c2', dayIndex: 0, dateStr: '2026-08-03', startTime: 11.0, duration: 2.0, patient: 'Meenakshi Iyer', phone: '+91 96655 44333', service: 'Periodic Maintenance Service', type: 'surgery', staff: 'Service Lead Gaurav', status: 'Confirmed', room: 'Service Bay 3' },
   ],
 };
 

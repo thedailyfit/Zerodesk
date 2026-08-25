@@ -48,7 +48,6 @@ const DEPARTMENTS_BY_NICHE: Record<NicheId, string[]> = {
   salon: ['Hair Styling', 'Hair Color', 'Bridal', 'Skin & Facial', 'Nail Art', 'Front Desk', 'Billing'],
   realestate: ['Sales', 'Leasing', 'Legal', 'Marketing', 'Customer Relations', 'Finance', 'Admin'],
   hotel: ['Front Office', 'Housekeeping', 'F&B Service', 'Kitchen', 'Concierge', 'Events', 'Engineering'],
-  auto: ['Sales', 'Service Center', 'Spare Parts', 'Finance & Insurance', 'Marketing', 'Admin'],
 };
 
 const DEFAULT_TEAMS_BY_NICHE: Record<NicheId, TeamMember[]> = {
@@ -313,36 +312,6 @@ const DEFAULT_TEAMS_BY_NICHE: Record<NicheId, TeamMember[]> = {
       isActive: true, 
       specialization: 'Express PMS Check-in & Folios', 
       metrics: { monthlyAppts: 450, rating: 4.92, efficiency: '100%', revenue: 'N/A' },
-      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
-    }
-  ],
-  auto: [
-    { 
-      id: 'tm-au-1', 
-      name: 'Suresh Kumar', 
-      role: 'Senior Sales Lead', 
-      department: 'Sales', 
-      email: 'suresh@zeroshowroom.com', 
-      phone: '+91 96655 11111', 
-      userRole: 'MANAGER', 
-      shiftStatus: 'On Duty', 
-      isActive: true, 
-      specialization: 'SUV Specialist & Corporate Sales', 
-      metrics: { monthlyAppts: 64, rating: 4.9, efficiency: '96%', revenue: '₹1.8Cr' },
-      availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
-    },
-    { 
-      id: 'tm-au-2', 
-      name: 'Gaurav Singh', 
-      role: 'Master Service Lead', 
-      department: 'Service Center', 
-      email: 'gaurav@zeroshowroom.com', 
-      phone: '+91 96655 22222', 
-      userRole: 'STAFF', 
-      shiftStatus: 'On Duty', 
-      isActive: true, 
-      specialization: 'Diagnostics, Detailing & Warranty', 
-      metrics: { monthlyAppts: 180, rating: 4.88, efficiency: '95%', revenue: '₹14.2L' },
       availability: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: false } 
     }
   ]

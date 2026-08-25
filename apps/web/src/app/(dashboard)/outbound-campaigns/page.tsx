@@ -182,18 +182,6 @@ const DEFAULT_OUTBOUND_BY_NICHE: Record<NicheId, CampaignItem[]> = {
       createdDate: '2026-08-08',
       stats: { sent: 1500, delivered: 1460, replied: 380 }
     }
-  ],
-  auto: [
-    {
-      id: 'camp_au_1',
-      name: 'Annual Monsoon Vehicle Safety Checkup Camp',
-      goal: 'Promotional Offer',
-      channels: ['Voice AI', 'WhatsApp'],
-      audienceSize: 800,
-      status: 'ACTIVE',
-      createdDate: '2026-08-11',
-      stats: { sent: 800, delivered: 780, replied: 260 }
-    }
   ]
 };
 

@@ -132,17 +132,6 @@ const DEFAULT_TICKETS_BY_NICHE: Record<NicheId, SupportTicket[]> = {
       status: 'In Progress',
       createdAt: 'Today, 08:30 AM'
     }
-  ],
-  auto: [
-    {
-      id: 't-au-1',
-      ticketNumber: 'ZD-2026-614',
-      subject: 'Test drive GPS tracking link SMS template registration',
-      category: 'AI Telephony',
-      priority: 'Medium',
-      status: 'In Progress',
-      createdAt: 'Today, 10:00 AM'
-    }
   ]
 };
 

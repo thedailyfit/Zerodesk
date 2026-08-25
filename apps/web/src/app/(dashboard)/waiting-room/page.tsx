@@ -75,12 +75,6 @@ const DEFAULT_WAITING_ROOM_BY_NICHE: Record<NicheId, PatientItem[]> = {
     { id: 'ht-w3', pid: 'HT-6003', name: 'Vikas Khanna', time: '09:30 AM', service: 'Banquet Hall Tasting & Review', elapsed: '35 min', col: 'with-doctor', vip: false },
     { id: 'ht-w4', pid: 'HT-6004', name: 'Neha Sharma', time: '09:00 AM', service: 'Express Checkout & Airport Cab', elapsed: '4 min', col: 'checkout', vip: false },
   ],
-  auto: [
-    { id: 'au-w1', pid: 'AU-7001', name: 'Suresh Kumar', time: '10:00 AM', service: 'SUV Test Drive Handover', elapsed: '3 min', col: 'checked-in', vip: true },
-    { id: 'au-w2', pid: 'AU-7002', name: 'Meenakshi Iyer', time: '10:15 AM', service: 'Periodic Service Intake Inspection', elapsed: '10 min', col: 'waiting', vip: false },
-    { id: 'au-w3', pid: 'AU-7003', name: 'Gaurav Singh', time: '09:20 AM', service: 'Ceramic Detailing Bay Inspection', elapsed: '40 min', col: 'with-doctor', vip: false },
-    { id: 'au-w4', pid: 'AU-7004', name: 'Preeti Desai', time: '09:00 AM', service: 'Insurance Handover & Gate Pass', elapsed: '5 min', col: 'checkout', vip: false },
-  ],
 };
 
 const DEFAULT_BOOKED_BY_NICHE: Record<NicheId, { pid: string; name: string; time: string; service: string; vip: boolean }[]> = {
@@ -111,10 +105,6 @@ const DEFAULT_BOOKED_BY_NICHE: Record<NicheId, { pid: string; name: string; time
   hotel: [
     { pid: 'HT-6005', name: 'Rahul Bajaj', time: '11:00 AM', service: 'Weekend Dining & Spa Pass', vip: true },
     { pid: 'HT-6006', name: 'Rajinikanth', time: '11:30 AM', service: 'Royal Suite Check-in', vip: true },
-  ],
-  auto: [
-    { pid: 'AU-7005', name: 'Aditya Chawla', time: '11:00 AM', service: 'Pre-Delivery Vehicle Handover', vip: true },
-    { pid: 'AU-7006', name: 'Rohan Mehra', time: '11:30 AM', service: 'EV Test Drive & Fast Charging', vip: false },
   ],
 };
 
