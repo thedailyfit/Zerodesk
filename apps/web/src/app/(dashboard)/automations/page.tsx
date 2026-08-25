@@ -7,7 +7,7 @@ import {
   MessageSquare, Mail, Phone, Calendar, CheckCircle, Clock,
   FileText, Activity, AlertCircle, RefreshCw, Zap,
   Smartphone, User, CreditCard, Tag, FileSpreadsheet, Star,
-  ArrowRight, HeartPulse
+  ArrowRight, HeartPulse, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -449,26 +449,43 @@ export default function AutomationsPage() {
   const [activeCategory, setActiveCategory] = useState<'All' | CategoryType>('All');
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Initialize from local storage or niche config
+  // Initialize from local storage with smart fallback
   useEffect(() => {
-    const saved = localStorage.getItem('zd_automations');
-    if (saved) {
-      try {
-        setWorkflows(JSON.parse(saved));
-      } catch (e) {
-        // use initial
+    try {
+      const saved = localStorage.getItem('zd_automations_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Check if it's not just empty placeholder workflows
+          const hasRealSteps = parsed.some(wf => wf.steps && wf.steps.length > 1 && wf.name !== 'New Custom Workflow');
+          if (hasRealSteps) {
+            setWorkflows(parsed);
+            return;
+          }
+        }
       }
-    } else if (nicheConfig?.initialWorkflows) {
-      // Basic mapping if niche config exists
-      // We'll stick to our initial 12 as default base
-      setWorkflows(INITIAL_WORKFLOWS);
+    } catch (e) {
+      console.error('Failed to load workflows', e);
     }
-  }, [nicheConfig]);
+    // Default to our rich 12 AI Frontdesk & Clinic Management templates
+    setWorkflows(INITIAL_WORKFLOWS);
+    localStorage.setItem('zd_automations_v3', JSON.stringify(INITIAL_WORKFLOWS));
+  }, []);
 
   // Save to local storage whenever workflows change
   useEffect(() => {
-    localStorage.setItem('zd_automations', JSON.stringify(workflows));
+    if (workflows && workflows.length > 0) {
+      localStorage.setItem('zd_automations_v3', JSON.stringify(workflows));
+    }
   }, [workflows]);
+
+  const resetToDefaults = () => {
+    if (confirm('Restore all 12 pre-installed AI Frontdesk & Clinic Management workflow templates?')) {
+      setWorkflows(INITIAL_WORKFLOWS);
+      localStorage.setItem('zd_automations_v3', JSON.stringify(INITIAL_WORKFLOWS));
+      setEditingId(null);
+    }
+  };
 
   const toggleActive = (id: string) => {
     setWorkflows(wfs => wfs.map(wf => 
@@ -515,26 +532,40 @@ export default function AutomationsPage() {
           </p>
         </div>
         
-        <button 
-          onClick={() => {
-            const newWf: WorkflowItem = {
-              id: 'wf_' + Math.random().toString(36).substr(2, 9),
-              name: 'New Custom Workflow',
-              category: 'Operations',
-              active: false,
-              steps: [
-                { id: 's1', type: 'trigger', label: 'Custom Trigger', details: '' }
-              ]
-            };
-            setWorkflows([newWf, ...workflows]);
-            setEditingId(newWf.id);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-md shadow-blue-500/20"
-        >
-          <Plus className="w-5 h-5" />
-          Create Custom
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={resetToDefaults}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border)] rounded-xl font-medium text-sm transition-all shadow-sm cursor-pointer"
+            title="Restore default AI Frontdesk & Clinic templates"
+          >
+            <RotateCcw className="w-4 h-4 text-blue-500" />
+            Restore Templates
+          </button>
+
+          <button 
+            onClick={() => {
+              const newWf: WorkflowItem = {
+                id: 'wf_' + Math.random().toString(36).substr(2, 9),
+                name: 'Custom Frontdesk Sequence',
+                category: 'Patient Care',
+                active: false,
+                steps: [
+                  { id: 's1', type: 'trigger', label: 'New Patient Registration', details: 'Form submitted' },
+                  { id: 's2', type: 'whatsapp', label: 'WhatsApp Welcome Msg', details: 'Instant dispatch' },
+                  { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 1 day' },
+                  { id: 's4', type: 'call', label: 'AI Voice Check-in', details: 'Frontdesk AI' }
+                ]
+              };
+              setWorkflows([newWf, ...workflows]);
+              setEditingId(newWf.id);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-md shadow-blue-500/20 cursor-pointer"
+          >
+            <Plus className="w-5 h-5" />
+            Create Custom
+          </button>
+        </div>
       </div>
 
       {/* Filters and Search */}
