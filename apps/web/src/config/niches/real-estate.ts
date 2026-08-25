@@ -78,7 +78,6 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
-    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN'] },
 
     { name: 'Backend AI', roles: ['ADMIN'], divider: true },
     {

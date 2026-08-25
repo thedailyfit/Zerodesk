@@ -79,7 +79,6 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
     { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
-    { name: 'Agent Analytics', href: '/agent-analytics', icon: Activity, roles: ['ADMIN'] },
 
     { name: 'Backend AI', roles: ['ADMIN'], divider: true },
     {
