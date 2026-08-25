@@ -149,6 +149,20 @@ export default function BookingLinkAdminPage() {
                 className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Clinic Cover Image URL (Optional)</label>
+              <input
+                type="url"
+                value={config.coverImage || ''}
+                onChange={(e) => updateConfig({ coverImage: e.target.value })}
+                placeholder="https://example.com/clinic-cover.jpg"
+                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
+                Provide an image URL to display as the header on your public booking page.
+              </p>
+            </div>
           </div>
 
           {/* Slot & Scheduling Rules */}

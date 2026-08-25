@@ -104,14 +104,22 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
           
           {/* Clinic Cover Image Banner */}
           <div className="relative h-32 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            <div className="absolute bottom-3 left-6 right-6 flex items-center justify-between text-white">
+            {config.coverImage ? (
+              <img 
+                src={config.coverImage} 
+                alt="Clinic Cover" 
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute bottom-3 left-6 right-6 flex items-center justify-between text-white relative z-10">
               <div className="flex items-center gap-2">
                 <span className="p-1.5 rounded-xl bg-white/20 backdrop-blur-md">
                   <Building2 size={16} />
                 </span>
-                <span className="text-sm font-bold tracking-wide">{config.businessName || 'ZeroDesk Clinic'}</span>
+                <span className="text-sm font-bold tracking-wide drop-shadow-md">{config.businessName || 'ZeroDesk Clinic'}</span>
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider bg-white/25 px-2.5 py-0.5 rounded-full backdrop-blur-md">
                 Verified Scheduler

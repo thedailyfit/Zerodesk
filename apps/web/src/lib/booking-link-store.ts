@@ -6,6 +6,7 @@ export interface BookingLinkConfig {
   slug: string;
   businessName: string;
   doctorEmail: string;
+  coverImage?: string;
   enabledServiceIds: string[];
   slotDuration: 15 | 30 | 45 | 60;
   workingHoursStart: number;
@@ -23,6 +24,7 @@ export interface BookingLinkConfig {
 const DEFAULT_CONFIG: BookingLinkConfig = {
   slug: 'dr-appointment',
   businessName: 'ZeroDesk Clinic',
+  coverImage: '',
   doctorEmail: 'doctor@zerodesk.in',
   enabledServiceIds: ['1', '2', '3', '4'],
   slotDuration: 30,
