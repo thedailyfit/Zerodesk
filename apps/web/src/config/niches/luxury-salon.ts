@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, TrendingUp, CreditCard,
   CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
 } from 'lucide-react';
 
 export const LUXURY_SALON_CONFIG: NicheConfig = {
@@ -67,6 +67,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
     
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
+    { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 

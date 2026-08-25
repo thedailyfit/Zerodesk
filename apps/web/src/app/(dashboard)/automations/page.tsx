@@ -1,993 +1,746 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNiche } from '@/components/providers/niche-provider';
 import { 
-  Workflow, 
-  Phone, 
-  MessageSquare, 
-  Calendar, 
-  UserPlus, 
-  Bell, 
-  ChevronRight, 
-  CheckCircle2, 
-  Zap,
-  Plus, 
-  X, 
-  Play, 
-  ArrowRight, 
-  Clock, 
-  Sparkles, 
-  Check,
-  Edit3,
-  Trash2,
-  Sliders,
-  Layers,
-  FileText,
-  Mail,
-  Smartphone,
-  Database,
-  ArrowDown,
-  RotateCcw,
-  Save,
-  CheckCircle,
-  Activity,
-  AlertCircle,
-  Copy,
-  Webhook,
-  Globe
+  Play, Pause, Plus, Trash2, Edit2, Copy, Save, X, Search,
+  MessageSquare, Mail, Phone, Calendar, CheckCircle, Clock,
+  FileText, Activity, AlertCircle, RefreshCw, Zap,
+  Smartphone, User, CreditCard, Tag, FileSpreadsheet, Star,
+  ArrowRight, HeartPulse
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNiche } from '@/components/providers/niche-provider';
+
+// ---------------------------
+// TYPES
+// ---------------------------
+
+export type StepActionType =
+  | 'trigger'
+  | 'whatsapp'
+  | 'sms'
+  | 'email'
+  | 'wait'
+  | 'task'
+  | 'crm_update'
+  | 'call'
+  | 'survey'
+  | 'invoice';
 
 export interface WorkflowStep {
   id: string;
-  type: 'TRIGGER' | 'CONDITION' | 'ACTION' | 'DELAY';
-  actionType?: 'WHATSAPP' | 'VOICE_CALL' | 'EMAIL' | 'CREATE_TASK' | 'UPDATE_CRM' | 'WAIT_DELAY' | 'CUSTOM' | 'WEBHOOK';
+  type: StepActionType;
   label: string;
-  detail: string;
-  config?: Record<string, any>;
+  details?: string;
+  icon?: any;
 }
+
+export type CategoryType = 
+  | 'Patient Care' 
+  | 'Marketing' 
+  | 'Appointments' 
+  | 'Billing' 
+  | 'Voice AI' 
+  | 'WhatsApp' 
+  | 'Reviews' 
+  | 'Operations';
 
 export interface WorkflowItem {
   id: string;
   name: string;
-  triggerEvent: string;
-  description: string;
+  category: CategoryType;
+  active: boolean;
   steps: WorkflowStep[];
-  actionsCount: number;
-  isActive: boolean;
-  lastRun: string;
-  runs24h: number;
-  category: 'Voice AI' | 'WhatsApp' | 'Appointments' | 'Cron Schedule' | 'Clinical Care';
+  lastRun?: string;
+  runCount24h?: number;
+  successRate?: number;
 }
 
-const STEP_ICONS: Record<string, any> = {
-  TRIGGER: Zap,
-  CONDITION: Sliders,
-  ACTION: Workflow,
-  DELAY: Clock,
-  WHATSAPP: MessageSquare,
-  VOICE_CALL: Phone,
-  EMAIL: Mail,
-  CREATE_TASK: Bell,
-  UPDATE_CRM: Database,
-  WAIT_DELAY: Clock,
-  WEBHOOK: Webhook,
+const ALL_CATEGORIES: ('All' | CategoryType)[] = [
+  'All',
+  'Patient Care',
+  'Marketing',
+  'Appointments',
+  'Billing',
+  'Voice AI',
+  'WhatsApp',
+  'Reviews',
+  'Operations'
+];
+
+const CATEGORY_COLORS: Record<CategoryType, string> = {
+  'Patient Care': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  'Marketing': 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  'Appointments': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  'Billing': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  'Voice AI': 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+  'WhatsApp': 'bg-green-500/10 text-green-600 border-green-500/20',
+  'Reviews': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+  'Operations': 'bg-slate-500/10 text-slate-600 border-slate-500/20'
 };
 
-const STEP_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  TRIGGER: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
-  CONDITION: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/30' },
-  ACTION: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-  DELAY: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+const STEP_ICONS: Record<StepActionType, any> = {
+  trigger: Zap,
+  whatsapp: MessageSquare,
+  sms: Smartphone,
+  email: Mail,
+  wait: Clock,
+  task: CheckCircle,
+  crm_update: User,
+  call: Phone,
+  survey: Star,
+  invoice: CreditCard
 };
 
+const STEP_COLORS: Record<StepActionType, string> = {
+  trigger: 'bg-amber-500',
+  whatsapp: 'bg-green-500',
+  sms: 'bg-blue-400',
+  email: 'bg-purple-500',
+  wait: 'bg-slate-400',
+  task: 'bg-emerald-500',
+  crm_update: 'bg-blue-600',
+  call: 'bg-cyan-500',
+  survey: 'bg-yellow-500',
+  invoice: 'bg-indigo-500'
+};
+
+// ---------------------------
+// DEFAULT TEMPLATES
+// ---------------------------
 const INITIAL_WORKFLOWS: WorkflowItem[] = [
   {
     id: 'wf_1',
-    name: 'New Customer & Patient Onboarding',
-    triggerEvent: '👤 New Registration / Lead Created',
-    description: 'When a new client registers → Send WhatsApp Welcome Kit & Medical Form → Wait for submission → Update CRM profile',
+    name: 'New Patient Onboarding',
+    category: 'Patient Care',
+    active: true,
+    lastRun: '10 mins ago',
+    runCount24h: 12,
+    successRate: 100,
     steps: [
-      { id: 's1', type: 'TRIGGER', label: 'Trigger: New Registration', detail: 'Triggered when new contact profile is created in CRM' },
-      { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: WhatsApp Welcome', detail: 'Send welcome message with digital intake form link' },
-      { id: 's3', type: 'DELAY', actionType: 'WAIT_DELAY', label: 'Delay: Wait 4 Hours', detail: 'Wait for client to complete digital intake form' },
-      { id: 's4', type: 'ACTION', actionType: 'UPDATE_CRM', label: 'Action 2: Update CRM & EMR', detail: 'Mark intake form status as received and ready for review' }
-    ],
-    actionsCount: 4,
-    isActive: true,
-    lastRun: '4 min ago',
-    runs24h: 18,
-    category: 'Clinical Care'
+      { id: 's1', type: 'trigger', label: 'New Registration', details: 'Form submitted' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Welcome Kit', details: 'Template: welcome_01' },
+      { id: 's3', type: 'wait', label: 'Wait 4h', details: 'Delay 4 hours' },
+      { id: 's4', type: 'crm_update', label: 'Update CRM Profile', details: 'Set status: Onboarded' }
+    ]
   },
   {
     id: 'wf_2',
-    name: 'Post-Procedure Care & Aftercare Sequence',
-    triggerEvent: '🏷️ Procedure / Service Completed',
-    description: 'When appointment is completed → Send instant WhatsApp care guide → Wait 24h → Send follow-up recovery check',
+    name: 'Post-Procedure Aftercare',
+    category: 'Patient Care',
+    active: false,
+    lastRun: '2 hours ago',
+    runCount24h: 4,
+    successRate: 98,
     steps: [
-      { id: 's1', type: 'TRIGGER', label: 'Trigger: Service Completed', detail: 'When specialist marks appointment as completed' },
-      { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: Send Aftercare Guide', detail: 'Send customized PDF aftercare protocol and SPF instructions' },
-      { id: 's3', type: 'DELAY', actionType: 'WAIT_DELAY', label: 'Delay: Wait 24 Hours', detail: 'Allow recovery period before follow-up check' },
-      { id: 's4', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 2: Recovery Check & Review', detail: 'Automated check-in asking how patient is feeling + Google review prompt' }
-    ],
-    actionsCount: 4,
-    isActive: true,
-    lastRun: '12 min ago',
-    runs24h: 24,
-    category: 'WhatsApp'
+      { id: 's1', type: 'trigger', label: 'Service Completed', details: 'Status = Done' },
+      { id: 's2', type: 'email', label: 'Send Care Guide', details: 'PDF attachment' },
+      { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 24 hours' },
+      { id: 's4', type: 'whatsapp', label: 'Recovery Check', details: '+ Review Prompt' }
+    ]
   },
   {
     id: 'wf_3',
-    name: 'Missed Appointment & No-Show Reactivation',
-    triggerEvent: '❌ Status: Appointment No-Show',
-    description: 'When customer misses appointment → Send 1-click reschedule link → Wait 24h → Create frontdesk call task',
+    name: 'Missed Appointment Recovery',
+    category: 'Appointments',
+    active: true,
+    lastRun: '1 hour ago',
+    runCount24h: 3,
+    successRate: 85,
     steps: [
-      { id: 's1', type: 'TRIGGER', label: 'Trigger: No-Show Status', detail: 'Triggered when appointment marked as no-show' },
-      { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: Reschedule Link', detail: 'WhatsApp: "We missed you today! Tap here to pick a new slot"' },
-      { id: 's3', type: 'DELAY', actionType: 'WAIT_DELAY', label: 'Delay: Wait 24 Hours', detail: 'Wait to see if user self-reschedules' },
-      { id: 's4', type: 'ACTION', actionType: 'CREATE_TASK', label: 'Action 2: Frontdesk Follow-up Task', detail: 'Assign high-priority call task to frontdesk staff' }
-    ],
-    actionsCount: 4,
-    isActive: true,
-    lastRun: '1h ago',
-    runs24h: 7,
-    category: 'Appointments'
+      { id: 's1', type: 'trigger', label: 'No-Show Status', details: 'Appt missed' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Reschedule', details: 'Send scheduling link' },
+      { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 1 day' },
+      { id: 's4', type: 'task', label: 'Frontdesk Call Task', details: 'Assign to staff' }
+    ]
   },
   {
     id: 'wf_4',
-    name: 'Voice AI Inbound Missed Call Recovery',
-    triggerEvent: '📵 Missed Phone Call',
-    description: 'When incoming phone call is missed → Send instant interactive WhatsApp DM → Assign CRM lead',
+    name: 'Missed Call Recovery',
+    category: 'Voice AI',
+    active: true,
+    lastRun: '5 mins ago',
+    runCount24h: 22,
+    successRate: 95,
     steps: [
-      { id: 's1', type: 'TRIGGER', label: 'Trigger: Missed Call Received', detail: 'Inbound call unattended on business line' },
-      { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: Instant WhatsApp Responder', detail: 'Send menu: 1-Book appointment, 2-Pricing, 3-Talk to Doctor' },
-      { id: 's3', type: 'ACTION', actionType: 'UPDATE_CRM', label: 'Action 2: Log Lead in CRM', detail: 'Create new contact marked "Missed Call Lead"' }
-    ],
-    actionsCount: 3,
-    isActive: true,
-    lastRun: '2h ago',
-    runs24h: 15,
-    category: 'Voice AI'
+      { id: 's1', type: 'trigger', label: 'Missed Call', details: 'Inbound failed' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Interactive', details: 'Menu options' },
+      { id: 's3', type: 'crm_update', label: 'Log CRM Lead', details: 'Source: Missed Call' }
+    ]
+  },
+  {
+    id: 'wf_5',
+    name: 'Appointment Confirmation',
+    category: 'Appointments',
+    active: true,
+    lastRun: 'Just now',
+    runCount24h: 45,
+    successRate: 99,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Booking Created', details: 'New appt' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Confirmation', details: 'Date/Time details' },
+      { id: 's3', type: 'wait', label: 'Wait 1h before appt', details: 'Relative delay' },
+      { id: 's4', type: 'sms', label: 'SMS Reminder', details: 'Final nudge' }
+    ]
+  },
+  {
+    id: 'wf_6',
+    name: 'Birthday & Anniversary Offers',
+    category: 'Marketing',
+    active: false,
+    lastRun: 'Yesterday',
+    runCount24h: 8,
+    successRate: 100,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Birthday Match', details: 'Date matches today' },
+      { id: 's2', type: 'whatsapp', label: 'Birthday Offer', details: 'Discount code' },
+      { id: 's3', type: 'wait', label: 'Wait 3d', details: 'Delay 3 days' },
+      { id: 's4', type: 'sms', label: 'Follow-up DM', details: 'Reminder to claim' }
+    ]
+  },
+  {
+    id: 'wf_7',
+    name: 'Payment & Invoice Receipt',
+    category: 'Billing',
+    active: true,
+    lastRun: '30 mins ago',
+    runCount24h: 18,
+    successRate: 100,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Payment Received', details: 'Stripe webhook' },
+      { id: 's2', type: 'email', label: 'Email Invoice', details: 'PDF attachment' },
+      { id: 's3', type: 'whatsapp', label: 'WhatsApp Receipt', details: 'Quick conf' },
+      { id: 's4', type: 'invoice', label: 'Update Ledger', details: 'Sync accounting' }
+    ]
+  },
+  {
+    id: 'wf_8',
+    name: 'Google Review Request',
+    category: 'Reviews',
+    active: true,
+    lastRun: '4 hours ago',
+    runCount24h: 15,
+    successRate: 75,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Appt Completed', details: 'Status = Done' },
+      { id: 's2', type: 'wait', label: 'Wait 2h', details: 'Cooldown' },
+      { id: 's3', type: 'whatsapp', label: 'WhatsApp Review Link', details: 'Google My Business' },
+      { id: 's4', type: 'wait', label: 'Wait 48h', details: 'Delay 2 days' },
+      { id: 's5', type: 'sms', label: 'SMS Reminder', details: 'Gentle nudge' }
+    ]
+  },
+  {
+    id: 'wf_9',
+    name: 'Lead Nurture Drip',
+    category: 'Marketing',
+    active: false,
+    lastRun: '12 hours ago',
+    runCount24h: 5,
+    successRate: 90,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'New Lead', details: 'Source: Website' },
+      { id: 's2', type: 'email', label: 'Email Welcome', details: 'Intro brand' },
+      { id: 's3', type: 'wait', label: 'Wait 2d', details: 'Delay' },
+      { id: 's4', type: 'whatsapp', label: 'WhatsApp Offer', details: 'Special deal' },
+      { id: 's5', type: 'wait', label: 'Wait 5d', details: 'Delay' },
+      { id: 's6', type: 'task', label: 'Call Task', details: 'Assign sales' }
+    ]
+  },
+  {
+    id: 'wf_10',
+    name: 'Staff Shift Reminder',
+    category: 'Operations',
+    active: true,
+    lastRun: 'Today 7:00 AM',
+    runCount24h: 1,
+    successRate: 100,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Cron Daily 7AM', details: 'Schedule' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Roster', details: 'To staff group' },
+      { id: 's3', type: 'task', label: 'Log Attendance', details: 'Create record' }
+    ]
+  },
+  {
+    id: 'wf_11',
+    name: 'Low Stock Alert',
+    category: 'Operations',
+    active: true,
+    lastRun: '2 days ago',
+    runCount24h: 0,
+    successRate: 100,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'Inventory Low', details: '< Threshold' },
+      { id: 's2', type: 'email', label: 'Manager Alert', details: 'To admin' },
+      { id: 's3', type: 'task', label: 'Restock Task', details: 'Order supplies' }
+    ]
+  },
+  {
+    id: 'wf_12',
+    name: 'VIP Patient Follow-up',
+    category: 'Patient Care',
+    active: true,
+    lastRun: 'Yesterday',
+    runCount24h: 2,
+    successRate: 100,
+    steps: [
+      { id: 's1', type: 'trigger', label: 'VIP Tag Applied', details: 'CRM update' },
+      { id: 's2', type: 'whatsapp', label: 'Personalized Welcome', details: 'Concierge msg' },
+      { id: 's3', type: 'wait', label: 'Wait 7d', details: 'Delay 1 week' },
+      { id: 's4', type: 'survey', label: 'Feedback Survey', details: 'NPS' }
+    ]
   }
 ];
 
-export default function AutomationsPage() {
-  const { currentNiche, nicheConfig } = useNiche();
+// ---------------------------
+// INLINE EDITOR COMPONENT
+// ---------------------------
+function InlineEditor({ 
+  workflow, 
+  onSave, 
+  onCancel 
+}: { 
+  workflow: WorkflowItem; 
+  onSave: (w: WorkflowItem) => void;
+  onCancel: () => void;
+}) {
+  const [localWorkflow, setLocalWorkflow] = useState<WorkflowItem>(JSON.parse(JSON.stringify(workflow)));
 
-  const getDefaultWorkflows = (): WorkflowItem[] => {
-    if (nicheConfig?.initialWorkflows && nicheConfig.initialWorkflows.length > 0) {
-      return (nicheConfig.initialWorkflows as any[]).map((w, idx) => ({
-        id: w.id || `wf-${idx}`,
-        name: w.name || 'Automated Pipeline',
-        triggerEvent: w.triggerEvent || 'Trigger: System Event',
-        description: w.description || 'Automated multi-step event sequence',
-        steps: (w.steps || []).map((s: any, sIdx: number) => ({
-          id: `step-${sIdx}`,
-          type: s.type || 'ACTION',
-          actionType: s.type === 'TRIGGER' ? undefined : (s.label?.toLowerCase().includes('whatsapp') ? 'WHATSAPP' : s.label?.toLowerCase().includes('wait') ? 'WAIT_DELAY' : 'UPDATE_CRM'),
-          label: s.label || `Step ${sIdx + 1}`,
-          detail: s.detail || ''
-        })),
-        actionsCount: w.actionsCount || (w.steps?.length || 3),
-        isActive: w.isActive !== false,
-        lastRun: w.lastRun || 'Recent',
-        runs24h: w.runs24h || Math.floor(Math.random() * 20) + 5,
-        category: (w.category as any) || 'Clinical Care'
-      }));
-    }
-    return INITIAL_WORKFLOWS;
+  const updateStep = (index: number, key: keyof WorkflowStep, value: any) => {
+    const newSteps = [...localWorkflow.steps];
+    newSteps[index] = { ...newSteps[index], [key]: value };
+    setLocalWorkflow({ ...localWorkflow, steps: newSteps });
   };
 
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>(getDefaultWorkflows());
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Zapier-Style Canvas Editor State
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [activeWorkflow, setActiveWorkflow] = useState<WorkflowItem | null>(null);
-  const [isNewWorkflow, setIsNewWorkflow] = useState(false);
-
-  // Step Editing Drawer State
-  const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null);
-  const [stepLabel, setStepLabel] = useState('');
-  const [stepDetail, setStepDetail] = useState('');
-  const [stepType, setStepType] = useState<WorkflowStep['type']>('ACTION');
-  const [stepActionType, setStepActionType] = useState<WorkflowStep['actionType']>('WHATSAPP');
-
-  // Test Run Simulator State
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simulatedStepIndex, setSimulatedStepIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_workflows_${currentNiche}`);
-    if (saved) {
-      try {
-        setWorkflows(JSON.parse(saved));
-        return;
-      } catch (e) {}
-    }
-    setWorkflows(getDefaultWorkflows());
-  }, [currentNiche, nicheConfig]);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  const saveWorkflows = (updated: WorkflowItem[]) => {
-    setWorkflows(updated);
-    localStorage.setItem(`zerodesk_workflows_${currentNiche}`, JSON.stringify(updated));
-  };
-
-  const toggleWorkflow = (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const updated = workflows.map(w => w.id === id ? { ...w, isActive: !w.isActive } : w);
-    saveWorkflows(updated);
-    showToast(updated.find(w => w.id === id)?.isActive ? 'Workflow activated!' : 'Workflow paused');
-  };
-
-  const openCanvasEditor = (wf: WorkflowItem) => {
-    setActiveWorkflow(JSON.parse(JSON.stringify(wf)));
-    setIsNewWorkflow(false);
-    setEditingStepIndex(null);
-    setIsEditorOpen(true);
-  };
-
-  const openCreateNewCanvas = () => {
-    const newWf: WorkflowItem = {
-      id: `wf_${Date.now()}`,
-      name: 'Untitled Automation Sequence',
-      triggerEvent: '⚡ Event Trigger',
-      description: 'Configure multi-step trigger and connected actions',
-      steps: [
-        { id: 's1', type: 'TRIGGER', label: 'Trigger: Inbound Event', detail: 'When event occurs in system' },
-        { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: WhatsApp Notification', detail: 'Send customized message to customer' }
-      ],
-      actionsCount: 2,
-      isActive: true,
-      lastRun: 'Never',
-      runs24h: 0,
-      category: 'Clinical Care'
-    };
-    setActiveWorkflow(newWf);
-    setIsNewWorkflow(true);
-    setEditingStepIndex(null);
-    setIsEditorOpen(true);
-  };
-
-  const handleSaveActiveWorkflow = () => {
-    if (!activeWorkflow) return;
-    if (!activeWorkflow.name.trim()) {
-      showToast('Please enter a workflow name');
-      return;
-    }
-
-    const updatedWorkflow: WorkflowItem = {
-      ...activeWorkflow,
-      actionsCount: activeWorkflow.steps.length
-    };
-
-    let updatedList: WorkflowItem[];
-    if (isNewWorkflow) {
-      updatedList = [updatedWorkflow, ...workflows];
-    } else {
-      updatedList = workflows.map(w => w.id === updatedWorkflow.id ? updatedWorkflow : w);
-    }
-
-    saveWorkflows(updatedList);
-    setIsEditorOpen(false);
-    showToast(`⚡ Workflow "${activeWorkflow.name}" saved & active!`);
-  };
-
-  const handleAddStepToCanvas = (index: number) => {
-    if (!activeWorkflow) return;
+  const addStep = () => {
     const newStep: WorkflowStep = {
-      id: `step_${Date.now()}`,
-      type: 'ACTION',
-      actionType: 'WHATSAPP',
-      label: 'New Action Step',
-      detail: 'Send automated WhatsApp message'
+      id: Math.random().toString(36).substr(2, 9),
+      type: 'task',
+      label: 'New Task',
+      details: ''
     };
-
-    const newSteps = [...activeWorkflow.steps];
-    newSteps.splice(index + 1, 0, newStep);
-    setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-    openStepEditor(index + 1, newStep);
+    setLocalWorkflow({ ...localWorkflow, steps: [...localWorkflow.steps, newStep] });
   };
 
-  const handleDeleteStepFromCanvas = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!activeWorkflow) return;
-    if (activeWorkflow.steps.length <= 1) {
-      showToast('Workflow must have at least 1 step');
-      return;
-    }
-
-    const newSteps = activeWorkflow.steps.filter((_, i) => i !== index);
-    setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-    if (editingStepIndex === index) {
-      setEditingStepIndex(null);
-    }
+  const removeStep = (index: number) => {
+    const newSteps = localWorkflow.steps.filter((_, i) => i !== index);
+    setLocalWorkflow({ ...localWorkflow, steps: newSteps });
   };
 
-  const openStepEditor = (index: number, step: WorkflowStep) => {
-    setEditingStepIndex(index);
-    setStepLabel(step.label);
-    setStepDetail(step.detail);
-    setStepType(step.type);
-    setStepActionType(step.actionType || 'WHATSAPP');
-  };
-
-  const handleSaveStepDetails = () => {
-    if (!activeWorkflow || editingStepIndex === null) return;
-    const updatedSteps = [...activeWorkflow.steps];
-    updatedSteps[editingStepIndex] = {
-      ...updatedSteps[editingStepIndex],
-      label: stepLabel,
-      detail: stepDetail,
-      type: stepType,
-      actionType: stepType === 'TRIGGER' ? undefined : stepActionType
-    };
-
-    setActiveWorkflow({ ...activeWorkflow, steps: updatedSteps });
-    setEditingStepIndex(null);
-    showToast('Step configuration updated');
-  };
-
-  const handleRunSimulation = () => {
-    if (!activeWorkflow) return;
-    setIsSimulating(true);
-    setSimulatedStepIndex(0);
-
-    let current = 0;
-    const interval = setInterval(() => {
-      current += 1;
-      if (current < activeWorkflow.steps.length) {
-        setSimulatedStepIndex(current);
-      } else {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsSimulating(false);
-          setSimulatedStepIndex(null);
-          showToast('✅ Sequence test run completed successfully!');
-        }, 800);
-      }
-    }, 900);
+  const moveStep = (index: number, dir: 1 | -1) => {
+    if (index + dir < 0 || index + dir >= localWorkflow.steps.length) return;
+    const newSteps = [...localWorkflow.steps];
+    const temp = newSteps[index];
+    newSteps[index] = newSteps[index + dir];
+    newSteps[index + dir] = temp;
+    setLocalWorkflow({ ...localWorkflow, steps: newSteps });
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-emerald-950/90 border border-emerald-500/40 text-emerald-200 rounded-xl shadow-2xl backdrop-blur-xl text-xs font-semibold"
-          >
-            <CheckCircle2 size={16} className="text-emerald-400" />
-            <span>{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 md:p-6 mt-4 shadow-inner">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>Workflow Automations</span>
-            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              Zapier-Style Pipeline Engine
-            </span>
-          </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Build, edit, and automate connected event-driven sequences connecting WhatsApp, Voice AI calls, calendar reminders, and staff tasks.
-          </p>
+          <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
+            <Edit2 className="w-5 h-5 text-blue-500" />
+            Editing Workflow
+          </h3>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">Modify steps and actions for this template</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] bg-[var(--color-surface)] px-3.5 py-2 rounded-xl border border-[var(--color-border)] font-mono">
-            <span className="flex items-center gap-1.5 font-bold text-emerald-400">
-              <CheckCircle2 size={14} />
-              {workflows.filter(w => w.isActive).length} Active Pipelines
-            </span>
-            <span>•</span>
-            <span className="text-blue-300 font-bold">{workflows.reduce((s, w) => s + w.runs24h, 0)} runs in 24h</span>
-          </div>
-
-          <button
-            onClick={openCreateNewCanvas}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95 shrink-0"
-          >
-            <Plus size={18} />
-            <span>Create Automation Sequence</span>
-          </button>
+        <div className="flex items-center gap-2">
+          <input 
+            type="text" 
+            value={localWorkflow.name}
+            onChange={(e) => setLocalWorkflow({ ...localWorkflow, name: e.target.value })}
+            className="px-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] outline-none focus:border-blue-500"
+          />
         </div>
       </div>
 
-      {/* Preset Automation Templates */}
-      <div className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
-            <Sparkles size={14} />
-            1-Click Pre-Installed Workflow Sequences ({nicheConfig?.label || 'Industry Best Practices'})
-          </h2>
-          <span className="text-[10px] text-slate-400 font-mono">Click to launch in Canvas Editor</span>
-        </div>
+      <div className="space-y-3">
+        {localWorkflow.steps.map((step, idx) => (
+          <div key={step.id} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-[var(--color-surface)] p-3 rounded-xl border border-[var(--color-border)] relative group">
+            <div className="flex flex-col items-center justify-center gap-1 w-6 opacity-50 hover:opacity-100 transition-opacity">
+               <button onClick={() => moveStep(idx, -1)} disabled={idx === 0} className="disabled:opacity-20 hover:text-blue-500">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m18 15-6-6-6 6"/></svg>
+               </button>
+               <button onClick={() => moveStep(idx, 1)} disabled={idx === localWorkflow.steps.length - 1} className="disabled:opacity-20 hover:text-blue-500">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+               </button>
+            </div>
+            
+            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm", STEP_COLORS[step.type] || 'bg-blue-500')}>
+               {React.createElement(STEP_ICONS[step.type] || Zap, { className: "w-5 h-5 text-white" })}
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {(nicheConfig?.automationPresets || [
-            { title: 'Post-Procedure Care Sequence', trigger: '🏷️ Procedure Completed', desc: 'Automatically send aftercare instructions via WhatsApp 2 hours after treatment.', category: 'Customer Care' },
-            { title: 'Ready Notification Alert', trigger: '📦 Lab/Order Arrived', desc: 'Notify customer immediately when custom lab order or report is ready.', category: 'Operations' },
-            { title: '6-Month Routine Recall', trigger: '⏰ 6 Months Inactive', desc: 'Send automated recall reminder for routine checkup and preventive care.', category: 'Retention' },
-            { title: 'Unscheduled Lead Recovery', trigger: '⏳ Lead Stalled', desc: 'Follow up with inquiries who agreed to treatment but have not booked.', category: 'Conversion' }
-          ]).map((tmpl: any, idx: number) => (
-            <button
-              key={idx}
-              onClick={() => {
-                const newWf: WorkflowItem = {
-                  id: `wf_${Date.now()}`,
-                  name: tmpl.title,
-                  triggerEvent: tmpl.trigger,
-                  description: tmpl.desc,
-                  steps: [
-                    { id: 's1', type: 'TRIGGER', label: `Trigger: ${tmpl.trigger}`, detail: 'Event trigger configured from pre-installed template' },
-                    { id: 's2', type: 'ACTION', actionType: 'WHATSAPP', label: 'Action 1: WhatsApp Automated Outreach', detail: tmpl.desc },
-                    { id: 's3', type: 'DELAY', actionType: 'WAIT_DELAY', label: 'Delay: Wait 24h', detail: 'Wait for client response or confirmation' },
-                    { id: 's4', type: 'ACTION', actionType: 'CREATE_TASK', label: 'Action 2: Staff Escalation Alert', detail: 'Notify assigned coordinator if no reply' }
-                  ],
-                  actionsCount: 4,
-                  isActive: true,
-                  lastRun: 'Just added',
-                  runs24h: 0,
-                  category: tmpl.category || 'Clinical Care'
-                };
-                setActiveWorkflow(newWf);
-                setIsNewWorkflow(true);
-                setIsEditorOpen(true);
-              }}
-              className="p-3.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-blue-500/50 text-left transition-all group relative overflow-hidden"
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+              <select 
+                value={step.type}
+                onChange={(e) => updateStep(idx, 'type', e.target.value as StepActionType)}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] outline-none focus:border-blue-500"
+              >
+                {Object.keys(STEP_ICONS).map(t => (
+                  <option key={t} value={t}>{t.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                ))}
+              </select>
+              
+              <input 
+                type="text" 
+                value={step.label}
+                onChange={(e) => updateStep(idx, 'label', e.target.value)}
+                placeholder="Step Label"
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] outline-none focus:border-blue-500"
+              />
+
+              <input 
+                type="text" 
+                value={step.details || ''}
+                onChange={(e) => updateStep(idx, 'details', e.target.value)}
+                placeholder="Details (Optional)"
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <button 
+              onClick={() => removeStep(idx)}
+              className="p-2 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors ml-auto md:ml-0"
+              title="Remove step"
             >
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                {tmpl.category}
-              </span>
-              <h3 className="font-bold text-xs text-[var(--color-text)] mt-2 group-hover:text-blue-400 transition-colors">
-                {tmpl.title}
-              </h3>
-              <p className="text-[11px] text-[var(--color-text-muted)] mt-1 line-clamp-2">
-                {tmpl.desc}
-              </p>
-              <div className="mt-2.5 text-[10px] font-semibold text-blue-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Open in Canvas Editor →</span>
-              </div>
+              <Trash2 className="w-4 h-4" />
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Workflow Sequences List (Connected Zapier Style Preview) */}
-      <div className="space-y-4">
-        {workflows.map((wf, i) => (
-          <motion.div
-            key={wf.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            onClick={() => openCanvasEditor(wf)}
-            className={cn(
-              "p-5 rounded-2xl border transition-all space-y-4 group shadow-sm cursor-pointer hover:shadow-xl hover:border-blue-500/60 relative",
-              wf.isActive
-                ? "bg-[var(--color-glass)] backdrop-blur border-[var(--color-glass-border)]"
-                : "bg-slate-950/40 border-slate-800/60 opacity-70"
-            )}
-          >
-            {/* Header Line */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-3.5">
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "p-2.5 rounded-xl shrink-0 border",
-                  wf.isActive ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-slate-800 text-slate-500 border-slate-700"
-                )}>
-                  <Workflow size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <h3 className="font-bold text-base text-[var(--color-text)] group-hover:text-blue-300 transition-colors">
-                      {wf.name}
-                    </h3>
-                    <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                      {wf.triggerEvent}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{wf.description}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-                <span className="text-xs text-slate-400 font-mono">
-                  24h Runs: <strong className="text-emerald-400">{wf.runs24h}</strong>
-                </span>
-
-                <button
-                  onClick={(e) => toggleWorkflow(wf.id, e)}
-                  className={cn(
-                    "px-3 py-1 rounded-xl text-xs font-bold transition-all border",
-                    wf.isActive
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
-                  )}
-                >
-                  {wf.isActive ? 'Active (ON)' : 'Paused (OFF)'}
-                </button>
-
-                <div className="p-2 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-xl transition-colors">
-                  <Edit3 size={15} />
-                </div>
-              </div>
-            </div>
-
-            {/* Zapier-Style Connected Sequence Nodes Row */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 pt-1 overflow-x-auto pb-2">
-              {wf.steps.map((step, idx) => {
-                const conf = STEP_COLORS[step.type] || STEP_COLORS.ACTION;
-                const Icon = STEP_ICONS[step.actionType || step.type] || Zap;
-                const isLast = idx === wf.steps.length - 1;
-
-                return (
-                  <div key={step.id || idx} className="flex flex-1 md:flex-initial items-center gap-2 min-w-[210px]">
-                    <div className={cn(
-                      "flex-1 p-3 rounded-xl border bg-[var(--color-surface)] relative space-y-1 group-hover:border-blue-500/40 transition-colors shadow-sm",
-                      conf.border
-                    )}>
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className={cn("font-mono font-bold uppercase tracking-wider", conf.text)}>
-                          {step.type}
-                        </span>
-                        <span className="text-slate-400 font-mono">Step #{idx + 1}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 pt-0.5">
-                        <Icon size={14} className={conf.text} />
-                        <p className="font-bold text-white text-xs truncate">{step.label}</p>
-                      </div>
-
-                      <p className="text-[11px] text-[var(--color-text-muted)] line-clamp-1 font-sans">{step.detail}</p>
-                    </div>
-
-                    {/* Connecting Connector Arrow between steps */}
-                    {!isLast && (
-                      <div className="hidden md:flex items-center justify-center text-blue-400/70 shrink-0">
-                        <ArrowRight size={16} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom prompt */}
-            <div className="flex items-center justify-between pt-1 text-[11px] text-blue-400 font-semibold">
-              <span className="flex items-center gap-1">
-                <Sliders size={12} />
-                Click to open interactive Zapier Sequence Canvas & edit steps
-              </span>
-              <span className="text-slate-400 font-mono text-[10px]">Last run: {wf.lastRun}</span>
-            </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      {/* FULL-SCREEN / MODAL ZAPIER-STYLE SEQUENCE CANVAS BUILDER */}
-      <AnimatePresence>
-        {isEditorOpen && activeWorkflow && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              className="w-full max-w-5xl bg-[#0b0f17] border border-blue-500/40 rounded-3xl p-6 sm:p-8 text-white space-y-6 shadow-2xl my-8 max-h-[92vh] flex flex-col justify-between overflow-hidden"
+      <div className="mt-4 flex justify-center">
+        <button 
+          onClick={addStep}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-colors font-medium"
+        >
+          <Plus className="w-4 h-4" />
+          Add Step
+        </button>
+      </div>
+
+      <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+        <button 
+          onClick={onCancel}
+          className="px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] bg-[var(--color-surface)] hover:bg-[var(--color-border)] border border-[var(--color-border)] rounded-xl transition-colors"
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={() => onSave(localWorkflow)}
+          className="flex items-center gap-2 px-6 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors font-medium shadow-sm"
+        >
+          <Save className="w-4 h-4" />
+          Save Workflow
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------
+// MAIN COMPONENT
+// ---------------------------
+export default function AutomationsPage() {
+  const { nicheConfig } = useNiche();
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>(INITIAL_WORKFLOWS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'All' | CategoryType>('All');
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Initialize from local storage or niche config
+  useEffect(() => {
+    const saved = localStorage.getItem('zd_automations');
+    if (saved) {
+      try {
+        setWorkflows(JSON.parse(saved));
+      } catch (e) {
+        // use initial
+      }
+    } else if (nicheConfig?.initialWorkflows) {
+      // Basic mapping if niche config exists
+      // We'll stick to our initial 12 as default base
+      setWorkflows(INITIAL_WORKFLOWS);
+    }
+  }, [nicheConfig]);
+
+  // Save to local storage whenever workflows change
+  useEffect(() => {
+    localStorage.setItem('zd_automations', JSON.stringify(workflows));
+  }, [workflows]);
+
+  const toggleActive = (id: string) => {
+    setWorkflows(wfs => wfs.map(wf => 
+      wf.id === id ? { ...wf, active: !wf.active } : wf
+    ));
+  };
+
+  const deleteWorkflow = (id: string) => {
+    if (confirm('Are you sure you want to delete this workflow?')) {
+      setWorkflows(wfs => wfs.filter(wf => wf.id !== id));
+      if (editingId === id) setEditingId(null);
+    }
+  };
+
+  const duplicateWorkflow = (wf: WorkflowItem) => {
+    const newWf = { 
+      ...wf, 
+      id: 'wf_' + Math.random().toString(36).substr(2, 9),
+      name: wf.name + ' (Copy)',
+      active: false
+    };
+    setWorkflows([newWf, ...workflows]);
+  };
+
+  const saveEditedWorkflow = (updatedWf: WorkflowItem) => {
+    setWorkflows(wfs => wfs.map(wf => wf.id === updatedWf.id ? updatedWf : wf));
+    setEditingId(null);
+  };
+
+  const filteredWorkflows = workflows.filter(wf => {
+    const matchesSearch = wf.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeCategory === 'All' || wf.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto pb-32">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--color-text)] tracking-tight">Workflow Templates</h1>
+          <p className="text-[var(--color-text-muted)] mt-2 max-w-2xl text-lg">
+            Automate your patient journey, marketing, and operations with intelligent pre-built pipelines.
+          </p>
+        </div>
+        
+        <button 
+          onClick={() => {
+            const newWf: WorkflowItem = {
+              id: 'wf_' + Math.random().toString(36).substr(2, 9),
+              name: 'New Custom Workflow',
+              category: 'Operations',
+              active: false,
+              steps: [
+                { id: 's1', type: 'trigger', label: 'Custom Trigger', details: '' }
+              ]
+            };
+            setWorkflows([newWf, ...workflows]);
+            setEditingId(newWf.id);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-md shadow-blue-500/20"
+        >
+          <Plus className="w-5 h-5" />
+          Create Custom
+        </button>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-[var(--color-surface)] p-2 rounded-2xl border border-[var(--color-border)] shadow-sm">
+        <div className="flex overflow-x-auto hide-scrollbar w-full py-2 px-2 gap-2">
+          {ALL_CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
+                activeCategory === cat 
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+              )}
             >
-              {/* Canvas Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-400">
-                    <Workflow size={24} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={activeWorkflow.name}
-                        onChange={(e) => setActiveWorkflow({ ...activeWorkflow, name: e.target.value })}
-                        className="font-bold text-lg sm:text-xl text-white bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:outline-none transition-colors px-1 py-0.5"
-                        placeholder="Sequence Name..."
-                      />
-                      <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
-                        Zapier Canvas Mode
+              {cat}
+            </button>
+          ))}
+        </div>
+        
+        <div className="relative w-full lg:w-72 shrink-0 px-2 lg:px-0 lg:pr-2 pb-2 lg:pb-0">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] lg:left-3" />
+          <input 
+            type="text" 
+            placeholder="Search templates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-[var(--color-text)]"
+          />
+        </div>
+      </div>
+
+      {/* Workflows Grid */}
+      {filteredWorkflows.length === 0 ? (
+        <div className="text-center py-20 bg-[var(--color-surface)] rounded-3xl border border-[var(--color-border)]">
+          <div className="w-16 h-16 bg-[var(--color-bg)] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[var(--color-border)]">
+            <Zap className="w-8 h-8 text-[var(--color-text-muted)]" />
+          </div>
+          <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No workflows found</h3>
+          <p className="text-[var(--color-text-muted)]">Try adjusting your filters or search query.</p>
+          <button 
+            onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
+            className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <AnimatePresence>
+            {filteredWorkflows.map(wf => (
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                key={wf.id}
+                className={cn(
+                  "bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow",
+                  !wf.active && "opacity-75"
+                )}
+              >
+                {/* Card Header */}
+                <div className="p-5 md:p-6 border-b border-[var(--color-border)] flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className={cn(
+                        "px-2.5 py-1 text-xs font-semibold rounded-lg border",
+                        CATEGORY_COLORS[wf.category] || CATEGORY_COLORS['Operations']
+                      )}>
+                        {wf.category}
                       </span>
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                        <span className={cn(
+                          "w-2 h-2 rounded-full",
+                          wf.active ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-slate-400"
+                        )}></span>
+                        {wf.active ? 'Active' : 'Paused'}
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Configure connected triggers, conditions, WhatsApp messages, and staff actions.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleRunSimulation}
-                    disabled={isSimulating}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900/50 text-white rounded-xl text-xs font-semibold shadow-md transition-all shrink-0"
-                    title="Simulate live execution of this pipeline"
-                  >
-                    <Play size={13} className={cn(isSimulating && "animate-spin text-emerald-200")} />
-                    <span>{isSimulating ? 'Testing Run...' : 'Test Sequence'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsEditorOpen(false)}
-                    className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Canvas Interactive Sequence Body */}
-              <div className="flex-1 overflow-y-auto space-y-6 py-2 px-1 sm:px-4">
-                
-                {/* Workflow Trigger Configuration Card */}
-                <div className="p-4 bg-slate-900/80 border border-amber-500/40 rounded-2xl space-y-2.5 shadow-lg">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider font-mono">
-                      <Zap size={14} />
-                      Sequence Trigger (Event Initiator)
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">STEP #1</span>
+                    <h3 className="text-xl font-bold text-[var(--color-text)] truncate">{wf.name}</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] text-slate-300 font-semibold mb-1">Trigger Event</label>
-                      <select
-                        value={activeWorkflow.triggerEvent}
-                        onChange={(e) => setActiveWorkflow({ ...activeWorkflow, triggerEvent: e.target.value })}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-amber-300 font-bold focus:border-blue-500 focus:outline-none"
-                      >
-                        <option value="👤 New Registration / Lead Created">👤 New Registration / Lead Created in CRM</option>
-                        <option value="🏷️ Procedure / Service Completed">🏷️ Procedure / Service Completed in Clinic</option>
-                        <option value="❌ Status: Appointment No-Show">❌ Status: Appointment No-Show</option>
-                        <option value="📵 Missed Phone Call">📵 Missed Phone Call on Business Number</option>
-                        <option value="⏰ Scheduled (Cron Timer - Daily 5 PM)">⏰ Scheduled (Cron Timer - Daily 5 PM)</option>
-                        <option value="📅 Appointment Created">📅 Appointment Created in Doctor Calendar</option>
-                        <option value="📦 Lab Order Received">📦 Lab / Diagnostic Report Received</option>
-                        <option value="🔗 Incoming Webhook (External Trigger)">🔗 Incoming Webhook (External Trigger)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {activeWorkflow.triggerEvent === '🔗 Incoming Webhook (External Trigger)' && (
-                    <div className="mt-3 p-3 bg-slate-950 border border-indigo-500/30 rounded-xl">
-                      <label className="block text-[11px] text-slate-300 font-semibold mb-1">Incoming Webhook URL</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={`https://api.zerodesk.io/webhooks/wf-${activeWorkflow.id}`}
-                          className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono"
-                        />
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(`https://api.zerodesk.io/webhooks/wf-${activeWorkflow.id}`);
-                            showToast('Webhook URL copied!');
-                          }}
-                          className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors flex shrink-0"
-                          title="Copy URL"
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => toggleActive(wf.id)}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]",
+                        wf.active ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                          wf.active ? 'translate-x-2.5' : '-translate-x-2.5'
+                        )}
+                      />
+                    </button>
+                    
+                    <div className="relative group/menu">
+                      <button className="p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] rounded-xl transition-colors">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                      </button>
+                      
+                      {/* Dropdown Menu */}
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10 py-1">
+                        <button 
+                          onClick={() => setEditingId(editingId === wf.id ? null : wf.id)}
+                          className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
                         >
-                          <Copy size={14} />
+                          <Edit2 className="w-4 h-4" /> {editingId === wf.id ? 'Close Editor' : 'Edit Steps'}
+                        </button>
+                        <button 
+                          onClick={() => duplicateWorkflow(wf)}
+                          className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
+                        >
+                          <Copy className="w-4 h-4" /> Duplicate
+                        </button>
+                        <div className="h-px bg-[var(--color-border)] my-1"></div>
+                        <button 
+                          onClick={() => deleteWorkflow(wf.id)}
+                          className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
                         </button>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5">Trigger this workflow from Zapier, Make.com, or any external system.</p>
                     </div>
-                  )}
-
-                  <div>
-                    <label className="block text-[11px] text-slate-300 font-semibold mb-1">Pipeline Description</label>
-                    <input
-                      type="text"
-                      value={activeWorkflow.description}
-                      onChange={(e) => setActiveWorkflow({ ...activeWorkflow, description: e.target.value })}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
-                      placeholder="Brief summary of this automation pipeline..."
-                    />
                   </div>
                 </div>
 
-                {/* Zapier Vertical Connected Flow Builder */}
-                <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-[19px] sm:before:left-[27px] before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-cyan-500 before:to-emerald-500">
-                  {activeWorkflow.steps.map((step, idx) => {
-                    const conf = STEP_COLORS[step.type] || STEP_COLORS.ACTION;
-                    const Icon = STEP_ICONS[step.actionType || step.type] || Zap;
-                    const isSimActive = simulatedStepIndex === idx;
-
-                    return (
-                      <div key={step.id || idx} className="relative group">
-                        {/* Node Connector Circle Pin on Left Vertical Rail */}
-                        <div className={cn(
-                          "absolute -left-[27px] sm:-left-[35px] top-4 w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center bg-slate-950 z-10",
-                          isSimActive
-                            ? "border-emerald-400 bg-emerald-500 ring-4 ring-emerald-500/30 scale-125"
-                            : "border-blue-500 group-hover:scale-110 group-hover:border-blue-400"
-                        )}>
-                          {isSimActive && <Check size={10} className="text-slate-950 stroke-[3]" />}
-                        </div>
-
-                        {/* Step Card Box */}
-                        <div 
-                          onClick={() => openStepEditor(idx, step)}
-                          className={cn(
-                            "p-4 rounded-2xl border bg-slate-900/90 transition-all cursor-pointer shadow-lg space-y-2 hover:border-blue-500/70 relative",
-                            editingStepIndex === idx ? "border-blue-500 ring-2 ring-blue-500/30" : "border-slate-800",
-                            isSimActive && "border-emerald-500 bg-emerald-950/20"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className={cn("px-2 py-0.5 text-[10px] font-mono font-bold rounded-md border", conf.border, conf.bg, conf.text)}>
-                                {step.type}
-                              </span>
-                              <span className="text-xs font-mono text-slate-400">Step #{idx + 1}</span>
-                            </div>
-
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openStepEditor(idx, step); }}
-                                className="p-1 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded-lg transition-colors text-[10px] flex items-center gap-1 font-semibold"
-                              >
-                                <Edit3 size={12} />
-                                <span>Configure</span>
-                              </button>
-                              <button
-                                onClick={(e) => handleDeleteStepFromCanvas(idx, e)}
-                                className="p-1 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
-                                title="Delete Step"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
+                {/* Pipeline Preview */}
+                <div className="p-5 md:p-6 bg-[var(--color-bg)]/50">
+                  <div className="flex items-center overflow-x-auto hide-scrollbar py-2">
+                    {wf.steps.map((step, idx) => (
+                      <React.Fragment key={step.id}>
+                        <div className="flex flex-col items-center gap-2 shrink-0 group relative cursor-help">
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border border-white/10 relative z-10 transition-transform group-hover:scale-110",
+                            STEP_COLORS[step.type] || 'bg-blue-500'
+                          )}>
+                            {React.createElement(STEP_ICONS[step.type] || Zap, { className: "w-6 h-6 text-white" })}
                           </div>
-
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn("p-2 rounded-xl border shrink-0", conf.bg, conf.border)}>
-                              <Icon size={16} className={conf.text} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="font-bold text-sm text-white">{step.label}</h4>
-                              <p className="text-xs text-slate-400 mt-0.5">{step.detail}</p>
-                            </div>
+                          
+                          {/* Tooltip */}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-20 shadow-lg pointer-events-none before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-slate-800">
+                            <span className="font-semibold block mb-0.5">{step.label}</span>
+                            {step.details && <span className="text-slate-300">{step.details}</span>}
                           </div>
                         </div>
 
-                        {/* + Add Step Connector Button directly between nodes */}
-                        <div className="flex items-center justify-center my-2 -ml-6 sm:-ml-8">
-                          <button
-                            type="button"
-                            onClick={() => handleAddStepToCanvas(idx)}
-                            className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-blue-600 border border-blue-500/30 hover:border-blue-400 text-blue-300 hover:text-white rounded-full text-[10px] font-bold shadow-md transition-all hover:scale-105"
-                          >
-                            <Plus size={11} />
-                            <span>Add Step After</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        {idx < wf.steps.length - 1 && (
+                          <div className="w-8 md:w-12 h-0.5 bg-[var(--color-border)] shrink-0 mx-1 md:mx-2 relative">
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 border-t-2 border-r-2 border-[var(--color-border)] rotate-45"></div>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Step Configuration Drawer (Appears when step is clicked) */}
-                {editingStepIndex !== null && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border border-blue-500/50 space-y-4 shadow-xl text-xs"
-                  >
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <Sliders size={16} className="text-blue-400" />
-                        <h4 className="font-bold text-sm text-white">Configure Step #{editingStepIndex + 1}</h4>
-                      </div>
-                      <button onClick={() => setEditingStepIndex(null)} className="text-slate-400 hover:text-white">
-                        <X size={16} />
-                      </button>
-                    </div>
+                {/* Stats Row */}
+                <div className="px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface)] grid grid-cols-3 gap-4 text-sm divide-x divide-[var(--color-border)]">
+                  <div className="flex flex-col">
+                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Last Run</span>
+                    <span className="font-medium text-[var(--color-text)]">{wf.lastRun || 'Never'}</span>
+                  </div>
+                  <div className="flex flex-col pl-4">
+                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Runs (24h)</span>
+                    <span className="font-medium text-[var(--color-text)]">{wf.runCount24h || 0}</span>
+                  </div>
+                  <div className="flex flex-col pl-4">
+                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Success</span>
+                    <span className="font-medium text-[var(--color-text)] flex items-center gap-1">
+                      {wf.successRate || 0}%
+                      {(wf.successRate || 0) >= 95 && <CheckCircle className="w-3 h-3 text-green-500" />}
+                    </span>
+                  </div>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-slate-300 font-semibold mb-1">Step Type</label>
-                        <select
-                          value={stepType}
-                          onChange={(e) => setStepType(e.target.value as any)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
-                        >
-                          <option value="TRIGGER">TRIGGER (Event Starter)</option>
-                          <option value="ACTION">ACTION (Perform Task)</option>
-                          <option value="DELAY">DELAY (Wait Timer)</option>
-                          <option value="CONDITION">CONDITION (Filter / Check)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-slate-300 font-semibold mb-1">Action Channel / Utility</label>
-                        <select
-                          value={stepActionType}
-                          onChange={(e) => setStepActionType(e.target.value as any)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
-                        >
-                          <option value="WHATSAPP">💬 WhatsApp Message DM</option>
-                          <option value="VOICE_CALL">📞 Voice AI Outbound Call</option>
-                          <option value="EMAIL">✉️ Email Notification</option>
-                          <option value="CREATE_TASK">🔔 Frontdesk / Doctor Task</option>
-                          <option value="UPDATE_CRM">🗄️ Update CRM / EMR Status</option>
-                          <option value="WAIT_DELAY">⏳ Wait Delay Timer</option>
-                          <option value="WEBHOOK">🌐 Send Webhook (Zapier / Make.com)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-slate-300 font-semibold mb-1">Step Title / Label</label>
-                        <input
-                          type="text"
-                          value={stepLabel}
-                          onChange={(e) => setStepLabel(e.target.value)}
-                          className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none"
-                          placeholder="e.g. Action 1: Send WhatsApp Aftercare"
+                {/* Inline Editor Area */}
+                <AnimatePresence>
+                  {editingId === wf.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden bg-[var(--color-surface)]"
+                    >
+                      <div className="px-5 pb-5">
+                        <InlineEditor 
+                          workflow={wf} 
+                          onSave={saveEditedWorkflow} 
+                          onCancel={() => setEditingId(null)} 
                         />
                       </div>
-                    </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                    {stepType === 'ACTION' && stepActionType === 'WEBHOOK' && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
-                        <div>
-                          <label className="block text-slate-300 font-semibold mb-1">Webhook URL</label>
-                          <input
-                            type="text"
-                            value={activeWorkflow.steps[editingStepIndex]?.config?.url || ''}
-                            onChange={(e) => {
-                              const newSteps = [...activeWorkflow.steps];
-                              newSteps[editingStepIndex] = {
-                                ...newSteps[editingStepIndex],
-                                config: { ...newSteps[editingStepIndex].config, url: e.target.value }
-                              };
-                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-                            }}
-                            placeholder="https://hooks.zapier.com/..."
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-300 font-semibold mb-1">HTTP Method</label>
-                          <select
-                            value={activeWorkflow.steps[editingStepIndex]?.config?.method || 'POST'}
-                            onChange={(e) => {
-                              const newSteps = [...activeWorkflow.steps];
-                              newSteps[editingStepIndex] = {
-                                ...newSteps[editingStepIndex],
-                                config: { ...newSteps[editingStepIndex].config, method: e.target.value }
-                              };
-                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-                            }}
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-blue-500"
-                          >
-                            <option value="POST">POST</option>
-                            <option value="GET">GET</option>
-                          </select>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="block text-slate-300 font-semibold mb-1">JSON Payload Preview</label>
-                          <textarea
-                            rows={3}
-                            value={activeWorkflow.steps[editingStepIndex]?.config?.payload || '{\n  "contact_name": "{{contact.name}}",\n  "phone": "{{contact.phone}}"\n}'}
-                            onChange={(e) => {
-                              const newSteps = [...activeWorkflow.steps];
-                              newSteps[editingStepIndex] = {
-                                ...newSteps[editingStepIndex],
-                                config: { ...newSteps[editingStepIndex].config, payload: e.target.value }
-                              };
-                              setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-                            }}
-                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {stepType === 'ACTION' && (stepActionType === 'WHATSAPP' || stepActionType === 'VOICE_CALL') && (
-                      <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
-                        <label className="block text-slate-300 font-semibold mb-1">Select Template</label>
-                        <select
-                          value={activeWorkflow.steps[editingStepIndex]?.config?.templateId || ''}
-                          onChange={(e) => {
-                            const selectedTemp = nicheConfig?.templates?.find((t: any) => t.id === e.target.value);
-                            const newSteps = [...activeWorkflow.steps];
-                            newSteps[editingStepIndex] = {
-                              ...newSteps[editingStepIndex],
-                              config: { ...newSteps[editingStepIndex].config, templateId: e.target.value },
-                              detail: selectedTemp ? selectedTemp.content : newSteps[editingStepIndex].detail
-                            };
-                            setActiveWorkflow({ ...activeWorkflow, steps: newSteps });
-                            if (selectedTemp) {
-                              setStepDetail(selectedTemp.content);
-                            }
-                          }}
-                          className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-blue-500"
-                        >
-                          <option value="">-- Custom Message (Type below) --</option>
-                          {nicheConfig?.templates
-                            ?.filter((t: any) => t.channel === (stepActionType === 'WHATSAPP' ? 'whatsapp' : 'voice'))
-                            .map((t: any) => (
-                              <option key={t.id} value={t.id}>{t.name}</option>
-                            ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Action Details & Message Instruction</label>
-                      <textarea
-                        rows={3}
-                        value={stepDetail}
-                        onChange={(e) => setStepDetail(e.target.value)}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:outline-none leading-relaxed font-mono text-[11px]"
-                        placeholder="Write exact action parameters, delay duration (e.g. 'Wait 24h'), or message template..."
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setEditingStepIndex(null)}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium"
-                      >
-                        Close
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveStepDetails}
-                        className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md"
-                      >
-                        Apply Step Changes
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Canvas Footer Bar */}
-              <div className="flex items-center justify-between border-t border-slate-800 pt-4 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsEditorOpen(false)}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
-                >
-                  Cancel
-                </button>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSaveActiveWorkflow}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
-                  >
-                    <Save size={15} />
-                    <span>Save & Deploy Sequence</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

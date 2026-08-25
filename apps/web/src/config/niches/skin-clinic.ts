@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -68,6 +68,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
 
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
+    { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Meta & Google Ads CRM', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },

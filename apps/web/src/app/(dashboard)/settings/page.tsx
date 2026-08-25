@@ -589,40 +589,6 @@ export default function SettingsPage() {
                   </button>
                 </div>
 
-                {/* Voice Character Selection */}
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
-                  <label className="block text-xs font-semibold text-[var(--color-text)]">Preferred Voice Character (Male / Female)</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[
-                      { id: 'female_rachel', name: 'Rachel (Female)', desc: 'Empathetic, warm, ideal for clinics & care.', icon: '👩' },
-                      { id: 'male_marcus', name: 'Marcus (Male)', desc: 'Professional, confident, ideal for corporate.', icon: '👨' },
-                      { id: 'female_sarah', name: 'Sarah (Female)', desc: 'Energetic, fast-paced receptionist voice.', icon: '👩' },
-                      { id: 'male_david', name: 'David (Male)', desc: 'Calm, authoritative medical advisor.', icon: '👨' },
-                    ].map(vc => (
-                      <button
-                        key={vc.id}
-                        type="button"
-                        onClick={() => setVoiceGender(vc.id)}
-                        className={cn(
-                          "p-3 rounded-lg border text-left transition-all flex items-center justify-between",
-                          voiceGender === vc.id
-                            ? "bg-blue-600/10 border-blue-500 text-white"
-                            : "bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)]"
-                        )}
-                      >
-                        <div>
-                          <p className="text-xs font-bold flex items-center gap-1.5">
-                            <span>{vc.icon}</span>
-                            {vc.name}
-                          </p>
-                          <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{vc.desc}</p>
-                        </div>
-                        {voiceGender === vc.id && <Check size={14} className="text-blue-400" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Preferred Language Picker */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
                   <label className="block text-xs font-semibold text-[var(--color-text)]">Primary Voice AI Language</label>

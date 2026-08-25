@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, Cpu, PhoneIncoming, Heart,
-  Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones, UserCheck
+  Megaphone, Activity, Laptop, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -69,6 +69,7 @@ export const AUTOMOBILE_SHOWROOM_CONFIG: NicheConfig = {
 
     { name: 'Operations', roles: ['ADMIN', 'MANAGER'], divider: true },
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN', 'MANAGER'] },
