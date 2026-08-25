@@ -69,7 +69,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'ADS CRM MANAGEMENT', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ads CRM Management', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
@@ -122,7 +122,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
 
   kpis: [
     { label: 'Chair Utilization', value: '85%', change: '+4%', trend: 'up' },
-    { label: 'Average Ticket Value', value: '₹3,200', change: '+₹200', trend: 'up' },
+    { label: 'Average Ticket Value', value: 'â‚¹3,200', change: '+â‚¹200', trend: 'up' },
     { label: 'Client Re-Booking Rate', value: '64%', change: '+1.5%', trend: 'up' },
     { label: 'Retail-to-Service Ratio', value: '18%', change: '-1%', trend: 'down' },
   ],
@@ -133,7 +133,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Stylist Match Confirmation',
       category: 'Booking',
       channel: 'WHATSAPP',
-      content: 'Hey {{client_name}}! 💖\n\nYour session at {{salon_branch}} is locked in! You are booked with our fabulous artist, {{preferred_stylist}}, on {{appointment_date}} at {{appointment_time}}.\n\nWe cant wait to glam you up. Need to make changes? Just reply to this message!\n\nStay Gorgeous,\nThe {{salon_branch}} Team',
+      content: 'Hey {{client_name}}! ðŸ’–\n\nYour session at {{salon_branch}} is locked in! You are booked with our fabulous artist, {{preferred_stylist}}, on {{appointment_date}} at {{appointment_time}}.\n\nWe cant wait to glam you up. Need to make changes? Just reply to this message!\n\nStay Gorgeous,\nThe {{salon_branch}} Team',
       isPreinstalled: true,
       variables: ['client_name', 'salon_branch', 'preferred_stylist', 'appointment_date', 'appointment_time'],
     },
@@ -142,7 +142,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Color Touch-up Reminder',
       category: 'Retention',
       channel: 'WHATSAPP',
-      content: 'Hi {{client_name}} ✨,\n\nIt has been a few weeks since your last color session with {{preferred_stylist}} on {{last_visit_date}}. To keep your shade looking vibrant and fresh, it might be time for a root touch-up or gloss!\n\nWould you like me to find some available slots for you this week?\n\n- StyleAI @ {{salon_branch}}',
+      content: 'Hi {{client_name}} âœ¨,\n\nIt has been a few weeks since your last color session with {{preferred_stylist}} on {{last_visit_date}}. To keep your shade looking vibrant and fresh, it might be time for a root touch-up or gloss!\n\nWould you like me to find some available slots for you this week?\n\n- StyleAI @ {{salon_branch}}',
       isPreinstalled: true,
       variables: ['client_name', 'preferred_stylist', 'last_visit_date', 'salon_branch'],
     },
@@ -151,7 +151,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Bridal Prep Countdown',
       category: 'Events',
       channel: 'WHATSAPP',
-      content: 'Hello beautiful {{client_name}} 💍!\n\nYour big day is approaching fast! This is a friendly reminder for your Bridal Hair & Makeup Trial tomorrow at {{appointment_time}}.\n\nPlease come with clean, dry hair and wear a top with a similar neckline to your dress if possible! Our bridal expert {{preferred_stylist}} is so excited to create your dream look.\n\nSee you soon at {{salon_branch}}!',
+      content: 'Hello beautiful {{client_name}} ðŸ’!\n\nYour big day is approaching fast! This is a friendly reminder for your Bridal Hair & Makeup Trial tomorrow at {{appointment_time}}.\n\nPlease come with clean, dry hair and wear a top with a similar neckline to your dress if possible! Our bridal expert {{preferred_stylist}} is so excited to create your dream look.\n\nSee you soon at {{salon_branch}}!',
       isPreinstalled: true,
       variables: ['client_name', 'appointment_time', 'preferred_stylist', 'salon_branch'],
     },
@@ -160,7 +160,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Walk-in Queue Update',
       category: 'Operations',
       channel: 'WHATSAPP',
-      content: 'Hi {{client_name}}, you are currently on the waitlist at {{salon_branch}}! 💅\n\nThere are currently {{queue_position}} clients ahead of you. We estimate your chair will be ready in about {{estimated_wait}} minutes.\n\nFeel free to grab a coffee nearby, we will text you exactly 5 minutes before your stylist is ready!',
+      content: 'Hi {{client_name}}, you are currently on the waitlist at {{salon_branch}}! ðŸ’…\n\nThere are currently {{queue_position}} clients ahead of you. We estimate your chair will be ready in about {{estimated_wait}} minutes.\n\nFeel free to grab a coffee nearby, we will text you exactly 5 minutes before your stylist is ready!',
       isPreinstalled: true,
       variables: ['client_name', 'salon_branch', 'queue_position', 'estimated_wait'],
     },
@@ -180,7 +180,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Seasonal Style Inspiration',
       category: 'Marketing',
       channel: 'EMAIL',
-      subject: 'Trends We Are Loving This Season 💇‍♀️',
+      subject: 'Trends We Are Loving This Season ðŸ’‡â€â™€ï¸',
       content: 'Hey {{client_name}},\n\nReady for a refresh?\n\nThis season at {{salon_branch}}, we are obsessed with lived-in balayage, bouncy blowouts, and bold statement nails. Our artists have been busy creating some stunning looks!\n\nCheck out our latest stylist portfolios attached. If you are feeling inspired, book your next session with {{preferred_stylist}} today and let\'s create some magic.\n\nStay stylish,\n{{salon_branch}}',
       mediaAttachment: 'IMAGE',
       isPreinstalled: true,
@@ -191,8 +191,8 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       title: 'Loyalty Reward Unlocked',
       category: 'Retention',
       channel: 'EMAIL',
-      subject: 'You\'ve Unlocked a Style Reward! 🎁',
-      content: 'Hi {{client_name}},\n\nYour loyalty means the world to us! You have just reached VIP status at {{salon_branch}}.\n\nTo celebrate, we are gifting you a complimentary deep conditioning treatment (worth ₹1,500) with your next haircut or color service.\n\nSimply mention this email when you book your next session with {{preferred_stylist}}.\n\nWith love,\nThe {{salon_branch}} Team',
+      subject: 'You\'ve Unlocked a Style Reward! ðŸŽ',
+      content: 'Hi {{client_name}},\n\nYour loyalty means the world to us! You have just reached VIP status at {{salon_branch}}.\n\nTo celebrate, we are gifting you a complimentary deep conditioning treatment (worth â‚¹1,500) with your next haircut or color service.\n\nSimply mention this email when you book your next session with {{preferred_stylist}}.\n\nWith love,\nThe {{salon_branch}} Team',
       isPreinstalled: true,
       variables: ['client_name', 'salon_branch', 'preferred_stylist'],
     },
@@ -239,7 +239,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       id: 'kb_full_service_menu',
       title: 'Full Service Menu & Pricing',
       category: 'PRICING',
-      content: 'Detailed list of all salon services. Women\'s Haircut (₹1200-2500 based on stylist tier), Men\'s Grooming (₹600-1200), Global Color (Starting at ₹4500), Balayage (Starting at ₹6500), Classic Manicure (₹800), Gel Extensions (₹2500). Prices vary by hair length and thickness.',
+      content: 'Detailed list of all salon services. Women\'s Haircut (â‚¹1200-2500 based on stylist tier), Men\'s Grooming (â‚¹600-1200), Global Color (Starting at â‚¹4500), Balayage (Starting at â‚¹6500), Classic Manicure (â‚¹800), Gel Extensions (â‚¹2500). Prices vary by hair length and thickness.',
       chunks: 30,
       isActive: true,
       updatedAt: '2026-08-10',
@@ -248,7 +248,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       id: 'kb_bridal_packages',
       title: 'Bridal & Pre-Bridal Packages',
       category: 'SERVICE',
-      content: 'Overview of bridal offerings. Silver Package (₹15,000: HD Makeup, Hair styling, Draping). Gold Package (₹25,000: Airbrush Makeup, Premium Hair, Draping, Trial included). Pre-bridal packages (starting ₹10,000) include body polishing, facial, waxing, and spa mani/pedi. 50% advance required for booking.',
+      content: 'Overview of bridal offerings. Silver Package (â‚¹15,000: HD Makeup, Hair styling, Draping). Gold Package (â‚¹25,000: Airbrush Makeup, Premium Hair, Draping, Trial included). Pre-bridal packages (starting â‚¹10,000) include body polishing, facial, waxing, and spa mani/pedi. 50% advance required for booking.',
       chunks: 18,
       isActive: true,
       updatedAt: '2026-07-15',
@@ -284,7 +284,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       id: 'kb_nail_art_catalog',
       title: 'Nail Art & Extensions Catalog',
       category: 'SERVICE',
-      content: 'Guide to nail services. Acrylic vs Gel extensions pros/cons. Nail art tiers: Basic (glitter/french - ₹300 per nail), Advanced (chrome/ombre - ₹500 per nail), 3D/Complex (crystals/hand-painted - ₹800+ per nail). Remind desk to book extra time for nail art.',
+      content: 'Guide to nail services. Acrylic vs Gel extensions pros/cons. Nail art tiers: Basic (glitter/french - â‚¹300 per nail), Advanced (chrome/ombre - â‚¹500 per nail), 3D/Complex (crystals/hand-painted - â‚¹800+ per nail). Remind desk to book extra time for nail art.',
       chunks: 14,
       isActive: true,
       updatedAt: '2026-08-08',
@@ -293,7 +293,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
       id: 'kb_festival_specials',
       title: 'Festival & Wedding Specials',
       category: 'PRICING',
-      content: 'Current seasonal promotions for Diwali/Wedding season. "Glow & Go" combo (Express Facial + Blowout + Classic Mani for ₹3,500). Group discounts for bridesmaids (Book 4, Bride gets 20% off). Valid through November.',
+      content: 'Current seasonal promotions for Diwali/Wedding season. "Glow & Go" combo (Express Facial + Blowout + Classic Mani for â‚¹3,500). Group discounts for bridesmaids (Book 4, Bride gets 20% off). Valid through November.',
       chunks: 6,
       isActive: true,
       updatedAt: '2026-08-11',
@@ -309,7 +309,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
     },
     {
       title: 'Review Request post-Makeover',
-      trigger: '2 hours after a service > ₹5000',
+      trigger: '2 hours after a service > â‚¹5000',
       desc: 'Sends a sweet WhatsApp message asking for a Google Review and to tag us in their selfies.',
       category: 'Marketing'
     },
@@ -397,7 +397,7 @@ export const LUXURY_SALON_CONFIG: NicheConfig = {
 Your tone is stylish, upbeat, and very friendly. Use terms like "gorgeous," "fabulous," and "glam" naturally.
 Your primary role is to help clients book their Styling Sessions, manage the Chair Schedule, and answer questions about our services (cuts, colors, extensions, nails, bridal).
 If a client is unsure what to book for a color change, politely suggest a "Consultation Session" so our Master Stylists can assess their hair.
-Always quote prices in INR (₹) and gently remind them that complex color corrections may require a higher budget.
+Always quote prices in INR (â‚¹) and gently remind them that complex color corrections may require a higher budget.
 Be enthusiastic and ensure every caller feels like a VIP before they even step into the salon.`,
 
   tones: [
@@ -422,7 +422,7 @@ Be enthusiastic and ensure every caller feels like a VIP before they even step i
     {
       id: 'rule_currency_inr',
       title: 'Pricing in INR',
-      description: 'Always quote service starting prices in Indian Rupees (₹).',
+      description: 'Always quote service starting prices in Indian Rupees (â‚¹).',
       severity: 'info'
     },
     {

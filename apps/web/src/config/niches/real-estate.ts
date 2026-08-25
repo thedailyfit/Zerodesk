@@ -70,7 +70,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Automations', href: '/automations', icon: Workflow, roles: ['ADMIN'] },
     { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'ADS CRM MANAGEMENT', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ads CRM Management', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
@@ -125,7 +125,7 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { label: 'Lead-to-Visit Rate', value: '32%', change: '+4.2%', trend: 'up' },
     { label: 'Visit-to-Booking Ratio', value: '12%', change: '+1.5%', trend: 'up' },
     { label: 'Avg Sales Cycle', value: '45 days', change: '-3 days', trend: 'down' },
-    { label: 'Cost Per Lead', value: '₹850', change: '-₹45', trend: 'down' },
+    { label: 'Cost Per Lead', value: 'â‚¹850', change: '-â‚¹45', trend: 'down' },
   ],
 
   templates: [

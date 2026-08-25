@@ -71,7 +71,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Build Sequence', href: '/build-sequence', icon: GitBranch, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { name: 'Automated Leads', href: '/crm', icon: Target, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'ADS CRM MANAGEMENT', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
+    { name: 'Ads CRM Management', href: '/meta-ads-crm', icon: Megaphone, roles: ['ADMIN', 'MANAGER'] },
     { name: 'WhatsApp', href: '/whatsapp', icon: MessageCircle, roles: ['ADMIN', 'MANAGER'] },
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
@@ -122,7 +122,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
   ],
 
   kpis: [
-    { label: 'Avg Revenue Per Patient', value: '₹4,250', change: '+12%', trend: 'up' },
+    { label: 'Avg Revenue Per Patient', value: 'â‚¹4,250', change: '+12%', trend: 'up' },
     { label: 'Package Conversion Rate', value: '34%', change: '+5%', trend: 'up' },
     { label: 'No-Show Rate', value: '8%', change: '-2%', trend: 'down' },
     { label: 'AI Resolution Rate', value: '78%', change: '+15%', trend: 'up' }
@@ -248,7 +248,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
       id: 'kb-pricing-menu',
       title: 'Pricing Menu & Packages',
       category: 'PRICING',
-      content: 'Comprehensive pricing for consultations (₹800), individual peels (₹2500+), laser packages (₹15,000 for 6 sessions), and PRP therapy.',
+      content: 'Comprehensive pricing for consultations (â‚¹800), individual peels (â‚¹2500+), laser packages (â‚¹15,000 for 6 sessions), and PRP therapy.',
       chunks: 5,
       isActive: true,
       updatedAt: '2026-08-01T09:00:00Z'

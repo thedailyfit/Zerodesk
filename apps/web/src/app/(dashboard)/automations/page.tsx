@@ -112,7 +112,7 @@ const STEP_COLORS: Record<StepActionType, string> = {
 const INITIAL_WORKFLOWS: WorkflowItem[] = [
   {
     id: 'wf_1',
-    name: 'New Patient Onboarding',
+    name: 'New Patient Onboarding & Pre-Consult',
     category: 'Patient Care',
     active: true,
     lastRun: '10 mins ago',
@@ -121,28 +121,28 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     steps: [
       { id: 's1', type: 'trigger', label: 'New Registration', details: 'Form submitted' },
       { id: 's2', type: 'whatsapp', label: 'WhatsApp Welcome Kit', details: 'Template: welcome_01' },
-      { id: 's3', type: 'wait', label: 'Wait 4h', details: 'Delay 4 hours' },
-      { id: 's4', type: 'crm_update', label: 'Update CRM Profile', details: 'Set status: Onboarded' }
+      { id: 's3', type: 'wait', label: 'Wait 1h', details: 'Delay 1 hour' },
+      { id: 's4', type: 'whatsapp', label: 'Send Medical History Form', details: 'Pre-consultation link' }
     ]
   },
   {
     id: 'wf_2',
-    name: 'Post-Procedure Aftercare',
+    name: 'Post-Procedure AI Voice Follow-up',
     category: 'Patient Care',
-    active: false,
+    active: true,
     lastRun: '2 hours ago',
     runCount24h: 4,
     successRate: 98,
     steps: [
-      { id: 's1', type: 'trigger', label: 'Service Completed', details: 'Status = Done' },
+      { id: 's1', type: 'trigger', label: 'Procedure Completed', details: 'Status = Done' },
       { id: 's2', type: 'email', label: 'Send Care Guide', details: 'PDF attachment' },
       { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 24 hours' },
-      { id: 's4', type: 'whatsapp', label: 'Recovery Check', details: '+ Review Prompt' }
+      { id: 's4', type: 'call', label: 'AI Voice Check-in', details: 'Agent: Post-Op Care' }
     ]
   },
   {
     id: 'wf_3',
-    name: 'Missed Appointment Recovery',
+    name: 'AI Frontdesk: No-Show Rescheduler',
     category: 'Appointments',
     active: true,
     lastRun: '1 hour ago',
@@ -150,14 +150,14 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     successRate: 85,
     steps: [
       { id: 's1', type: 'trigger', label: 'No-Show Status', details: 'Appt missed' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Reschedule', details: 'Send scheduling link' },
-      { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 1 day' },
-      { id: 's4', type: 'task', label: 'Frontdesk Call Task', details: 'Assign to staff' }
+      { id: 's2', type: 'call', label: 'AI Voice Reschedule Call', details: 'Agent: Frontdesk AI' },
+      { id: 's3', type: 'wait', label: 'Wait 2h', details: 'If unanswered' },
+      { id: 's4', type: 'whatsapp', label: 'WhatsApp Reschedule Link', details: 'Fallback link' }
     ]
   },
   {
     id: 'wf_4',
-    name: 'Missed Call Recovery',
+    name: 'AI Frontdesk: Missed Call Recovery',
     category: 'Voice AI',
     active: true,
     lastRun: '5 mins ago',
@@ -165,13 +165,13 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     successRate: 95,
     steps: [
       { id: 's1', type: 'trigger', label: 'Missed Call', details: 'Inbound failed' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Interactive', details: 'Menu options' },
-      { id: 's3', type: 'crm_update', label: 'Log CRM Lead', details: 'Source: Missed Call' }
+      { id: 's2', type: 'whatsapp', label: 'AI Chatbot Handoff', details: 'Ask for intent' },
+      { id: 's3', type: 'crm_update', label: 'Log Missed Call Lead', details: 'Update CRM' }
     ]
   },
   {
     id: 'wf_5',
-    name: 'Appointment Confirmation',
+    name: 'Multi-Channel Appt Confirmation',
     category: 'Appointments',
     active: true,
     lastRun: 'Just now',
@@ -180,28 +180,28 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     steps: [
       { id: 's1', type: 'trigger', label: 'Booking Created', details: 'New appt' },
       { id: 's2', type: 'whatsapp', label: 'WhatsApp Confirmation', details: 'Date/Time details' },
-      { id: 's3', type: 'wait', label: 'Wait 1h before appt', details: 'Relative delay' },
-      { id: 's4', type: 'sms', label: 'SMS Reminder', details: 'Final nudge' }
+      { id: 's3', type: 'wait', label: 'Wait 24h before appt', details: 'Relative delay' },
+      { id: 's4', type: 'call', label: 'AI Reminder Call', details: 'Agent: Frontdesk AI' }
     ]
   },
   {
     id: 'wf_6',
-    name: 'Birthday & Anniversary Offers',
-    category: 'Marketing',
-    active: false,
+    name: 'Clinic Mgmt: Waitlist Slot Backfill',
+    category: 'Operations',
+    active: true,
     lastRun: 'Yesterday',
     runCount24h: 8,
     successRate: 100,
     steps: [
-      { id: 's1', type: 'trigger', label: 'Birthday Match', details: 'Date matches today' },
-      { id: 's2', type: 'whatsapp', label: 'Birthday Offer', details: 'Discount code' },
-      { id: 's3', type: 'wait', label: 'Wait 3d', details: 'Delay 3 days' },
-      { id: 's4', type: 'sms', label: 'Follow-up DM', details: 'Reminder to claim' }
+      { id: 's1', type: 'trigger', label: 'Appt Cancelled', details: '< 24h notice' },
+      { id: 's2', type: 'whatsapp', label: 'Broadcast to Waitlist', details: 'First 5 waitlisted' },
+      { id: 's3', type: 'wait', label: 'Wait 2h', details: 'Delay 2 hours' },
+      { id: 's4', type: 'task', label: 'Notify Frontdesk', details: 'If slot still empty' }
     ]
   },
   {
     id: 'wf_7',
-    name: 'Payment & Invoice Receipt',
+    name: 'Payment Receipt & Ledger Sync',
     category: 'Billing',
     active: true,
     lastRun: '30 mins ago',
@@ -216,7 +216,7 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
   },
   {
     id: 'wf_8',
-    name: 'Google Review Request',
+    name: 'Google Review via AI Request',
     category: 'Reviews',
     active: true,
     lastRun: '4 hours ago',
@@ -226,58 +226,57 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
       { id: 's1', type: 'trigger', label: 'Appt Completed', details: 'Status = Done' },
       { id: 's2', type: 'wait', label: 'Wait 2h', details: 'Cooldown' },
       { id: 's3', type: 'whatsapp', label: 'WhatsApp Review Link', details: 'Google My Business' },
-      { id: 's4', type: 'wait', label: 'Wait 48h', details: 'Delay 2 days' },
-      { id: 's5', type: 'sms', label: 'SMS Reminder', details: 'Gentle nudge' }
+      { id: 's4', type: 'wait', label: 'Wait 48h', details: 'If no review clicked' },
+      { id: 's5', type: 'call', label: 'AI Feedback Call', details: 'Ask for internal feedback' }
     ]
   },
   {
     id: 'wf_9',
-    name: 'Lead Nurture Drip',
+    name: 'Patient Recall: 6-Month Checkup',
     category: 'Marketing',
-    active: false,
+    active: true,
     lastRun: '12 hours ago',
     runCount24h: 5,
     successRate: 90,
     steps: [
-      { id: 's1', type: 'trigger', label: 'New Lead', details: 'Source: Website' },
-      { id: 's2', type: 'email', label: 'Email Welcome', details: 'Intro brand' },
-      { id: 's3', type: 'wait', label: 'Wait 2d', details: 'Delay' },
-      { id: 's4', type: 'whatsapp', label: 'WhatsApp Offer', details: 'Special deal' },
-      { id: 's5', type: 'wait', label: 'Wait 5d', details: 'Delay' },
-      { id: 's6', type: 'task', label: 'Call Task', details: 'Assign sales' }
+      { id: 's1', type: 'trigger', label: 'Time Since Last Visit', details: '= 180 Days' },
+      { id: 's2', type: 'whatsapp', label: 'Routine Checkup Prompt', details: 'Booking link' },
+      { id: 's3', type: 'wait', label: 'Wait 3d', details: 'Delay' },
+      { id: 's4', type: 'call', label: 'AI Outbound Recall Call', details: 'Agent: Frontdesk AI' }
     ]
   },
   {
     id: 'wf_10',
-    name: 'Staff Shift Reminder',
-    category: 'Operations',
+    name: 'AI Frontdesk: After-Hours Voicemail Logic',
+    category: 'Voice AI',
     active: true,
     lastRun: 'Today 7:00 AM',
     runCount24h: 1,
     successRate: 100,
     steps: [
-      { id: 's1', type: 'trigger', label: 'Cron Daily 7AM', details: 'Schedule' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Roster', details: 'To staff group' },
-      { id: 's3', type: 'task', label: 'Log Attendance', details: 'Create record' }
+      { id: 's1', type: 'trigger', label: 'Incoming Call', details: 'Outside Business Hours' },
+      { id: 's2', type: 'call', label: 'AI After-hours Agent', details: 'Take message' },
+      { id: 's3', type: 'task', label: 'Log Callback Task', details: 'For morning shift' }
     ]
   },
   {
     id: 'wf_11',
-    name: 'Low Stock Alert',
-    category: 'Operations',
+    name: 'Treatment Plan AI Follow-up',
+    category: 'Patient Care',
     active: true,
     lastRun: '2 days ago',
-    runCount24h: 0,
+    runCount24h: 10,
     successRate: 100,
     steps: [
-      { id: 's1', type: 'trigger', label: 'Inventory Low', details: '< Threshold' },
-      { id: 's2', type: 'email', label: 'Manager Alert', details: 'To admin' },
-      { id: 's3', type: 'task', label: 'Restock Task', details: 'Order supplies' }
+      { id: 's1', type: 'trigger', label: 'Proposal/Est Sent', details: 'CRM update' },
+      { id: 's2', type: 'wait', label: 'Wait 2d', details: 'Delay 48h' },
+      { id: 's3', type: 'call', label: 'AI Consult Follow-up Call', details: 'Answer questions' },
+      { id: 's4', type: 'task', label: 'Alert Doctor/Manager', details: 'If patient interested' }
     ]
   },
   {
     id: 'wf_12',
-    name: 'VIP Patient Follow-up',
+    name: 'VIP Patient Concierge Boarding',
     category: 'Patient Care',
     active: true,
     lastRun: 'Yesterday',
@@ -286,8 +285,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     steps: [
       { id: 's1', type: 'trigger', label: 'VIP Tag Applied', details: 'CRM update' },
       { id: 's2', type: 'whatsapp', label: 'Personalized Welcome', details: 'Concierge msg' },
-      { id: 's3', type: 'wait', label: 'Wait 7d', details: 'Delay 1 week' },
-      { id: 's4', type: 'survey', label: 'Feedback Survey', details: 'NPS' }
+      { id: 's3', type: 'wait', label: 'Wait 1d', details: 'Delay 24 hours' },
+      { id: 's4', type: 'task', label: 'Assign Dedicated Agent', details: 'Route to senior staff' }
     ]
   }
 ];

@@ -46,33 +46,33 @@ interface CampaignItem {
 
 const DEFAULT_CAMPAIGNS_BY_NICHE: Record<NicheId, CampaignItem[]> = {
   skin: [
-    { id: 'c-sk-1', name: 'Summer Glow & Laser Hair Promo', platform: 'Meta Ads', spend: '₹42,500', leads: 68, cpl: 145, roas: '4.2x', status: 'ACTIVE' },
-    { id: 'c-sk-2', name: 'Search Intent - Dermatologist Near Me', platform: 'Google Ads', spend: '₹28,000', leads: 34, cpl: 210, roas: '3.8x', status: 'ACTIVE' },
-    { id: 'c-sk-3', name: 'Retargeting - Acne Scars Consultation', platform: 'Meta Ads', spend: '₹15,200', leads: 28, cpl: 130, roas: '5.1x', status: 'ACTIVE' },
+    { id: 'c-sk-1', name: 'Summer Glow & Laser Hair Promo', platform: 'Meta Ads', spend: 'â‚¹42,500', leads: 68, cpl: 145, roas: '4.2x', status: 'ACTIVE' },
+    { id: 'c-sk-2', name: 'Search Intent - Dermatologist Near Me', platform: 'Google Ads', spend: 'â‚¹28,000', leads: 34, cpl: 210, roas: '3.8x', status: 'ACTIVE' },
+    { id: 'c-sk-3', name: 'Retargeting - Acne Scars Consultation', platform: 'Meta Ads', spend: 'â‚¹15,200', leads: 28, cpl: 130, roas: '5.1x', status: 'ACTIVE' },
   ],
   dental: [
-    { id: 'c-dt-1', name: 'Invisalign Clear Aligners Early Bird', platform: 'Meta Ads', spend: '₹55,000', leads: 42, cpl: 280, roas: '6.4x', status: 'ACTIVE' },
-    { id: 'c-dt-2', name: 'Search Intent - Dental Implants Center', platform: 'Google Ads', spend: '₹38,000', leads: 29, cpl: 320, roas: '5.2x', status: 'ACTIVE' },
-    { id: 'c-dt-3', name: 'Laser Teeth Whitening Instant Booking', platform: 'Meta Ads', spend: '₹18,500', leads: 35, cpl: 160, roas: '4.1x', status: 'ACTIVE' },
+    { id: 'c-dt-1', name: 'Invisalign Clear Aligners Early Bird', platform: 'Meta Ads', spend: 'â‚¹55,000', leads: 42, cpl: 280, roas: '6.4x', status: 'ACTIVE' },
+    { id: 'c-dt-2', name: 'Search Intent - Dental Implants Center', platform: 'Google Ads', spend: 'â‚¹38,000', leads: 29, cpl: 320, roas: '5.2x', status: 'ACTIVE' },
+    { id: 'c-dt-3', name: 'Laser Teeth Whitening Instant Booking', platform: 'Meta Ads', spend: 'â‚¹18,500', leads: 35, cpl: 160, roas: '4.1x', status: 'ACTIVE' },
   ],
   spa: [
-    { id: 'c-sp-1', name: 'Ayurvedic Monsoon Rejuvenation Retreat', platform: 'Meta Ads', spend: '₹35,000', leads: 54, cpl: 175, roas: '4.8x', status: 'ACTIVE' },
-    { id: 'c-sp-2', name: 'Luxury Couple Spa Weekend Getaway', platform: 'Meta Ads', spend: '₹24,000', leads: 38, cpl: 190, roas: '5.5x', status: 'ACTIVE' },
-    { id: 'c-sp-3', name: 'Deep Tissue & Stress Relief Therapy', platform: 'Google Ads', spend: '₹16,000', leads: 22, cpl: 220, roas: '3.9x', status: 'ACTIVE' },
+    { id: 'c-sp-1', name: 'Ayurvedic Monsoon Rejuvenation Retreat', platform: 'Meta Ads', spend: 'â‚¹35,000', leads: 54, cpl: 175, roas: '4.8x', status: 'ACTIVE' },
+    { id: 'c-sp-2', name: 'Luxury Couple Spa Weekend Getaway', platform: 'Meta Ads', spend: 'â‚¹24,000', leads: 38, cpl: 190, roas: '5.5x', status: 'ACTIVE' },
+    { id: 'c-sp-3', name: 'Deep Tissue & Stress Relief Therapy', platform: 'Google Ads', spend: 'â‚¹16,000', leads: 22, cpl: 220, roas: '3.9x', status: 'ACTIVE' },
   ],
   salon: [
-    { id: 'c-sl-1', name: 'Bridal Makeup 2026 Advance Booking', platform: 'Meta Ads', spend: '₹48,000', leads: 62, cpl: 220, roas: '7.1x', status: 'ACTIVE' },
-    { id: 'c-sl-2', name: 'Balayage Color & Olaplex Treatment Promo', platform: 'Meta Ads', spend: '₹32,000', leads: 48, cpl: 165, roas: '4.6x', status: 'ACTIVE' },
-    { id: 'c-sl-3', name: 'Keratin Smoothening Festive Discount', platform: 'Google Ads', spend: '₹19,500', leads: 31, cpl: 180, roas: '4.0x', status: 'ACTIVE' },
+    { id: 'c-sl-1', name: 'Bridal Makeup 2026 Advance Booking', platform: 'Meta Ads', spend: 'â‚¹48,000', leads: 62, cpl: 220, roas: '7.1x', status: 'ACTIVE' },
+    { id: 'c-sl-2', name: 'Balayage Color & Olaplex Treatment Promo', platform: 'Meta Ads', spend: 'â‚¹32,000', leads: 48, cpl: 165, roas: '4.6x', status: 'ACTIVE' },
+    { id: 'c-sl-3', name: 'Keratin Smoothening Festive Discount', platform: 'Google Ads', spend: 'â‚¹19,500', leads: 31, cpl: 180, roas: '4.0x', status: 'ACTIVE' },
   ],
   realestate: [
-    { id: 'c-re-1', name: '3BHK Luxury Gated Villas Launch', platform: 'Meta Ads', spend: '₹1,20,000', leads: 74, cpl: 450, roas: '12.5x', status: 'ACTIVE' },
-    { id: 'c-re-2', name: 'High-Yield Commercial Office Spaces', platform: 'Google Ads', spend: '₹85,000', leads: 38, cpl: 620, roas: '9.8x', status: 'ACTIVE' },
-    { id: 'c-re-3', name: 'NRI Direct Investment Highway Plots', platform: 'Meta Ads', spend: '₹45,000', leads: 30, cpl: 510, roas: '8.2x', status: 'ACTIVE' },
+    { id: 'c-re-1', name: '3BHK Luxury Gated Villas Launch', platform: 'Meta Ads', spend: 'â‚¹1,20,000', leads: 74, cpl: 450, roas: '12.5x', status: 'ACTIVE' },
+    { id: 'c-re-2', name: 'High-Yield Commercial Office Spaces', platform: 'Google Ads', spend: 'â‚¹85,000', leads: 38, cpl: 620, roas: '9.8x', status: 'ACTIVE' },
+    { id: 'c-re-3', name: 'NRI Direct Investment Highway Plots', platform: 'Meta Ads', spend: 'â‚¹45,000', leads: 30, cpl: 510, roas: '8.2x', status: 'ACTIVE' },
   ],
   hotel: [
-    { id: 'c-ht-1', name: 'Weekend Luxury Suite Staycation Pass', platform: 'Meta Ads', spend: '₹60,000', leads: 82, cpl: 240, roas: '5.8x', status: 'ACTIVE' },
-    { id: 'c-ht-2', name: 'Grand Ballroom Wedding & Banquet Leads', platform: 'Google Ads', spend: '₹45,000', leads: 26, cpl: 480, roas: '11.2x', status: 'ACTIVE' },
+    { id: 'c-ht-1', name: 'Weekend Luxury Suite Staycation Pass', platform: 'Meta Ads', spend: 'â‚¹60,000', leads: 82, cpl: 240, roas: '5.8x', status: 'ACTIVE' },
+    { id: 'c-ht-2', name: 'Grand Ballroom Wedding & Banquet Leads', platform: 'Google Ads', spend: 'â‚¹45,000', leads: 26, cpl: 480, roas: '11.2x', status: 'ACTIVE' },
   ],
 };
 
@@ -186,7 +186,7 @@ export default function MetaAdsCrmPage() {
             <div className="p-2.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-2xl">
               <Megaphone size={22} />
             </div>
-            <span>ADS CRM MANAGEMENT</span>
+            <span>Ads CRM Management</span>
             <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               API Connected
@@ -212,7 +212,7 @@ export default function MetaAdsCrmPage() {
         <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-5 rounded-2xl shadow-sm space-y-1">
           <div className="flex items-center justify-between text-[var(--color-text-muted)]">
             <span className="text-[11px] font-bold uppercase tracking-wider">Avg. Cost Per Lead</span>
-            <span className="text-xs font-bold text-amber-400">₹</span>
+            <span className="text-xs font-bold text-amber-400">â‚¹</span>
           </div>
           <div className="text-3xl font-extrabold text-[var(--color-text)] font-mono">{formatCurrency(avgCpl)}</div>
           <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">Optimal CPL</span>
@@ -253,7 +253,7 @@ export default function MetaAdsCrmPage() {
                   {camp.platform}
                 </span>
                 <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  ● {camp.status}
+                  â— {camp.status}
                 </span>
               </div>
               <h3 className="font-bold text-sm text-[var(--color-text)] truncate">{camp.name}</h3>

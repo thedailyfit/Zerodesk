@@ -361,8 +361,8 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div className="w-full lg:w-[42%]">
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl sticky top-6 space-y-5">
+        <div className="w-full lg:w-[42%] flex flex-col gap-6">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
               <h2 className="font-bold text-[var(--color-text)] flex items-center gap-2 text-base">
                 <Receipt size={18} className="text-blue-400" /> Invoice Breakdown
