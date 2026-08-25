@@ -148,7 +148,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
                     <div>
                       <p className="text-xs font-bold text-slate-800">Host: {config.doctorEmail}</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{config.slotDuration} minutes session • In-clinic / Consultation</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{config.slotDuration} minutes session  - In-clinic / Consultation</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 font-mono text-xs font-bold">
                       ? Free / Standard
