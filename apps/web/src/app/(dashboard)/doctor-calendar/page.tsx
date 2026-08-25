@@ -11,7 +11,8 @@ import {
   Calendar,
   Sparkles,
   Scissors,
-  Stethoscope
+  Stethoscope,
+  Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -364,49 +365,53 @@ export default function DoctorCalendarPage() {
     }
   };
 
+  // Edit Shift Modal
+  const [isEditShiftModalOpen, setIsEditShiftModalOpen] = useState(false);
+  const [editShiftStart, setEditShiftStart] = useState('09:00 AM');
+  const [editShiftEnd, setEditShiftEnd] = useState('05:00 PM');
+  const [editClinicalRoom, setEditClinicalRoom] = useState('Consult OT 1');
+
+  const handleOpenEditShift = () => {
+    const parts = selectedDoctor.hours.split(' - ');
+    if (parts.length === 2) {
+      setEditShiftStart(parts[0]);
+      setEditShiftEnd(parts[1]);
+    }
+    setIsEditShiftModalOpen(true);
+  };
+
+  const handleSaveShift = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newHours = `${editShiftStart} - ${editShiftEnd}`;
+    const updated = doctors.map(d => d.id === selectedDoctor.id ? { ...d, hours: newHours } : d);
+    saveDoctors(updated);
+    setSelectedDoctor(prev => ({ ...prev, hours: newHours }));
+    setIsEditShiftModalOpen(false);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Streamlined Header: Active Profiles + Add New */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[var(--color-border)]">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>{staffTerm} & Specialist Management</span>
-            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              {nicheConfig?.label ? `${nicheConfig.label} Hub` : 'Team Hub'}
-            </span>
+          <h1 className="text-2xl font-extrabold text-[var(--color-text)] flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-500">
+              <UserCheck className="w-6 h-6" />
+            </div>
+            Active {staffTerm} Profiles ({doctors.length})
           </h1>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Administer {staffTerm.toLowerCase()} profiles, availability status, shift hours, and service workloads.
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            Manage {staffTerm.toLowerCase()} working shifts, timing allocations, and floor availability.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20"
-          >
-            <Plus size={16} />
-            <span>Add New {staffTerm}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Distinction Info Card */}
-      <div className="p-4 rounded-2xl bg-[var(--color-glass)] border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center font-bold">
-            <UserCheck size={16} />
-          </div>
-          <div>
-            <span className="font-bold text-[var(--color-text)]">{staffTerm} Management vs Shift Calendar</span>
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              This page manages {staffTerm.toLowerCase()} availability and team profiles. For drag-and-drop appointment slot scheduling, open{' '}
-              <Link href="/calendar" className="text-blue-400 font-bold hover:underline inline-flex items-center gap-0.5">
-                <Calendar size={11} className="inline" /> Calendar & Slots &rarr;
-              </Link>
-            </p>
-          </div>
-        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20 self-start sm:self-auto"
+        >
+          <Plus size={16} />
+          <span>Add New {staffTerm}</span>
+        </button>
       </div>
 
       {/* Main Grid: Left = Doctors List, Right = Selected Doctor Schedule & Timeline */}
@@ -414,7 +419,7 @@ export default function DoctorCalendarPage() {
         {/* Left Column: Doctor Profile Cards */}
         <div className="lg:col-span-5 space-y-3">
           <h2 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-            Active {staffTerm} Profiles ({doctors.length})
+            {staffTerm} List ({doctors.length})
           </h2>
 
           {doctors.map((doc) => {
@@ -519,8 +524,16 @@ export default function DoctorCalendarPage() {
                 <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor.todayAppointments} Patients</span>
               </div>
 
-              <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
-                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Working Shift</span>
+              <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)]">Working Shift</span>
+                  <button
+                    onClick={handleOpenEditShift}
+                    className="text-[10px] text-blue-500 hover:text-blue-400 font-bold hover:underline"
+                  >
+                    Edit Shift
+                  </button>
+                </div>
                 <span className="text-sm font-bold font-mono text-blue-400 mt-1 block">{selectedDoctor.hours.split(' - ')[0]} - {selectedDoctor.hours.split(' - ')[1]}</span>
               </div>
 
@@ -658,6 +671,86 @@ export default function DoctorCalendarPage() {
                     className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25"
                   >
                     Add Doctor
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Edit Doctor Shift Modal */}
+        {isEditShiftModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  Edit Shift Timing ({selectedDoctor.name})
+                </h3>
+                <button 
+                  onClick={() => setIsEditShiftModalOpen(false)}
+                  className="p-1.5 hover:bg-[var(--color-surface)] rounded-xl text-[var(--color-text-muted)]"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveShift} className="space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Shift Start Time</label>
+                    <input
+                      type="text"
+                      value={editShiftStart}
+                      onChange={(e) => setEditShiftStart(e.target.value)}
+                      placeholder="09:00 AM"
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Shift End Time</label>
+                    <input
+                      type="text"
+                      value={editShiftEnd}
+                      onChange={(e) => setEditShiftEnd(e.target.value)}
+                      placeholder="05:00 PM"
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Assigned Room / Suite</label>
+                  <input
+                    type="text"
+                    value={editClinicalRoom}
+                    onChange={(e) => setEditClinicalRoom(e.target.value)}
+                    placeholder="Consult OT 1"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditShiftModalOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25"
+                  >
+                    Save Shift
                   </button>
                 </div>
               </form>

@@ -46,10 +46,9 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
-    { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
-    
+    { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Properties', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Sales Pipeline (Kanban)', href: '/pipeline', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Property Matrix', href: '/waiting-room', icon: Target, roles: ['ADMIN', 'STAFF'] },

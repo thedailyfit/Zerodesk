@@ -46,13 +46,12 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
-    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
-    
+    { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Clinical', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Doctor Slots', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Shift Doctor Slot', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor\'s Calendar', href: '/doctor-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient Files', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },

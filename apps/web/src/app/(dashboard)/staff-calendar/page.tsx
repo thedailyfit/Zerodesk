@@ -37,7 +37,7 @@ export interface StaffMember {
   avatar: string;
   phone: string;
   email: string;
-  status: 'Active' | 'On Break' | 'Off Shift' | 'On Call';
+  status: 'Active' | 'On Break' | 'Off Shift' | 'On Call' | 'On Duty' | 'On Leave' | 'Lunch Break' | 'On Treatment Session' | string;
   shifts: StaffShiftBlock[];
   workingHoursStr: string;
   lunchHoursStr: string;
@@ -92,37 +92,37 @@ const DEFAULT_STAFF_BY_NICHE: Record<NicheId, StaffMember[]> = {
   skin: [
     {
       id: 's-sk-1',
-      name: 'Dr. Meenakshi',
-      role: 'Senior Dermatologist',
-      department: 'Dermatology',
-      avatar: 'DM',
+      name: 'Meenakshi Rao',
+      role: 'Clinic Operations Manager',
+      department: 'Management',
+      avatar: 'MR',
       phone: '+91 98765 11111',
       email: 'meenakshi@zerodesk.com',
       status: 'Active',
       workingHoursStr: '9:00 AM - 5:00 PM',
       lunchHoursStr: '1:00 PM - 2:00 PM',
       shifts: [
-        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Morning Consultations' },
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Floor Operations & Staffing' },
         { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
-        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Afternoon Procedure Duty' },
-        { type: 'oncall', startHour: 17.0, endHour: 20.0, label: 'Emergency On Call' }
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Inventory & Operations Review' },
+        { type: 'oncall', startHour: 17.0, endHour: 20.0, label: 'Manager On Call' }
       ]
     },
     {
       id: 's-sk-2',
-      name: 'Dr. Arun',
-      role: 'Cosmetic Surgeon',
-      department: 'Cosmetology',
-      avatar: 'DA',
+      name: 'Arun Kumar',
+      role: 'Senior Clinical Coordinator',
+      department: 'Clinical Care',
+      avatar: 'AK',
       phone: '+91 98765 22222',
       email: 'arun@zerodesk.com',
       status: 'Active',
       workingHoursStr: '10:00 AM - 6:00 PM',
       lunchHoursStr: '2:00 PM - 3:00 PM',
       shifts: [
-        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Surgery OT Duty' },
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Treatment Room Coordination' },
         { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
-        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Post-Op Rounds & Consults' }
+        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Patient Post-Care Support' }
       ]
     },
     {
@@ -180,36 +180,36 @@ const DEFAULT_STAFF_BY_NICHE: Record<NicheId, StaffMember[]> = {
   dental: [
     {
       id: 's-dt-1',
-      name: 'Dr. Arvind Sharma',
-      role: 'Chief Endodontist',
-      department: 'Endodontics',
+      name: 'Arvind Sharma',
+      role: 'Dental Clinic Manager',
+      department: 'Operations',
       avatar: 'AS',
       phone: '+91 91234 11111',
-      email: 'dr.sharma@dentalcare.com',
+      email: 'arvind@dentalcare.com',
       status: 'Active',
       workingHoursStr: '9:00 AM - 5:00 PM',
       lunchHoursStr: '1:00 PM - 2:00 PM',
       shifts: [
-        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Root Canal Treatments' },
+        { type: 'duty', startHour: 9.0, endHour: 13.0, label: 'Clinic Operations & Supplies' },
         { type: 'lunch', startHour: 13.0, endHour: 14.0, label: 'Lunch Break' },
-        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Surgical Consultations' }
+        { type: 'duty', startHour: 14.0, endHour: 17.0, label: 'Staff Roster & Chair Management' }
       ]
     },
     {
       id: 's-dt-2',
-      name: 'Dr. Priya Nair',
-      role: 'Orthodontist Specialist',
-      department: 'Orthodontics',
+      name: 'Priya Nair',
+      role: 'Senior Clinical Coordinator',
+      department: 'Clinical Staff',
       avatar: 'PN',
       phone: '+91 91234 22222',
-      email: 'dr.priya@dentalcare.com',
+      email: 'priya@dentalcare.com',
       status: 'Active',
       workingHoursStr: '10:00 AM - 6:00 PM',
       lunchHoursStr: '2:00 PM - 3:00 PM',
       shifts: [
-        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Invisalign Aligners Scans' },
+        { type: 'duty', startHour: 10.0, endHour: 14.0, label: 'Patient Scans & Treatment Planning' },
         { type: 'lunch', startHour: 14.0, endHour: 15.0, label: 'Lunch Break' },
-        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Braces Adjustments' }
+        { type: 'duty', startHour: 15.0, endHour: 18.0, label: 'Lab Case Tracking' }
       ]
     },
     {
@@ -613,21 +613,16 @@ export default function StaffCalendarPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Top Banner Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[var(--color-border)]">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold">
-              Admin & Manager Portal
-            </span>
-          </div>
-          <h1 className="text-3xl font-extrabold text-[var(--color-text)] flex items-center gap-3 mt-1 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-[var(--color-text)] flex items-center gap-3 tracking-tight">
             <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-2xl text-blue-400">
               <Users className="w-7 h-7" />
             </div>
             Staff Working Calendar
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Real-time staff shift schedules, exact lunch break windows, and department duty tracking
+            Real-time staff shift schedules, lunch break windows, and department duty tracking
           </p>
         </div>
 
@@ -857,49 +852,6 @@ export default function StaffCalendarPage() {
         </div>
       </div>
 
-      {/* Leave Requests Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-[var(--color-text)] flex items-center gap-2">
-          <UserX className="w-5 h-5 text-rose-400" />
-          Pending Leave Requests
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {leaveRequests.map(req => (
-            <div key={req.id} className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-4 shadow-lg space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-bold text-[var(--color-text)]">{req.name}</h3>
-                  <p className="text-xs text-[var(--color-text-muted)]">{req.role}</p>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                  {req.type}
-                </span>
-              </div>
-              <div className="text-sm space-y-1">
-                <div className="flex items-center justify-between text-[var(--color-text-muted)]">
-                  <span className="text-xs">Dates:</span>
-                  <span className="font-medium text-[var(--color-text)]">{req.dates}</span>
-                </div>
-                <div className="flex items-center justify-between text-[var(--color-text-muted)]">
-                  <span className="text-xs">Reason:</span>
-                  <span className="font-medium text-[var(--color-text)]">{req.reason}</span>
-                </div>
-              </div>
-              {isAdminOrManager && (
-                <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border)]">
-                  <button className="flex-1 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-colors">
-                    Approve
-                  </button>
-                  <button className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold transition-colors">
-                    Reject
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Legend for Shift Types (Moved to Bottom) */}
       <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
         <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
@@ -940,6 +892,32 @@ export default function StaffCalendarPage() {
                   <div>
                     <h3 className="font-bold text-lg text-[var(--color-text)]">{selectedStaffDetail.name}</h3>
                     <p className="text-xs text-[var(--color-text-muted)]">{selectedStaffDetail.role} • {selectedStaffDetail.department}</p>
+                    {/* Real-time Status Selector */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-[var(--color-text-muted)]">Live Status:</span>
+                      {isAdminOrManager ? (
+                        <select
+                          value={selectedStaffDetail.status}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            const updated = { ...selectedStaffDetail, status: newStatus };
+                            setSelectedStaffDetail(updated);
+                            setStaffList(prev => prev.map(s => s.id === updated.id ? updated : s));
+                          }}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="On Duty">On Duty</option>
+                          <option value="On Leave">On Leave</option>
+                          <option value="Lunch Break">Lunch Break</option>
+                          <option value="On Call">On Call</option>
+                          <option value="On Treatment Session">On Treatment Session</option>
+                        </select>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          {selectedStaffDetail.status || 'On Duty'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button

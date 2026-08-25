@@ -37,12 +37,7 @@ export default function BillingPage() {
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   
-  useEffect(() => {
-    if (patients.length > 0 && !selectedPatientId) {
-      setSelectedPatientId(patients[0].id);
-    }
-  }, [patients, selectedPatientId]);
-
+  // Patient is NOT auto-selected before searching
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [serviceSearch, setServiceSearch] = useState('');
   
@@ -63,7 +58,43 @@ export default function BillingPage() {
   const [customPrice, setCustomPrice] = useState('');
   const [customGst, setCustomGst] = useState('18');
 
-  const selectedPatient = patients.find(p => p.id === selectedPatientId) || patients[0];
+  // Billing Park State (Holds pending consultation & service bills)
+  const [parkedBills, setParkedBills] = useState<Array<{
+    id: string;
+    patientId: string;
+    patientName: string;
+    phone: string;
+    items: string;
+    totalAmount: number;
+    time: string;
+    tag: string;
+    quantities: Record<string, number>;
+  }>>([
+    {
+      id: 'park-1',
+      patientId: 'PID-001',
+      patientName: 'Priya Sharma',
+      phone: '+91 98765 43210',
+      items: 'Doctor Consultation + Skin Glow',
+      totalAmount: 3500,
+      time: '10 min ago',
+      tag: 'Consultation Fee',
+      quantities: { '1': 1 }
+    },
+    {
+      id: 'park-2',
+      patientId: 'PID-002',
+      patientName: 'Rajesh Kumar',
+      phone: '+91 98123 45678',
+      items: 'HydraFacial Deep Clean',
+      totalAmount: 4500,
+      time: '25 min ago',
+      tag: 'Service Session',
+      quantities: { '2': 1 }
+    }
+  ]);
+
+  const selectedPatient = patients.find(p => p.id === selectedPatientId) || (selectedPatientId ? { id: selectedPatientId, name: 'Patient #' + selectedPatientId, phone: '', email: '', priority: 'Standard', tags: [], registrationDate: '' } : undefined);
 
   const updateQty = (id: string, delta: number) => {
     setQuantities(prev => {
@@ -586,8 +617,107 @@ export default function BillingPage() {
               >
                 <FileCheck size={16} /> Generate Invoice & Print Preview
               </button>
+
+              {/* Park Current Bill Option */}
+              {activeItemsList.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newPark = {
+                      id: `park-${Date.now()}`,
+                      patientId: selectedPatient?.id || 'WALK-IN',
+                      patientName: selectedPatient?.name || 'Walk-in Guest',
+                      phone: selectedPatient?.phone || '',
+                      items: activeItemsList.map(i => i.name).join(', '),
+                      totalAmount: grandTotal,
+                      time: 'Just now',
+                      tag: activeItemsList.some(i => i.name.toLowerCase().includes('consult')) ? 'Consultation Fee' : 'Service Session',
+                      quantities: { ...quantities }
+                    };
+                    setParkedBills(prev => [newPark, ...prev]);
+                    setQuantities({});
+                    setSelectedPatientId('');
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <span>📥 Park Current Bill to Holding Bay</span>
+                </button>
+              )}
             </div>
 
+          </div>
+
+          {/* Billing Park (Pending Billings Bay) */}
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-xs">
+                  P
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-[var(--color-text)] flex items-center gap-2">
+                    Billing Park
+                    <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.2 rounded-full font-bold">
+                      {parkedBills.length} Pending
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-[var(--color-text-muted)]">
+                    Pending consultation fees & services ready to process
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+              {parkedBills.length === 0 ? (
+                <div className="py-6 text-center text-xs text-[var(--color-text-muted)]">
+                  No parked bills currently in the queue.
+                </div>
+              ) : (
+                parkedBills.map((b) => (
+                  <div key={b.id} className="p-3 rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-blue-500/40 transition-all space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-[var(--color-text)]">{b.patientName}</span>
+                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                            {b.patientId}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{b.items}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {b.tag}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1.5 border-t border-[var(--color-border)]/60 text-xs">
+                      <span className="font-mono font-bold text-emerald-500">₹{b.totalAmount.toLocaleString()}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPatientId(b.patientId);
+                            setQuantities(b.quantities);
+                            setParkedBills(prev => prev.filter(item => item.id !== b.id));
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
+                        >
+                          Load to Bill &rarr;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setParkedBills(prev => prev.filter(item => item.id !== b.id))}
+                          className="p-1 text-[var(--color-text-muted)] hover:text-rose-400 transition-colors cursor-pointer"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -12,7 +12,9 @@ import {
   CheckCircle2, 
   ArrowRight, 
   ArrowLeft,
-  Lock
+  Lock,
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBookingLink } from '@/lib/booking-link-store';
@@ -95,28 +97,44 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 selection:bg-blue-600 selection:text-white">
       <div className="w-full max-w-xl">
         {/* Main Booking Container */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
           
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 p-6 sm:p-8 text-white relative">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full backdrop-blur-md">
+          {/* Clinic Cover Image Banner */}
+          <div className="relative h-32 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="absolute bottom-3 left-6 right-6 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-xl bg-white/20 backdrop-blur-md">
+                  <Building2 size={16} />
+                </span>
+                <span className="text-sm font-bold tracking-wide">{config.businessName || 'ZeroDesk Clinic'}</span>
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-wider bg-white/25 px-2.5 py-0.5 rounded-full backdrop-blur-md">
                 Verified Scheduler
               </span>
-              <span className="text-xs text-blue-100 flex items-center gap-1 font-medium">
-                <ShieldCheck size={13} /> {config.otpChannel === 'phone' ? 'Phone OTP' : 'Google OTP'} Protected
-              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Schedule an Appointment</h1>
-            <p className="text-sm text-blue-100 mt-1">
-              Book a time slot with <strong className="text-white">{config.businessName}</strong>
-            </p>
           </div>
 
-          <div className="p-6 sm:p-8">
+          {/* Header Description */}
+          <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-slate-100 bg-white">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Schedule an Appointment</h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Direct online slot reservation & instant confirmation
+                </p>
+              </div>
+              <span className="text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-xl flex items-center gap-1 font-semibold">
+                <ShieldCheck size={13} /> {config.otpChannel === 'phone' ? 'Phone OTP' : 'Google OTP'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8 bg-white">
             <AnimatePresence mode="wait">
               {/* STEP 1: Date & Time Selection */}
               {step === 'dateTime' && (
@@ -127,45 +145,45 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   exit={{ opacity: 0, x: 10 }}
                   className="space-y-6"
                 >
-                  <div className="p-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl flex items-center justify-between">
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold text-slate-200">Host: {config.doctorEmail}</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">{config.slotDuration} minutes session • In-clinic / Consultation</p>
+                      <p className="text-xs font-bold text-slate-800">Host: {config.doctorEmail}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{config.slotDuration} minutes session � In-clinic / Consultation</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono text-xs font-bold">
-                      ₹ Free / Standard
+                    <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 font-mono text-xs font-bold">
+                      ? Free / Standard
                     </span>
                   </div>
 
                   {/* Calendar Grid */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                        <CalIcon size={16} className="text-blue-400" />
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <CalIcon size={16} className="text-blue-600" />
                         Select Date (August 2026)
                       </h3>
-                      <span className="text-xs text-blue-400 font-semibold">Today: Aug 22</span>
+                      <span className="text-xs text-blue-600 font-semibold">Today: Aug 24</span>
                     </div>
 
-                    <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                       <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
                         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-                          <span key={d} className="text-[11px] font-bold text-slate-500 py-1">{d}</span>
+                          <span key={d} className="text-[11px] font-bold text-slate-400 py-1">{d}</span>
                         ))}
                       </div>
 
                       <div className="grid grid-cols-7 gap-1 text-center text-xs">
                         {/* Empty padding days */}
-                        <div className="py-2.5 text-slate-700 font-medium">26</div>
-                        <div className="py-2.5 text-slate-700 font-medium">27</div>
-                        <div className="py-2.5 text-slate-700 font-medium">28</div>
-                        <div className="py-2.5 text-slate-700 font-medium">29</div>
-                        <div className="py-2.5 text-slate-700 font-medium">30</div>
-                        <div className="py-2.5 text-slate-700 font-medium">31</div>
+                        <div className="py-2.5 text-slate-300 font-medium">26</div>
+                        <div className="py-2.5 text-slate-300 font-medium">27</div>
+                        <div className="py-2.5 text-slate-300 font-medium">28</div>
+                        <div className="py-2.5 text-slate-300 font-medium">29</div>
+                        <div className="py-2.5 text-slate-300 font-medium">30</div>
+                        <div className="py-2.5 text-slate-300 font-medium">31</div>
                         
                         {AUGUST_DAYS.map((day) => {
                           const isSelected = selectedDay === day;
-                          const isPast = day < 22;
+                          const isPast = day < 24;
                           return (
                             <button
                               key={day}
@@ -174,9 +192,9 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                               onClick={() => setSelectedDay(day)}
                               className={cn(
                                 "py-2.5 rounded-xl font-semibold transition-all text-xs",
-                                isPast && "text-slate-700 opacity-40 cursor-not-allowed",
-                                !isPast && !isSelected && "text-slate-300 hover:bg-slate-800 hover:text-white",
-                                isSelected && "bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 scale-105"
+                                isPast && "text-slate-300 opacity-50 cursor-not-allowed",
+                                !isPast && !isSelected && "text-slate-700 hover:bg-white hover:text-slate-900 shadow-sm",
+                                isSelected && "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30 scale-105"
                               )}
                             >
                               {day}
@@ -189,8 +207,8 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
 
                   {/* Time Slots */}
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2 mb-3">
-                      <Clock size={16} className="text-blue-400" />
+                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
+                      <Clock size={16} className="text-blue-600" />
                       Select Time Slot (Asia/Calcutta)
                     </h3>
 
@@ -205,8 +223,8 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                             className={cn(
                               "py-2.5 px-2 rounded-xl text-xs font-semibold border transition-all text-center",
                               isSelected
-                                ? "bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-600/20 font-bold"
-                                : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white"
+                                ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
+                                : "bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50/50"
                             )}
                           >
                             {slot}
@@ -219,7 +237,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   <button
                     type="button"
                     onClick={() => setStep('details')}
-                    className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
                   >
                     <span>Continue to Patient Details</span>
                     <ArrowRight size={16} />
@@ -237,69 +255,69 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   onSubmit={handleSendOtp}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <button
                       type="button"
                       onClick={() => setStep('dateTime')}
-                      className="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-semibold"
+                      className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1 font-semibold"
                     >
                       <ArrowLeft size={14} /> Back to Calendar
                     </button>
-                    <span className="text-xs font-mono text-blue-400 font-bold">
+                    <span className="text-xs font-mono text-blue-600 font-bold">
                       Aug {selectedDay}, 2026 at {selectedTime}
                     </span>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Full Name *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Full Name *</label>
                     <div className="relative">
-                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="text"
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="e.g. Priya Sharma"
-                        className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Mobile Phone (For OTP Verification) *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Mobile Phone (For OTP Verification) *</label>
                     <div className="relative">
-                      <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="tel"
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+91 98765 43210"
-                        className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white font-mono"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address (Optional)</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email Address (Optional)</label>
                     <div className="relative">
-                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="priya@example.com"
-                        className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Service</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Select Service</label>
                     <select
                       value={selectedService}
                       onChange={(e) => setSelectedService(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                     >
                       {activeServices.length > 0 ? (
                         activeServices.slice(0, 6).map(s => (
@@ -312,19 +330,19 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Special Notes / Symptoms</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Special Notes / Symptoms</label>
                     <textarea
                       rows={2}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Any specific concerns or medical background..."
-                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
                   >
                     <span>Send Verification OTP</span>
                     <ArrowRight size={16} />
@@ -342,20 +360,20 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   onSubmit={handleVerifyOtp}
                   className="space-y-6 text-center"
                 >
-                  <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mx-auto">
                     <Lock size={28} />
                   </div>
 
                   <div className="space-y-1">
-                    <h2 className="text-xl font-bold text-white">Enter 6-Digit OTP</h2>
-                    <p className="text-xs text-slate-400">
-                      We sent a one-time verification code to <strong className="text-slate-200 font-mono">{phone}</strong>
+                    <h2 className="text-xl font-bold text-slate-900">Enter 6-Digit OTP</h2>
+                    <p className="text-xs text-slate-500">
+                      We sent a one-time verification code to <strong className="text-slate-800 font-mono">{phone}</strong>
                     </p>
                   </div>
 
                   {/* Demo Helper Banner */}
-                  <div className="p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-xl text-xs text-blue-300">
-                    💡 Test Demo OTP: Enter <strong className="font-mono font-bold">123456</strong> to verify instantly.
+                  <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-medium">
+                    ?? Test Demo OTP: Enter <strong className="font-mono font-bold">123456</strong> to verify instantly.
                   </div>
 
                   <div>
@@ -368,10 +386,10 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                         setOtpError(false);
                       }}
                       placeholder="123456"
-                      className="w-48 mx-auto text-center font-mono font-extrabold text-2xl tracking-widest bg-slate-950 border border-slate-700 text-white rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-48 mx-auto text-center font-mono font-extrabold text-2xl tracking-widest bg-slate-50 border border-slate-300 text-slate-900 rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                     />
                     {otpError && (
-                      <p className="text-xs text-rose-400 font-semibold mt-2">Invalid OTP. Please enter 123456</p>
+                      <p className="text-xs text-rose-600 font-semibold mt-2">Invalid OTP. Please enter 123456</p>
                     )}
                   </div>
 
@@ -379,14 +397,14 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                     <button
                       type="button"
                       onClick={() => setStep('details')}
-                      className="flex-1 py-3 rounded-2xl border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs"
+                      className="flex-1 py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs"
                     >
                       Change Phone
                     </button>
                     <button
                       type="submit"
                       disabled={isVerifying || otpValue.length < 6}
-                      className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-lg shadow-blue-600/25"
+                      className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-lg shadow-blue-600/25"
                     >
                       {isVerifying ? 'Verifying...' : 'Verify & Confirm Booking'}
                     </button>
@@ -402,38 +420,38 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                   animate={{ opacity: 1, scale: 1 }}
                   className="space-y-6 text-center py-4"
                 >
-                  <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+                  <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
                     <CheckCircle2 size={44} className="animate-bounce" />
                   </div>
 
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-extrabold text-white">Appointment Confirmed!</h2>
-                    <p className="text-xs text-slate-400">
+                    <h2 className="text-2xl font-extrabold text-slate-900">Appointment Confirmed!</h2>
+                    <p className="text-xs text-slate-500">
                       Your booking has been registered with ZeroDesk AI frontdesk engine.
                     </p>
                   </div>
 
-                  <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 text-left space-y-3 text-xs">
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
-                      <span className="text-slate-400">Patient</span>
-                      <strong className="text-slate-100">{fullName}</strong>
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-left space-y-3 text-xs">
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
+                      <span className="text-slate-500">Patient</span>
+                      <strong className="text-slate-900">{fullName}</strong>
                     </div>
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
-                      <span className="text-slate-400">Date & Time</span>
-                      <strong className="text-blue-400 font-mono">August {selectedDay}, 2026 at {selectedTime}</strong>
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
+                      <span className="text-slate-500">Date & Time</span>
+                      <strong className="text-blue-600 font-mono">August {selectedDay}, 2026 at {selectedTime}</strong>
                     </div>
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
-                      <span className="text-slate-400">Service</span>
-                      <strong className="text-slate-100">{selectedService}</strong>
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
+                      <span className="text-slate-500">Service</span>
+                      <strong className="text-slate-900">{selectedService}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Clinic / Provider</span>
-                      <strong className="text-slate-100">{config.businessName}</strong>
+                      <span className="text-slate-500">Clinic / Provider</span>
+                      <strong className="text-slate-900">{config.businessName}</strong>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 text-center">
-                    📱 Confirmation SMS and WhatsApp reminder have been triggered to {phone}.
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 text-center font-medium">
+                    ?? Confirmation SMS and WhatsApp reminder have been triggered to {phone}.
                   </div>
 
                   <button
@@ -444,7 +462,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                       setPhone('');
                       setOtpValue('');
                     }}
-                    className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors"
+                    className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
                   >
                     Book Another Slot
                   </button>
@@ -455,8 +473,8 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-500 mt-6">
-          Powered by <strong className="text-slate-300">ZeroDesk Autonomous Frontdesk OS</strong>
+        <p className="text-center text-xs text-slate-400 mt-6 font-medium">
+          Powered by ZeroDesk
         </p>
       </div>
     </div>

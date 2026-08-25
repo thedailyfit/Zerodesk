@@ -66,14 +66,34 @@ export default function BookAppointmentPage() {
 
   const registrationFee = isClinic ? (regFeeOffering?.price ?? 300) : 0;
 
-  // Service Tab
-  const [serviceTab, setServiceTab] = useState<'individual' | 'package'>('individual');
+  // Service Tab (Consultation, Individual Services, Treatment Packages)
+  const [serviceTab, setServiceTab] = useState<'consultation' | 'individual' | 'package'>('consultation');
   const [packagePaymentMode, setPackagePaymentMode] = useState<'FULL' | 'PER_SESSION' | 'CUSTOM'>('FULL');
   const [customPaymentAmount, setCustomPaymentAmount] = useState<string>('');
 
   const displayServices = useMemo(() => {
-    return activeServices.filter(s => serviceTab === 'package' ? s.isPackage : !s.isPackage);
-  }, [activeServices, serviceTab]);
+    if (serviceTab === 'consultation') {
+      const consultServices = activeServices.filter(s => 
+        !s.isPackage && (
+          s.category?.toLowerCase().includes('consult') || 
+          s.name?.toLowerCase().includes('consult') || 
+          s.name?.toLowerCase().includes('checkup') ||
+          s.name?.toLowerCase().includes('assessment') ||
+          s.name?.toLowerCase().includes('evaluation')
+        )
+      );
+      if (consultServices.length > 0) return consultServices;
+      return [
+        { id: 'cons-1', name: `General ${staffLabel} Consultation`, duration: 30, price: 800, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
+        { id: 'cons-2', name: `Senior Specialist Comprehensive Assessment`, duration: 45, price: 1500, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
+        { id: 'cons-3', name: `Follow-up Review Consultation`, duration: 20, price: 500, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
+      ];
+    }
+    if (serviceTab === 'package') {
+      return activeServices.filter(s => s.isPackage);
+    }
+    return activeServices.filter(s => !s.isPackage && !s.category?.toLowerCase().includes('consult') && !s.name?.toLowerCase().includes('consult'));
+  }, [activeServices, serviceTab, staffLabel]);
 
   // Appointment Details State
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
@@ -517,15 +537,27 @@ export default function BookAppointmentPage() {
               </div>
             </div>
             
-            {/* Treatment Packages vs Individual Services Toggle */}
-            <div className="flex bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)] mb-4">
+            {/* Consultation vs Individual Services vs Treatment Packages Toggle */}
+            <div className="flex bg-[var(--color-bg)] rounded-xl p-1 border border-[var(--color-border)] mb-4">
+              <button
+                type="button"
+                onClick={() => setServiceTab('consultation')}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  serviceTab === 'consultation'
+                    ? "bg-blue-600 text-white shadow font-bold"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                )}
+              >
+                🩺 Consultation
+              </button>
               <button
                 type="button"
                 onClick={() => setServiceTab('individual')}
                 className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                   serviceTab === 'individual'
-                    ? "bg-[var(--color-surface)] shadow text-[var(--color-text)]"
+                    ? "bg-blue-600 text-white shadow font-bold"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 )}
               >
@@ -535,9 +567,9 @@ export default function BookAppointmentPage() {
                 type="button"
                 onClick={() => setServiceTab('package')}
                 className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                   serviceTab === 'package'
-                    ? "bg-[var(--color-surface)] shadow text-[var(--color-text)]"
+                    ? "bg-blue-600 text-white shadow font-bold"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 )}
               >

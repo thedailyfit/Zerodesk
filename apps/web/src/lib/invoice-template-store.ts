@@ -9,7 +9,7 @@ export interface InvoiceTemplate {
   clinicPhone: string;
   clinicGST: string;
   brandColor: string;
-  templateStyle: 'classic' | 'modern' | 'minimal' | 'branded';
+  templateStyle: 'classic' | 'modern' | 'minimal' | 'branded' | 'executive' | 'compact';
   footerNote: string;
 }
 

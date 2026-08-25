@@ -57,6 +57,41 @@ export default function ServicesPage() {
   const [packageValidityDays, setPackageValidityDays] = useState('180');
   const [packageDiscount, setPackageDiscount] = useState('10');
 
+  // Consultation Fee Configuration Sidepanel State
+  const [consultFee, setConsultFee] = useState('800');
+  const [followUpFee, setFollowUpFee] = useState('400');
+  const [consultDuration, setConsultDuration] = useState('30');
+  const [followUpDays, setFollowUpDays] = useState('7');
+  const [consultGstRate, setConsultGstRate] = useState('0');
+
+  const handleSaveConsultationFee = (e: React.FormEvent) => {
+    e.preventDefault();
+    const existingConsult = services.find(s => s.name.toLowerCase().includes('consultation') && !s.isPackage);
+    if (existingConsult) {
+      updateService(existingConsult.id, {
+        price: Number(consultFee) || 800,
+        duration: Number(consultDuration) || 30,
+        gstRate: Number(consultGstRate) || 0,
+        gstEnabled: Number(consultGstRate) > 0,
+      });
+    } else {
+      addService({
+        name: `Doctor Consultation`,
+        category: 'Consultation',
+        duration: Number(consultDuration) || 30,
+        price: Number(consultFee) || 800,
+        staffRole: nicheConfig.terminology?.staff || 'Doctor / Specialist',
+        description: `Standard in-clinic doctor consultation session (Free follow-up within ${followUpDays} days).`,
+        isActive: true,
+        gstEnabled: Number(consultGstRate) > 0,
+        gstRate: Number(consultGstRate) || 0,
+        isPackage: false,
+      });
+    }
+    setSuccessToast('Consultation fee configuration saved and synced across frontdesk & booking channels!');
+    setTimeout(() => setSuccessToast(null), 3500);
+  };
+
   // Extract unique categories
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -233,178 +268,307 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* Search & Category Filter */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-2xl shadow-sm">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-          <input
-            type="text"
-            placeholder="Search services by name, category, or role..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
-          />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Service catalog & search */}
+        <div className="lg:col-span-8 space-y-4">
+          {/* Search & Category Filter */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-2xl shadow-sm">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+              <input
+                type="text"
+                placeholder="Search services by name, category, or role..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
+              />
+            </div>
 
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-          <button
-            onClick={() => setSelectedCategory('ALL')}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
-              selectedCategory === 'ALL'
-                ? "bg-blue-600 text-white shadow-sm"
-                : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
-            )}
-          >
-            All ({services.length})
-          </button>
-          {categories.map((cat) => {
-            const count = services.filter(s => s.category === cat).length;
-            return (
+            {/* Category Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => setSelectedCategory('ALL')}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
-                  selectedCategory === cat
+                  selectedCategory === 'ALL'
                     ? "bg-blue-600 text-white shadow-sm"
                     : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                 )}
               >
-                {cat} ({count})
+                All ({services.length})
               </button>
-            );
-          })}
-        </div>
-      </div>
+              {categories.map((cat) => {
+                const count = services.filter(s => s.category === cat).length;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer",
+                      selectedCategory === cat
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                    )}
+                  >
+                    {cat} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Services List Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredServices.map((service, i) => (
-          <motion.div
-            key={service.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.02 }}
-            className={cn(
-              "p-5 rounded-2xl border transition-all relative flex flex-col justify-between group shadow-sm bg-[var(--color-surface)]",
-              service.isActive 
-                ? "border-[var(--color-border)] hover:border-blue-500/40" 
-                : "border-[var(--color-border)] opacity-60 bg-[var(--color-bg)]"
-            )}
-          >
-            <div>
-              {/* Header: Title & Active Status */}
-              <div className="flex items-start justify-between gap-2 mb-2">
+          {/* Services List Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredServices.map((service, i) => (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.02 }}
+                className={cn(
+                  "p-5 rounded-2xl border transition-all relative flex flex-col justify-between group shadow-sm bg-[var(--color-surface)]",
+                  service.isActive 
+                    ? "border-[var(--color-border)] hover:border-blue-500/40" 
+                    : "border-[var(--color-border)] opacity-60 bg-[var(--color-bg)]"
+                )}
+              >
                 <div>
-                  <span className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">
-                    {service.category}
-                  </span>
-                  <h3 className="font-bold text-base text-[var(--color-text)] mt-0.5">
-                    {service.name}
-                  </h3>
+                  {/* Header: Title & Active Status */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <span className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">
+                        {service.category}
+                      </span>
+                      <h3 className="font-bold text-base text-[var(--color-text)] mt-0.5">
+                        {service.name}
+                      </h3>
+                    </div>
+
+                    <button
+                      onClick={() => toggleServiceStatus(service.id)}
+                      title={service.isActive ? "Click to Deactivate" : "Click to Activate"}
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide transition-all cursor-pointer flex items-center gap-1 shrink-0",
+                        service.isActive 
+                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
+                          : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
+                      )}
+                    >
+                      <span className={cn("w-1.5 h-1.5 rounded-full", service.isActive ? "bg-emerald-500" : "bg-zinc-400")}></span>
+                      <span>{service.isActive ? "Active" : "Inactive"}</span>
+                    </button>
+                  </div>
+
+                  {/* Pricing & Duration */}
+                  <div className="flex items-baseline gap-2.5 my-2">
+                    <span className="text-xl font-extrabold text-[var(--color-text)] font-mono">
+                      {formatCurrency(service.price)}
+                    </span>
+                    <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 font-mono">
+                      <Clock size={12} className="text-blue-500" />
+                      {service.duration} mins
+                    </span>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    {service.gstEnabled && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                        GST {service.gstRate ?? 18}%
+                      </span>
+                    )}
+                    {service.isPackage && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                        📦 Package · {service.totalSessions} Sessions
+                      </span>
+                    )}
+                    {service.isPackage && service.packageValidityDays && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                        Valid: {service.packageValidityDays} days
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  {service.description && (
+                    <p className="text-xs text-[var(--color-text-muted)] line-clamp-2 leading-relaxed mt-1">
+                      {service.description}
+                    </p>
+                  )}
                 </div>
 
+                {/* Actions Bar */}
+                <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--color-border)]">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEditModal(service)}
+                      title="Edit Service"
+                      className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-blue-600 transition-colors cursor-pointer"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(service.id, service.name)}
+                      title="Delete Service"
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <Link
+                    href="/billing"
+                    className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 cursor-pointer"
+                  >
+                    <Receipt size={12} />
+                    <span>Quick Bill</span>
+                    <ArrowRight size={11} />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+
+            {filteredServices.length === 0 && (
+              <div className="col-span-full text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+                <Sparkles size={32} className="mx-auto text-blue-500 mb-2 opacity-60" />
+                <h3 className="text-sm font-bold text-[var(--color-text)]">No services found</h3>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Try adjusting your search query or add a new service.</p>
                 <button
-                  onClick={() => toggleServiceStatus(service.id)}
-                  title={service.isActive ? "Click to Deactivate" : "Click to Activate"}
-                  className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide transition-all cursor-pointer flex items-center gap-1 shrink-0",
-                    service.isActive 
-                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
-                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
-                  )}
+                  onClick={handleOpenAddModal}
+                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", service.isActive ? "bg-emerald-500" : "bg-zinc-400")}></span>
-                  <span>{service.isActive ? "Active" : "Inactive"}</span>
+                  <Plus size={14} />
+                  Add Service
                 </button>
               </div>
-
-              {/* Pricing & Duration */}
-              <div className="flex items-baseline gap-2.5 my-2">
-                <span className="text-xl font-extrabold text-[var(--color-text)] font-mono">
-                  {formatCurrency(service.price)}
-                </span>
-                <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 font-mono">
-                  <Clock size={12} className="text-blue-500" />
-                  {service.duration} mins
-                </span>
-              </div>
-
-              {/* Badges */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                {service.gstEnabled && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                    GST {service.gstRate ?? 18}%
-                  </span>
-                )}
-                {service.isPackage && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
-                    📦 Package · {service.totalSessions} Sessions
-                  </span>
-                )}
-                {service.isPackage && service.packageValidityDays && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                    Valid: {service.packageValidityDays} days
-                  </span>
-                )}
-              </div>
-
-              {/* Description */}
-              {service.description && (
-                <p className="text-xs text-[var(--color-text-muted)] line-clamp-2 leading-relaxed mt-1">
-                  {service.description}
-                </p>
-              )}
-            </div>
-
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--color-border)]">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleOpenEditModal(service)}
-                  title="Edit Service"
-                  className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <Edit3 size={14} />
-                </button>
-                <button
-                  onClick={() => handleDelete(service.id, service.name)}
-                  title="Delete Service"
-                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-
-              <Link
-                href="/billing"
-                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 cursor-pointer"
-              >
-                <Receipt size={12} />
-                <span>Quick Bill</span>
-                <ArrowRight size={11} />
-              </Link>
-            </div>
-          </motion.div>
-        ))}
-
-        {filteredServices.length === 0 && (
-          <div className="col-span-full text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
-            <Sparkles size={32} className="mx-auto text-blue-500 mb-2 opacity-60" />
-            <h3 className="text-sm font-bold text-[var(--color-text)]">No services found</h3>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">Try adjusting your search query or add a new service.</p>
-            <button
-              onClick={handleOpenAddModal}
-              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <Plus size={14} />
-              Add Service
-            </button>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Right Column: Consultation Fee Configuration Sidepanel */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4 sticky top-6">
+            <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-3">
+              <span className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-sm">
+                🩺
+              </span>
+              <div>
+                <h3 className="font-bold text-sm text-[var(--color-text)]">
+                  {nicheConfig.terminology?.staff || 'Doctor'} Consultation Fee
+                </h3>
+                <p className="text-[11px] text-[var(--color-text-muted)]">
+                  Configure default consultation pricing & duration
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveConsultationFee} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-[var(--color-text)] mb-1">
+                  First-Time Consultation Price (₹) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] font-mono">₹</span>
+                  <input
+                    type="number"
+                    required
+                    value={consultFee}
+                    onChange={(e) => setConsultFee(e.target.value)}
+                    placeholder="800"
+                    className="w-full pl-7 pr-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-xs text-[var(--color-text)] font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[var(--color-text)] mb-1">
+                  Follow-up Review Fee (₹)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] font-mono">₹</span>
+                  <input
+                    type="number"
+                    value={followUpFee}
+                    onChange={(e) => setFollowUpFee(e.target.value)}
+                    placeholder="400"
+                    className="w-full pl-7 pr-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-xs text-[var(--color-text)] font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-[var(--color-text)] mb-1">
+                    Slot Duration
+                  </label>
+                  <select
+                    value={consultDuration}
+                    onChange={(e) => setConsultDuration(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="15">15 mins</option>
+                    <option value="20">20 mins</option>
+                    <option value="30">30 mins</option>
+                    <option value="45">45 mins</option>
+                    <option value="60">60 mins</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[var(--color-text)] mb-1">
+                    Follow-up Window
+                  </label>
+                  <select
+                    value={followUpDays}
+                    onChange={(e) => setFollowUpDays(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="5">Within 5 days</option>
+                    <option value="7">Within 7 days</option>
+                    <option value="14">Within 14 days</option>
+                    <option value="30">Within 30 days</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[var(--color-text)] mb-1">
+                  GST Applicable on Consultation
+                </label>
+                <select
+                  value={consultGstRate}
+                  onChange={(e) => setConsultGstRate(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                >
+                  <option value="0">0% (Medical Exempt)</option>
+                  <option value="5">5% GST</option>
+                  <option value="12">12% GST</option>
+                  <option value="18">18% Standard GST</option>
+                </select>
+              </div>
+
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-400 space-y-1">
+                <div className="flex justify-between font-medium">
+                  <span>First Visit Total:</span>
+                  <strong className="font-mono text-[var(--color-text)]">₹{consultFee}</strong>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Slot Duration:</span>
+                  <strong className="font-mono text-[var(--color-text)]">{consultDuration} mins</strong>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={14} />
+                <span>Save Consultation Fee & Sync</span>
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
 
       {/* Add / Edit Service Modal */}

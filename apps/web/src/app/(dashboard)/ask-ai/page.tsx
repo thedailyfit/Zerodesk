@@ -108,8 +108,12 @@ export default function AskAiFrontdeskPage() {
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-[var(--color-border)] shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-            <Sparkles size={20} />
+          <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-blue-400/30 shrink-0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2.5L14.2 9.8L21.5 12L14.2 14.2L12 21.5L9.8 14.2L2.5 12L9.8 9.8L12 2.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M19 3V7M17 5H21" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="6" cy="18" r="1.2" fill="white" />
+            </svg>
           </div>
           <div>
             <h1 className="text-xl font-bold text-[var(--color-text)] flex items-center gap-2">

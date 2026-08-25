@@ -97,12 +97,12 @@ export default function CustomersPage() {
               placeholder={`Search ${nicheConfig.terminology.customers.toLowerCase()}...`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-9 pr-4 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-[var(--color-text)]"
+              className="w-full sm:w-64 pl-9 pr-4 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50 text-[var(--color-text)]"
             />
           </div>
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm"
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add {nicheConfig.terminology.customer}</span>
@@ -119,7 +119,7 @@ export default function CustomersPage() {
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
               filterPriority === pri 
-                ? "bg-brand-500 border-brand-500 text-white shadow-sm" 
+                ? "bg-blue-600 border-blue-600 text-white shadow-sm" 
                 : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]"
             )}
           >
@@ -143,7 +143,7 @@ export default function CustomersPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 key={patient.id}
                 onClick={() => setSelectedPatient(patient)}
-                className="group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 cursor-pointer hover:border-brand-500/50 hover:shadow-md transition-all flex flex-col gap-4 overflow-hidden"
+                className="group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 cursor-pointer hover:border-blue-600/50 hover:shadow-md transition-all flex flex-col gap-4 overflow-hidden"
               >
                 {/* PID Badge */}
                 <div className="absolute top-4 right-4 text-[10px] font-mono font-medium px-2 py-1 rounded bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
@@ -153,7 +153,7 @@ export default function CustomersPage() {
                 <div className="flex items-center gap-4 pt-1">
                   <Avatar3D name={patient.name} size="md" />
                   <div>
-                    <h3 className="font-semibold text-base text-[var(--color-text)] group-hover:text-brand-500 transition-colors line-clamp-1 pr-14">
+                    <h3 className="font-semibold text-base text-[var(--color-text)] group-hover:text-blue-600 transition-colors line-clamp-1 pr-14">
                       {patient.name}
                     </h3>
                     <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1">
@@ -182,7 +182,7 @@ export default function CustomersPage() {
                   )}
                   {activePlans.length > 0 && (
                     <div className="mt-1 pt-2 border-t border-[var(--color-border)] flex flex-col gap-1">
-                      <span className="text-brand-500 font-medium line-clamp-1 flex items-center gap-1">
+                      <span className="text-blue-600 font-medium line-clamp-1 flex items-center gap-1">
                         <Activity className="w-3 h-3" />
                         {activePlans[0].packageName}
                       </span>
@@ -276,7 +276,7 @@ export default function CustomersPage() {
                     className={cn(
                       "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
                       drawerTab === tab.id 
-                        ? "border-brand-500 text-brand-500"
+                        ? "border-blue-600 text-blue-600"
                         : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                     )}
                   >
@@ -333,7 +333,7 @@ export default function CustomersPage() {
                     {selectedPatient.totalVisits > 0 ? (
                       <div className="relative border-l border-[var(--color-border)] ml-3 space-y-6">
                         <div className="relative pl-6">
-                          <div className="absolute w-3 h-3 rounded-full bg-brand-500 -left-[6.5px] top-1 ring-4 ring-[var(--color-surface)]" />
+                          <div className="absolute w-3 h-3 rounded-full bg-blue-600 -left-[6.5px] top-1 ring-4 ring-[var(--color-surface)]" />
                           <p className="text-xs text-[var(--color-text-muted)] mb-1">{selectedPatient.lastVisit ? new Date(selectedPatient.lastVisit).toLocaleDateString() : 'Recent'}</p>
                           <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
                             <h4 className="text-sm font-medium text-[var(--color-text)]">Latest Appointment</h4>
@@ -381,7 +381,7 @@ export default function CustomersPage() {
                             </div>
                             <div className="h-1.5 w-full bg-[var(--color-surface)] rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-brand-500 rounded-full" 
+                                className="h-full bg-blue-600 rounded-full" 
                                 style={{ width: `${(plan.completedSessions / plan.totalSessions) * 100}%` }}
                               />
                             </div>
@@ -404,18 +404,18 @@ export default function CustomersPage() {
                     {/* Prescriptions */}
                     <div>
                       <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3 flex items-center gap-2">
-                        <Pill className="w-4 h-4 text-brand-500" />
+                        <Pill className="w-4 h-4 text-blue-600" />
                         Prescriptions ({selectedPatient.prescriptions.length})
                       </h4>
                       {selectedPatient.prescriptions.length > 0 ? (
                         <div className="space-y-3">
                           {selectedPatient.prescriptions.map(rx => (
-                            <div key={rx.id} className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center group cursor-pointer hover:border-brand-500/50">
+                            <div key={rx.id} className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center group cursor-pointer hover:border-blue-600/50">
                               <div>
                                 <p className="text-sm font-medium text-[var(--color-text)]">{rx.doctorName}</p>
                                 <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{rx.diagnosis} · {new Date(rx.date).toLocaleDateString()}</p>
                               </div>
-                              <FileText className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-brand-500 transition-colors" />
+                              <FileText className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-blue-600 transition-colors" />
                             </div>
                           ))}
                         </div>
@@ -425,18 +425,18 @@ export default function CustomersPage() {
                     {/* Files */}
                     <div>
                       <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3 flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4 text-brand-500" />
+                        <ImageIcon className="w-4 h-4 text-blue-600" />
                         Uploaded Files ({selectedPatient.uploadedFiles.length})
                       </h4>
                       {selectedPatient.uploadedFiles.length > 0 ? (
                         <div className="space-y-3">
                           {selectedPatient.uploadedFiles.map(file => (
-                            <div key={file.id} className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center group cursor-pointer hover:border-brand-500/50">
+                            <div key={file.id} className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center group cursor-pointer hover:border-blue-600/50">
                               <div>
                                 <p className="text-sm font-medium text-[var(--color-text)]">{file.fileName}</p>
                                 <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{file.category} · {new Date(file.uploadDate).toLocaleDateString()}</p>
                               </div>
-                              <FileText className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-brand-500 transition-colors" />
+                              <FileText className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-blue-600 transition-colors" />
                             </div>
                           ))}
                         </div>
@@ -478,27 +478,27 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-sm font-medium text-[var(--color-text)]">Full Name *</label>
-                    <input required type="text" value={newPatient.name} onChange={e => setNewPatient({...newPatient, name: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50" />
+                    <input required type="text" value={newPatient.name} onChange={e => setNewPatient({...newPatient, name: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
                   
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Phone Number *</label>
-                    <input required type="tel" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50" />
+                    <input required type="tel" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Email Address</label>
-                    <input type="email" value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50" />
+                    <input type="email" value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Age</label>
-                    <input type="number" value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50" />
+                    <input type="number" value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Gender</label>
-                    <select value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value as any})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                    <select value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value as any})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50">
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
@@ -507,7 +507,7 @@ export default function CustomersPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Priority</label>
-                    <select value={newPatient.priority} onChange={e => setNewPatient({...newPatient, priority: e.target.value as any})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                    <select value={newPatient.priority} onChange={e => setNewPatient({...newPatient, priority: e.target.value as any})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50">
                       <option value="VIP">VIP 🌟</option>
                       <option value="High">High 🔴</option>
                       <option value="Medium">Medium 🟡</option>
@@ -517,7 +517,7 @@ export default function CustomersPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--color-text)]">Tags (comma-separated)</label>
-                    <input type="text" placeholder="e.g. Regular, Acne, Laser" value={newPatient.tags} onChange={e => setNewPatient({...newPatient, tags: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50" />
+                    <input type="text" placeholder="e.g. Regular, Acne, Laser" value={newPatient.tags} onChange={e => setNewPatient({...newPatient, tags: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
                 </div>
 
@@ -525,7 +525,7 @@ export default function CustomersPage() {
                   <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium text-[var(--color-text)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface)]">
                     Cancel
                   </button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 shadow-sm">
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
                     Save {nicheConfig.terminology.customer}
                   </button>
                 </div>
@@ -537,3 +537,4 @@ export default function CustomersPage() {
     </div>
   );
 }
+

@@ -13,7 +13,10 @@ import {
   Palette,
   FileText,
   Building2,
-  LayoutTemplate
+  LayoutTemplate,
+  MessageCircle,
+  Mail,
+  Check
 } from 'lucide-react';
 import { useNiche } from '@/components/providers/niche-provider';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -230,6 +233,23 @@ export default function InvoicesPage() {
     printWindow.document.close();
   };
 
+  const [notifyToast, setNotifyToast] = useState<string | null>(null);
+
+  const handleSendWhatsApp = (inv: InvoiceRecord) => {
+    const text = encodeURIComponent(`Hello ${inv.customerName}, here is your invoice #${inv.invoiceNo} from ${template.clinicName} for ${formatCurrency(inv.grandTotal)}. View details or download your receipt anytime. Thank you!`);
+    window.open(`https://wa.me/${inv.phone.replace(/\D/g, '')}?text=${text}`, '_blank');
+    setNotifyToast(`WhatsApp invoice notification sent to ${inv.customerName}!`);
+    setTimeout(() => setNotifyToast(null), 3500);
+  };
+
+  const handleSendEmail = (inv: InvoiceRecord) => {
+    const subject = encodeURIComponent(`Invoice #${inv.invoiceNo} from ${template.clinicName}`);
+    const body = encodeURIComponent(`Dear ${inv.customerName},\n\nPlease find your invoice #${inv.invoiceNo} for ${formatCurrency(inv.grandTotal)}.\n\nThank you for choosing ${template.clinicName}.\n\nBest regards,\nClinic Operations`);
+    window.open(`mailto:${inv.email || 'client@example.com'}?subject=${subject}&body=${body}`, '_blank');
+    setNotifyToast(`Email invoice link prepared for ${inv.customerName}!`);
+    setTimeout(() => setNotifyToast(null), 3500);
+  };
+
   const handleDownloadAll = () => {
     if (!filtered.length) return;
     const headers = ['Invoice #', 'Customer', 'Phone', 'Subtotal', 'GST', 'Total', 'Status', 'Date'];
@@ -243,7 +263,21 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 relative">
+      {/* Toast feedback banner */}
+      <AnimatePresence>
+        {notifyToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-8 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold"
+          >
+            <Check size={16} />
+            <span>{notifyToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -412,13 +446,33 @@ export default function InvoicesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handlePrintInvoice(inv)}
-                          className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 font-semibold text-xs flex items-center gap-1 ml-auto"
-                        >
-                          <Printer size={12} />
-                          Print
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsApp(inv)}
+                            title="Send invoice via WhatsApp"
+                            className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer"
+                          >
+                            <MessageCircle size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendEmail(inv)}
+                            title="Send invoice via Email"
+                            className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all cursor-pointer"
+                          >
+                            <Mail size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePrintInvoice(inv)}
+                            title="Print / View Receipt"
+                            className="px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-bg)] border border-[var(--color-border)] font-semibold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <Printer size={12} />
+                            <span>Print</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -438,15 +492,17 @@ export default function InvoicesPage() {
             <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-6 shadow-sm space-y-4">
               <h2 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-2">
                 <Palette size={16} className="text-blue-400" />
-                Choose Template Layout Style
+                Choose Template Layout Style (6 Clinic Styles)
               </h2>
 
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: 'modern', name: 'Modern Header', desc: 'Bold blue header with clean table' },
-                  { id: 'classic', name: 'Classic Medical', desc: 'Traditional two-column letterhead' },
-                  { id: 'minimal', name: 'Clean Minimal', desc: 'Light borders and subtle styling' },
+                  { id: 'modern', name: 'Modern Header', desc: 'Bold blue header with clean data grid' },
+                  { id: 'classic', name: 'Classic Medical', desc: 'Formal two-column letterhead' },
+                  { id: 'minimal', name: 'Clean Minimal', desc: 'Light borders and subtle mono styling' },
                   { id: 'branded', name: 'Branded Color', desc: 'Full-width custom color banner' },
+                  { id: 'executive', name: 'Executive Suite', desc: 'High-contrast luxury dark accents' },
+                  { id: 'compact', name: 'Compact POS', desc: 'Thermal receipt style quick format' },
                 ].map((s) => (
                   <button
                     key={s.id}
@@ -688,6 +744,22 @@ export default function InvoicesPage() {
                     onChange={(e) => setService(e.target.value)}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Invoice Template Style</label>
+                  <select
+                    value={template.templateStyle}
+                    onChange={(e) => updateTemplate({ templateStyle: e.target.value as any })}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="modern">Modern Header (Blue Accent)</option>
+                    <option value="classic">Classic Medical (Two-Column Letterhead)</option>
+                    <option value="minimal">Clean Minimalist (Light Monochrome)</option>
+                    <option value="branded">Branded Full-Width Banner</option>
+                    <option value="executive">Executive Suite (Dark Luxury)</option>
+                    <option value="compact">Compact POS Receipt (Thermal Format)</option>
+                  </select>
                 </div>
 
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 flex justify-between items-center">

@@ -635,26 +635,10 @@ export default function TeamsPage() {
                 </div>
               </div>
 
-              {/* Performance Metrics Box */}
-              <div className="grid grid-cols-4 gap-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-2.5 text-center">
-                <div>
-                  <p className="text-[10px] text-[var(--color-text-muted)] font-medium">Appts</p>
-                  <p className="text-xs font-bold text-[var(--color-text)] font-mono mt-0.5">{member.metrics.monthlyAppts}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[var(--color-text-muted)] font-medium">Rating</p>
-                  <p className="text-xs font-bold text-amber-500 font-mono mt-0.5 flex items-center justify-center gap-0.5">
-                    {member.metrics.rating} <Star size={9} className="fill-amber-500" />
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[var(--color-text-muted)] font-medium">Efficiency</p>
-                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">{member.metrics.efficiency}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[var(--color-text-muted)] font-medium">Revenue</p>
-                  <p className="text-xs font-bold text-blue-600 dark:text-blue-300 font-mono mt-0.5">{member.metrics.revenue}</p>
-                </div>
+              {/* Monthly Appointments Box */}
+              <div className="flex items-center justify-between bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-left">
+                <span className="text-xs text-[var(--color-text-muted)] font-medium">Monthly Appointments</span>
+                <span className="text-xs font-bold text-[var(--color-text)] font-mono">{member.metrics.monthlyAppts}</span>
               </div>
             </div>
 

@@ -46,10 +46,9 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     { name: 'Operational Delays', href: '/operational-delays', icon: AlertTriangle, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Sales', roles: ['ADMIN', 'MANAGER'], divider: true },
-    { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
-    
+    { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Wellness', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Therapy Queue', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Therapy Suites', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },

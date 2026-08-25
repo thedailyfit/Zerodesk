@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -17,7 +18,8 @@ import {
   Stethoscope,
   Scissors,
   HeartPulse,
-  RotateCcw
+  RotateCcw,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -36,7 +38,7 @@ export interface Appointment {
   service: string;
   type: 'consult' | 'surgery' | 'wellness' | 'followup';
   staff: string;
-  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled';
+  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled' | 'Running Late';
   room?: string;
   notes?: string;
 }
@@ -224,20 +226,20 @@ export default function DoctorSlotsPage() {
             <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-2xl text-blue-400">
               <CalIcon className="w-7 h-7" />
             </div>
-            Doctor Slots & Appointments
+            Shift Doctor Slot
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Dynamic slot allocation, quick shifting, and staff appointment grid
+            Dynamic doctor slot allocation, running late status tracking, and frontdesk quick shifting
           </p>
         </div>
 
-        <button
-          onClick={() => handleOpenNewAppt(0, 9.0)}
+        <Link
+          href="/book-appointment"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all active:scale-95 self-start md:self-auto"
         >
           <Plus size={18} />
           Book Slot
-        </button>
+        </Link>
       </div>
 
       {/* View Selector Bar */}
@@ -297,67 +299,34 @@ export default function DoctorSlotsPage() {
         )}
       </div>
 
-      {/* Filters Bar & Color Legend */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Staff Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          <Filter size={16} className="text-[var(--color-text-muted)] shrink-0" />
+      {/* Staff Filter Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <Filter size={16} className="text-[var(--color-text-muted)] shrink-0" />
+        <button
+          onClick={() => setSelectedStaff('All Staff')}
+          className={cn(
+            "px-3 py-1.5 rounded-full text-xs font-bold transition-all border shrink-0",
+            selectedStaff === 'All Staff'
+              ? "bg-blue-600 border-blue-500 text-white"
+              : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
+          )}
+        >
+          All Doctors & Staff
+        </button>
+        {staffList.map(st => (
           <button
-            onClick={() => setSelectedStaff('All Staff')}
+            key={st}
+            onClick={() => setSelectedStaff(st)}
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-bold transition-all border shrink-0",
-              selectedStaff === 'All Staff'
+              selectedStaff === st
                 ? "bg-blue-600 border-blue-500 text-white"
                 : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
             )}
           >
-            All Doctors & Staff
+            {st}
           </button>
-          {staffList.map(st => (
-            <button
-              key={st}
-              onClick={() => setSelectedStaff(st)}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-bold transition-all border shrink-0",
-                selectedStaff === st
-                  ? "bg-blue-600 border-blue-500 text-white"
-                  : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
-              )}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-
-        {/* Color Coding Legend & Type Filter */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-medium text-[var(--color-text-muted)]">Type:</span>
-          <button
-            onClick={() => setSelectedType('all')}
-            className={cn(
-              "text-xs px-2.5 py-1 rounded-lg border font-semibold transition-all",
-              selectedType === 'all'
-                ? "bg-[var(--color-surface)] border-[var(--color-primary)] text-[var(--color-text)]"
-                : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-            )}
-          >
-            All Types
-          </button>
-          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
-            <button
-              key={key}
-              onClick={() => setSelectedType(selectedType === key ? 'all' : key)}
-              className={cn(
-                "text-xs px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition-all",
-                cfg.badge,
-                selectedType === key ? "ring-2 ring-blue-500 scale-105" : "opacity-80 hover:opacity-100"
-              )}
-            >
-              <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
-              {cfg.label}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
       {/* Main Calendar View Container */}
@@ -413,6 +382,40 @@ export default function DoctorSlotsPage() {
             />
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Color Coding Legend & Type Filter (Moved to Bottom) */}
+      <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] p-3.5 rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Appointment Types:</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedType('all')}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all",
+              selectedType === 'all'
+                ? "bg-blue-600 border-blue-500 text-white shadow-sm"
+                : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+            )}
+          >
+            All Types
+          </button>
+          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedType(selectedType === key ? 'all' : key)}
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-xl border font-semibold flex items-center gap-1.5 transition-all",
+                cfg.badge,
+                selectedType === key ? "ring-2 ring-blue-500 scale-105" : "opacity-80 hover:opacity-100"
+              )}
+            >
+              <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
+              {cfg.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Quick Edit Modal */}
@@ -1109,10 +1112,52 @@ function QuickEditModal({
                 className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-[var(--color-text)] font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="Confirmed">Confirmed</option>
+                <option value="Running Late">Running Late</option>
                 <option value="Pending">Pending</option>
                 <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
+            </div>
+          </div>
+
+          {/* Quick Shift & Status Shortcuts */}
+          <div className="p-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-[11px] font-bold text-[var(--color-text-muted)]">Quick Shift:</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, startTime: Math.max(7, prev.startTime - 0.25) }));
+                  onShift(formData.id, -15);
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-blue-500 transition-all"
+              >
+                -15m
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, startTime: Math.min(21, prev.startTime + 0.25) }));
+                  onShift(formData.id, 15);
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-blue-500 transition-all"
+              >
+                +15m
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, status: 'Running Late' }))}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-500 hover:bg-amber-500/25 transition-all"
+              >
+                Running Late
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, status: 'Cancelled' }))}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-500 hover:bg-rose-500/25 transition-all"
+              >
+                Cancel Slot
+              </button>
             </div>
           </div>
 
@@ -1159,22 +1204,31 @@ function QuickEditModal({
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border)] pt-4">
+        <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-4">
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] transition-colors"
+            onClick={() => onSave({ ...formData, status: 'Cancelled' })}
+            className="text-xs font-bold text-rose-500 hover:underline flex items-center gap-1"
           >
-            Cancel
+            <X size={14} /> Cancel Appointment
           </button>
-          <button
-            type="button"
-            onClick={() => onSave(formData)}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition-all"
-          >
-            <Check size={16} />
-            Save Changes
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] transition-colors"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={() => onSave(formData)}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition-all"
+            >
+              <Check size={16} />
+              Save Changes
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
