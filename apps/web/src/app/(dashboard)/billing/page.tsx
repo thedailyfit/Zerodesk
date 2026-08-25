@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { useServices, type ServiceOffering } from '@/lib/services-store';
 import { usePatients } from '@/lib/patients-store';
 import { useInvoices } from '@/lib/invoices-store';
+import { useParkedBills } from '@/lib/billing-store';
 import { PatientSearchInput } from '@/components/ui/patient-search-input';
 
 export default function BillingPage() {
@@ -31,6 +32,7 @@ export default function BillingPage() {
   const { activeServices } = useServices();
   const { patients } = usePatients();
   const { addInvoice } = useInvoices();
+  const { parkedBills, setParkedBills, addParkedBill, removeParkedBill } = useParkedBills();
 
   const SERVICES = activeServices.filter(s => !s.isPackage);
   const PACKAGES = activeServices.filter(s => s.isPackage);
@@ -58,41 +60,7 @@ export default function BillingPage() {
   const [customPrice, setCustomPrice] = useState('');
   const [customGst, setCustomGst] = useState('18');
 
-  // Billing Park State (Holds pending consultation & service bills)
-  const [parkedBills, setParkedBills] = useState<Array<{
-    id: string;
-    patientId: string;
-    patientName: string;
-    phone: string;
-    items: string;
-    totalAmount: number;
-    time: string;
-    tag: string;
-    quantities: Record<string, number>;
-  }>>([
-    {
-      id: 'park-1',
-      patientId: 'PID-001',
-      patientName: 'Priya Sharma',
-      phone: '+91 98765 43210',
-      items: 'Doctor Consultation + Skin Glow',
-      totalAmount: 3500,
-      time: '10 min ago',
-      tag: 'Consultation Fee',
-      quantities: { '1': 1 }
-    },
-    {
-      id: 'park-2',
-      patientId: 'PID-002',
-      patientName: 'Rajesh Kumar',
-      phone: '+91 98123 45678',
-      items: 'HydraFacial Deep Clean',
-      totalAmount: 4500,
-      time: '25 min ago',
-      tag: 'Service Session',
-      quantities: { '2': 1 }
-    }
-  ]);
+  // Billing Park State is now global (useParkedBills)
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || (selectedPatientId ? { id: selectedPatientId, name: 'Patient #' + selectedPatientId, phone: '', email: '', priority: 'Standard', tags: [], registrationDate: '' } : undefined);
 
@@ -634,7 +602,7 @@ export default function BillingPage() {
                       tag: activeItemsList.some(i => i.name.toLowerCase().includes('consult')) ? 'Consultation Fee' : 'Service Session',
                       quantities: { ...quantities }
                     };
-                    setParkedBills(prev => [newPark, ...prev]);
+                    addParkedBill(newPark);
                     setQuantities({});
                     setSelectedPatientId('');
                   }}
@@ -699,7 +667,7 @@ export default function BillingPage() {
                           onClick={() => {
                             setSelectedPatientId(b.patientId);
                             setQuantities(b.quantities);
-                            setParkedBills(prev => prev.filter(item => item.id !== b.id));
+                            removeParkedBill(b.id);
                           }}
                           className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
                         >
@@ -707,7 +675,7 @@ export default function BillingPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setParkedBills(prev => prev.filter(item => item.id !== b.id))}
+                          onClick={() => removeParkedBill(b.id)}
                           className="p-1 text-[var(--color-text-muted)] hover:text-rose-400 transition-colors cursor-pointer"
                         >
                           <Trash2 size={12} />

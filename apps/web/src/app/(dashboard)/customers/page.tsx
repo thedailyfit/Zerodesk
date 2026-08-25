@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, X, Phone, Mail, Calendar, Activity, Tag, FileText, Image as ImageIcon, Briefcase, Pill, CheckCircle2, Circle, User } from 'lucide-react';
 import { useNiche } from '@/components/providers/niche-provider';
 import { usePatients, type PatientRecord } from '@/lib/patients-store';
+import { useParkedBills } from '@/lib/billing-store';
+import { useServices } from '@/lib/services-store';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 
@@ -45,6 +47,12 @@ export default function CustomersPage() {
     tags: ''
   });
 
+  const { addParkedBill } = useParkedBills();
+  const { activeServices } = useServices();
+  const [sendToBilling, setSendToBilling] = useState(true);
+  const [billingReasonId, setBillingReasonId] = useState('Consultation Fee');
+
+
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
       const matchesSearch = 
@@ -60,7 +68,7 @@ export default function CustomersPage() {
     e.preventDefault();
     if (!newPatient.name || !newPatient.phone) return;
 
-    addPatient({
+    const added = addPatient({
       name: newPatient.name,
       phone: newPatient.phone,
       email: newPatient.email,
@@ -70,10 +78,39 @@ export default function CustomersPage() {
       tags: newPatient.tags.split(',').map(t => t.trim()).filter(Boolean)
     });
     
+    if (sendToBilling) {
+      let items = 'Consultation Fee';
+      let tag = 'Consultation Fee';
+      let totalAmount = 1500; // Default consultation fee
+      let quantities: Record<string, number> = { 'consult': 1 };
+
+      if (billingReasonId !== 'Consultation Fee') {
+        const service = activeServices.find(s => s.id.toString() === billingReasonId);
+        if (service) {
+          items = service.name;
+          tag = 'Service Session';
+          totalAmount = service.price;
+          quantities = { [service.id]: 1 };
+        }
+      }
+
+      addParkedBill({
+        patientId: added.id,
+        patientName: added.name,
+        phone: added.phone,
+        items,
+        totalAmount,
+        tag,
+        quantities
+      });
+    }
+
     setIsAddModalOpen(false);
     setNewPatient({
       name: '', phone: '', email: '', gender: 'Other', age: '', priority: 'Standard', tags: ''
     });
+    setSendToBilling(true);
+    setBillingReasonId('Consultation Fee');
   };
 
   return (
@@ -515,10 +552,42 @@ export default function CustomersPage() {
                     </select>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-sm font-medium text-[var(--color-text)]">Tags (comma-separated)</label>
                     <input type="text" placeholder="e.g. Regular, Acne, Laser" value={newPatient.tags} onChange={e => setNewPatient({...newPatient, tags: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50" />
                   </div>
+                </div>
+
+                {/* Billing Park Integration */}
+                <div className="mt-4 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="sendToBilling" 
+                      checked={sendToBilling} 
+                      onChange={(e) => setSendToBilling(e.target.checked)} 
+                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-600 cursor-pointer" 
+                    />
+                    <label htmlFor="sendToBilling" className="text-sm font-semibold text-slate-800 cursor-pointer">
+                      Send to Billing Park
+                    </label>
+                  </div>
+                  
+                  {sendToBilling && (
+                    <div className="pl-6 flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-medium">Reason:</span>
+                      <select 
+                        value={billingReasonId}
+                        onChange={(e) => setBillingReasonId(e.target.value)}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-blue-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                      >
+                        <option value="Consultation Fee">Consultation Fee</option>
+                        {activeServices.map(s => (
+                          <option key={s.id} value={s.id.toString()}>{s.name} ({formatCurrency(s.price)})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3 mt-4 border-t border-[var(--color-border)]">
