@@ -59,7 +59,7 @@ const SEGMENT_BADGE_STYLES: Record<RfmSegment, string> = {
 };
 
 const TIER_BADGE_STYLES: Record<LtvTier, string> = {
-  'Platinum VIP': 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+  'Platinum VIP': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   'Gold': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
   'Silver': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   'Bronze': 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
@@ -248,11 +248,11 @@ export default function CustomerValuePage() {
         <div className="p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] space-y-2 shadow-sm">
           <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)] font-medium">
             <span>VIP Revenue Share</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
               <Award className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-purple-500">{vipRevenueShare}%</p>
+          <p className="text-2xl font-black text-blue-500">{vipRevenueShare}%</p>
           <p className="text-xs text-[var(--color-text-secondary)]">Driven by {vipCount} Platinum VIP accounts</p>
         </div>
       </div>

@@ -878,7 +878,7 @@ export default function BookAppointmentPage() {
           {/* Today's Recent Frontdesk Tokens */}
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 shadow-sm space-y-3">
             <h4 className="font-bold text-xs text-[var(--color-text)] flex items-center justify-between">
-              <span>Today's Frontdesk Tokens</span>
+              <span>Today&apos;s Frontdesk Tokens</span>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-bold px-2 py-0.5 rounded-full">Live</span>
             </h4>
 

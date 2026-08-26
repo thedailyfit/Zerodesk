@@ -66,7 +66,7 @@ export default function TodaysRevenuePage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center space-x-3 mb-2">
-            <h1 className="text-3xl font-bold tracking-tight">Today's Revenue</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Today&apos;s Revenue</h1>
             <span className="flex items-center px-2.5 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-semibold border border-green-500/20">
               <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
               LIVE

@@ -44,7 +44,7 @@ const STAGES: { id: PipelineStage; label: string; color: string }[] = [
   { id: 'VISIT_SCHEDULED', label: 'Site Visit Booked', color: 'border-sky-500/40 text-sky-600 dark:text-sky-400' },
   { id: 'VISITED', label: 'Visited & Interested', color: 'border-indigo-500/40 text-indigo-600 dark:text-indigo-400' },
   { id: 'NEGOTIATION', label: 'Token / Offer Discuss', color: 'border-amber-500/40 text-amber-600 dark:text-amber-400' },
-  { id: 'LEGAL_AGREEMENT', label: 'Sale Agreement', color: 'border-purple-500/40 text-purple-600 dark:text-purple-400' },
+  { id: 'LEGAL_AGREEMENT', label: 'Sale Agreement', color: 'border-blue-500/40 text-blue-600 dark:text-blue-400' },
   { id: 'CLOSED_WON', label: 'Closed & Registered', color: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' }
 ];
 

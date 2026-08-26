@@ -71,7 +71,7 @@ const ALL_CATEGORIES: ('All' | CategoryType)[] = [
 
 const CATEGORY_COLORS: Record<CategoryType, string> = {
   'Patient Care': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  'Marketing': 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  'Marketing': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   'Appointments': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
   'Billing': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   'Voice AI': 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
@@ -97,7 +97,7 @@ const STEP_COLORS: Record<StepActionType, string> = {
   trigger: 'bg-amber-500',
   whatsapp: 'bg-green-500',
   sms: 'bg-blue-400',
-  email: 'bg-purple-500',
+  email: 'bg-blue-500',
   wait: 'bg-slate-400',
   task: 'bg-emerald-500',
   crm_update: 'bg-blue-600',

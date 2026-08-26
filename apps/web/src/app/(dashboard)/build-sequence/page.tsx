@@ -238,7 +238,7 @@ export default function BuildSequencePage() {
             <div className="flex flex-col items-center justify-center py-20 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl text-center">
               <Zap className="w-16 h-16 text-[var(--color-text-muted)] mb-4 opacity-50" />
               <h3 className="text-xl font-medium mb-2">No sequences yet</h3>
-              <p className="text-[var(--color-text-muted)] mb-6 max-w-sm">You haven't created any sequences yet. Click + New Sequence to get started.</p>
+              <p className="text-[var(--color-text-muted)] mb-6 max-w-sm">You haven&apos;t created any sequences yet. Click + New Sequence to get started.</p>
               <button 
                 onClick={createSequence}
                 className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
@@ -289,7 +289,7 @@ export default function BuildSequencePage() {
   const getNodeColor = (type: string) => {
     switch (type) {
       case 'trigger': return 'border-amber-500';
-      case 'condition': return 'border-purple-500';
+      case 'condition': return 'border-blue-500';
       case 'action': return 'border-blue-500';
       case 'delay': return 'border-emerald-500';
       default: return 'border-slate-500';
@@ -299,7 +299,7 @@ export default function BuildSequencePage() {
   const getNodeBgColor = (type: string) => {
     switch (type) {
       case 'trigger': return 'bg-amber-500/10 text-amber-600';
-      case 'condition': return 'bg-purple-500/10 text-purple-600';
+      case 'condition': return 'bg-blue-500/10 text-blue-600';
       case 'action': return 'bg-blue-500/10 text-blue-600';
       case 'delay': return 'bg-emerald-500/10 text-emerald-600';
       default: return 'bg-slate-500/10 text-slate-600';
@@ -436,7 +436,7 @@ export default function BuildSequencePage() {
                         >
                           <div className="text-xs font-semibold text-[var(--color-text-muted)] px-3 py-2 uppercase tracking-wider">Add Step</div>
                           <button onClick={() => addNode(node.id, 'condition')} className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-[var(--color-bg)] rounded-lg text-left text-sm transition-colors">
-                            <Settings className="w-4 h-4 text-purple-500" /> <span>Condition</span>
+                            <Settings className="w-4 h-4 text-blue-500" /> <span>Condition</span>
                           </button>
                           <button onClick={() => addNode(node.id, 'action')} className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-[var(--color-bg)] rounded-lg text-left text-sm transition-colors">
                             <Activity className="w-4 h-4 text-blue-500" /> <span>Action</span>
@@ -469,7 +469,7 @@ export default function BuildSequencePage() {
                   >
                     <div className="text-xs font-semibold text-[var(--color-text-muted)] px-3 py-2 uppercase tracking-wider">Add Step</div>
                     <button onClick={(e) => { e.stopPropagation(); addNode(null, 'condition'); }} className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-[var(--color-bg)] rounded-lg text-left text-sm transition-colors">
-                      <Settings className="w-4 h-4 text-purple-500" /> <span>Condition</span>
+                      <Settings className="w-4 h-4 text-blue-500" /> <span>Condition</span>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); addNode(null, 'action'); }} className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-[var(--color-bg)] rounded-lg text-left text-sm transition-colors">
                       <Activity className="w-4 h-4 text-blue-500" /> <span>Action</span>

@@ -81,7 +81,7 @@ export default function StaffDashboardPage() {
             padding: '1.5rem',
             backdropFilter: 'blur(10px)'
           }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1.5rem' }}>Today's Schedule</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1.5rem' }}>Today&apos;s Schedule</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {schedule.map((item, idx) => (
                 <div key={idx} style={{ 
