@@ -4,6 +4,7 @@ import type { InvoiceRecord } from '@/lib/invoices-store';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Lost';
 export type LtvTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum VIP';
+export type RfmSegment = 'Champions & VIP' | 'Loyal Core' | 'Promising & New' | 'Needs Attention' | 'At Risk / Churn Alert' | 'Lost';
 
 export interface CustomerRFMResult {
   patientId: string;
@@ -17,12 +18,14 @@ export interface CustomerRFMResult {
   lastActiveDays: number;
   tier: LtvTier;
   risk: RiskLevel;
+  segment: RfmSegment;
   rfmScore: {
     r: number; // 1-5
     f: number; // 1-5
     m: number; // 1-5
     composite: number; // 0-100
   };
+  invoices: InvoiceRecord[];
 }
 
 export interface LtvCohortBracket {
@@ -35,11 +38,15 @@ export interface LtvCohortBracket {
 export interface AggregateLTVResult {
   totalEquity: number;
   avgLtv: number;
+  avgTicketSize: number;
   repeatRate: number;
   highRiskCount: number;
+  atRiskRevenue: number;
   vipCount: number;
+  vipRevenueShare: number;
   topCustomers: CustomerRFMResult[];
   distribution: LtvCohortBracket[];
+  segmentCounts: Record<RfmSegment, number>;
 }
 
 export interface NicheCadenceConfig {
@@ -211,6 +218,22 @@ export function calculateCustomerRFM(
 
   const composite = Math.round(((rScore * 0.4) + (fScore * 0.35) + (mScore * 0.25)) * 20);
 
+  // Segment classification
+  let segment: RfmSegment = 'Promising & New';
+  if (rScore >= 4 && (fScore >= 4 || mScore >= 4)) {
+    segment = 'Champions & VIP';
+  } else if (rScore >= 3 && fScore >= 3) {
+    segment = 'Loyal Core';
+  } else if (rScore >= 3 && fScore <= 2) {
+    segment = 'Promising & New';
+  } else if (rScore === 2 && fScore >= 2) {
+    segment = 'Needs Attention';
+  } else if (rScore === 1 && fScore >= 2) {
+    segment = 'At Risk / Churn Alert';
+  } else {
+    segment = 'Lost';
+  }
+
   return {
     patientId: patient.id,
     name: patient.name,
@@ -223,12 +246,14 @@ export function calculateCustomerRFM(
     lastActiveDays: diffDays,
     tier,
     risk,
+    segment,
     rfmScore: {
       r: rScore,
       f: fScore,
       m: mScore,
       composite
-    }
+    },
+    invoices: patientInvoices
   };
 }
 
@@ -261,13 +286,36 @@ export function calculateAggregateLTV(
   scoredPatients.sort((a, b) => b.totalSpend - a.totalSpend);
 
   const totalEquity = scoredPatients.reduce((sum, p) => sum + p.totalSpend, 0);
+  const totalVisits = scoredPatients.reduce((sum, p) => sum + p.visits, 0);
   const avgLtv = scoredPatients.length > 0 ? Math.round(totalEquity / scoredPatients.length) : 0;
+  const avgTicketSize = totalVisits > 0 ? Math.round(totalEquity / totalVisits) : 0;
 
   const repeatCount = scoredPatients.filter(p => p.visits > 1).length;
   const repeatRate = scoredPatients.length > 0 ? Number(((repeatCount / scoredPatients.length) * 100).toFixed(1)) : 0;
 
-  const highRiskCount = scoredPatients.filter(p => p.risk === 'High' || p.risk === 'Lost').length;
-  const vipCount = scoredPatients.filter(p => p.tier === 'Platinum VIP').length;
+  const highRiskList = scoredPatients.filter(p => p.risk === 'High' || p.risk === 'Lost');
+  const highRiskCount = highRiskList.length;
+  const atRiskRevenue = highRiskList.reduce((sum, p) => sum + p.totalSpend, 0);
+
+  const vipList = scoredPatients.filter(p => p.tier === 'Platinum VIP');
+  const vipCount = vipList.length;
+  const vipRevenue = vipList.reduce((sum, p) => sum + p.totalSpend, 0);
+  const vipRevenueShare = totalEquity > 0 ? Number(((vipRevenue / totalEquity) * 100).toFixed(1)) : 0;
+
+  const segmentCounts: Record<RfmSegment, number> = {
+    'Champions & VIP': 0,
+    'Loyal Core': 0,
+    'Promising & New': 0,
+    'Needs Attention': 0,
+    'At Risk / Churn Alert': 0,
+    'Lost': 0
+  };
+
+  scoredPatients.forEach(p => {
+    if (segmentCounts[p.segment] !== undefined) {
+      segmentCounts[p.segment] += 1;
+    }
+  });
 
   const [l0, l1, l2, l3] = config.brackets.labels;
   const b0 = { name: l0, count: 0, value: 0, color: '#94a3b8' };
@@ -294,10 +342,14 @@ export function calculateAggregateLTV(
   return {
     totalEquity,
     avgLtv,
+    avgTicketSize,
     repeatRate,
     highRiskCount,
+    atRiskRevenue,
     vipCount,
+    vipRevenueShare,
     topCustomers: scoredPatients,
-    distribution: [b0, b1, b2, b3]
+    distribution: [b0, b1, b2, b3],
+    segmentCounts
   };
 }
