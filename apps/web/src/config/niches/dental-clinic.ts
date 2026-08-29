@@ -124,7 +124,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   kpis: [
     { label: 'Chair Utilization', value: '82%', change: '+4%', trend: 'up' },
     { label: 'Treatment Acceptance', value: '65%', change: '+10%', trend: 'up' },
-    { label: 'Revenue Per Chair', value: 'â‚¹12,400', change: '+2%', trend: 'up' },
+    { label: 'Revenue Per Chair', value: '₹12,400', change: '+2%', trend: 'up' },
     { label: '6-Month Recall Rate', value: '45%', change: '-5%', trend: 'down' }
   ],
 
@@ -249,7 +249,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
       id: 'kb-treatment-costs',
       title: 'Treatment Costs & EMI Options',
       category: 'PRICING',
-      content: 'Standard pricing: Consultation (â‚¹500), Scaling (â‚¹1500), RCT (â‚¹4500+). EMI options available via Bajaj Finserv for treatments above â‚¹20,000.',
+      content: 'Standard pricing: Consultation (₹500), Scaling (₹1500), RCT (₹4500+). EMI options available via Bajaj Finserv for treatments above ₹20,000.',
       chunks: 5,
       isActive: true,
       updatedAt: '2026-08-01T09:00:00Z'

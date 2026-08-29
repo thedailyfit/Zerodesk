@@ -122,7 +122,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
   kpis: [
     { label: 'Room Occupancy Rate', value: '78%', change: '+5%', trend: 'up' },
     { label: 'Therapist Utilization', value: '82%', change: '+2%', trend: 'up' },
-    { label: 'Average Ticket Value', value: 'â‚¹2,800', change: '+â‚¹150', trend: 'up' },
+    { label: 'Average Ticket Value', value: '₹2,800', change: '+₹150', trend: 'up' },
     { label: 'Membership Renewal Rate', value: '71%', change: '-2%', trend: 'down' },
   ],
 
@@ -256,7 +256,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
       id: 'kb_membership_tiers',
       title: 'Membership Tiers & Pricing',
       category: 'PRICING',
-      content: 'Details our 3 membership tiers: Silver (â‚¹10,000/month - 4 basic therapies), Gold (â‚¹20,000/month - 4 premium therapies + 10% retail discount), and Platinum (â‚¹35,000/month - Unlimited basic therapies + 20% retail discount + priority booking). Explains credit rollover policies.',
+      content: 'Details our 3 membership tiers: Silver (₹10,000/month - 4 basic therapies), Gold (₹20,000/month - 4 premium therapies + 10% retail discount), and Platinum (₹35,000/month - Unlimited basic therapies + 20% retail discount + priority booking). Explains credit rollover policies.',
       chunks: 10,
       isActive: true,
       updatedAt: '2026-08-10',
@@ -396,7 +396,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
 Your tone is deeply soothing, grounded, and polite. Always begin calls with "Namaste" and speak at a calm, unhurried pace.
 Your primary goals are to assist guests with booking Therapy Suites, answering questions about Ayurvedic treatments, and managing membership inquiries.
 Never diagnose medical conditions. If a guest asks about medical ailments, politely suggest they book a consultation with our BAMS Doctor.
-When discussing prices, always quote in INR (â‚¹) and gently highlight our membership value.
+When discussing prices, always quote in INR (₹) and gently highlight our membership value.
 If a guest seems stressed, offer a compassionate remark about our relaxing environment.
 Do not use harsh or highly energetic language; maintain a Zen-like presence.`,
 
@@ -422,7 +422,7 @@ Do not use harsh or highly energetic language; maintain a Zen-like presence.`,
     {
       id: 'rule_currency_inr',
       title: 'Pricing in INR',
-      description: 'Always state prices using Indian Rupees (â‚¹) and ensure taxes are mentioned if applicable.',
+      description: 'Always state prices using Indian Rupees (₹) and ensure taxes are mentioned if applicable.',
       severity: 'info'
     },
     {
