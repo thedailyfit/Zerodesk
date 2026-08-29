@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { TenantPrismaService } from '../../prisma/tenant-prisma.service';
 
 @Injectable()
@@ -17,7 +17,8 @@ export class CustomerService {
 
   async findById(tenantId: string, id: string) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    const customer = await db.customers.findUnique({ where: { id, tenantId } });
+    // FIX P1-01: Switched to findFirst to properly apply tenantId where clause safely.
+    const customer = await db.customers.findFirst({ where: { id } });
     if (!customer) throw new NotFoundException('Customer not found');
     return customer;
   }
@@ -29,6 +30,7 @@ export class CustomerService {
 
   async update(tenantId: string, id: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
+    // Note: update requires id to be unique.
     return db.customers.update({ where: { id, tenantId }, data });
   }
 
@@ -36,7 +38,16 @@ export class CustomerService {
     const db = this.tenantPrisma.forTenant(tenantId);
     let customer = await db.customers.findFirst({ where: { phone } });
     if (!customer) {
-      customer = await db.customers.create({ data: { phone, name } });
+      try {
+          customer = await db.customers.create({ data: { phone, name } });
+      } catch (error: any) {
+          // Handle P0-01 race condition explicitly if unique constraint fails
+          if (error.code === 'P2002') {
+              customer = await db.customers.findFirst({ where: { phone } });
+          } else {
+              throw error;
+          }
+      }
     }
     return customer;
   }

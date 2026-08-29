@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Body, Query, UseGuards } from '@nestjs/common';
+﻿import { Controller, Get, Post, Put, Body, Query, UseGuards, Headers, UnauthorizedException, Req } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
+import * as crypto from 'crypto';
 
 @Controller('whatsapp')
 export class WhatsappController {
@@ -16,7 +17,18 @@ export class WhatsappController {
 
   @Post('webhook')
   @UseGuards(IdempotencyGuard)
-  async handleWebhook(@Body() payload: any) {
+  async handleWebhook(@Req() req: any, @Body() payload: any, @Headers('x-hub-signature-256') signature: string) {
+    // FIX P0-02: Validate WhatsApp signature
+    if (process.env.NODE_ENV === "production") {
+       if (!signature) throw new UnauthorizedException("Missing WhatsApp Signature");
+       const secret = process.env.WHATSAPP_APP_SECRET;
+       if (secret) {
+           const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+           const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+           const expected = `sha256=${hash}`;
+           if (signature !== expected) throw new UnauthorizedException("Invalid WhatsApp Signature");
+       }
+    }
     return this.whatsappService.handleIncomingMessage(payload);
   }
 

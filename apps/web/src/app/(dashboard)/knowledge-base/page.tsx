@@ -182,7 +182,6 @@ export default function KnowledgeBasePage() {
     if (currentNiche === 'skin') return 'DermAI Pro v3.0';
     if (currentNiche === 'dental') return 'DentAI Pro v3.0';
     if (currentNiche === 'spa') return 'WellnessAI Pro v3.0';
-    if (currentNiche === 'salon') return 'StyleAI Pro v3.0';
     if (currentNiche === 'realestate') return 'PropertyAI Pro v3.0';
     if (currentNiche === 'hotel') return 'HotelAI Pro v3.0';
     return `${nicheConfig?.label || 'ZeroDesk'} AI Agent`;

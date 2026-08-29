@@ -323,15 +323,26 @@ export class WhatsappService {
     });
 
     if (!customer) {
-      customer = await this.prisma.customer.create({
-        data: {
-          tenantId,
-          phone: normalizedPhone,
-          name,
-          language: 'en',
-        },
-      });
-      this.logger.log(`New WhatsApp customer created: ${normalizedPhone}`);
+      try {
+        customer = await this.prisma.customer.create({
+          data: {
+            tenantId,
+            phone: normalizedPhone,
+            name,
+            language: 'en',
+          },
+        });
+        this.logger.log(`New WhatsApp customer created: ${normalizedPhone}`);
+      } catch (error: any) {
+        // Handle P0-01 race condition explicitly if unique constraint fails
+        if (error.code === 'P2002') {
+          customer = await this.prisma.customer.findFirst({
+            where: { tenantId, phone: normalizedPhone },
+          });
+        } else {
+          throw error;
+        }
+      }
     } else if (name && !customer.name) {
       customer = await this.prisma.customer.update({
         where: { id: customer.id },
@@ -342,6 +353,10 @@ export class WhatsappService {
         where: { id: customer.id },
         data: { lastSeenAt: new Date() },
       });
+    }
+
+    if (!customer) {
+      throw new Error(`Failed to resolve customer for phone: ${normalizedPhone}`);
     }
 
     return customer;

@@ -99,6 +99,7 @@ model Customer {
   activities    Activity[]     @relation("CustomerActivities")
 
   @@unique([tenantId, phone])
+  @@unique([tenantId, email])
   @@map("customers")
 }
 

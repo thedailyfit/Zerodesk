@@ -34,13 +34,12 @@ import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useNotifications } from '@/lib/notifications-store';
-import type { NicheId, NicheNavItem } from '@/config/niches/types';
+import type { NicheId, ActiveNicheId, NicheNavItem } from '@/config/niches/types';
 
-const NICHE_OPTIONS: { id: NicheId; name: string; tag: string }[] = [
+const NICHE_OPTIONS: { id: ActiveNicheId; name: string; tag: string }[] = [
   { id: 'skin', name: 'Skin Clinic', tag: 'Dermatology' },
   { id: 'dental', name: 'Dental Clinic', tag: 'Dental Care' },
   { id: 'spa', name: 'Spa & Wellness', tag: 'Wellness' },
-  { id: 'salon', name: 'Luxury Salon', tag: 'Beauty & Style' },
   { id: 'realestate', name: 'Real Estate', tag: 'Property OS' },
   { id: 'hotel', name: 'Hotel', tag: 'Hospitality' },
 ];

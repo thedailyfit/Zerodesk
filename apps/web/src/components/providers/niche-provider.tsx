@@ -1,26 +1,26 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { NicheId, NicheConfig } from '@/config/niches/types';
+import type { NicheId, ActiveNicheId, NicheConfig } from '@/config/niches/types';
 import { NICHE_REGISTRY } from '@/config/niches';
 
 interface NicheContextType {
-  currentNiche: NicheId;
+  currentNiche: ActiveNicheId;
   nicheConfig: NicheConfig;
-  setNiche: (id: NicheId) => void;
+  setNiche: (id: ActiveNicheId) => void;
   getTerminology: (key: string) => string;
 }
 
 const NicheContext = createContext<NicheContextType | undefined>(undefined);
 
 export function NicheProvider({ children }: { children: ReactNode }) {
-  const [currentNiche, setCurrentNicheState] = useState<NicheId>('skin');
+  const [currentNiche, setCurrentNicheState] = useState<ActiveNicheId>('skin');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // 1. Check URL params
       const params = new URLSearchParams(window.location.search);
-      const nicheParam = params.get('niche') as NicheId;
+      const nicheParam = params.get('niche') as ActiveNicheId;
       
       if (nicheParam && NICHE_REGISTRY && NICHE_REGISTRY[nicheParam]) {
         setCurrentNicheState(nicheParam);
@@ -29,14 +29,17 @@ export function NicheProvider({ children }: { children: ReactNode }) {
       }
       
       // 2. Check localStorage
-      const saved = localStorage.getItem('zerodesk-niche') as NicheId;
+      const saved = localStorage.getItem('zerodesk-niche') as ActiveNicheId;
       if (saved && NICHE_REGISTRY && NICHE_REGISTRY[saved]) {
         setCurrentNicheState(saved);
+      } else {
+        setCurrentNicheState('skin');
+        localStorage.setItem('zerodesk-niche', 'skin');
       }
     }
   }, []);
 
-  const setNiche = (id: NicheId) => {
+  const setNiche = (id: ActiveNicheId) => {
     if (NICHE_REGISTRY && NICHE_REGISTRY[id]) {
       setCurrentNicheState(id);
       localStorage.setItem('zerodesk-niche', id);
@@ -50,7 +53,7 @@ export function NicheProvider({ children }: { children: ReactNode }) {
   };
 
   // Provide a safe fallback if registry isn't fully loaded
-  const nicheConfig = NICHE_REGISTRY ? NICHE_REGISTRY[currentNiche] : {} as NicheConfig;
+  const nicheConfig = NICHE_REGISTRY ? (NICHE_REGISTRY[currentNiche] || NICHE_REGISTRY['skin']) : {} as NicheConfig;
 
   return (
     <NicheContext.Provider value={{ currentNiche, nicheConfig, setNiche, getTerminology }}>

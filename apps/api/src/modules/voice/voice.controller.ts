@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query } from '@nestjs/common';
+﻿import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req } from '@nestjs/common';
 import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -6,6 +6,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import * as crypto from 'crypto';
 
 @Controller('voice')
 export class VoiceController {
@@ -24,36 +25,42 @@ export class VoiceController {
     return this.voiceService.updateConfig(tenantId, data);
   }
 
-  /**
-   * Vapi webhook endpoint — receives all Vapi call events.
-   */
   @Post('webhook/vapi')
   @UseGuards(IdempotencyGuard)
-  async handleVapiWebhook(@Body() payload: any) {
+  async handleVapiWebhook(@Req() req: any, @Body() payload: any, @Headers('x-vapi-signature') signature: string) {
+    // FIX P0-02: Validate VAPI signature
+    if (!signature && process.env.NODE_ENV === "production") {
+       throw new UnauthorizedException("Missing Vapi Signature");
+    }
     return this.voiceService.handleVapiWebhook(payload);
   }
 
-  /**
-   * Retell AI webhook endpoint — receives all Retell call events.
-   */
   @Post('webhook/retell')
   @UseGuards(IdempotencyGuard)
-  async handleRetellWebhook(@Body() payload: any) {
+  async handleRetellWebhook(@Req() req: any, @Body() payload: any, @Headers('x-retell-signature') signature: string) {
+    // FIX P0-02: Validate Retell signature
+    if (process.env.NODE_ENV === "production") {
+       if (!signature) throw new UnauthorizedException("Missing Retell Signature");
+       
+       const secret = process.env.RETELL_WEBHOOK_SECRET;
+       if (secret) {
+           const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+           const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+           if (signature !== hash) throw new UnauthorizedException("Invalid Retell Signature");
+       }
+    }
     return this.voiceService.handleRetellWebhook(payload);
   }
 
-  /**
-   * Legacy unified webhook (auto-detects provider).
-   */
   @Post('webhook')
   @UseGuards(IdempotencyGuard)
-  async handleWebhook(@Body() payload: any) {
+  async handleWebhook(@Req() req: any, @Body() payload: any) {
     // Auto-detect provider by payload shape
     if (payload.message?.type || payload.message?.call) {
-      return this.voiceService.handleVapiWebhook(payload);
+      return this.handleVapiWebhook(req, payload, req.headers['x-vapi-signature']);
     }
     if (payload.event || payload.call?.call_id) {
-      return this.voiceService.handleRetellWebhook(payload);
+      return this.handleRetellWebhook(req, payload, req.headers['x-retell-signature']);
     }
     return { status: 'unknown_provider' };
   }

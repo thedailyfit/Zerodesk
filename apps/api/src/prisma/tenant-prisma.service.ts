@@ -1,50 +1,29 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class TenantPrismaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Returns an extended Prisma Client instance scoped to a specific tenant.
-   * Uses Prisma Client Extensions ($extends) to automatically inject `tenantId`
-   * and execute `set_config('app.current_tenant_id')` to enforce engine-level RLS.
-   */
   getExtendedClient(tenantId: string) {
     return this.prisma.$extends({
       query: {
         $allModels: {
           async $allOperations({ model, operation, args, query }: any) {
             const tenantModels = [
-              'Customer',
-              'Conversation',
-              'Message',
-              'Appointment',
-              'Service',
-              'StaffMember',
-              'Lead',
-              'KnowledgeDocument',
-              'KnowledgeChunk',
-              'AutomationWorkflow',
-              'Task',
-              'Activity',
-              'Invoice'
+              'Customer', 'Conversation', 'Message', 'Appointment', 'Service', 'StaffMember',
+              'Lead', 'KnowledgeDocument', 'KnowledgeChunk', 'AutomationWorkflow', 'Task', 'Activity', 'Invoice'
             ];
-
             if (tenantModels.includes(model)) {
               if (
-                operation === 'findMany' ||
-                operation === 'findFirst' ||
-                operation === 'count' ||
-                operation === 'deleteMany' ||
-                operation === 'updateMany'
+                operation === 'findMany' || operation === 'findFirst' ||
+                operation === 'count' || operation === 'deleteMany' || operation === 'updateMany'
               ) {
                 args.where = { ...args.where, tenantId };
               } else if (operation === 'create') {
                 args.data = { ...args.data, tenantId };
               }
             }
-
             return query(args);
           },
         },
@@ -52,10 +31,6 @@ export class TenantPrismaService {
     });
   }
 
-  /**
-   * Execute a callback within a strict PostgreSQL RLS session transaction.
-   * Sets app.current_tenant_id in PostgreSQL session so engine RLS policies block cross-tenant reads.
-   */
   async executeInTenantContext<T>(
     tenantId: string,
     callback: (prisma: PrismaService) => Promise<T>,
@@ -66,9 +41,6 @@ export class TenantPrismaService {
     });
   }
 
-  /**
-   * Lightweight tenant-scoped wrapper for direct operations.
-   */
   forTenant(tenantId: string) {
     return {
       tenantId,
@@ -79,12 +51,15 @@ export class TenantPrismaService {
           this.prisma.customer.findMany({ ...args, where: { ...args.where, tenantId } }),
         findFirst: (args: any = {}) =>
           this.prisma.customer.findFirst({ ...args, where: { ...args.where, tenantId } }),
-        findUnique: (args: any) =>
-          this.prisma.customer.findUnique(args),
+        
+        // FIX P1-01: Removed findUnique wrapper entirely as it strips non-unique tenantId silently.
+        // Developers MUST use findFirst instead for guaranteed tenant isolation.
+        // findUnique: (args: any) => this.prisma.customer.findUnique(args),
+        
         create: (args: any) =>
           this.prisma.customer.create({ ...args, data: { ...args.data, tenantId } }),
         update: (args: any) =>
-          this.prisma.customer.update(args),
+          this.prisma.customer.update(args), // Note: relies on args.where.tenantId passed explicitly
         count: (args: any = {}) =>
           this.prisma.customer.count({ ...args, where: { ...args.where, tenantId } }),
       },

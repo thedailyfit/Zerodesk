@@ -78,13 +78,6 @@ export default function TestKnowledgeBasePage() {
           'What is your cancellation and refund policy?',
           'Are essential oils safe for sensitive skin?'
         ];
-      case 'salon':
-        return [
-          'How much is Balayage hair coloring with Olaplex treatment?',
-          'Do I need a patch test before hair smoothening?',
-          'Can I book a bridal trial consultation with Zara?',
-          'What products do you recommend for post-keratin homecare?'
-        ];
       case 'realestate':
         return [
           'What is the starting price for 3BHK luxury villas?',

@@ -15,7 +15,6 @@ type Step = 1 | 2 | 3;
 const NICHES = [
   { id: 'skin', title: 'Skin & Dermatology Clinic', tagline: 'Advanced care for healthy skin', emoji: '🏥', accent: 'from-blue-600 to-indigo-600', color: 'blue' },
   { id: 'spa', title: 'Spa & Wellness Center', tagline: 'Relaxation and holistic wellness', emoji: '🧖', accent: 'from-emerald-500 to-teal-500', color: 'emerald' },
-  { id: 'salon', title: 'Luxury Salon & Grooming', tagline: 'Premium hair and beauty services', emoji: '💇', accent: 'from-rose-500 to-pink-500', color: 'rose' },
   { id: 'realestate', title: 'Real Estate & Property', tagline: 'Connecting people with dream homes', emoji: '🏢', accent: 'from-amber-500 to-orange-500', color: 'amber' },
   { id: 'dental', title: 'Dental Clinic', tagline: 'Expert dental care and surgery', emoji: '🦷', accent: 'from-cyan-500 to-blue-500', color: 'cyan' },
   { id: 'hotel', title: 'Hotel & Resort', tagline: 'Unforgettable stays and hospitality', emoji: '🏨', accent: 'from-indigo-500 to-blue-600', color: 'indigo' },
