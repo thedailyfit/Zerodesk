@@ -32,7 +32,10 @@ export function useInvoiceTemplate() {
     try {
       const saved = localStorage.getItem('zerodesk_invoice_template');
       if (saved) {
-        setTemplate(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+            setTemplate({ ...DEFAULT_TEMPLATE, ...parsed });
+        }
       }
     } catch (e) {
       console.error('Failed to load invoice template', e);

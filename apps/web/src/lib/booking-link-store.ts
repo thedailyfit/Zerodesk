@@ -48,7 +48,10 @@ export function useBookingLink() {
     try {
       const saved = localStorage.getItem('zerodesk_booking_link_config');
       if (saved) {
-        setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+            setConfig({ ...DEFAULT_CONFIG, ...parsed });
+        }
       }
     } catch (e) {
       console.error('Failed to load booking link config', e);

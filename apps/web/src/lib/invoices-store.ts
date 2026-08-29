@@ -940,7 +940,8 @@ export function useInvoices() {
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
-        setInvoices(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setInvoices(Array.isArray(parsed) ? parsed : (DEFAULT_INVOICES_BY_NICHE[currentNiche] || []));
       } else {
         const defaults = DEFAULT_INVOICES_BY_NICHE[currentNiche] || [];
         setInvoices(defaults);

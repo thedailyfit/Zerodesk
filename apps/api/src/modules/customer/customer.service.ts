@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { TenantPrismaService } from '../../prisma/tenant-prisma.service';
 
 @Injectable()
@@ -44,6 +44,9 @@ export class CustomerService {
           // Handle P0-01 race condition explicitly if unique constraint fails
           if (error.code === 'P2002') {
               customer = await db.customers.findFirst({ where: { phone } });
+              if (!customer) {
+                  throw new Error(`Failed to find or create customer with phone ${phone} due to P2002 race condition.`);
+              }
           } else {
               throw error;
           }

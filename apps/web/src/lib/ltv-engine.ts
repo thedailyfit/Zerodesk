@@ -1,4 +1,4 @@
-﻿import type { NicheId } from '@/config/niches/types';
+import type { NicheId } from '@/config/niches/types';
 import type { PatientRecord } from '@/lib/patients-store';
 import type { InvoiceRecord } from '@/lib/invoices-store';
 
@@ -154,23 +154,25 @@ export function calculateCustomerRFM(
 ): CustomerRFMResult {
   const config = NICHE_CADENCE_CONFIGS[nicheId] || NICHE_CADENCE_CONFIGS.skin;
 
-  const invoicePaid = patientInvoices.reduce((sum, inv) => {
-    return sum + (inv.paidAmount || (inv.paymentStatus === 'PAID' ? inv.grandTotal : 0));
+  const safeInvoices = Array.isArray(patientInvoices) ? patientInvoices : [];
+
+  const invoicePaid = safeInvoices.reduce((sum, inv) => {
+    return sum + (inv?.paidAmount || (inv?.paymentStatus === 'PAID' ? inv.grandTotal : 0));
   }, 0);
 
-  const totalSpend = invoicePaid > 0 ? invoicePaid : (patient.ltv || 0);
+  const totalSpend = invoicePaid > 0 ? invoicePaid : (patient?.ltv || 0);
 
-  const invoiceCount = patientInvoices.filter(inv => inv.paymentStatus === 'PAID' || inv.paymentStatus === 'PARTIAL').length;
-  const visits = Math.max(patient.totalVisits || 0, invoiceCount, totalSpend > 0 ? 1 : 0);
+  const invoiceCount = safeInvoices.filter(inv => inv?.paymentStatus === 'PAID' || inv?.paymentStatus === 'PARTIAL').length;
+  const visits = Math.max(patient?.totalVisits || 0, invoiceCount, totalSpend > 0 ? 1 : 0);
   const avgSpend = visits > 0 ? Math.round(totalSpend / visits) : 0;
 
   const timestamps: number[] = [];
-  if (patient.lastVisit) {
+  if (patient?.lastVisit) {
     const t = new Date(patient.lastVisit).getTime();
     if (!isNaN(t)) timestamps.push(t);
   }
-  patientInvoices.forEach(inv => {
-    if (inv.createdDate) {
+  safeInvoices.forEach(inv => {
+    if (inv?.createdDate) {
       const t = new Date(inv.createdDate).getTime();
       if (!isNaN(t)) timestamps.push(t);
     }
@@ -264,10 +266,13 @@ export function calculateAggregateLTV(
   now: Date = new Date()
 ): AggregateLTVResult {
   const config = NICHE_CADENCE_CONFIGS[nicheId] || NICHE_CADENCE_CONFIGS.skin;
+  
+  const safePatients = Array.isArray(patients) ? patients : [];
+  const safeInvoices = Array.isArray(invoices) ? invoices : [];
 
   const invoicesByPatient = new Map<string, InvoiceRecord[]>();
-  invoices.forEach(inv => {
-    const key = inv.patientId || inv.phone || (inv.customerName ? inv.customerName.toLowerCase().trim() : '');
+  safeInvoices.forEach(inv => {
+    const key = inv?.patientId || inv?.phone || (inv?.customerName ? inv.customerName.toLowerCase().trim() : '');
     if (key) {
       const list = invoicesByPatient.get(key) || [];
       list.push(inv);
@@ -275,10 +280,10 @@ export function calculateAggregateLTV(
     }
   });
 
-  const scoredPatients = patients.map(p => {
-    const matchedInvoices = invoicesByPatient.get(p.id) || 
-      invoicesByPatient.get(p.phone) || 
-      invoicesByPatient.get(p.name.toLowerCase().trim()) || 
+  const scoredPatients = safePatients.map(p => {
+    const matchedInvoices = invoicesByPatient.get(p?.id) || 
+      invoicesByPatient.get(p?.phone) || 
+      (p?.name ? invoicesByPatient.get(p.name.toLowerCase().trim()) : []) || 
       [];
     return calculateCustomerRFM(p, matchedInvoices, nicheId, now);
   });

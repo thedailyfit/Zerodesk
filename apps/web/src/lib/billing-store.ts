@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 
@@ -46,7 +46,8 @@ export function useParkedBills() {
     try {
       const saved = localStorage.getItem('zerodesk_parked_bills');
       if (saved) {
-        setParkedBillsState(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setParkedBillsState(Array.isArray(parsed) ? parsed : []);
       } else {
         localStorage.setItem('zerodesk_parked_bills', JSON.stringify(DEFAULT_PARKED_BILLS));
       }
@@ -56,14 +57,20 @@ export function useParkedBills() {
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'zerodesk_parked_bills' && e.newValue) {
-        setParkedBillsState(JSON.parse(e.newValue));
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setParkedBillsState(Array.isArray(parsed) ? parsed : []);
+        } catch {}
       }
     };
     
     const handleCustomEvent = () => {
       try {
         const saved = localStorage.getItem('zerodesk_parked_bills');
-        if (saved) setParkedBillsState(JSON.parse(saved));
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            setParkedBillsState(Array.isArray(parsed) ? parsed : []);
+        }
       } catch {}
     };
 

@@ -609,7 +609,8 @@ export function usePatients() {
       const stored = localStorage.getItem(`zerodesk_patients_${currentNiche}`);
       if (stored) {
         try {
-          setPatients(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          setPatients(Array.isArray(parsed) ? parsed : (DEFAULT_PATIENTS_BY_NICHE[currentNiche] || []));
         } catch (e) {
           console.error('Failed to parse patients from localStorage:', e);
           setPatients(DEFAULT_PATIENTS_BY_NICHE[currentNiche] || []);

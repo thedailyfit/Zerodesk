@@ -73,7 +73,7 @@ export default function BusinessHealthPage() {
       </div>
 
       {/* 4 Daily Snapshot Tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Today's Bookings", val: "18 Sittings", sub: "8 Completed", icon: CalendarIcon, color: "text-blue-400" },
           { label: "Pending Confirmations", val: "3 Patients", sub: "WhatsApp active", icon: AlertCircle, color: "text-amber-400" },
@@ -82,13 +82,13 @@ export default function BusinessHealthPage() {
         ].map((tile, i) => {
           const Icon = tile.icon;
           return (
-            <div key={i} className="p-4 bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl space-y-1">
-              <div className="flex items-center justify-between text-[var(--color-text-muted)]">
+            <div key={i} className="p-5 bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl shadow-sm transition-all hover:shadow-md space-y-1">
+              <div className="flex items-center justify-between text-[var(--color-text-muted)] mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider">{tile.label}</span>
-                <Icon size={14} className={tile.color} />
+                <Icon size={16} className={tile.color} />
               </div>
-              <p className="text-xl font-extrabold text-[var(--color-text)] font-mono">{tile.val}</p>
-              <p className="text-[10px] text-[var(--color-text-muted)]">{tile.sub}</p>
+              <p className="text-2xl font-extrabold text-[var(--color-text)] font-mono">{tile.val}</p>
+              <p className="text-[11px] text-[var(--color-text-muted)] font-medium">{tile.sub}</p>
             </div>
           );
         })}
@@ -182,8 +182,8 @@ export default function BusinessHealthPage() {
                 <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '8px', color: 'var(--color-text)' }}
-                  itemStyle={{ color: 'var(--color-text)' }}
+                  contentStyle={{ backgroundColor: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', borderRadius: '12px', color: 'var(--color-text)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: 'var(--color-text)', fontWeight: 600 }}
                 />
                 <Area type="monotone" dataKey="calls" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorCalls)" />
                 <Area type="monotone" dataKey="messages" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorMsgs)" />
@@ -217,8 +217,8 @@ export default function BusinessHealthPage() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'var(--color-text)' }}
+                    contentStyle={{ backgroundColor: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', borderRadius: '12px', color: 'var(--color-text)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: 'var(--color-text)', fontWeight: 600 }}
                   />
                 </PieChart>
               </ResponsiveContainer>

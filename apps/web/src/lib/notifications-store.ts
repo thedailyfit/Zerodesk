@@ -24,7 +24,10 @@ export function useNotifications() {
     try {
       const saved = localStorage.getItem('zerodesk_notification_settings');
       if (saved) {
-        setSettings(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+            setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        }
       }
     } catch (e) {
       console.error('Failed to load notification settings', e);
