@@ -425,23 +425,76 @@ export default function OutboundCampaignsPage() {
 
                   if (node.type === 'ACTION' && node.actionType === 'WHATSAPP') {
                     return (
-                      <div className="space-y-3">
-                        <label className="block text-xs font-semibold text-[var(--color-text)]">Message Template</label>
-                        <select 
-                          value={node.config.template}
-                          onChange={(e) => updateNode({ config: { template: e.target.value } })}
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
-                        >
-                          <option value="">-- Select Template --</option>
-                          {nicheConfig?.templates?.filter((t:any) => t.channel === 'whatsapp').map((t:any) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
-                          ))}
-                        </select>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[var(--color-text)] mb-2">Message Template vs Custom</label>
+                          <div className="flex bg-[var(--color-bg)] p-1 rounded-lg border border-[var(--color-border)] mb-3">
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, messageMode: 'template' } })}
+                               className={cn("flex-1 text-xs py-1.5 rounded-md font-medium transition-colors", (!node.config.messageMode || node.config.messageMode === 'template') ? "bg-[var(--color-surface)] shadow-sm text-blue-500" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]")}
+                             >
+                               Templates
+                             </button>
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, messageMode: 'custom' } })}
+                               className={cn("flex-1 text-xs py-1.5 rounded-md font-medium transition-colors", node.config.messageMode === 'custom' ? "bg-[var(--color-surface)] shadow-sm text-blue-500" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]")}
+                             >
+                               Custom Script
+                             </button>
+                          </div>
+
+                          {(!node.config.messageMode || node.config.messageMode === 'template') ? (
+                            <select 
+                              value={node.config.template}
+                              onChange={(e) => updateNode({ config: { template: e.target.value } })}
+                              className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                            >
+                              <option value="">-- Select Pre-approved Template --</option>
+                              {nicheConfig?.templates?.filter((t:any) => t.channel === 'whatsapp').map((t:any) => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <textarea 
+                              rows={4}
+                              value={node.config.customMessage || ''}
+                              onChange={(e) => updateNode({ config: { customMessage: e.target.value } })}
+                              placeholder="Write your custom WhatsApp message... (Variables supported: {{name}}, {{appointment_date}})"
+                              className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none resize-none"
+                            />
+                          )}
+                        </div>
                         
-                        <label className="block text-xs font-semibold text-[var(--color-text)] mt-4">Promotional Image (Optional)</label>
-                        <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-blue-500 bg-[var(--color-bg)]">
-                          <ImageIcon className="mx-auto text-[var(--color-text-muted)] mb-2" size={20} />
-                          <span className="text-xs text-[var(--color-text)]">Upload Image (1080x1080px)</span>
+                        <div>
+                          <label className="block text-xs font-semibold text-[var(--color-text)] mb-2">Media Attachment (Optional)</label>
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, attachmentType: 'image' } })}
+                               className={cn("flex flex-col items-center justify-center p-2 rounded-lg border text-xs gap-1 transition-colors", (!node.config.attachmentType || node.config.attachmentType === 'image') ? "border-blue-500 bg-blue-500/10 text-blue-500" : "border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-blue-500/50")}
+                             >
+                               <ImageIcon size={16} /> Image
+                             </button>
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, attachmentType: 'document' } })}
+                               className={cn("flex flex-col items-center justify-center p-2 rounded-lg border text-xs gap-1 transition-colors", node.config.attachmentType === 'document' ? "border-blue-500 bg-blue-500/10 text-blue-500" : "border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-blue-500/50")}
+                             >
+                               <FileSpreadsheet size={16} /> Doc/PDF
+                             </button>
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, attachmentType: 'audio' } })}
+                               className={cn("flex flex-col items-center justify-center p-2 rounded-lg border text-xs gap-1 transition-colors", node.config.attachmentType === 'audio' ? "border-blue-500 bg-blue-500/10 text-blue-500" : "border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-blue-500/50")}
+                             >
+                               <PhoneOutgoing size={16} /> Audio
+                             </button>
+                          </div>
+                          <div className="p-4 border-2 border-dashed border-[var(--color-border)] rounded-lg text-center cursor-pointer hover:border-blue-500 hover:bg-blue-500/5 transition-colors bg-[var(--color-bg)]">
+                            <Upload className="mx-auto text-[var(--color-text-muted)] mb-2" size={20} />
+                            <span className="text-xs text-[var(--color-text)]">
+                              {(!node.config.attachmentType || node.config.attachmentType === 'image') ? "Upload Image (JPG, PNG)" : 
+                               node.config.attachmentType === 'document' ? "Upload Document (PDF, DOCX)" : 
+                               "Upload Audio (MP3, OGG)"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -449,15 +502,49 @@ export default function OutboundCampaignsPage() {
 
                   if (node.type === 'ACTION' && node.actionType === 'VOICE_CALL') {
                     return (
-                      <div className="space-y-3">
-                        <label className="block text-xs font-semibold text-[var(--color-text)]">Agent Script / Prompt</label>
-                        <textarea 
-                          rows={5}
-                          value={node.config.script || ''}
-                          onChange={(e) => updateNode({ config: { script: e.target.value } })}
-                          placeholder="You are an AI assistant calling on behalf of..."
-                          className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500"
-                        />
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[var(--color-text)] mb-2">Agent Script Mode</label>
+                          <div className="flex bg-[var(--color-bg)] p-1 rounded-lg border border-[var(--color-border)] mb-3">
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, scriptMode: 'template' } })}
+                               className={cn("flex-1 text-xs py-1.5 rounded-md font-medium transition-colors", (!node.config.scriptMode || node.config.scriptMode === 'template') ? "bg-[var(--color-surface)] shadow-sm text-blue-500" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]")}
+                             >
+                               Pre-built Templates
+                             </button>
+                             <button 
+                               onClick={() => updateNode({ config: { ...node.config, scriptMode: 'custom' } })}
+                               className={cn("flex-1 text-xs py-1.5 rounded-md font-medium transition-colors", node.config.scriptMode === 'custom' ? "bg-[var(--color-surface)] shadow-sm text-blue-500" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]")}
+                             >
+                               Custom Prompt
+                             </button>
+                          </div>
+
+                          {(!node.config.scriptMode || node.config.scriptMode === 'template') ? (
+                            <select 
+                              value={node.config.scriptTemplate}
+                              onChange={(e) => updateNode({ config: { scriptTemplate: e.target.value } })}
+                              className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                            >
+                              <option value="">-- Select AI Voice Template --</option>
+                              {nicheConfig?.templates?.filter((t:any) => t.channel === 'voice').map((t:any) => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                              ))}
+                              {/* Fallback templates if none matched */}
+                              <option value="fb_winback">90-Day Winback Call Script</option>
+                              <option value="fb_promo">Special Offer Broadcast Script</option>
+                              <option value="fb_followup">Post-Treatment Follow-up Script</option>
+                            </select>
+                          ) : (
+                            <textarea 
+                              rows={6}
+                              value={node.config.script || ''}
+                              onChange={(e) => updateNode({ config: { script: e.target.value } })}
+                              placeholder="You are an AI assistant calling on behalf of our clinic. Your goal is to..."
+                              className="w-full p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none resize-none font-mono text-xs"
+                            />
+                          )}
+                        </div>
                       </div>
                     );
                   }
