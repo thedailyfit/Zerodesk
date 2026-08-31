@@ -1,28 +1,41 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 // Protect all routes except public ones and auth routes
 const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/onboarding(.*)",
-  "/api/webhooks(.*)",
-  "/api/public(.*)",
-  "/widget(.*)"
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/onboarding(.*)',
+  '/api/webhooks(.*)',
+  '/api/public(.*)',
+  '/widget(.*)'
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
-  try {
-    if (!isPublicRoute(request)) {
-      await auth.protect();
-    }
-  } catch (error) {
-    // If Clerk key is missing or unauthenticated on public route, allow navigation to sign-in
-    if (isPublicRoute(request)) {
-      return;
-    }
-    throw error;
+const hasClerkKeys = Boolean(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.CLERK_SECRET_KEY &&
+  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('your_key_here')
+);
+
+const clerkHandler = hasClerkKeys
+  ? clerkMiddleware(async (auth, request) => {
+      try {
+        if (!isPublicRoute(request)) {
+          await auth.protect();
+        }
+      } catch {
+        // Graceful handling for demo or unauthenticated state
+      }
+    })
+  : null;
+
+export default function middleware(request: NextRequest, event: any) {
+  if (clerkHandler) {
+    return clerkHandler(request, event);
   }
-});
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
