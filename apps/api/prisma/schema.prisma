@@ -27,6 +27,10 @@ model Tenant {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  assignedLlmId      String?  @map("assigned_llm_id") @db.Uuid
+  assignedLlm        GlobalLlmRegistry? @relation("TenantAssignedLlm", fields: [assignedLlmId], references: [id])
+  allowedVoices      GlobalVoiceRegistry[] @relation("TenantAllowedVoices")
+
   users              User[]
   customers          Customer[]
   conversations      Conversation[]
@@ -421,6 +425,10 @@ model Subscription {
   voiceMinutesUsed      Int       @default(0) @map("voice_minutes_used")
   whatsappMessagesLimit Int       @default(500) @map("whatsapp_messages_limit")
   whatsappMessagesUsed  Int       @default(0) @map("whatsapp_messages_used")
+  llmTokensLimit        Int       @default(1000000) @map("llm_tokens_limit")
+  llmTokensUsed         Int       @default(0) @map("llm_tokens_used")
+  storageLimitMB        Int       @default(1000) @map("storage_limit_mb")
+  storageUsedMB         Decimal   @default(0) @map("storage_used_mb") @db.Decimal(10, 2)
   currentPeriodStart    DateTime? @map("current_period_start") @db.Timestamptz
   currentPeriodEnd      DateTime? @map("current_period_end") @db.Timestamptz
   status                String    @default("active")
@@ -447,4 +455,50 @@ model AuditLog {
 
   @@index([tenantId, createdAt])
   @@map("audit_logs")
+}
+
+// ============================================================
+// GLOBAL REGISTRIES (SUPER ADMIN CONTROL PLANE)
+// ============================================================
+
+model GlobalVoiceRegistry {
+  id          String   @id @default(uuid()) @db.Uuid
+  provider    String   // 'elevenlabs', 'sarvam', 'cartesia', 'openai'
+  voiceId     String   @unique @map("voice_id") // Provider's voice ID
+  name        String   // Display Name e.g. "Kavya"
+  gender      String   // "female" | "male" | "neutral"
+  language    String   // "hi-IN", "en-US", "te-IN", etc.
+  accent      String?  // "Indian English", "Hindi", etc.
+  previewUrl  String?  @map("preview_url")
+  sampleText  String?  @map("sample_text")
+  isDefault   Boolean  @default(false) @map("is_default")
+  isActive    Boolean  @default(true) @map("is_active")
+  tags        String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  allowedTenants Tenant[] @relation("TenantAllowedVoices")
+
+  @@map("global_voice_registries")
+}
+
+model GlobalLlmRegistry {
+  id             String   @id @default(uuid()) @db.Uuid
+  provider       String   // 'openai', 'anthropic', 'groq', 'sarvam', 'deepseek'
+  modelId        String   @unique @map("model_id") // 'gpt-4o', 'claude-3-5-sonnet', 'llama-3.3-70b-versatile'
+  name           String   // 'GPT-4o Omnichannel'
+  contextWindow  Int      @default(128000) @map("context_window")
+  costPer1kInput Decimal  @default(0.0025) @map("cost_per_1k_input") @db.Decimal(10, 5)
+  costPer1kOutput Decimal @default(0.0100) @map("cost_per_1k_output") @db.Decimal(10, 5)
+  isDefault      Boolean  @default(false) @map("is_default")
+  isActive       Boolean  @default(true) @map("is_active")
+  isFallback     Boolean  @default(false) @map("is_fallback")
+  category       String   @default("flagship") // 'flagship', 'fast_voice', 'reasoning', 'economy'
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenantsAssigned Tenant[] @relation("TenantAssignedLlm")
+
+  @@map("global_llm_registries")
 }

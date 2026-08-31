@@ -24,10 +24,12 @@ import {
   PhoneForwarded,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  Volume2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatWidget } from '@/components/widget/chat-widget';
+import { useSuperAdminStore } from '@/lib/superadmin-store';
 
 const tabs = [
   { id: 'business', label: 'Business Profile', icon: Building2 },
@@ -604,6 +606,74 @@ export default function SettingsPage() {
                     <option value="ta">Tamil (தமிழ்)</option>
                     <option value="es">Spanish (Español)</option>
                   </select>
+                </div>
+
+                {/* Dynamic Voice AI Personas from Super Admin Registry */}
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text)] flex items-center gap-2">
+                        <Volume2 size={16} className="text-blue-400" />
+                        <span>Voice AI Persona (Centrally Curated by Admin)</span>
+                      </label>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                        High-definition text-to-speech voice models synced from ZeroDesk Super Admin Fleet.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">
+                      LiveFleet Synced
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    {useSuperAdminStore.getState().voices.filter((v: any) => v.isActive).map((voice: any) => {
+                      const isSelected = voiceGender === voice.id || (voice.isDefault && !voiceGender);
+                      return (
+                        <div
+                          key={voice.id}
+                          onClick={() => setVoiceGender(voice.id)}
+                          className={cn(
+                            "p-3.5 rounded-xl border cursor-pointer transition-all relative overflow-hidden flex flex-col justify-between",
+                            isSelected
+                              ? "bg-blue-600/10 border-blue-500 shadow-md shadow-blue-500/10"
+                              : "bg-[var(--color-bg)] border-[var(--color-border)] hover:border-slate-600"
+                          )}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-semibold text-xs text-[var(--color-text)]">{voice.name}</span>
+                              {isSelected && <Check size={14} className="text-blue-500" />}
+                            </div>
+                            <div className="text-[10px] text-[var(--color-text-muted)] font-mono mb-2">
+                              {voice.provider.toUpperCase()} • {voice.language} • {voice.gender}
+                            </div>
+                            <p className="text-[11px] text-[var(--color-text-secondary)] italic line-clamp-2">
+                              "{voice.sampleText}"
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Assigned LLM Engine Info Card */}
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-purple-400" />
+                      <span className="text-xs font-semibold text-[var(--color-text)]">Active AI Reasoning Engine</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
+                        Managed by Admin
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      Your voice receptionist is powered by an enterprise LLM router with automatic sub-second failover.
+                    </p>
+                  </div>
+                  <div className="text-right font-mono text-xs text-[var(--color-text)] font-semibold bg-[var(--color-bg)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
+                    GPT-4o Omnichannel (OpenAI)
+                  </div>
                 </div>
               </div>
             </div>
