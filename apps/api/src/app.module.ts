@@ -24,12 +24,24 @@ import { HealthModule } from './modules/health/health.module';
 
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { CryptoModule } from './common/crypto/crypto.module';
+import { SecurityModule } from './common/security/security.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds sliding window
+        limit: 120, // 120 requests/min per IP
+      },
+    ]),
+    CryptoModule,
+    SecurityModule,
     BullModule.forRootAsync({
       useFactory: () => ({
         connection: {
@@ -59,5 +71,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     AdminModule,
     HealthModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
+

@@ -1,12 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RagService } from '../knowledge-base/rag.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { AccessToken, WebhookReceiver } from 'livekit-server-sdk';
+import { PromptGuardService } from '../../common/security/prompt-guard.service';
 
-export type VoiceProvider = 'vapi' | 'retell';
+export type VoiceProvider = 'vapi' | 'retell' | 'livekit';
 
 export interface VoiceCallEvent {
   provider: VoiceProvider;
@@ -23,14 +25,22 @@ export interface VoiceCallEvent {
 @Injectable()
 export class VoiceService {
   private readonly logger = new Logger(VoiceService.name);
+  private livekitReceiver: WebhookReceiver | null = null;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     private ragService: RagService,
+    private promptGuard: PromptGuardService,
     @InjectQueue('outbound-calls') private outboundQueue: Queue,
-  ) {}
+  ) {
+    const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
+    const lkSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
+    if (lkKey && lkSecret) {
+      this.livekitReceiver = new WebhookReceiver(lkKey, lkSecret);
+    }
+  }
 
   /**
    * Get voice config for a tenant.
@@ -358,6 +368,100 @@ export class VoiceService {
     }
   }
 
+  // ========================================
+  // LIVEKIT FIRST-CLASS INTEGRATION
+  // ========================================
+
+  /**
+   * Generates a secure LiveKit Room access token for real-time voice sessions.
+   */
+  async createLiveKitToken(tenantId: string, roomName: string, participantIdentity: string, participantName?: string) {
+    const apiKey = this.configService.get<string>('LIVEKIT_API_KEY') || 'devkey';
+    const apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET') || 'secret';
+
+    const at = new AccessToken(apiKey, apiSecret, {
+      identity: participantIdentity,
+      name: participantName || participantIdentity,
+      ttl: '1h',
+    });
+
+    at.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish: true,
+      canSubscribe: true,
+    });
+
+    const token = await at.toJwt();
+    return {
+      serverUrl: this.configService.get<string>('LIVEKIT_URL', 'wss://livekit.zerodesk.in'),
+      roomName,
+      token,
+      participantIdentity,
+    };
+  }
+
+  /**
+   * Handles LiveKit Webhook events with cryptographic signature verification.
+   */
+  async handleLiveKitWebhook(rawBody: string, authHeader: string) {
+    if (!this.livekitReceiver) {
+      const apiKey = this.configService.get<string>('LIVEKIT_API_KEY');
+      const apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
+      if (apiKey && apiSecret) {
+        this.livekitReceiver = new WebhookReceiver(apiKey, apiSecret);
+      }
+    }
+
+    let event: any;
+    if (this.livekitReceiver && authHeader) {
+      try {
+        event = await this.livekitReceiver.receive(rawBody, authHeader);
+      } catch (err) {
+        this.logger.error(`LiveKit Webhook HMAC Signature Verification Failed: ${err}`);
+        throw new UnauthorizedException('Invalid LiveKit webhook signature');
+      }
+    } else {
+      try {
+        event = JSON.parse(rawBody);
+      } catch {
+        event = {};
+      }
+    }
+
+    this.logger.log(`LiveKit Webhook Event Received: ${event.event} for room: ${event.room?.name}`);
+
+    if (event.event === 'room_finished') {
+      const durationSec = Number(event.room?.duration || 0);
+      const roomName = event.room?.name || '';
+      
+      // If roomName is formatted as tenant_<tenantId>_<callId>
+      const tenantMatch = roomName.match(/^tenant_([^_]+)/);
+      const tenantId = tenantMatch ? tenantMatch[1] : null;
+
+      if (durationSec > 0 && tenantId) {
+        const billedMinutes = Math.max(1, Math.ceil(durationSec / 60));
+        await this.prisma.subscription.updateMany({
+          where: { tenantId },
+          data: {
+            voiceMinutesUsed: { increment: billedMinutes },
+          },
+        });
+        this.logger.log(`[LIVEKIT METERING] Billed ${billedMinutes} minute(s) to tenant ${tenantId}`);
+      }
+
+      this.eventEmitter.emit('voice.call.ended', {
+        provider: 'livekit',
+        callId: event.room?.sid || roomName,
+        type: 'ROOM_FINISHED',
+        duration: durationSec,
+        metadata: { roomName: event.room?.name },
+      });
+    }
+
+    return { status: 'received' };
+  }
+
   /**
    * Create a Retell AI agent for a tenant.
    */
@@ -482,7 +586,7 @@ export class VoiceService {
   }
 
   private buildVoiceSystemPrompt(tenant: any, voiceConfig: any, kbContext?: string): string {
-    return `You are an AI receptionist for ${tenant?.name || 'our business'}.
+    const corePrompt = `You are an AI receptionist for ${tenant?.name || 'our business'}.
 Industry: ${tenant?.industry || 'general'}
 Your role: Answer calls professionally, book appointments, provide pricing info, and handle customer queries.
 Personality: ${voiceConfig?.voicePersonality || 'professional'}
@@ -496,6 +600,8 @@ RULES:
 - Never share internal business data or other customers' information
 - If the caller is angry or distressed, remain calm and empathetic
 - Speak naturally, use short sentences for voice clarity`;
+
+    return this.promptGuard.wrapSystemPromptWithGuardrails(tenant?.name || 'ZeroDesk Client', corePrompt);
   }
 
   private getVoiceFunctions() {

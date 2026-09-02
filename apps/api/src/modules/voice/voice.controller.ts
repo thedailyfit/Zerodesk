@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req } from '@nestjs/common';
 import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -50,6 +50,26 @@ export class VoiceController {
        }
     }
     return this.voiceService.handleRetellWebhook(payload);
+  }
+
+  @Post('livekit/token')
+  @UseGuards(AuthGuard, TenantGuard)
+  async createLiveKitToken(
+    @TenantId() tenantId: string,
+    @Body() body: { roomName: string; participantName?: string; identity?: string },
+  ) {
+    const identity = body.identity || `user_${Date.now()}`;
+    return this.voiceService.createLiveKitToken(tenantId, body.roomName, identity, body.participantName);
+  }
+
+  @Post('livekit/webhook')
+  async handleLiveKitWebhook(
+    @Req() req: any,
+    @Body() payload: any,
+    @Headers('authorization') authHeader: string,
+  ) {
+    const rawBody = req.rawBody?.toString() || JSON.stringify(payload);
+    return this.voiceService.handleLiveKitWebhook(rawBody, authHeader);
   }
 
   @Post('webhook')
