@@ -27,13 +27,15 @@ import {
   Settings,
   Rocket,
   Shield,
-  ExternalLink
+  ExternalLink,
+  Eye
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useNotifications } from '@/lib/notifications-store';
+import { useSuperAdminStore } from '@/lib/superadmin-store';
 import type { NicheId, ActiveNicheId, NicheNavItem } from '@/config/niches/types';
 
 const NICHE_OPTIONS: { id: ActiveNicheId; name: string; tag: string }[] = [
@@ -218,6 +220,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [nicheDropdownOpen, setNicheDropdownOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { tenants, impersonatedTenantId, impersonateTenant } = useSuperAdminStore();
+
+  const impersonatedTenant = useMemo(() => {
+    if (!impersonatedTenantId) return null;
+    return tenants.find((t: any) => t.id === impersonatedTenantId) || null;
+  }, [tenants, impersonatedTenantId]);
 
   const nicheNavItems = useMemo(() => nicheConfig?.navItems || [], [nicheConfig]);
 
@@ -544,6 +552,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Ghost Mode Live Banner */}
+        {impersonatedTenant && (
+          <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 border-b border-rose-500/40 px-6 py-2.5 flex items-center justify-between z-30 shadow-xl text-xs sticky top-0 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-rose-200 tracking-wider uppercase text-[10px] bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">
+                  Ghost Mode Active
+                </span>
+                <span className="text-white font-medium">
+                  Viewing Live as: <strong className="text-rose-200 font-bold underline decoration-rose-500 underline-offset-2">{impersonatedTenant.name}</strong>
+                </span>
+                <span className="text-rose-300/80 font-mono text-[11px] hidden md:inline">
+                  • {impersonatedTenant.industry} • {impersonatedTenant.plan} Plan • ({impersonatedTenant.voiceMinutesUsed}/{impersonatedTenant.voiceMinutesLimit} Voice Mins Used)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link 
+                href="/super-admin/tenants"
+                onClick={() => impersonateTenant(null)}
+                className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-all shadow-md shadow-rose-900/50 flex items-center gap-1.5"
+              >
+                <LogOut size={13} />
+                <span>Exit Ghost Mode</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 backdrop-blur-sm z-10 sticky top-0">
           <div className="flex-1 flex items-center gap-4">
             <button

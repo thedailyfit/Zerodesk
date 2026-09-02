@@ -140,8 +140,28 @@ export class VoiceService {
       };
     }
 
-    const voiceConfig = await this.getConfig(tenantConfig.id);
+    const [voiceConfig, subscription, tenantWithLlm] = await Promise.all([
+      this.getConfig(tenantConfig.id),
+      this.prisma.subscription.findUnique({ where: { tenantId: tenantConfig.id } }),
+      this.prisma.tenant.findUnique({
+        where: { id: tenantConfig.id },
+        include: { assignedLlm: true },
+      }),
+    ]);
+
     const tenant = tenantConfig;
+
+    // Quota Enforcement: Check if tenant has exceeded allocated monthly voice minutes
+    if (subscription && subscription.voiceMinutesUsed >= subscription.voiceMinutesLimit) {
+      this.logger.warn(`Tenant ${tenant.name} exceeded voice minutes quota: ${subscription.voiceMinutesUsed}/${subscription.voiceMinutesLimit}`);
+      return {
+        assistant: {
+          firstMessage: `Thank you for calling ${tenant.name}. Our voice assistant is temporarily at capacity for this billing cycle. Please message us on WhatsApp for instant assistance. Have a wonderful day!`,
+          recordingEnabled: false,
+          endCallFunctionEnabled: true,
+        },
+      };
+    }
 
     // Retrieve Knowledge Base RAG Context for this tenant
     const kbSearchResults = await this.ragService.search(tenant.id, 'business services pricing hours policies FAQs', 5);
@@ -151,12 +171,16 @@ export class VoiceService {
     const elevenLabsVoiceId = (voiceConfig?.settings as any)?.elevenLabsVoiceId
       || this.configService.get('ELEVENLABS_DEFAULT_VOICE_ID', 'pNInz6obpgDQGcFmaJgB');
 
+    // Dynamic model routing based on Super Admin assignment
+    const modelId = tenantWithLlm?.assignedLlm?.modelId || 'gpt-4o';
+    const modelProvider = tenantWithLlm?.assignedLlm?.provider === 'groq' ? 'custom-llm' : 'openai';
+
     return {
       assistant: {
         firstMessage: voiceConfig?.greeting || `Hello! Welcome to ${tenant.name}. How can I help you?`,
         model: {
-          provider: 'openai',
-          model: 'gpt-4o',
+          provider: modelProvider,
+          model: modelId,
           systemMessage: this.buildVoiceSystemPrompt(tenant, voiceConfig, kbContext),
           functions: this.getVoiceFunctions(),
         },
@@ -214,13 +238,31 @@ export class VoiceService {
    */
   private async handleVapiCallEnd(payload: any) {
     const report = payload.message;
+    const durationSeconds = Number(report.durationSeconds || 0);
+    const phoneNumber = report.call?.phoneNumber?.number || report.call?.customer?.number;
+
+    // Meter voice minutes consumed against tenant subscription
+    if (durationSeconds > 0 && phoneNumber) {
+      const tenant = await this.findTenantByPhone(phoneNumber, 'vapi');
+      if (tenant?.id) {
+        const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
+        await this.prisma.subscription.updateMany({
+          where: { tenantId: tenant.id },
+          data: {
+            voiceMinutesUsed: { increment: billedMinutes },
+          },
+        });
+        this.logger.log(`[METERING] Billed ${billedMinutes} voice minute(s) to tenant "${tenant.name}" (${tenant.id})`);
+      }
+    }
+
     const event: VoiceCallEvent = {
       provider: 'vapi',
       callId: report.call?.id || '',
       type: 'CALL_ENDED',
       phoneNumber: report.call?.customer?.number,
       transcript: report.transcript,
-      duration: report.durationSeconds,
+      duration: durationSeconds,
       status: report.endedReason,
       metadata: {
         cost: report.cost,
@@ -254,13 +296,30 @@ export class VoiceService {
         return { status: 'ok' };
 
       case 'call_ended':
+        const durationSec = payload.call?.duration_ms ? Math.floor(payload.call.duration_ms / 1000) : 0;
+        const fromNumber = payload.call?.from_number || payload.call?.to_number;
+
+        if (durationSec > 0 && fromNumber) {
+          const tenant = await this.findTenantByPhone(fromNumber, 'retell');
+          if (tenant?.id) {
+            const billedMinutes = Math.max(1, Math.ceil(durationSec / 60));
+            await this.prisma.subscription.updateMany({
+              where: { tenantId: tenant.id },
+              data: {
+                voiceMinutesUsed: { increment: billedMinutes },
+              },
+            });
+            this.logger.log(`[METERING] Billed ${billedMinutes} Retell voice minute(s) to tenant "${tenant.name}" (${tenant.id})`);
+          }
+        }
+
         const event: VoiceCallEvent = {
           provider: 'retell',
           callId: payload.call?.call_id || '',
           type: 'CALL_ENDED',
           phoneNumber: payload.call?.from_number,
           transcript: payload.call?.transcript,
-          duration: payload.call?.duration_ms ? Math.floor(payload.call.duration_ms / 1000) : 0,
+          duration: durationSec,
           status: payload.call?.disconnection_reason,
           metadata: {
             recordingUrl: payload.call?.recording_url,

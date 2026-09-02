@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -11,21 +11,21 @@ import {
   Shield, 
   Bell, 
   Key, 
-  MessageSquare,
-  Phone,
-  MessageCircle,
-  Upload,
-  Check,
-  Power,
-  Sparkles,
-  User,
-  Sliders,
-  AlertCircle,
-  PhoneForwarded,
-  Eye,
-  EyeOff,
-  Loader2,
-  Volume2
+  MessageSquare, 
+  Phone, 
+  MessageCircle, 
+  Upload, 
+  Check, 
+  Power, 
+  Sparkles, 
+  User, 
+  Sliders, 
+  AlertCircle, 
+  PhoneForwarded, 
+  Eye, 
+  EyeOff, 
+  Loader2, 
+  Volume2 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatWidget } from '@/components/widget/chat-widget';
@@ -46,6 +46,26 @@ const tabs = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('business');
+  const { voices, llmModels, tenants, impersonatedTenantId } = useSuperAdminStore();
+
+  const currentTenant = useMemo(() => {
+    if (impersonatedTenantId) {
+      return tenants.find((t: any) => t.id === impersonatedTenantId) || tenants[0];
+    }
+    return tenants[0];
+  }, [tenants, impersonatedTenantId]);
+
+  const availableVoices = useMemo(() => {
+    if (!currentTenant) return voices.filter((v: any) => v.isActive);
+    return voices.filter((v: any) => 
+      v.isActive && (currentTenant.allowedVoiceIds?.includes(v.id) || currentTenant.allowedVoiceIds?.length === 0)
+    );
+  }, [voices, currentTenant]);
+
+  const assignedLlm = useMemo(() => {
+    if (!currentTenant) return llmModels[0];
+    return llmModels.find((m: any) => m.id === currentTenant.assignedLlmId) || llmModels[0];
+  }, [llmModels, currentTenant]);
 
   // Business Profile State (Branding merged into Business Profile)
   const [businessName, setBusinessName] = useState('Glow Skin & Hair Clinic');
@@ -626,7 +646,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                    {useSuperAdminStore.getState().voices.filter((v: any) => v.isActive).map((voice: any) => {
+                    {availableVoices.map((voice: any) => {
                       const isSelected = voiceGender === voice.id || (voice.isDefault && !voiceGender);
                       return (
                         <div
@@ -672,7 +692,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <div className="text-right font-mono text-xs text-[var(--color-text)] font-semibold bg-[var(--color-bg)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                    GPT-4o Omnichannel (OpenAI)
+                    {assignedLlm.name} ({assignedLlm.provider.toUpperCase()})
                   </div>
                 </div>
               </div>

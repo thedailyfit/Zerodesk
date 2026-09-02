@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
@@ -18,14 +19,17 @@ import {
   ShieldAlert, 
   UserCheck, 
   Sparkles,
-  Save
+  Save,
+  Eye,
+  LogIn
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuperAdminStore, AdminTenant } from '@/lib/superadmin-store';
 import { toast } from 'sonner';
 
 export default function SuperAdminTenantsPage() {
-  const { tenants, voices, llmModels, updateTenant, deleteTenant } = useSuperAdminStore();
+  const router = useRouter();
+  const { tenants, voices, llmModels, updateTenant, deleteTenant, impersonateTenant } = useSuperAdminStore();
   const [search, setSearch] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('All');
   const [editingTenant, setEditingTenant] = useState<AdminTenant | null>(null);
@@ -44,6 +48,14 @@ export default function SuperAdminTenantsPage() {
     updateTenant(editingTenant.id, editingTenant);
     toast.success(`Updated ${editingTenant.name} settings successfully!`);
     setEditingTenant(null);
+  };
+
+  const handleGhostMode = (tenant: AdminTenant) => {
+    impersonateTenant(tenant.id);
+    toast.success(`Ghost Mode Activated: Impersonating ${tenant.name}`, {
+      description: 'You are now viewing the client dashboard live with their specific settings.'
+    });
+    router.push(`/?ghost=${tenant.id}`);
   };
 
   const formatINR = (val: number) => 
@@ -148,13 +160,23 @@ export default function SuperAdminTenantsPage() {
                       {t.ragChunksCount} chunks
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => setEditingTenant(t)}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-all inline-flex items-center gap-1.5"
-                      >
-                        <Sliders className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Configure</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleGhostMode(t)}
+                          title="Impersonate & View Client Dashboard"
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-xs font-semibold border border-rose-500/30 transition-all inline-flex items-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Ghost Mode</span>
+                        </button>
+                        <button
+                          onClick={() => setEditingTenant(t)}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-all inline-flex items-center gap-1.5"
+                        >
+                          <Sliders className="w-3.5 h-3.5 text-slate-300" />
+                          <span>Configure</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -295,21 +317,36 @@ export default function SuperAdminTenantsPage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
-                  <button 
-                    type="button" 
-                    onClick={() => setEditingTenant(null)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+                <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = editingTenant;
+                      setEditingTenant(null);
+                      handleGhostMode(t);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-semibold border border-rose-500/30 flex items-center gap-1.5 transition-all"
                   >
-                    Cancel
+                    <Eye className="w-4 h-4 text-rose-400" />
+                    <span>Launch Ghost Mode</span>
                   </button>
-                  <button 
-                    type="submit"
-                    className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-rose-600/30"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Apply to Client</span>
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingTenant(null)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-rose-600/30"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Apply to Client</span>
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>

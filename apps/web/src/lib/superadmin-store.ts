@@ -63,10 +63,12 @@ export interface SuperAdminState {
   globalFailoverEnabled: boolean;
   fallbackModelId: string;
   latencyThresholdMs: number;
+  impersonatedTenantId: string | null;
   
   addTenant: (tenant: AdminTenant) => void;
   updateTenant: (id: string, data: Partial<AdminTenant>) => void;
   deleteTenant: (id: string) => void;
+  impersonateTenant: (id: string | null) => void;
   
   addVoice: (voice: AdminVoice) => void;
   updateVoice: (id: string, data: Partial<AdminVoice>) => void;
@@ -436,6 +438,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       globalFailoverEnabled: true,
       fallbackModelId: 'm-2',
       latencyThresholdMs: 1200,
+      impersonatedTenantId: null,
 
       addTenant: (tenant: AdminTenant) =>
         set((state: SuperAdminState) => ({ tenants: [tenant, ...state.tenants] })),
@@ -449,6 +452,9 @@ export const useSuperAdminStore = create<SuperAdminState>()(
         set((state: SuperAdminState) => ({
           tenants: state.tenants.filter((t: AdminTenant) => t.id !== id),
         })),
+
+      impersonateTenant: (id: string | null) =>
+        set(() => ({ impersonatedTenantId: id })),
 
       addVoice: (voice: AdminVoice) =>
         set((state: SuperAdminState) => ({ voices: [voice, ...state.voices] })),
