@@ -9,7 +9,8 @@ const isPublicRoute = createRouteMatcher([
   '/onboarding(.*)',
   '/api/webhooks(.*)',
   '/api/public(.*)',
-  '/widget(.*)'
+  '/widget(.*)',
+  '/book(.*)'
 ]);
 
 const hasClerkKeys = Boolean(
@@ -20,12 +21,8 @@ const hasClerkKeys = Boolean(
 
 const clerkHandler = hasClerkKeys
   ? clerkMiddleware(async (auth, request) => {
-      try {
-        if (!isPublicRoute(request)) {
-          await auth.protect();
-        }
-      } catch {
-        // Graceful handling for demo or unauthenticated state
+      if (!isPublicRoute(request)) {
+        await auth.protect();
       }
     })
   : null;
