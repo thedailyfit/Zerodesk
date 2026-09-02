@@ -43,12 +43,31 @@ import { SecurityModule } from './common/security/security.module';
     CryptoModule,
     SecurityModule,
     BullModule.forRootAsync({
-      useFactory: () => ({
-        connection: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        },
-      }),
+      useFactory: () => {
+        if (process.env.REDIS_URL) {
+          try {
+            const url = new URL(process.env.REDIS_URL);
+            return {
+              connection: {
+                host: url.hostname,
+                port: parseInt(url.port || '6379', 10),
+                password: url.password || undefined,
+                username: url.username || undefined,
+                tls: url.protocol === 'rediss:' ? {} : undefined,
+              },
+            };
+          } catch {
+            // Fallback if URL parsing fails
+          }
+        }
+        return {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            password: process.env.REDIS_PASSWORD || undefined,
+          },
+        };
+      },
     }),
     PrismaModule,
     RedisModule,

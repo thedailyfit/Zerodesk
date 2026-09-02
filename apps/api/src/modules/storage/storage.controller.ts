@@ -4,7 +4,7 @@ import { StorageService } from './storage.service';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Storage')
-@Controller('v1/storage')
+@Controller('storage')
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
