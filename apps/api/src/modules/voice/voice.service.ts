@@ -145,7 +145,7 @@ export class VoiceService {
       this.prisma.subscription.findUnique({ where: { tenantId: tenantConfig.id } }),
       this.prisma.tenant.findUnique({
         where: { id: tenantConfig.id },
-        include: { assignedLlm: true },
+        include: { assignedLlm: true, assignedFallbackLlm: true },
       }),
     ]);
 
@@ -174,6 +174,14 @@ export class VoiceService {
     // Dynamic model routing based on Super Admin assignment
     const modelId = tenantWithLlm?.assignedLlm?.modelId || 'gpt-4o';
     const modelProvider = tenantWithLlm?.assignedLlm?.provider === 'groq' ? 'custom-llm' : 'openai';
+    
+    // Dynamic fallback model routing
+    let fallbackModels = undefined;
+    if (tenantWithLlm?.assignedFallbackLlm) {
+      fallbackModels = [
+        tenantWithLlm.assignedFallbackLlm.modelId
+      ];
+    }
 
     return {
       assistant: {
@@ -181,6 +189,7 @@ export class VoiceService {
         model: {
           provider: modelProvider,
           model: modelId,
+          fallbackModels,
           systemMessage: this.buildVoiceSystemPrompt(tenant, voiceConfig, kbContext),
           functions: this.getVoiceFunctions(),
         },

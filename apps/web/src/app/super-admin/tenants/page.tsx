@@ -239,9 +239,9 @@ export default function SuperAdminTenantsPage() {
                   </div>
                 </div>
 
-                {/* Assigned LLM Router */}
+                {/* Assigned Primary LLM Router */}
                 <div>
-                  <label className="text-xs font-medium text-slate-400 mb-1.5 block flex items-center justify-between">
+                  <label className="text-xs font-medium text-slate-400 mb-1.5 flex items-center justify-between">
                     <span>Assigned Primary LLM Engine</span>
                     <span className="text-[10px] text-purple-400 font-mono">Controls client voice brain</span>
                   </label>
@@ -251,6 +251,26 @@ export default function SuperAdminTenantsPage() {
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
                   >
                     {llmModels.map((m: any) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.provider.toUpperCase()}) — ${m.costPer1kInput}/1k tokens
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Assigned Fallback LLM Router */}
+                <div>
+                  <label className="text-xs font-medium text-slate-400 mb-1.5 flex items-center justify-between">
+                    <span>Assigned Secondary LLM Engine (Fallback)</span>
+                    <span className="text-[10px] text-amber-400 font-mono">Used if primary fails</span>
+                  </label>
+                  <select
+                    value={editingTenant.assignedFallbackLlmId || ''}
+                    onChange={(e) => setEditingTenant({ ...editingTenant, assignedFallbackLlmId: e.target.value || undefined })}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="">-- No Fallback --</option>
+                    {llmModels.filter((m: any) => m.id !== editingTenant.assignedLlmId).map((m: any) => (
                       <option key={m.id} value={m.id}>
                         {m.name} ({m.provider.toUpperCase()}) — ${m.costPer1kInput}/1k tokens
                       </option>

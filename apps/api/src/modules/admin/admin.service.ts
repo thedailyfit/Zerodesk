@@ -31,6 +31,7 @@ export class AdminService {
         subscription: true,
         voiceConfig: true,
         assignedLlm: true,
+        assignedFallbackLlm: true,
         allowedVoices: true,
         _count: {
           select: {
@@ -49,6 +50,7 @@ export class AdminService {
       plan?: string;
       status?: string;
       assignedLlmId?: string;
+      assignedFallbackLlmId?: string;
       allowedVoiceIds?: string[];
       voiceMinutesLimit?: number;
       whatsappMessagesLimit?: number;
@@ -83,6 +85,9 @@ export class AdminService {
     if (data.assignedLlmId !== undefined) {
       updateData.assignedLlmId = data.assignedLlmId;
     }
+    if (data.assignedFallbackLlmId !== undefined) {
+      updateData.assignedFallbackLlmId = data.assignedFallbackLlmId;
+    }
     if (data.allowedVoiceIds !== undefined) {
       updateData.allowedVoices = {
         set: data.allowedVoiceIds.map((id) => ({ id })),
@@ -101,6 +106,7 @@ export class AdminService {
       include: {
         subscription: true,
         assignedLlm: true,
+        assignedFallbackLlm: true,
         allowedVoices: true,
       },
     });

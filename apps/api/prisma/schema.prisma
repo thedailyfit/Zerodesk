@@ -29,6 +29,8 @@ model Tenant {
 
   assignedLlmId      String?  @map("assigned_llm_id") @db.Uuid
   assignedLlm        GlobalLlmRegistry? @relation("TenantAssignedLlm", fields: [assignedLlmId], references: [id])
+  assignedFallbackLlmId String?  @map("assigned_fallback_llm_id") @db.Uuid
+  assignedFallbackLlm   GlobalLlmRegistry? @relation("TenantAssignedFallbackLlm", fields: [assignedFallbackLlmId], references: [id])
   allowedVoices      GlobalVoiceRegistry[] @relation("TenantAllowedVoices")
 
   users              User[]
@@ -499,6 +501,7 @@ model GlobalLlmRegistry {
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   tenantsAssigned Tenant[] @relation("TenantAssignedLlm")
+  tenantsAssignedFallback Tenant[] @relation("TenantAssignedFallbackLlm")
 
   @@map("global_llm_registries")
 }

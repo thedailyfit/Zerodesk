@@ -67,6 +67,11 @@ export default function SettingsPage() {
     return llmModels.find((m: any) => m.id === currentTenant.assignedLlmId) || llmModels[0];
   }, [llmModels, currentTenant]);
 
+  const assignedFallbackLlm = useMemo(() => {
+    if (!currentTenant || !currentTenant.assignedFallbackLlmId) return null;
+    return llmModels.find((m: any) => m.id === currentTenant.assignedFallbackLlmId) || null;
+  }, [llmModels, currentTenant]);
+
   // Business Profile State (Branding merged into Business Profile)
   const [businessName, setBusinessName] = useState('Glow Skin & Hair Clinic');
   const [industry, setIndustry] = useState('Skin & Hair Clinic');
@@ -678,22 +683,46 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Assigned LLM Engine Info Card */}
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={16} className="text-purple-400" />
-                      <span className="text-xs font-semibold text-[var(--color-text)]">Active AI Reasoning Engine</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
-                        Managed by Admin
-                      </span>
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex flex-col gap-4">
+                  {/* Primary LLM */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-purple-400" />
+                        <span className="text-xs font-semibold text-[var(--color-text)]">Active AI Reasoning Engine</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
+                          Managed by Admin
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-text-muted)]">
+                        Your voice receptionist is powered by an enterprise LLM router.
+                      </p>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)]">
-                      Your voice receptionist is powered by an enterprise LLM router with automatic sub-second failover.
-                    </p>
+                    <div className="text-right font-mono text-xs text-[var(--color-text)] font-semibold bg-[var(--color-bg)] px-3 py-1.5 rounded-lg border border-[var(--color-border)] shadow-sm">
+                      {assignedLlm?.name || 'Unknown Model'} ({assignedLlm?.provider?.toUpperCase()})
+                    </div>
                   </div>
-                  <div className="text-right font-mono text-xs text-[var(--color-text)] font-semibold bg-[var(--color-bg)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                    {assignedLlm.name} ({assignedLlm.provider.toUpperCase()})
-                  </div>
+
+                  {/* Fallback LLM */}
+                  {assignedFallbackLlm && (
+                    <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle size={16} className="text-amber-400" />
+                          <span className="text-xs font-semibold text-[var(--color-text)]">Secondary AI Engine (Fallback)</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
+                            Auto-Failover
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[var(--color-text-muted)]">
+                          Takes over seamlessly if the primary reasoning engine experiences downtime.
+                        </p>
+                      </div>
+                      <div className="text-right font-mono text-xs text-[var(--color-text)] font-semibold bg-[var(--color-bg)] px-3 py-1.5 rounded-lg border border-[var(--color-border)] shadow-sm">
+                        {assignedFallbackLlm.name} ({assignedFallbackLlm.provider.toUpperCase()})
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

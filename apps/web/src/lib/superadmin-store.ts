@@ -42,6 +42,7 @@ export interface AdminTenant {
   mrr: number;
   usersCount: number;
   assignedLlmId: string;
+  assignedFallbackLlmId?: string;
   allowedVoiceIds: string[];
   voiceMinutesUsed: number;
   voiceMinutesLimit: number;
