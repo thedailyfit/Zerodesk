@@ -188,6 +188,7 @@ export default function SuperAdminOverviewPage() {
             <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
               {tenants.slice(0, 5).map((t: any) => {
                 const assignedLlm = llmModels.find((m: any) => m.id === t.assignedLlmId);
+                const fallbackLlm = llmModels.find((m: any) => m.id === t.assignedFallbackLlmId);
                 return (
                   <tr key={t.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="px-5 py-4 font-semibold text-white">{t.name}</td>
@@ -212,9 +213,16 @@ export default function SuperAdminOverviewPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="font-mono text-slate-200 text-[11px] bg-slate-800 px-2 py-1 rounded-md border border-slate-700">
-                        {assignedLlm?.name.split(' ')[0] || 'GPT-4o'}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-slate-200 text-[11px] bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700 w-fit">
+                          {assignedLlm?.name.split(' ')[0] || 'GPT-4o'}
+                        </span>
+                        {fallbackLlm && (
+                          <span className="font-mono text-amber-300 text-[9px] bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit">
+                            ↳ {fallbackLlm.name.split(' ')[0]}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4 font-mono text-emerald-400 font-semibold">{formatINR(t.mrr)}</td>
                     <td className="px-5 py-4">

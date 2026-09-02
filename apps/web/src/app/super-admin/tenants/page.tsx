@@ -126,6 +126,7 @@ export default function SuperAdminTenantsPage() {
             <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
               {filteredTenants.map((t: any) => {
                 const assignedLlm = llmModels.find((m: any) => m.id === t.assignedLlmId);
+                const fallbackLlm = llmModels.find((m: any) => m.id === t.assignedFallbackLlmId);
                 return (
                   <tr key={t.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="px-5 py-4 font-semibold text-white">
@@ -138,9 +139,16 @@ export default function SuperAdminTenantsPage() {
                       <div className="text-[10px] text-slate-500 uppercase">{t.plan} Plan</div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="font-mono text-purple-300 text-[11px] bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20">
-                        {assignedLlm?.name.split(' ')[0] || 'GPT-4o'}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-purple-300 text-[11px] bg-purple-500/10 px-2 py-0.5 rounded-lg border border-purple-500/20 w-fit">
+                          {assignedLlm?.name.split(' ')[0] || 'GPT-4o'}
+                        </span>
+                        {fallbackLlm && (
+                          <span className="font-mono text-amber-300 text-[9px] bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit flex items-center gap-1">
+                            <span>↳ {fallbackLlm.name.split(' ')[0]}</span>
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <span className="font-mono text-blue-300 text-[11px] bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">

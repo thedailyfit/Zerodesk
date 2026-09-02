@@ -172,8 +172,17 @@ export class VoiceService {
       || this.configService.get('ELEVENLABS_DEFAULT_VOICE_ID', 'pNInz6obpgDQGcFmaJgB');
 
     // Dynamic model routing based on Super Admin assignment
-    const modelId = tenantWithLlm?.assignedLlm?.modelId || 'gpt-4o';
-    const modelProvider = tenantWithLlm?.assignedLlm?.provider === 'groq' ? 'custom-llm' : 'openai';
+    const assignedLlm = tenantWithLlm?.assignedLlm;
+    const modelId = assignedLlm?.modelId || 'gpt-4o';
+    
+    let modelProvider = 'openai';
+    if (assignedLlm?.provider === 'anthropic') {
+      modelProvider = 'anthropic';
+    } else if (assignedLlm?.provider === 'groq') {
+      modelProvider = 'groq';
+    } else if (assignedLlm?.provider === 'deepseek' || assignedLlm?.provider === 'sarvam') {
+      modelProvider = 'custom-llm';
+    }
     
     // Dynamic fallback model routing
     let fallbackModels = undefined;
