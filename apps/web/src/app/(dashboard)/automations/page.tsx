@@ -526,9 +526,14 @@ export default function AutomationsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--color-text)] tracking-tight">Workflow Templates</h1>
-          <p className="text-[var(--color-text-muted)] mt-2 max-w-2xl text-lg">
-            Automate your patient journey, marketing, and operations with intelligent pre-built pipelines.
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-500 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+              ZeroDesk Smart Engine
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold text-[var(--color-text)] tracking-tight">1-Click Smart Actions</h1>
+          <p className="text-[var(--color-text-muted)] mt-2 max-w-2xl text-base">
+            Automate patient journeys, missed-call WhatsApp follow-ups, and review collections with 1-click pre-configured AI triggers.
           </p>
         </div>
         

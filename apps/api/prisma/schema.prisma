@@ -24,6 +24,7 @@ model Tenant {
   settings           Json     @default("{}")
   subscriptionTier   String   @default("trial") @map("subscription_tier")
   subscriptionStatus String   @default("active") @map("subscription_status")
+  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -286,6 +287,7 @@ model Service {
   durationMins Int      @default(30) @map("duration_mins")
   price        Decimal? @db.Decimal(10, 2)
   category     String?
+  schedulePreset String?  @map("schedule_preset")
   isActive     Boolean  @default(true) @map("is_active")
   metadata     Json     @default("{}")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -433,6 +435,9 @@ model Subscription {
   storageUsedMB         Decimal   @default(0) @map("storage_used_mb") @db.Decimal(10, 2)
   currentPeriodStart    DateTime? @map("current_period_start") @db.Timestamptz
   currentPeriodEnd      DateTime? @map("current_period_end") @db.Timestamptz
+  pausedUntil           DateTime? @map("paused_until") @db.Timestamptz
+  retentionDiscountActive Boolean @default(false) @map("retention_discount_active")
+  churnReason           String?   @map("churn_reason")
   status                String    @default("active")
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz

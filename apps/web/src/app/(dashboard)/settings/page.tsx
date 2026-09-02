@@ -25,7 +25,13 @@ import {
   Eye, 
   EyeOff, 
   Loader2, 
-  Volume2 
+  Volume2,
+  Mail,
+  HeartHandshake,
+  HelpCircle,
+  XCircle,
+  CheckCircle2,
+  Copy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatWidget } from '@/components/widget/chat-widget';
@@ -127,6 +133,15 @@ export default function SettingsPage() {
   const [paymentMethods, setPaymentMethods] = useState({ cash: true, card: true, upi: true, insurance: false });
   const [bankUpi, setBankUpi] = useState('glowclinic@okicici');
   const [invoiceFooter, setInvoiceFooter] = useState('Thank you for choosing Glow Skin & Hair Clinic. Terms & Conditions apply.');
+
+  // Retention & Churn Cancellation Funnel State
+  const [showCancelFunnel, setShowCancelFunnel] = useState(false);
+  const [cancelStep, setCancelStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [selectedChurnReason, setSelectedChurnReason] = useState('');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [subscriptionPaused, setSubscriptionPaused] = useState(false);
+  const [discountClaimed, setDiscountClaimed] = useState(false);
+  const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
 
   // Security State
   const [twoFactor, setTwoFactor] = useState(true);
@@ -903,13 +918,263 @@ export default function SettingsPage() {
           {/* TAB 7: Billing */}
           {activeTab === 'billing' && (
              <div className="space-y-6">
-                <div className="border-b border-[var(--color-border)] pb-3">
-                  <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
-                     <CreditCard size={20} className="text-orange-400" />
-                     Billing Settings
-                  </h2>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Manage invoice configuration and accepted payments.</p>
+                <div className="border-b border-[var(--color-border)] pb-3 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                       <CreditCard size={20} className="text-orange-400" />
+                       Plan & Billing Settings
+                    </h2>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Manage subscription status, invoice configuration, and payment methods.</p>
+                  </div>
                 </div>
+
+                {/* Active Subscription Tier Overview */}
+                <div className="p-5 bg-gradient-to-r from-blue-950/40 via-purple-950/30 to-slate-900 border border-blue-500/30 rounded-2xl relative overflow-hidden shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2.5 mb-1.5">
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                          {(currentTenant as any)?.subscriptionTier || (currentTenant as any)?.plan || 'PRO PLAN'}
+                        </span>
+                        {subscriptionPaused && (
+                          <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                            PAUSED UNTIL NEXT MONTH
+                          </span>
+                        )}
+                        {discountClaimed && (
+                          <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                            50% RETENTION DISCOUNT ACTIVE
+                          </span>
+                        )}
+                        {subscriptionCancelled && (
+                          <span className="text-xs font-mono font-bold uppercase tracking-wider text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">
+                            CANCELLATION SCHEDULED
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-[var(--color-text)]">ZeroDesk Enterprise AI Suite</h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        Unlimited LiveKit Voice calls, Sarvam AI Indian Speech recognition, and WhatsApp Cloud sync.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCancelFunnel(true);
+                          setCancelStep(1);
+                        }}
+                        className="px-3.5 py-2 bg-slate-800/80 hover:bg-red-500/10 text-slate-400 hover:text-red-400 border border-slate-700 hover:border-red-500/30 rounded-xl text-xs font-semibold transition-all"
+                      >
+                        Cancel Plan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cancellation & Churn Retention Funnel Modal */}
+                {showCancelFunnel && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#0f172a] border border-slate-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-5 text-[var(--color-text)]">
+                      
+                      {/* Step 1: Reason Survey */}
+                      {cancelStep === 1 && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                              <h3 className="text-base font-bold text-white">We're sorry to see you go</h3>
+                              <p className="text-xs text-slate-400 mt-0.5">What is the main reason for canceling?</p>
+                            </div>
+                            <button onClick={() => setShowCancelFunnel(false)} className="text-slate-400 hover:text-white">
+                              <XCircle size={20} />
+                            </button>
+                          </div>
+
+                          <div className="space-y-2">
+                            {[
+                              { id: 'budget', label: 'Pricing is too high / Budget constraints' },
+                              { id: 'tech', label: 'Technical difficulty setting up phone/WhatsApp' },
+                              { id: 'features', label: 'Missing key features or integrations' },
+                              { id: 'temporary', label: 'Seasonal business / Temporary pause' },
+                              { id: 'other', label: 'Other reasons' },
+                            ].map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => setSelectedChurnReason(item.id)}
+                                className={cn(
+                                  "w-full text-left p-3 rounded-xl border text-xs font-medium transition-all",
+                                  selectedChurnReason === item.id
+                                    ? "bg-blue-600/20 border-blue-500 text-white"
+                                    : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                                )}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowCancelFunnel(false)}
+                              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300"
+                            >
+                              Nevermind, Keep My Plan
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!selectedChurnReason}
+                              onClick={() => setCancelStep(2)}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-xs font-bold rounded-lg text-white"
+                            >
+                              Continue
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step 2: Offer Pause (Lock-in Price) */}
+                      {cancelStep === 2 && (
+                        <div className="space-y-4 text-center">
+                          <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+                            <Clock size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-white">How about a quick break instead?</h3>
+                            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                              Pause your subscription for <strong>1 month</strong>. You will not be billed, your AI knowledge base & phone configs will stay saved, and you will lock in your current discount rate.
+                            </p>
+                          </div>
+
+                          <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-xl text-left text-xs space-y-2">
+                            <div className="flex items-center gap-2 text-emerald-400">
+                              <CheckCircle2 size={16} /> <span>Keep your trained voice persona & numbers saved</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-emerald-400">
+                              <CheckCircle2 size={16} /> <span>$0 charged during the pause duration</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-emerald-400">
+                              <CheckCircle2 size={16} /> <span>Auto-resumes automatically with 1-click extension</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSubscriptionPaused(true);
+                                setShowCancelFunnel(false);
+                              }}
+                              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg"
+                            >
+                              Pause for 1 Month (Keep Everything Saved)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCancelStep(3)}
+                              className="text-xs text-slate-500 hover:text-slate-300 py-1 font-medium"
+                            >
+                              No thanks, I still want to cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step 3: Offer 50% Off Discount */}
+                      {cancelStep === 3 && (
+                        <div className="space-y-4 text-center">
+                          <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                            <HeartHandshake size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-white">Exclusive 50% Off for 2 Months</h3>
+                            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                              We want to support your clinic/business growth. Claim 50% off your next 2 billing cycles right now.
+                            </p>
+                          </div>
+
+                          <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl text-center">
+                            <div className="text-2xl font-extrabold text-emerald-400 tracking-tight">50% OFF</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">Applied immediately to next month's invoice</div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDiscountClaimed(true);
+                                setShowCancelFunnel(false);
+                              }}
+                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg"
+                            >
+                              Claim 50% Off & Stay
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCancelStep(4)}
+                              className="text-xs text-slate-500 hover:text-slate-300 py-1 font-medium"
+                            >
+                              Decline Offer & Proceed to Final Step
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step 4: Final Confirmation & VIP Support Link */}
+                      {cancelStep === 4 && (
+                        <div className="space-y-4">
+                          <div className="border-b border-slate-800 pb-3">
+                            <h3 className="text-base font-bold text-red-400">Final Cancellation Confirmation</h3>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              Your access will remain active until the end of your billing cycle.
+                            </p>
+                          </div>
+
+                          <div className="p-4 bg-blue-950/30 border border-blue-500/30 rounded-xl space-y-2">
+                            <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs">
+                              <HelpCircle size={16} /> Need help setting up your phone lines?
+                            </div>
+                            <p className="text-[11px] text-slate-300 leading-relaxed">
+                              Our engineering team will jump on a complimentary 20-minute Zoom screen-share to connect your WhatsApp and phone routing for you.
+                            </p>
+                            <a
+                              href="https://cal.com/zerodesk/vip-support"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-block text-xs text-blue-400 underline font-bold hover:text-blue-300 mt-1"
+                            >
+                              Book Free 20-Min Setup Call →
+                            </a>
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowCancelFunnel(false)}
+                              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300"
+                            >
+                              Keep Plan
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSubscriptionCancelled(true);
+                                setShowCancelFunnel(false);
+                              }}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-xs font-bold rounded-lg text-white"
+                            >
+                              Confirm Cancellation
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Default GST Rate</label>
@@ -1257,13 +1522,30 @@ function WidgetSettingsView() {
           <div className="space-y-3 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-[var(--color-text)]">Website Embed Snippet</h3>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium transition-colors"
-              >
-                {copied ? '✓ Copied!' : 'Copy Code'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const subject = encodeURIComponent(`ZeroDesk AI Widget Embed Code for ${botName}`);
+                    const body = encodeURIComponent(
+                      `Hi,\n\nPlease add this AI Chatbot snippet to our website before the closing </body> tag:\n\n${embedCode}\n\nThanks!`
+                    );
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                  }}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded text-xs font-medium transition-colors flex items-center gap-1.5"
+                >
+                  <Mail size={12} />
+                  <span>Email to Developer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium transition-colors flex items-center gap-1"
+                >
+                  <Copy size={12} />
+                  <span>{copied ? '✓ Copied!' : 'Copy Code'}</span>
+                </button>
+              </div>
             </div>
             <pre className="bg-[#1a1b26] text-[#a9b1d6] p-3.5 rounded-lg overflow-x-auto text-[11px] font-mono border border-slate-800 leading-relaxed">
               <code>{embedCode}</code>
