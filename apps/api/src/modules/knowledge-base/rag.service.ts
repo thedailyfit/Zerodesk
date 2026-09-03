@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmbeddingService } from './embedding.service';
 
@@ -15,7 +15,7 @@ export interface SearchResult {
 }
 
 @Injectable()
-export class RagService {
+export class RagService implements OnModuleInit {
   private readonly logger = new Logger(RagService.name);
 
   constructor(
@@ -23,6 +23,18 @@ export class RagService {
     private embeddingService: EmbeddingService,
     @InjectQueue('rag-embedding') private ragQueue: Queue,
   ) {}
+
+  async onModuleInit() {
+    try {
+      await this.prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS knowledge_chunks_embedding_hnsw_idx 
+        ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
+      `);
+      this.logger.log('Verified HNSW vector index on knowledge_chunks');
+    } catch (e: any) {
+      this.logger.warn(`Could not verify HNSW index automatically: ${e.message}`);
+    }
+  }
 
   /**
    * Enqueue document indexing into background queue (non-blocking).
@@ -37,16 +49,15 @@ export class RagService {
   }
 
   /**
-   * Semantic search across a tenant's knowledge base using pgvector.
-   * Generates an embedding for the query, then finds the most similar chunks.
+   * Semantic and hybrid keyword search across a tenant's knowledge base.
    */
   async search(tenantId: string, query: string, topK = 5): Promise<SearchResult[]> {
     try {
       const embedding = await this.embeddingService.createEmbedding(query);
       const embeddingStr = `[${embedding.join(',')}]`;
 
-      // Use pgvector's cosine distance operator (<=>)
-      const results = await this.prisma.$queryRaw<SearchResult[]>`
+      // 1. Vector cosine similarity search
+      const vectorResults = await this.prisma.$queryRaw<SearchResult[]>`
         SELECT 
           kc.id as "chunkId",
           kc.document_id as "documentId",
@@ -63,7 +74,43 @@ export class RagService {
         LIMIT ${topK}
       `;
 
-      return results.filter((r: any) => r.similarity > 0.3); // Minimum relevance threshold
+      // 2. Keyword fallback search if query contains specific terms
+      const cleanKeyword = query.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+      let keywordResults: SearchResult[] = [];
+      if (cleanKeyword.length > 2) {
+        try {
+          keywordResults = await this.prisma.$queryRaw<SearchResult[]>`
+            SELECT 
+              kc.id as "chunkId",
+              kc.document_id as "documentId",
+              kd.title as "documentTitle",
+              kd.category,
+              kc.chunk_text as "chunkText",
+              0.85::float as similarity
+            FROM knowledge_chunks kc
+            JOIN knowledge_documents kd ON kd.id = kc.document_id
+            WHERE kc.tenant_id = ${tenantId}::uuid
+              AND kd.is_active = true
+              AND kc.chunk_text ILIKE ${'%' + cleanKeyword + '%'}
+            LIMIT 3
+          `;
+        } catch {
+          // Fallback gracefully to vector results if ILIKE fails
+        }
+      }
+
+      // Merge and deduplicate by chunkId
+      const map = new Map<string, SearchResult>();
+      for (const r of [...keywordResults, ...vectorResults]) {
+        if (!map.has(r.chunkId) || map.get(r.chunkId)!.similarity < r.similarity) {
+          map.set(r.chunkId, r);
+        }
+      }
+
+      return Array.from(map.values())
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, topK)
+        .filter((r) => r.similarity > 0.3);
     } catch (error) {
       this.logger.error(`RAG search failed: ${error}`, (error as Error).stack);
       return [];

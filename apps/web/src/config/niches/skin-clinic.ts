@@ -59,7 +59,6 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
-    { name: 'The Unified Inbox', href: '/unified-inbox', icon: Inbox, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Book Appointment', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },

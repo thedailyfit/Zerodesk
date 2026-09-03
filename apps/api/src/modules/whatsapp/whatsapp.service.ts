@@ -184,6 +184,50 @@ export class WhatsappService {
 
     const result = await response.json();
     this.logger.log(`WhatsApp message sent to ${to}: ${result.messages?.[0]?.id}`);
+
+    // Persist outbound message and meter quota
+    try {
+      const cleanPhone = to.replace(/[^0-9+]/g, '');
+      const customer = await this.prisma.customer.findFirst({
+        where: { tenantId, phone: { contains: cleanPhone.slice(-10) } },
+      });
+
+      if (customer) {
+        let conversation = await this.prisma.conversation.findFirst({
+          where: { tenantId, customerId: customer.id, channel: 'WHATSAPP' },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (!conversation) {
+          conversation = await this.prisma.conversation.create({
+            data: {
+              tenantId,
+              customerId: customer.id,
+              channel: 'WHATSAPP',
+              status: 'ACTIVE',
+            },
+          });
+        }
+
+        await this.prisma.message.create({
+          data: {
+            tenantId,
+            conversationId: conversation.id,
+            role: 'ASSISTANT',
+            content: message,
+            metadata: { waMessageId: result.messages?.[0]?.id },
+          },
+        });
+      }
+
+      await this.prisma.subscription.updateMany({
+        where: { tenantId },
+        data: { whatsappMessagesUsed: { increment: 1 } },
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to meter/store outbound message: ${err.message}`);
+    }
+
     return result;
   }
 

@@ -19,4 +19,29 @@ export class ServiceService {
       },
     });
   }
+
+  async search(tenantId: string, query: string) {
+    if (!tenantId) return [];
+    return this.prisma.service.findMany({
+      where: {
+        tenantId,
+        isActive: true,
+        ...(query ? {
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+            { category: { contains: query, mode: 'insensitive' } },
+          ],
+        } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        durationMins: true,
+        price: true,
+        description: true,
+      },
+    });
+  }
 }

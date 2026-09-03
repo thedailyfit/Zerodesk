@@ -28,9 +28,20 @@ export class VoiceController {
   @Post('webhook/vapi')
   @UseGuards(IdempotencyGuard)
   async handleVapiWebhook(@Req() req: any, @Body() payload: any, @Headers('x-vapi-signature') signature: string) {
-    // FIX P0-02: Validate VAPI signature
-    if (!signature && process.env.NODE_ENV === "production") {
-       throw new UnauthorizedException("Missing Vapi Signature");
+    const secret = process.env.VAPI_WEBHOOK_SECRET;
+    if (process.env.NODE_ENV === 'production' || secret) {
+      if (!signature) {
+        throw new UnauthorizedException('Missing Vapi Signature');
+      }
+      if (secret) {
+        const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+        const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+        const signatureBuf = Buffer.from(signature, 'utf8');
+        const hashBuf = Buffer.from(hash, 'utf8');
+        if (signatureBuf.length !== hashBuf.length || !crypto.timingSafeEqual(signatureBuf, hashBuf)) {
+          throw new UnauthorizedException('Invalid Vapi Signature');
+        }
+      }
     }
     return this.voiceService.handleVapiWebhook(payload);
   }
@@ -38,16 +49,18 @@ export class VoiceController {
   @Post('webhook/retell')
   @UseGuards(IdempotencyGuard)
   async handleRetellWebhook(@Req() req: any, @Body() payload: any, @Headers('x-retell-signature') signature: string) {
-    // FIX P0-02: Validate Retell signature
-    if (process.env.NODE_ENV === "production") {
-       if (!signature) throw new UnauthorizedException("Missing Retell Signature");
-       
-       const secret = process.env.RETELL_WEBHOOK_SECRET;
-       if (secret) {
-           const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
-           const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
-           if (signature !== hash) throw new UnauthorizedException("Invalid Retell Signature");
-       }
+    const secret = process.env.RETELL_WEBHOOK_SECRET;
+    if (process.env.NODE_ENV === 'production' || secret) {
+      if (!signature) throw new UnauthorizedException('Missing Retell Signature');
+      if (secret) {
+        const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+        const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+        const signatureBuf = Buffer.from(signature, 'utf8');
+        const hashBuf = Buffer.from(hash, 'utf8');
+        if (signatureBuf.length !== hashBuf.length || !crypto.timingSafeEqual(signatureBuf, hashBuf)) {
+          throw new UnauthorizedException('Invalid Retell Signature');
+        }
+      }
     }
     return this.voiceService.handleRetellWebhook(payload);
   }
@@ -58,7 +71,7 @@ export class VoiceController {
     @TenantId() tenantId: string,
     @Body() body: { roomName: string; participantName?: string; identity?: string },
   ) {
-    const identity = body.identity || `user_${Date.now()}`;
+    const identity = body.identity || `user_${crypto.randomUUID()}`;
     return this.voiceService.createLiveKitToken(tenantId, body.roomName, identity, body.participantName);
   }
 

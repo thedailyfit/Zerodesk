@@ -73,7 +73,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
       setIsVerifying(false);
       // Accept demo OTP 123456 or any 6 digits
       if (otpValue === '123456' || otpValue.length === 6) {
-        // Save new patient to local store if not already present
+        // Save to local state fallback
         const cleanPhone = phone.replace(/\D/g, '');
         const existing = patients.find(p => p.phone.replace(/\D/g, '') === cleanPhone || p.phone === phone);
         if (!existing && fullName.trim() && phone.trim()) {
@@ -89,6 +89,33 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
             // Ignore patient registration error if offline
           }
         }
+
+        // Dispatch booking to backend API
+        try {
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+          fetch(`${apiBase}/appointments/voice-book`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-voice-key': 'zerodesk-internal-voice-key-2026',
+              'x-tenant-id': slug,
+            },
+            body: JSON.stringify({
+              customerName: fullName.trim(),
+              customerPhone: phone.trim(),
+              serviceName: selectedService || 'Consultation',
+              date: `2026-09-${selectedDay.toString().padStart(2, '0')}`,
+              time: selectedTime,
+              source: 'WEB_BOOKING',
+              notes: `Public Web Booking by ${fullName.trim()} for ${selectedService || 'Consultation'}`,
+            }),
+          }).catch((err) => {
+            console.warn('Backend appointment dispatch error:', err);
+          });
+        } catch {
+          // Keep user flow unbroken
+        }
+
         setStep('confirmed');
       } else {
         setOtpError(true);

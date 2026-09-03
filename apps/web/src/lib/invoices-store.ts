@@ -975,51 +975,35 @@ export function useInvoices() {
   }, [storageKey, syncEventName, currentNiche]);
 
   const addInvoice = useCallback((invoiceData: Omit<InvoiceRecord, 'id' | 'invoiceNo'>) => {
-    setInvoices(prev => {
-      // Auto-generate INV-2026-XXXX
-      const currentYear = new Date().getFullYear().toString();
-      let maxNum = 0;
-      
-      prev.forEach(inv => {
-        const parts = inv.invoiceNo.split('-');
-        if (parts.length === 3 && parts[1] === currentYear) {
-          const num = parseInt(parts[2], 10);
-          if (!isNaN(num) && num > maxNum) {
-            maxNum = num;
-          }
-        }
-      });
-      
-      const nextNum = (maxNum + 1).toString().padStart(4, '0');
-      const invoiceNo = `INV-${currentYear}-${nextNum}`;
-      
-      const newInvoice: InvoiceRecord = {
-        ...invoiceData,
-        id: crypto.randomUUID(),
-        invoiceNo
-      };
-      
-      const newInvoices = [newInvoice, ...prev];
-      saveInvoices(newInvoices);
-      return newInvoices;
+    const currentYear = new Date().getFullYear().toString();
+    let maxNum = 0;
+    invoices.forEach(inv => {
+      const match = inv.invoiceNo.match(new RegExp(`INV-${currentYear}-(\\d+)`));
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
     });
-  }, [saveInvoices]);
+
+    const nextNum = (maxNum + 1).toString().padStart(4, '0');
+    const invoiceNo = `INV-${currentYear}-${nextNum}`;
+
+    const newInvoice: InvoiceRecord = {
+      ...invoiceData,
+      id: crypto.randomUUID(),
+      invoiceNo
+    };
+
+    saveInvoices([newInvoice, ...invoices]);
+  }, [invoices, saveInvoices]);
 
   const updateInvoice = useCallback((id: string, updates: Partial<InvoiceRecord>) => {
-    setInvoices(prev => {
-      const newInvoices = prev.map(inv => inv.id === id ? { ...inv, ...updates } : inv);
-      saveInvoices(newInvoices);
-      return newInvoices;
-    });
-  }, [saveInvoices]);
+    saveInvoices(invoices.map(inv => inv.id === id ? { ...inv, ...updates } : inv));
+  }, [invoices, saveInvoices]);
 
   const deleteInvoice = useCallback((id: string) => {
-    setInvoices(prev => {
-      const newInvoices = prev.filter(inv => inv.id !== id);
-      saveInvoices(newInvoices);
-      return newInvoices;
-    });
-  }, [saveInvoices]);
+    saveInvoices(invoices.filter(inv => inv.id !== id));
+  }, [invoices, saveInvoices]);
 
   const getInvoicesByPatientId = useCallback((patientId: string) => {
     return invoices.filter(inv => inv.patientId === patientId);

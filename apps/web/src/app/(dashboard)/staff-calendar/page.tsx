@@ -509,7 +509,7 @@ function decimalToTime(decimal: number): string {
 export default function StaffCalendarPage() {
   const { role } = useRole();
   const { currentNiche } = useNiche();
-  const isAdminOrManager = ['MANAGER', 'ORG_ADMIN', 'SUPER_ADMIN'].includes(role || '');
+  const isAdminOrManager = ['MANAGER', 'ADMIN', 'ORG_ADMIN', 'SUPER_ADMIN'].includes(role || '');
 
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');

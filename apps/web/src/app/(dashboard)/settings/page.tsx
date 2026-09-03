@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -199,8 +199,68 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  // Restore persistent settings on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('zerodesk_tenant_settings');
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.businessName) setBusinessName(data.businessName);
+        if (data.industry) setIndustry(data.industry);
+        if (data.phone) setPhone(data.phone);
+        if (data.email) setEmail(data.email);
+        if (data.website) setWebsite(data.website);
+        if (data.address) setAddress(data.address);
+        if (data.gstNumber) setGstNumber(data.gstNumber);
+        if (data.primaryColor) setPrimaryColor(data.primaryColor);
+        if (data.logoPreview) setLogoPreview(data.logoPreview);
+        if (data.workingDays) setWorkingDays(data.workingDays);
+        if (data.waNumber) setWaNumber(data.waNumber);
+        if (data.bankUpi) setBankUpi(data.bankUpi);
+      }
+    } catch {
+      // Fallback to defaults
+    }
+  }, []);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    const settingsPayload = {
+      businessName,
+      industry,
+      phone,
+      email,
+      website,
+      timezone,
+      address,
+      gstNumber,
+      primaryColor,
+      logoPreview,
+      workingDays,
+      waNumber,
+      bankUpi,
+      isWebchatEnabled,
+      isVoiceAiEnabled,
+      isWhatsappAiEnabled,
+      isHandoffEnabled,
+    };
+
+    try {
+      localStorage.setItem('zerodesk_tenant_settings', JSON.stringify(settingsPayload));
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+      fetch(`${apiBase}/tenants/me`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: businessName,
+          industry,
+          settings: settingsPayload,
+        }),
+      }).catch(() => {});
+    } catch {
+      // Offline fallback
+    }
+
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };

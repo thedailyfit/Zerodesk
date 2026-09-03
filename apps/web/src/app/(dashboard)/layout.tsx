@@ -31,6 +31,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useRole } from '@/components/providers/role-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -215,7 +216,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const profileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { currentNiche, setNiche, nicheConfig } = useNiche();
   const { settings, updateSetting } = useNotifications();
-  const [demoRole, setDemoRole] = useState<string>('ADMIN');
+  const { role: globalRole, setRole: setGlobalRole } = useRole();
+  const [demoRole, setDemoRole] = useState<string>(globalRole || 'ADMIN');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [nicheDropdownOpen, setNicheDropdownOpen] = useState(false);
   const pathname = usePathname();
@@ -622,6 +624,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         key={role.id}
                         onClick={() => {
                           setDemoRole(role.id);
+                          setGlobalRole(role.id as any);
                           setRoleDropdownOpen(false);
                         }}
                         className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
@@ -643,7 +646,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* Notification Bell with Settings Modal Popover */}
+            {/* Notification Center */}
             <div className="relative">
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
@@ -657,14 +660,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
               </button>
 
-              {/* Notification Settings Modal (Exact layout from user screenshot) */}
+              {/* Notification Settings Modal */}
               <AnimatePresence>
                 {isNotifOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    className="absolute right-0 top-full mt-2 w-96 bg-[var(--color-bg-elevated)] backdrop-blur-2xl border border-[var(--color-border)] rounded-3xl shadow-2xl p-5 z-50 space-y-4"
+                    className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 bg-[var(--color-bg-elevated)] backdrop-blur-2xl border border-[var(--color-border)] rounded-3xl shadow-2xl p-5 z-50 space-y-4"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">

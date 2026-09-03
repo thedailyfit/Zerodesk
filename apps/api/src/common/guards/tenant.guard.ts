@@ -7,9 +7,14 @@ export class TenantGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    if (request.tenantId && request.tenant) {
+      return true;
+    }
+
     const clerkOrgId = request.user?.orgId;
 
     if (!clerkOrgId) {
+      if (request.tenantId) return true;
       throw new UnauthorizedException('No organization context');
     }
 

@@ -29,4 +29,7 @@ COPY --from=builder /app/apps/api ./apps/api
 
 EXPOSE 4000
 
+# Security: Run as non-root user
+USER node
+
 CMD ["pnpm", "--filter", "@zerodesk/api", "start:prod"]

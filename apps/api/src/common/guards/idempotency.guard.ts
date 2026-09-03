@@ -32,8 +32,11 @@ export class IdempotencyGuard implements CanActivate {
     const acquiredLock = await this.redisService.setNx(lockKey, 'processing', ttlSeconds);
 
     if (!acquiredLock) {
-      this.logger.warn(`Duplicate webhook blocked by IdempotencyGuard: Key=${messageId}`);
-      // Returning false drops duplicate webhook requests from Meta/Vapi retries
+      this.logger.warn(`Duplicate webhook acknowledged by IdempotencyGuard: Key=${messageId}`);
+      const response = context.switchToHttp().getResponse();
+      if (response && typeof response.status === 'function') {
+        response.status(200).json({ status: 'duplicate_acknowledged', messageId });
+      }
       return false;
     }
 

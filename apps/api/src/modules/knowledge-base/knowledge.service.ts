@@ -84,16 +84,13 @@ export class KnowledgeService {
         batch.map(async (chunkText, batchIndex) => {
           const chunkOrder = i + batchIndex;
           try {
-            await this.aiService.generateEmbedding(chunkText);
+            const embedding = await this.aiService.generateEmbedding(chunkText);
+            const embeddingStr = `[${embedding.join(',')}]`;
 
-            await this.prisma.knowledgeChunk.create({
-              data: {
-                tenantId,
-                documentId,
-                chunkText,
-                chunkIndex: chunkOrder,
-              },
-            });
+            await this.prisma.$executeRaw`
+              INSERT INTO knowledge_chunks (id, tenant_id, document_id, chunk_text, chunk_index, embedding, created_at)
+              VALUES (gen_random_uuid(), ${tenantId}::uuid, ${documentId}::uuid, ${chunkText}, ${chunkOrder}, ${embeddingStr}::vector, NOW())
+            `;
           } catch (err) {
             this.logger.error(`Error processing chunk ${chunkOrder} of doc ${documentId}:`, err);
           }

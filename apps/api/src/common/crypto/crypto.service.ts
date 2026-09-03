@@ -9,12 +9,20 @@ export class CryptoService {
   private readonly key: Buffer;
 
   constructor(private configService: ConfigService) {
-    const secret = this.configService.get<string>('ENCRYPTION_SECRET_KEY') 
-      || this.configService.get<string>('CLERK_SECRET_KEY') 
-      || 'zerodesk-super-secret-encryption-master-key-32b';
+    const isProd = process.env.NODE_ENV === 'production';
+    const secret = this.configService.get<string>('ENCRYPTION_SECRET_KEY');
+
+    if (!secret) {
+      if (isProd) {
+        throw new Error('FATAL: ENCRYPTION_SECRET_KEY environment variable is mandatory in production!');
+      }
+      this.logger.warn('ENCRYPTION_SECRET_KEY not set. Using dev fallback. DO NOT USE IN PRODUCTION.');
+    }
+
+    const effectiveSecret = secret || this.configService.get<string>('CLERK_SECRET_KEY') || 'zerodesk-dev-only-secret-key-32b';
 
     // Ensure 32-byte key for AES-256
-    this.key = crypto.createHash('sha256').update(secret).digest();
+    this.key = crypto.createHash('sha256').update(effectiveSecret).digest();
   }
 
   /**

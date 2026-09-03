@@ -36,10 +36,11 @@ export class StorageService {
     return `${uuidv4()}${ext}`;
   }
 
-  async uploadFile(fileBuffer: Buffer, originalName: string, mimeType: string, folder = 'uploads'): Promise<{ key: string; url: string }> {
+  async uploadFile(tenantId: string, fileBuffer: Buffer, originalName: string, mimeType: string, folder = 'uploads'): Promise<{ key: string; url: string }> {
     try {
+      const sanitizedFolder = folder.replace(/[^a-zA-Z0-9-_]/g, '');
       const fileName = this.generateUniqueFileName(originalName);
-      const key = `${folder}/${fileName}`;
+      const key = `tenants/${tenantId}/${sanitizedFolder || 'uploads'}/${fileName}`;
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
@@ -61,10 +62,11 @@ export class StorageService {
     }
   }
 
-  async getPresignedUploadUrl(originalName: string, mimeType: string, folder = 'uploads'): Promise<{ uploadUrl: string; key: string }> {
+  async getPresignedUploadUrl(tenantId: string, originalName: string, mimeType: string, folder = 'uploads'): Promise<{ uploadUrl: string; key: string }> {
     try {
+      const sanitizedFolder = folder.replace(/[^a-zA-Z0-9-_]/g, '');
       const fileName = this.generateUniqueFileName(originalName);
-      const key = `${folder}/${fileName}`;
+      const key = `tenants/${tenantId}/${sanitizedFolder || 'uploads'}/${fileName}`;
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
@@ -80,8 +82,12 @@ export class StorageService {
     }
   }
 
-  async getPresignedDownloadUrl(key: string): Promise<string> {
+  async getPresignedDownloadUrl(tenantId: string, key: string): Promise<string> {
     try {
+      if (!key.startsWith(`tenants/${tenantId}/`)) {
+        throw new InternalServerErrorException('Access denied: file does not belong to your tenant.');
+      }
+
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
         Key: key,
@@ -90,7 +96,7 @@ export class StorageService {
       return await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
     } catch (error: any) {
       this.logger.error(`Failed to generate presigned download URL for key ${key}: ${error?.message || error}`, error?.stack);
-      throw new InternalServerErrorException('Failed to generate download URL.');
+      throw new InternalServerErrorException(error?.message || 'Failed to generate download URL.');
     }
   }
 

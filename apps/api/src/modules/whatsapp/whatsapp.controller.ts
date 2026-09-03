@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Put, Body, Query, UseGuards, Headers, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, UseGuards, Headers, UnauthorizedException, Req } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -26,7 +26,11 @@ export class WhatsappController {
            const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
            const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
            const expected = `sha256=${hash}`;
-           if (signature !== expected) throw new UnauthorizedException("Invalid WhatsApp Signature");
+           const sigBuf = Buffer.from(signature, 'utf8');
+           const expBuf = Buffer.from(expected, 'utf8');
+           if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+             throw new UnauthorizedException("Invalid WhatsApp Signature");
+           }
        }
     }
     return this.whatsappService.handleIncomingMessage(payload);

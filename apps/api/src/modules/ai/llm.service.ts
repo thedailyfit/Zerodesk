@@ -77,6 +77,10 @@ export class LlmService {
     messages: LLMMessage[],
     options: LLMOptions,
   ): Promise<LLMResponse> {
+    if (provider === 'anthropic') {
+      return this.callAnthropic(messages, options);
+    }
+
     const client = this.getClient(provider);
     const model = options.model || this.getDefaultModel(provider);
 
@@ -98,10 +102,53 @@ export class LlmService {
     };
   }
 
+  private async callAnthropic(messages: LLMMessage[], options: LLMOptions): Promise<LLMResponse> {
+    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
+
+    const systemMessage = messages.find((m) => m.role === 'system')?.content || '';
+    const nonSystemMessages = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+    const model = options.model || this.getDefaultModel('anthropic');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: options.maxTokens ?? 1024,
+        temperature: options.temperature ?? 0.7,
+        system: systemMessage || undefined,
+        messages: nonSystemMessages,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Anthropic API error (${res.status}): ${errText}`);
+    }
+
+    const data = await res.json();
+    const content = data.content?.[0]?.text || '';
+    const tokensUsed = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+
+    return {
+      content,
+      provider: 'anthropic',
+      model,
+      tokensUsed,
+    };
+  }
+
   private getClient(provider: LLMProvider): OpenAI {
     switch (provider) {
       case 'gemini': return this.gemini;
-      case 'anthropic': return this.anthropic;
       default: return this.openai;
     }
   }
@@ -110,7 +157,7 @@ export class LlmService {
     switch (provider) {
       case 'openai': return this.configService.get('OPENAI_MODEL', 'gpt-4o-mini');
       case 'gemini': return this.configService.get('GEMINI_MODEL', 'gemini-2.0-flash');
-      case 'anthropic': return this.configService.get('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514');
+      case 'anthropic': return this.configService.get('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022');
       default: return 'gpt-4o-mini';
     }
   }
@@ -120,8 +167,17 @@ export class LlmService {
     return [primary, ...all.filter((p) => p !== primary)];
   }
 
+  private normalizeVector1536(vec: number[]): number[] {
+    if (vec.length === 1536) return vec;
+    if (vec.length < 1536) {
+      return [...vec, ...new Array(1536 - vec.length).fill(0)];
+    }
+    return vec.slice(0, 1536);
+  }
+
   /**
    * Generate embeddings using OpenAI (primary) or Gemini as fallback.
+   * Always ensures output is exactly 1536 dimensions matching vector(1536).
    */
   async embed(text: string): Promise<number[]> {
     try {
@@ -129,14 +185,18 @@ export class LlmService {
         model: 'text-embedding-3-small',
         input: text,
       });
-      return response.data[0].embedding;
+      return this.normalizeVector1536(response.data[0].embedding);
     } catch {
-      this.logger.warn('OpenAI embedding failed, trying Gemini');
-      const response = await this.gemini.embeddings.create({
-        model: 'text-embedding-004',
-        input: text,
-      });
-      return response.data[0].embedding;
+      this.logger.warn('OpenAI embedding failed, trying Gemini fallback');
+      try {
+        const response = await this.gemini.embeddings.create({
+          model: 'text-embedding-004',
+          input: text,
+        });
+        return this.normalizeVector1536(response.data[0].embedding);
+      } catch {
+        return new Array(1536).fill(0);
+      }
     }
   }
 }

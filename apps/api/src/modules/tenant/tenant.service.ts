@@ -14,9 +14,22 @@ export class TenantService {
   }
 
   async update(id: string, data: any) {
+    const safeData: any = {};
+    if (typeof data.name === 'string') safeData.name = data.name;
+    if (typeof data.timezone === 'string') safeData.timezone = data.timezone;
+    if (typeof data.logoUrl === 'string') safeData.logoUrl = data.logoUrl;
+    if (typeof data.industry === 'string') safeData.industry = data.industry;
+    if (data.settings && typeof data.settings === 'object') {
+      const existing = await this.prisma.tenant.findUnique({ where: { id } });
+      safeData.settings = {
+        ...(typeof existing?.settings === 'object' ? existing.settings : {}),
+        ...data.settings,
+      };
+    }
+
     return this.prisma.tenant.update({
       where: { id },
-      data,
+      data: safeData,
     });
   }
 

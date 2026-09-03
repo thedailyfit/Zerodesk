@@ -85,4 +85,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       return 0;
     }
   }
+
+  async ping(): Promise<string> {
+    if (!this.isConnected) return 'offline';
+    try {
+      return await this.client.ping();
+    } catch {
+      return 'error';
+    }
+  }
 }
