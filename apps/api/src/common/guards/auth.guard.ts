@@ -53,10 +53,7 @@ export class AuthGuard implements CanActivate {
         .filter(Boolean);
 
       const isSuperAdminEmail = dbUser?.email && superAdminEmails.includes(dbUser.email.toLowerCase());
-      const isSuperAdmin =
-        dbUser?.role === 'SUPER_ADMIN' ||
-        isSuperAdminEmail ||
-        (payload as any)?.metadata?.role === 'SUPER_ADMIN';
+      const isSuperAdmin = dbUser?.role === 'SUPER_ADMIN' || isSuperAdminEmail;
 
       let computedRole = isSuperAdmin ? 'SUPER_ADMIN' : dbUser?.role;
       if (!computedRole) {

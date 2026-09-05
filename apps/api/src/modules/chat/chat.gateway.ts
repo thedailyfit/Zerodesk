@@ -90,15 +90,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendMessage')
   async handleMessage(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    const response = await this.chatService.handleMessage(data);
+    const tenantId = client.data.tenantId || data.tenantId;
+    if (!tenantId) {
+      return { status: 'error', message: 'Missing tenant identifier' };
+    }
+
+    if (client.data.tenantId && data.tenantId && client.data.tenantId !== data.tenantId) {
+      this.logger.warn(`Client ${client.id} attempted to send message to mismatched tenant ${data.tenantId}`);
+      return { status: 'error', message: 'Unauthorized tenant scope' };
+    }
+
+    const response = await this.chatService.handleMessage({ ...data, tenantId });
     this.server.to(client.id).emit('newMessage', response);
 
-    if (data.tenantId) {
-      this.server.to(`tenant:${data.tenantId}`).emit('inboxUpdate', {
-        channel: 'WEB_CHAT',
-        data: response,
-      });
-    }
+    this.server.to(`tenant:${tenantId}`).emit('inboxUpdate', {
+      channel: 'WEB_CHAT',
+      data: response,
+    });
   }
 
   // ========================================
@@ -112,6 +120,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         channel: 'WHATSAPP',
         data: payload,
       });
+    }
+  }
+
+  @OnEvent('whatsapp.status')
+  handleWhatsAppStatusEvent(payload: any) {
+    if (payload.tenantId) {
+      this.server.to(`tenant:${payload.tenantId}`).emit('messageStatusUpdate', payload);
     }
   }
 

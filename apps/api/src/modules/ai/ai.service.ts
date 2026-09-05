@@ -1,10 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ContextService } from './context.service';
 import { PromptService } from './prompt.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import OpenAI, { toFile } from 'openai';
 import { ConfigService } from '@nestjs/config';
+import { PromptGuardService } from '../../common/security/prompt-guard.service';
 
 export interface AiResponse {
   response: string;
@@ -30,6 +31,7 @@ export class AiService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
+    @Optional() private promptGuardService?: PromptGuardService,
   ) {
     this.openai = new OpenAI({
       apiKey: this.configService.get('OPENAI_API_KEY') || 'sk-dummy-key',
@@ -65,6 +67,7 @@ export class AiService {
         const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
         formData.append('file', blob, filename);
         formData.append('model', 'saaras:v2');
+        formData.append('language_code', 'unknown');
 
         const sarvamRes = await fetch('https://api.sarvam.ai/speech-to-text', {
           method: 'POST',
@@ -117,7 +120,17 @@ export class AiService {
     conversationId?: string,
   ): Promise<AiResponse> {
     try {
-      const context = await this.contextService.assembleContext(tenantId, customerId, message);
+      // 1. Sanitize user input against prompt injection attacks
+      let safeMessage = message;
+      if (this.promptGuardService) {
+        const { sanitized, isInjected } = this.promptGuardService.sanitizeUserInput(message);
+        safeMessage = sanitized;
+        if (isInjected) {
+          this.logger.warn(`[AI SECURITY] Blocked injection payload from customer ${customerId}`);
+        }
+      }
+
+      const context = await this.contextService.assembleContext(tenantId, customerId, safeMessage);
       const systemPrompt = this.promptService.getSystemPrompt(tenantId, context);
 
       let conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
@@ -138,7 +151,7 @@ export class AiService {
         messages: [
           { role: 'system', content: systemPrompt },
           ...conversationHistory,
-          { role: 'user', content: message },
+          { role: 'user', content: safeMessage },
         ],
         temperature: 0.7,
         max_tokens: 1024,

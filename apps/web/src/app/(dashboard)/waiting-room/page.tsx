@@ -126,11 +126,34 @@ const BORDER_MAP: Record<string, string> = {
 
 export default function WaitingRoomPage() {
   const { currentNiche, nicheConfig } = useNiche();
-  const [patients, setPatients] = useState<PatientItem[]>(() => DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin);
+  const [patients, setPatients] = useState<PatientItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`zerodesk_waiting_room_${currentNiche}`);
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin;
+  });
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`zerodesk_waiting_room_${currentNiche}`);
+      if (saved) {
+        try {
+          setPatients(JSON.parse(saved));
+          return;
+        } catch {}
+      }
+    }
     setPatients(DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin);
   }, [currentNiche]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`zerodesk_waiting_room_${currentNiche}`, JSON.stringify(patients));
+    }
+  }, [patients, currentNiche]);
 
   const bookedAppointments = DEFAULT_BOOKED_BY_NICHE[currentNiche] || DEFAULT_BOOKED_BY_NICHE.skin;
   const [searchQuery, setSearchQuery] = useState('');

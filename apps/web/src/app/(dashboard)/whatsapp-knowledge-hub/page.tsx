@@ -184,7 +184,7 @@ export default function WhatsAppKnowledgeHubPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
     localStorage.setItem(`zerodesk_whatsapp_prompt_${currentNiche}`, goldenPrompt);
     localStorage.setItem(`zerodesk_whatsapp_rules_${currentNiche}`, JSON.stringify(rules));
     localStorage.setItem(`zerodesk_whatsapp_vars_${currentNiche}`, JSON.stringify(inputVariables));
@@ -197,7 +197,31 @@ export default function WhatsAppKnowledgeHubPage() {
       outsideHoursMessage,
       responseDelay
     }));
-    showToast('✨ WhatsApp AI System Prompt, Rules & Settings Saved!');
+
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient('/whatsapp/config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          systemPrompt: goldenPrompt,
+          niche: currentNiche,
+          rules,
+          variables: inputVariables,
+          settings: {
+            linkedTemplate,
+            autoAttachImages,
+            autoAttachPdfs,
+            autoAttachLocation,
+            businessHoursEnabled,
+            outsideHoursMessage,
+            responseDelay,
+          },
+        }),
+      });
+      showToast('✨ WhatsApp AI Instructions & Settings Saved & Synced to Cloud!');
+    } catch {
+      showToast('✨ WhatsApp AI Instructions Saved to Local Workspace!');
+    }
   };
 
   const handleResetPrompt = () => {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 
@@ -24,15 +24,41 @@ export class AppointmentService {
   }
 
   async book(tenantId: string, data: any) {
-    return this.prisma.appointment.create({
-      data: {
-        ...data,
-        tenantId,
-      },
+    const scheduledAt = new Date(data.scheduledAt || Date.now());
+    const durationMins = data.durationMins || 30;
+
+    return this.prisma.$transaction(async (tx) => {
+      // Prevent double booking for the same staff or service within the time slot
+      if (data.staffId || data.serviceId) {
+        const slotEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
+        const conflicting = await tx.appointment.findFirst({
+          where: {
+            tenantId,
+            status: { not: 'CANCELLED' },
+            ...(data.staffId ? { staffId: data.staffId } : {}),
+            scheduledAt: {
+              gte: new Date(scheduledAt.getTime() - durationMins * 60 * 1000),
+              lte: slotEnd,
+            },
+          },
+        });
+        if (conflicting) {
+          throw new ConflictException('This time slot is already booked. Please choose another time.');
+        }
+      }
+
+      return tx.appointment.create({
+        data: {
+          ...data,
+          tenantId,
+          scheduledAt,
+          durationMins,
+        },
+      });
     });
   }
 
-  async bookFromVoice(tenantId: string, data: {
+  async bookFromVoice(tenantIdentifier: string, data: {
     customerName: string;
     customerPhone?: string;
     serviceName?: string;
@@ -42,6 +68,18 @@ export class AppointmentService {
     source?: string;
     notes?: string;
   }) {
+    // Support either tenant UUID or slug (e.g. from public booking link)
+    let tenantId = tenantIdentifier;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantIdentifier);
+    if (!isUuid && this.prisma.tenant) {
+      const resolvedTenant = await this.prisma.tenant.findFirst({
+        where: { OR: [{ slug: tenantIdentifier }, { id: tenantIdentifier }] },
+      });
+      if (resolvedTenant) {
+        tenantId = resolvedTenant.id;
+      }
+    }
+
     const rawPhone = data.customerPhone || 'unknown-caller';
     const phone = rawPhone.replace(/[^0-9+]/g, '');
 

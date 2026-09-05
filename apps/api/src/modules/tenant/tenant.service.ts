@@ -13,6 +13,23 @@ export class TenantService {
     return tenant;
   }
 
+  async findBySlug(slug: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        industry: true,
+        logoUrl: true,
+        timezone: true,
+        settings: true,
+      },
+    });
+    if (!tenant) throw new NotFoundException(`Tenant with slug "${slug}" not found`);
+    return tenant;
+  }
+
   async update(id: string, data: any) {
     const safeData: any = {};
     if (typeof data.name === 'string') safeData.name = data.name;

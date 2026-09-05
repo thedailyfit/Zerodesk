@@ -93,11 +93,10 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         // Dispatch booking to backend API
         try {
           const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
-          fetch(`${apiBase}/appointments/voice-book`, {
+          fetch(`${apiBase}/appointments/public-book`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-internal-voice-key': 'zerodesk-internal-voice-key-2026',
               'x-tenant-id': slug,
             },
             body: JSON.stringify({
@@ -107,6 +106,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
               date: `2026-09-${selectedDay.toString().padStart(2, '0')}`,
               time: selectedTime,
               source: 'WEB_BOOKING',
+              slug,
               notes: `Public Web Booking by ${fullName.trim()} for ${selectedService || 'Consultation'}`,
             }),
           }).catch((err) => {

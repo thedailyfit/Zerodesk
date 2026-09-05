@@ -39,12 +39,25 @@ export default function OnboardingPage() {
 
   const handleNext = () => setStep((s) => (s < 3 ? (s + 1) as Step : s));
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Save to local storage
     localStorage.setItem('zerodesk-niche', formData.niche);
     localStorage.setItem('zerodesk-business-name', formData.businessName);
     localStorage.setItem('zerodesk-role', formData.role);
     
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient('/tenants/me', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: formData.businessName,
+          industry: formData.niche,
+        }),
+      });
+    } catch {
+      // Local fallback
+    }
+
     // Redirect to dashboard
     router.push('/');
   };

@@ -28,9 +28,11 @@ export class InvoiceService {
   }
 
   async create(tenantId: string, data: any) {
+    const timestamp = Date.now().toString().slice(-6);
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
     const count = await this.prisma.invoice.count({ where: { tenantId } });
     const invoiceNumber =
-      data.invoiceNumber || `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+      data.invoiceNumber || `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}-${timestamp.slice(-3)}${randomSuffix}`;
 
     const items = data.items || [];
     const subtotal = Number(

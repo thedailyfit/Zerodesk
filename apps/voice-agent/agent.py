@@ -166,7 +166,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         "date": preferred_date,
                         "time": preferred_time,
                         "source": "VOICE_AI",
-                        "phoneNumber": call_ctx.caller_phone,
+                        "customerPhone": call_ctx.caller_phone,
                     },
                     timeout=aiohttp.ClientTimeout(total=6),
                 ) as resp:
@@ -314,7 +314,7 @@ async def notify_call_completion(call_ctx: CallContext, status: str = "COMPLETED
 
     headers = {
         "Content-Type": "application/json",
-        "x-internal-key": INTERNAL_VOICE_SECRET,
+        "x-internal-voice-key": INTERNAL_VOICE_SECRET,
         "x-tenant-id": call_ctx.tenant_id,
     }
 
@@ -405,7 +405,7 @@ STRICT GUIDELINES:
     # 5. Tuned Silero VAD parameters for Indian PSTN telephony latency & noise suppression
     vad_instance = silero.VAD.load(
         min_speech_duration=0.25,
-        min_silence_duration=0.45,
+        min_silence_duration=0.65,
     )
 
     session = AgentSession(
@@ -435,8 +435,8 @@ STRICT GUIDELINES:
         ),
     )
 
-    # Greeting
-    await session.say(f"Hello! Welcome to {call_ctx.clinic_name}. How may I help you today?")
+    # Greeting with DPDP & Telephony recording disclosure
+    await session.say(f"Namaskaram! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance and scheduling assistance. How may I help you today?")
 
 
 if __name__ == "__main__":

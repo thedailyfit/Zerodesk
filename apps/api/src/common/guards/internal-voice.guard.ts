@@ -1,4 +1,4 @@
-﻿import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -8,9 +8,9 @@ export class InternalVoiceGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const voiceKey = request.headers['x-internal-voice-key'];
-    const expectedKey = this.configService.get<string>('INTERNAL_VOICE_SECRET') || 'zerodesk-internal-voice-key-2026';
+    const expectedKey = this.configService.get<string>('INTERNAL_VOICE_SECRET');
 
-    if (!voiceKey || voiceKey !== expectedKey) {
+    if (!expectedKey || !voiceKey || voiceKey !== expectedKey) {
       throw new UnauthorizedException('Missing or invalid internal voice worker credentials');
     }
 

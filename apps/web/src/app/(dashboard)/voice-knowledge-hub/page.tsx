@@ -157,11 +157,28 @@ export default function VoiceKnowledgeHubPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
     localStorage.setItem(`zerodesk_prompt_${currentNiche}`, goldenPrompt);
     localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(rules));
     localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(inputVariables));
-    showToast('✨ Voice AI System Prompt, Rules & Variables Saved!');
+    
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      const activeTone = tonesList.find((t: any) => t.id === selectedTone);
+      await apiClient('/voice/config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          systemPrompt: goldenPrompt,
+          greeting: activeTone?.greeting,
+          niche: currentNiche,
+          rules,
+          variables: inputVariables,
+        }),
+      });
+      showToast('✨ Voice AI Instructions & Golden Prompt Saved & Synced to Cloud!');
+    } catch {
+      showToast('✨ Voice AI Instructions Saved to Local Workspace!');
+    }
   };
 
   const handleResetPrompt = () => {

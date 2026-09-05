@@ -269,7 +269,9 @@ export class WhatsappService {
       },
     );
 
-    return response.json();
+    const result = await response.json();
+    await this.persistAndMeterOutboundMessage(tenantId, to, `[Template: ${templateName}]`, result.messages?.[0]?.id);
+    return result;
   }
 
   /**
@@ -312,7 +314,59 @@ export class WhatsappService {
       },
     );
 
-    return response.json();
+    const result = await response.json();
+    await this.persistAndMeterOutboundMessage(tenantId, to, bodyText, result.messages?.[0]?.id);
+    return result;
+  }
+
+  private async persistAndMeterOutboundMessage(tenantId: string, to: string, content: string, waMessageId?: string) {
+    try {
+      const cleanPhone = to.replace(/[^0-9+]/g, '');
+      const customer = await this.prisma.customer.findFirst({
+        where: { tenantId, phone: { contains: cleanPhone.slice(-10) } },
+      });
+
+      if (customer) {
+        let conversation = await this.prisma.conversation.findFirst({
+          where: { tenantId, customerId: customer.id, channel: 'WHATSAPP' },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (!conversation) {
+          conversation = await this.prisma.conversation.create({
+            data: {
+              tenantId,
+              customerId: customer.id,
+              channel: 'WHATSAPP',
+              status: 'ACTIVE',
+            },
+          });
+        }
+
+        const msg = await this.prisma.message.create({
+          data: {
+            tenantId,
+            conversationId: conversation.id,
+            role: 'ASSISTANT',
+            content,
+            metadata: { waMessageId },
+          },
+        });
+
+        this.eventEmitter.emit('whatsapp.message.sent', {
+          tenantId,
+          conversationId: conversation.id,
+          message: msg,
+        });
+      }
+
+      await this.prisma.subscription.updateMany({
+        where: { tenantId },
+        data: { whatsappMessagesUsed: { increment: 1 } },
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to meter/store outbound message: ${err.message}`);
+    }
   }
 
   /**

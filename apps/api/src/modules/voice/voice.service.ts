@@ -96,8 +96,13 @@ export class VoiceService {
         const callId = payload.message?.call?.id;
         const role = payload.message?.role;
 
+        const tenantId = payload.message?.call?.assistantOverrides?.variableValues?.tenantId 
+          || payload.message?.call?.metadata?.tenantId 
+          || payload.tenantId;
+
         // Emit real-time transcript event for UI streaming
         this.eventEmitter.emit('voice.transcript', {
+          tenantId,
           callId,
           transcript: transcriptText,
           role,
@@ -416,7 +421,10 @@ export class VoiceService {
     }
 
     let event: any;
-    if (this.livekitReceiver && authHeader) {
+    if (this.livekitReceiver) {
+      if (!authHeader) {
+        throw new UnauthorizedException('Missing LiveKit webhook Authorization header');
+      }
       try {
         event = await this.livekitReceiver.receive(rawBody, authHeader);
       } catch (err) {
@@ -424,6 +432,9 @@ export class VoiceService {
         throw new UnauthorizedException('Invalid LiveKit webhook signature');
       }
     } else {
+      if (process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('LiveKit webhook receiver is not configured in production');
+      }
       try {
         event = JSON.parse(rawBody);
       } catch {

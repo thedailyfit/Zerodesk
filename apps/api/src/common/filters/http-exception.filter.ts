@@ -21,6 +21,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(`Unhandled exception: ${exception}`, (exception as Error)?.stack);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const Sentry = require('@sentry/node');
+        Sentry.captureException(exception);
+      } catch {
+        // Sentry not active in environment
+      }
     }
 
     response.status(status).json({

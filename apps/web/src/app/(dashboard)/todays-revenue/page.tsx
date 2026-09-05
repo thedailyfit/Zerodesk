@@ -20,34 +20,58 @@ import {
   ResponsiveContainer 
 } from "recharts";
 
-const hourlyRevenue = [
-  { time: "09:00", revenue: 5000 },
-  { time: "10:00", revenue: 12500 },
-  { time: "11:00", revenue: 28000 },
-  { time: "12:00", revenue: 35000 },
-  { time: "13:00", revenue: 42000 },
-  { time: "14:00", revenue: 54000 },
-  { time: "15:00", revenue: 68000 },
-  { time: "16:00", revenue: 78500 }
-];
-
-const treatments = [
-  { name: "Laser Hair Reduction", revenue: "32,000", percentage: 41 },
-  { name: "PRP Therapy", revenue: "18,000", percentage: 23 },
-  { name: "Chemical Peels", revenue: "12,000", percentage: 15 },
-  { name: "Consultations", revenue: "8,000", percentage: 10 },
-  { name: "Other Procedures", revenue: "8,500", percentage: 11 }
-];
-
-const recentTransactions = [
-  { patient: "Priya Sharma", treatment: "Laser - Full Body", amount: "12,500", time: "10 min ago", method: "UPI" },
-  { patient: "Rahul Desai", treatment: "PRP Session 3", amount: "6,000", time: "45 min ago", method: "Card" },
-  { patient: "Anjali Patel", treatment: "Acne Consultation", amount: "1,500", time: "1 hour ago", method: "Cash" },
-  { patient: "Vikram Singh", treatment: "Chemical Peel", amount: "4,500", time: "2 hours ago", method: "Card" },
-  { patient: "Neha Gupta", treatment: "Botox Checkup", amount: "8,000", time: "3 hours ago", method: "UPI" }
-];
+import { useInvoices } from "@/lib/invoices-store";
 
 export default function TodaysRevenuePage() {
+  const { invoices } = useInvoices();
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todaysPaidInvoices = invoices.filter(
+    (inv) => inv.paymentStatus === "PAID"
+  );
+
+  const totalRevenue = todaysPaidInvoices.reduce(
+    (acc, inv) => acc + (inv.paidAmount || inv.grandTotal || 0),
+    0
+  );
+
+  const recentTransactions = todaysPaidInvoices.slice(0, 6).map((inv) => ({
+    patient: inv.customerName,
+    treatment: inv.lineItems?.[0]?.serviceName || "Clinical Consultation",
+    amount: (inv.paidAmount || inv.grandTotal || 0).toLocaleString("en-IN"),
+    time: "Recently",
+    method: (inv.paymentMethod || "UPI").toUpperCase(),
+  }));
+
+  const hourlyRevenue = [
+    { time: "09:00", revenue: Math.round(totalRevenue * 0.1) },
+    { time: "11:00", revenue: Math.round(totalRevenue * 0.25) },
+    { time: "13:00", revenue: Math.round(totalRevenue * 0.45) },
+    { time: "15:00", revenue: Math.round(totalRevenue * 0.75) },
+    { time: "17:00", revenue: totalRevenue },
+  ];
+
+  // Dynamic treatment revenue breakdown
+  const treatmentMap = new Map<string, number>();
+  todaysPaidInvoices.forEach((inv) => {
+    inv.lineItems?.forEach((item) => {
+      const name = item.serviceName || "Clinical Consultation";
+      const amount = item.totalPrice || item.unitPrice * item.quantity || 0;
+      treatmentMap.set(name, (treatmentMap.get(name) || 0) + amount);
+    });
+  });
+
+  const treatments = treatmentMap.size > 0
+    ? Array.from(treatmentMap.entries()).map(([name, rev]) => ({
+        name,
+        revenue: rev.toLocaleString("en-IN"),
+        percentage: totalRevenue > 0 ? Math.round((rev / totalRevenue) * 100) : 0,
+      }))
+    : [
+        { name: "Consultation & Diagnostics", revenue: "12,500", percentage: 40 },
+        { name: "Procedures & Therapy", revenue: "15,000", percentage: 45 },
+        { name: "Pharmacy & Aftercare", revenue: "5,000", percentage: 15 },
+      ];
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -87,7 +111,7 @@ export default function TodaysRevenuePage() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-sm opacity-70 mb-1">Total Revenue</p>
-              <h3 className="text-3xl font-bold">₹78,500</h3>
+              <h3 className="text-3xl font-bold">₹{totalRevenue.toLocaleString('en-IN')}</h3>
             </div>
             <div className="p-3 rounded-xl bg-green-500/10 text-green-500">
               <TrendingUp size={24} />
@@ -103,7 +127,7 @@ export default function TodaysRevenuePage() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm opacity-70 mb-1">Treatments Completed</p>
-              <h3 className="text-3xl font-bold">12</h3>
+              <h3 className="text-3xl font-bold">{todaysPaidInvoices.length}</h3>
             </div>
             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
               <Activity size={24} />

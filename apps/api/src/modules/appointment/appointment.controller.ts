@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, UseGuards, Headers, Query, UnauthorizedException } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -37,6 +37,18 @@ export class AppointmentController {
     return this.appointmentService.bookFromVoice(tenantId, data);
   }
 
+  @Post('public-book')
+  async publicBook(
+    @Headers('x-tenant-id') headerTenantId: string,
+    @Body() data: any,
+  ) {
+    const tenantId = headerTenantId || data.tenantId || data.slug;
+    return this.appointmentService.bookFromVoice(tenantId, {
+      ...data,
+      source: 'WEB_BOOKING',
+    });
+  }
+
   @Put(':id/cancel')
   @UseGuards(AuthGuard, TenantGuard)
   async cancel(@TenantId() tenantId: string, @Param('id') id: string) {
@@ -44,7 +56,20 @@ export class AppointmentController {
   }
 
   @Get('ical/:tenantId')
-  async getIcalFeed(@Param('tenantId') tenantId: string) {
+  async getIcalFeed(
+    @Param('tenantId') tenantId: string,
+    @Query('token') token?: string,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    // Enforce signed token or authorization header to protect patient PHI
+    const expectedSecret = process.env.INTERNAL_VOICE_SECRET || process.env.CLERK_SECRET_KEY || 'zd-feed-secret';
+    const crypto = await import('crypto');
+    const expectedToken = crypto.createHmac('sha256', expectedSecret).update(tenantId).digest('hex').substring(0, 32);
+
+    if (!authHeader && (!token || token !== expectedToken)) {
+      throw new UnauthorizedException('Missing or invalid secure calendar feed token');
+    }
+
     return this.appointmentService.generateIcalFeed(tenantId);
   }
 }

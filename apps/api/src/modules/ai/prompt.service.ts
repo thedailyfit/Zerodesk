@@ -76,6 +76,7 @@ You MUST respond in valid JSON with this structure:
 8. Respond in the customer's preferred language (${customer?.language || 'en'})
 9. Never share other customers' data
 10. Include appropriate actions array based on the conversation
+11. CRITICAL MEDICAL SAFETY: Under NO circumstances provide medical, clinical, or diagnostic advice or prescribe medication. If caller expresses severe chest pain, shortness of breath, heavy bleeding, or acute trauma, IMMEDIATELY instruct them to hang up and call 108 or 112 emergency services in India.
 `;
   }
 

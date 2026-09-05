@@ -37,104 +37,57 @@ DROP POLICY IF EXISTS tenant_isolation_automation_workflows ON "automation_workf
 -- 3. Define strict RLS isolation policies based on PostgreSQL session variable 'app.current_tenant_id'
 CREATE POLICY tenant_isolation_customers ON "customers"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_conversations ON "conversations"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_messages ON "messages"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_appointments ON "appointments"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_services ON "services"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_staff_members ON "staff_members"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_leads ON "leads"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_tasks ON "tasks"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_activities ON "activities"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_invoices ON "invoices"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_knowledge_documents ON "knowledge_documents"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_knowledge_chunks ON "knowledge_chunks"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 
 CREATE POLICY tenant_isolation_automation_workflows ON "automation_workflows"
     FOR ALL
-    USING (
-        current_setting('app.current_tenant_id', true) IS NULL 
-        OR current_setting('app.current_tenant_id', true) = ''
-        OR "tenant_id" = current_setting('app.current_tenant_id', true)::uuid
-    );
+    USING ("tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
+
+-- 4. High-Performance HNSW Vector Index on pgvector embeddings
+CREATE INDEX IF NOT EXISTS knowledge_chunks_embedding_hnsw_idx 
+ON "knowledge_chunks" USING hnsw (embedding vector_cosine_ops);
+

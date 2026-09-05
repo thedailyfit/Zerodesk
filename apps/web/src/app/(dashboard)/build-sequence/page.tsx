@@ -156,7 +156,7 @@ export default function BuildSequencePage() {
       description: 'Configure this step',
       config: {}
     };
-    let newNodes = [...activeSequence.nodes];
+    const newNodes = [...activeSequence.nodes];
     if (afterNodeId) {
       const idx = newNodes.findIndex(n => n.id === afterNodeId);
       newNodes.splice(idx + 1, 0, newNode);
