@@ -1,7 +1,6 @@
 ﻿const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { PrismaClient } = require('@prisma/client');
 
 async function main() {
   console.log('====================================================');
@@ -14,36 +13,48 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('1️⃣ Pushing Prisma Schema to Supabase...');
+  // Resolving PrismaClient from apps/api
+  const prismaPath = path.resolve(__dirname, '../apps/api/node_modules/@prisma/client');
+  let PrismaClient;
+  try {
+    PrismaClient = require(prismaPath).PrismaClient;
+  } catch {
+    try {
+      PrismaClient = require('@prisma/client').PrismaClient;
+    } catch {
+      console.log('📦 Installing Prisma Client dependencies...');
+      execSync('pnpm --filter @zerodesk/api db:generate', { stdio: 'inherit' });
+      PrismaClient = require(path.resolve(__dirname, '../node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client')).PrismaClient;
+    }
+  }
+
+  console.log('1️⃣ Synchronizing Database Tables via Prisma db push...');
   try {
     execSync('pnpm --filter @zerodesk/api db:push', { stdio: 'inherit', env: process.env });
-    console.log('✅ Prisma Schema synchronized (all tables created).\n');
+    console.log('✅ Tables synchronized in Supabase.\n');
   } catch (err) {
     console.error('❌ Failed to push schema to Supabase:', err.message);
     process.exit(1);
   }
 
-  console.log('2️⃣ Initializing Prisma Client...');
+  console.log('2️⃣ Applying Row-Level Security policies & HNSW vector index...');
   const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 
   try {
     await prisma.$connect();
-    console.log('✅ Connected to database via Prisma.\n');
+    console.log('✅ Connected to database.\n');
 
-    console.log('3️⃣ Ensuring extensions exist (vector, uuid-ossp)...');
     try {
       await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS "vector";');
       await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-      console.log('✅ Extensions enabled.\n');
+      console.log('✅ Vector & UUID extensions confirmed.\n');
     } catch (extErr) {
-      console.warn('⚠️ Note on extension creation:', extErr.message);
+      console.warn('⚠️ Extension warning:', extErr.message);
     }
 
-    console.log('4️⃣ Applying Row-Level Security policies & HNSW vector index...');
     const rlsPath = path.join(__dirname, '../apps/api/prisma/migrations/rls_policies.sql');
     if (fs.existsSync(rlsPath)) {
       const sql = fs.readFileSync(rlsPath, 'utf8');
-      // Split statements on semicolon
       const statements = sql
         .split(';')
         .map(s => s.trim())
@@ -53,16 +64,15 @@ async function main() {
         try {
           await prisma.$executeRawUnsafe(statement);
         } catch (stmtErr) {
-          // Ignore individual policy drop errors if non-existent
           if (!statement.includes('DROP POLICY')) {
-            console.warn(`⚠️ Warning executing statement: ${stmtErr.message}`);
+            console.warn(`⚠️ Warning: ${stmtErr.message}`);
           }
         }
       }
       console.log('✅ RLS policies and HNSW vector index applied.\n');
     }
 
-    console.log('🎉 Production Database Migration & Security Setup Complete!');
+    console.log('🎉 Production Database Migration & Setup Complete!');
   } catch (err) {
     console.error('❌ Migration Error:', err.message);
     process.exit(1);
