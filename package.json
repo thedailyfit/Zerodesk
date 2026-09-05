@@ -13,9 +13,11 @@
     "test:e2e": "turbo test:e2e",
     "db:generate": "pnpm --filter @zerodesk/api db:generate",
     "db:migrate": "pnpm --filter @zerodesk/api db:migrate",
+    "db:migrate:prod": "node scripts/apply-production-migration.js",
     "db:push": "pnpm --filter @zerodesk/api db:push",
     "db:seed": "pnpm db:generate && pnpm --filter @zerodesk/api db:seed",
     "db:studio": "pnpm --filter @zerodesk/api db:studio",
+    "preflight": "node scripts/preflight-check.js",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
