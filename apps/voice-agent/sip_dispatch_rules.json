@@ -1,0 +1,24 @@
+{
+  "$schema": "https://livekit.io/schemas/sip-dispatch-rule.json",
+  "name": "zerodesk-inbound-trunk-dispatch",
+  "description": "Dynamic SIP Dispatch Rule for ZeroDesk Indian Telephony (Exotel / Airtel IQ)",
+  "rules": [
+    {
+      "name": "inbound-clinic-dispatch",
+      "dispatchRuleIndividual": {
+        "roomPrefix": "call_"
+      },
+      "metadata": {
+        "provider": "exotel_india",
+        "region": "ap-south-1"
+      },
+      "roomConfig": {
+        "agents": [
+          {
+            "agentName": "zerodesk-voice-agent"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useServices } from '@/lib/services-store';
+import { api } from '@/lib/api-client';
 import type { NicheId } from '@/config/niches/types';
 
 interface AppointmentItem {
@@ -141,7 +142,45 @@ export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>(() => DEFAULT_APPOINTMENTS_BY_NICHE[currentNiche] || DEFAULT_APPOINTMENTS_BY_NICHE.skin);
 
   useEffect(() => {
-    setAppointments(DEFAULT_APPOINTMENTS_BY_NICHE[currentNiche] || DEFAULT_APPOINTMENTS_BY_NICHE.skin);
+    // 1. Initial cached render
+    const cached = typeof window !== 'undefined' ? localStorage.getItem(`zerodesk_appointments_${currentNiche}`) : null;
+    if (cached) {
+      try {
+        setAppointments(JSON.parse(cached));
+      } catch {
+        setAppointments(DEFAULT_APPOINTMENTS_BY_NICHE[currentNiche] || DEFAULT_APPOINTMENTS_BY_NICHE.skin);
+      }
+    } else {
+      setAppointments(DEFAULT_APPOINTMENTS_BY_NICHE[currentNiche] || DEFAULT_APPOINTMENTS_BY_NICHE.skin);
+    }
+
+    // 2. Background sync with NestJS backend
+    api.get<any[]>('/appointments').then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: AppointmentItem[] = res.map((a: any) => ({
+          id: a.id,
+          customer: a.customer?.name || 'Inquiry Patient',
+          phone: a.customer?.phone || '',
+          email: a.customer?.email || '',
+          service: a.service?.name || 'Clinic Consultation',
+          staff: a.staff?.name || 'Specialist Doctor',
+          scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString() : new Date().toISOString(),
+          duration: a.durationMins || 30,
+          status: (a.status as any) || 'SCHEDULED',
+          source: (a.source as any) || 'AI_VOICE',
+          priority: 'VIP',
+          confirmationStatus: a.status === 'CONFIRMED' ? 'Confirmed via WhatsApp AI' : 'Scheduled',
+          confirmationSent: true,
+          notes: a.notes || '',
+        }));
+        setAppointments(mapped);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`zerodesk_appointments_${currentNiche}`, JSON.stringify(mapped));
+        }
+      }
+    }).catch(() => {
+      // Offline fallback
+    });
   }, [currentNiche]);
 
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
@@ -207,6 +246,14 @@ export default function AppointmentsPage() {
       return a;
     }));
 
+    // Background sync to backend
+    api.post('/appointments', {
+      scheduledAt: new Date(scheduledAt).toISOString(),
+      durationMins: editDuration,
+      status: editStatus,
+      notes: editNotes,
+    }).catch(() => {});
+
     setSaveSuccessMsg(true);
     setTimeout(() => {
       setSaveSuccessMsg(false);
@@ -221,6 +268,8 @@ export default function AppointmentsPage() {
       }
       return a;
     }));
+    // Background sync cancel to backend
+    api.put(`/appointments/${apptId}/cancel`).catch(() => {});
     setEditingAppt(null);
   };
 

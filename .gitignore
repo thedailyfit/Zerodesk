@@ -48,3 +48,8 @@ docker-compose.override.yml
 
 # Sentry
 .sentryclirc
+
+# Python & TypeScript Cache
+__pycache__/
+*.py[cod]
+*.tsbuildinfo

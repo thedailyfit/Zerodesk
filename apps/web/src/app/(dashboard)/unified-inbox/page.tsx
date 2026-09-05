@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
+import { useAuth } from '@clerk/nextjs';
+import { useInboxStore } from '@/lib/inbox-store';
 
 interface UnifiedMessage {
   id: string;
@@ -246,21 +248,38 @@ const MOCK_CONTACTS: UnifiedContact[] = [
 
 export default function UnifiedInboxPage() {
   const { currentNiche } = useNiche();
-  const [contacts, setContacts] = useState(MOCK_CONTACTS);
-  const [selectedContactId, setSelectedContactId] = useState<string>('c1');
+  const { getToken } = useAuth();
+  const store = useInboxStore();
+
   const [channelFilter, setChannelFilter] = useState<'all' | 'voice' | 'whatsapp' | 'webchat'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [outboundMessage, setOutboundMessage] = useState('');
   const [selectedSendChannel, setSelectedSendChannel] = useState<'whatsapp' | 'webchat'>('whatsapp');
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<string>('c1');
 
-  const selectedContact = contacts.find(c => c.id === selectedContactId) || contacts[0];
+  // Load conversations and connect WebSocket stream
+  React.useEffect(() => {
+    store.fetchConversations();
+    let cleanup: (() => void) | undefined;
+    async function init() {
+      const token = await getToken();
+      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') || undefined : undefined;
+      cleanup = store.initSocket(token || undefined, tenantId);
+    }
+    init();
+    return () => cleanup?.();
+  }, [getToken]);
+
+  const contacts = (store.contacts && store.contacts.length > 0) ? store.contacts : MOCK_CONTACTS;
+  const activeSelectedId = store.selectedContactId || selectedContactId;
+  const selectedContact = contacts.find(c => c.id === activeSelectedId) || contacts[0];
 
   const filteredContacts = contacts.filter(contact => {
     const matchesSearch = 
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.phone.includes(searchQuery) ||
-      contact.email.toLowerCase().includes(searchQuery.toLowerCase());
+      (contact.email && contact.email.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesChannel = channelFilter === 'all' || contact.lastChannel === channelFilter;
     return matchesSearch && matchesChannel;
   });
@@ -269,28 +288,7 @@ export default function UnifiedInboxPage() {
     e.preventDefault();
     if (!outboundMessage.trim() || !selectedContact) return;
 
-    const newMsg: UnifiedMessage = {
-      id: `msg_${Date.now()}`,
-      sender: 'staff',
-      channel: selectedSendChannel,
-      content: outboundMessage,
-      time: 'Just now',
-      status: 'sent'
-    };
-
-    setContacts(prev => prev.map(c => {
-      if (c.id === selectedContact.id) {
-        return {
-          ...c,
-          lastMessage: outboundMessage,
-          lastActive: 'Just now',
-          lastChannel: selectedSendChannel,
-          messages: [...c.messages, newMsg]
-        };
-      }
-      return c;
-    }));
-
+    store.sendMessage(selectedContact.id, outboundMessage, selectedSendChannel);
     setOutboundMessage('');
   };
 
@@ -304,7 +302,7 @@ export default function UnifiedInboxPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4.5rem)] flex flex-col max-w-[1600px] mx-auto p-3 sm:p-4 gap-3">
+    <div className="flex flex-col h-[calc(100vh-5rem)] gap-4 p-4 max-w-[1600px] mx-auto overflow-hidden">
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-3.5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
@@ -314,8 +312,14 @@ export default function UnifiedInboxPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-[var(--color-text)]">The Unified Omnichannel Inbox</h1>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                Live Sync Active
+              <span className={cn(
+                "text-[10px] font-mono font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full flex items-center gap-1.5",
+                store.isConnected 
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              )}>
+                <span className={cn("w-1.5 h-1.5 rounded-full", store.isConnected ? "bg-emerald-400 animate-pulse" : "bg-amber-400")} />
+                {store.isConnected ? "Live Stream Connected" : "Local Sync Mode"}
               </span>
             </div>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">

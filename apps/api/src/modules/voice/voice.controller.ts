@@ -4,6 +4,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
+import { InternalVoiceGuard } from '../../common/guards/internal-voice.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import * as crypto from 'crypto';
@@ -123,5 +124,19 @@ export class VoiceController {
     @Query('limit') limit?: number,
   ) {
     return this.voiceService.getCallHistory(tenantId, page || 1, limit || 20);
+  }
+
+  @Post('send-during-call-info')
+  @UseGuards(InternalVoiceGuard)
+  async sendDuringCallInfo(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() body: { to: string; infoType: string; channel?: string },
+  ) {
+    return this.voiceService.sendDuringCallWhatsApp(tenantId, body.to, body.infoType);
+  }
+
+  @Post('sip-dispatch-webhook')
+  async sipDispatchWebhook(@Body() payload: any) {
+    return this.voiceService.handleSipDispatchWebhook(payload);
   }
 }

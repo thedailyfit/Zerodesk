@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
+import { api } from '@/lib/api-client';
 
 export interface InvoiceLineItem {
   serviceId?: string;
@@ -947,6 +948,45 @@ export function useInvoices() {
         setInvoices(defaults);
         localStorage.setItem(storageKey, JSON.stringify(defaults));
       }
+
+      // Background sync with NestJS /v1/invoices
+      api.get<any[]>('/invoices').then((res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          const mapped: InvoiceRecord[] = res.map((inv: any) => ({
+            id: inv.id,
+            invoiceNo: inv.invoiceNumber || 'INV-2026-0001',
+            nicheId: currentNiche,
+            customerName: inv.customer?.name || 'Customer',
+            phone: inv.customer?.phone || '',
+            email: inv.customer?.email || '',
+            lineItems: (inv.items || []).map((it: any) => ({
+              serviceName: it.description || 'Service',
+              quantity: it.quantity || 1,
+              unitPrice: Number(it.unitPrice || 0),
+              gstRate: 18,
+              gstAmount: Number(it.totalPrice || 0) * 0.18,
+              totalPrice: Number(it.totalPrice || 0),
+            })),
+            subtotal: Number(inv.subtotal || 0),
+            totalGst: Number(inv.taxAmount || 0),
+            discountType: 'amount',
+            discountValue: 0,
+            discountAmount: 0,
+            grandTotal: Number(inv.totalAmount || 0),
+            paymentMethod: (inv.paymentMethod?.toLowerCase() as any) || 'upi',
+            paymentStatus: (inv.status as any) || 'PAID',
+            paidAmount: Number(inv.totalAmount || 0),
+            remainingBalance: 0,
+            dueDate: inv.dueDate ? inv.dueDate.split('T')[0] : new Date().toISOString().split('T')[0],
+            createdDate: inv.createdAt ? inv.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+            sentViaAi: false,
+            isPackagePayment: false,
+            notes: inv.notes,
+          }));
+          setInvoices(mapped);
+          localStorage.setItem(storageKey, JSON.stringify(mapped));
+        }
+      }).catch(() => {});
     } catch (error) {
       console.error('Failed to load invoices:', error);
       const defaults = DEFAULT_INVOICES_BY_NICHE[currentNiche] || [];
@@ -995,6 +1035,24 @@ export function useInvoices() {
     };
 
     saveInvoices([newInvoice, ...invoices]);
+
+    // Background sync to backend
+    api.post('/invoices', {
+      invoiceNumber: newInvoice.invoiceNo,
+      subtotal: newInvoice.subtotal,
+      taxAmount: newInvoice.totalGst,
+      totalAmount: newInvoice.grandTotal,
+      status: newInvoice.paymentStatus,
+      paymentMethod: newInvoice.paymentMethod.toUpperCase(),
+      notes: newInvoice.notes,
+      dueDate: newInvoice.dueDate,
+      items: newInvoice.lineItems.map(li => ({
+        description: li.serviceName,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        totalPrice: li.totalPrice,
+      })),
+    }).catch(() => {});
   }, [invoices, saveInvoices]);
 
   const updateInvoice = useCallback((id: string, updates: Partial<InvoiceRecord>) => {

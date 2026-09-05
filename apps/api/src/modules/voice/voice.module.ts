@@ -3,11 +3,13 @@ import { BullModule } from '@nestjs/bullmq';
 import { VoiceController } from './voice.controller';
 import { VoiceService } from './voice.service';
 import { KnowledgeModule } from '../knowledge-base/knowledge.module';
+import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { OutboundCallProcessor } from './outbound-call.processor';
 
 @Module({
   imports: [
     KnowledgeModule,
+    WhatsappModule,
     BullModule.registerQueue({
       name: 'outbound-calls',
     }),

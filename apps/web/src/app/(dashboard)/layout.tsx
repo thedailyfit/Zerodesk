@@ -33,6 +33,7 @@ import {
 import { useTheme } from '@/components/providers/theme-provider';
 import { useRole } from '@/components/providers/role-provider';
 import { CommandPalette } from '@/components/dashboard/command-palette';
+import { ApiAuthSync } from '@/components/providers/api-auth-sync';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import { useNotifications } from '@/lib/notifications-store';
@@ -249,6 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
+      <ApiAuthSync />
       {/* Sidebar */}
       <motion.aside
         initial={{ width: 256 }}

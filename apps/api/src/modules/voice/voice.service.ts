@@ -7,6 +7,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { AccessToken, WebhookReceiver } from 'livekit-server-sdk';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 export type VoiceProvider = 'vapi' | 'retell' | 'livekit';
 
@@ -33,6 +34,7 @@ export class VoiceService {
     private eventEmitter: EventEmitter2,
     private ragService: RagService,
     private promptGuard: PromptGuardService,
+    private whatsappService: WhatsappService,
     @InjectQueue('outbound-calls') private outboundQueue: Queue,
   ) {
     const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
@@ -452,6 +454,7 @@ export class VoiceService {
 
       this.eventEmitter.emit('voice.call.ended', {
         provider: 'livekit',
+        tenantId,
         callId: event.room?.sid || roomName,
         type: 'ROOM_FINISHED',
         duration: durationSec,
@@ -676,5 +679,69 @@ RULES:
       doctor_assistant: '11labs-Dorothy',
     };
     return voiceMap[personality] || '11labs-Adrian';
+  }
+
+  /**
+   * Dispatch during-call WhatsApp message to caller while phone call remains active.
+   */
+  async sendDuringCallWhatsApp(tenantId: string, to: string, infoType: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    let text = '';
+    const cleanType = (infoType || '').toLowerCase();
+
+    if (cleanType.includes('book') || cleanType.includes('link') || cleanType.includes('appoint')) {
+      text = `Here is our 24/7 direct booking link for ${tenant?.name || 'our clinic'}:\nhttps://app.zerodesk.in/book/${tenant?.slug || 'appointment'}`;
+    } else if (cleanType.includes('address') || cleanType.includes('location') || cleanType.includes('map') || cleanType.includes('direction')) {
+      text = `📍 Location & Directions for ${tenant?.name || 'our clinic'}:\nRoad No. 36, Jubilee Hills, Hyderabad.\nGoogle Maps: https://maps.google.com/?q=${encodeURIComponent(tenant?.name || 'ZeroDesk Clinic')}`;
+    } else if (cleanType.includes('price') || cleanType.includes('menu') || cleanType.includes('cost') || cleanType.includes('catalog')) {
+      text = `📋 Treatment & Consultation Pricing for ${tenant?.name || 'our clinic'}:\n• Specialist Consultation: ₹800\n• HydraFacial Deep Pore Cleanse: ₹3,500\n• Laser Hair Removal: from ₹4,000\nReply to this message anytime to book your preferred slot!`;
+    } else {
+      text = `Hello from ${tenant?.name || 'our clinic'}! We received your inquiry during our phone call. Please reply here or visit our booking link: https://app.zerodesk.in/book/${tenant?.slug || 'appointment'}`;
+    }
+
+    try {
+      return await this.whatsappService.sendMessage(tenantId, to, text);
+    } catch (err: any) {
+      this.logger.warn(`Could not dispatch during-call WhatsApp: ${err.message}`);
+      return { status: 'failed', error: err.message };
+    }
+  }
+
+  /**
+   * Dynamic LiveKit SIP Dispatch Webhook:
+   * Maps incoming carrier calledNumber to tenantId and callerPhone.
+   */
+  async handleSipDispatchWebhook(payload: { calledNumber?: string; callerNumber?: string; sipCallId?: string }) {
+    const called = payload.calledNumber || '';
+    const caller = payload.callerNumber || '';
+
+    const config = await this.prisma.voiceConfig.findFirst({
+      where: {
+        OR: [
+          { vapiPhoneNumber: called },
+          { settings: { path: ['inboundNumber'], equals: called } },
+        ],
+        isActive: true,
+      },
+      include: { tenant: true },
+    });
+
+    const tenantId = config?.tenantId || (await this.prisma.tenant.findFirst())?.id || 'default';
+    const clinicName = config?.tenant?.name || 'ZeroDesk Clinic';
+
+    const roomName = `call_${caller || 'caller'}_${Date.now()}`;
+    const metadata = JSON.stringify({
+      tenant_id: tenantId,
+      caller_phone: caller,
+      clinic_name: clinicName,
+      source: 'SIP_INBOUND',
+    });
+
+    this.logger.log(`LiveKit SIP dispatch mapped called number ${called} to tenant ${tenantId} (${clinicName})`);
+
+    return {
+      room_name: roomName,
+      metadata,
+    };
   }
 }

@@ -21,6 +21,7 @@ import { StaffModule } from './modules/staff/staff.module';
 import { ServiceModule } from './modules/service/service.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
+import { InvoiceModule } from './modules/invoice/invoice.module';
 
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -89,6 +90,7 @@ import { SecurityModule } from './common/security/security.module';
     ServiceModule,
     AdminModule,
     HealthModule,
+    InvoiceModule,
   ],
   providers: [
     {

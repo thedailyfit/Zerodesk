@@ -1,9 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class AppointmentService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(AppointmentService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    @Optional() private whatsappService?: WhatsappService,
+  ) {}
 
   async findAll(tenantId: string) {
     return this.prisma.appointment.findMany({
@@ -83,7 +89,7 @@ export class AppointmentService {
       scheduledAt = new Date(Date.now() + 24 * 3600 * 1000);
     }
 
-    return this.prisma.appointment.create({
+    const createdAppt = await this.prisma.appointment.create({
       data: {
         tenantId,
         customerId: customer.id,
@@ -99,6 +105,38 @@ export class AppointmentService {
         service: true,
       },
     });
+
+    // Automated WhatsApp Appointment Confirmation
+    if (this.whatsappService && customer.phone && customer.phone !== '+919999999999') {
+      try {
+        const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+        const clinicName = tenant?.name || 'ZeroDesk Clinic';
+        const formattedDate = scheduledAt.toLocaleDateString('en-IN', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        const formattedTime = scheduledAt.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const text = `✅ Appointment Confirmed at ${clinicName}!\n\n` +
+          `👤 Patient: ${customer.name}\n` +
+          `🩺 Service: ${createdAppt.service?.name || data.serviceName || 'Consultation'}\n` +
+          `📅 Date: ${formattedDate}\n` +
+          `⏰ Time: ${formattedTime}\n\n` +
+          `Need to reschedule or have questions? Reply directly to this message or call our 24/7 front desk.`;
+
+        await this.whatsappService.sendMessage(tenantId, customer.phone, text);
+        this.logger.log(`Dispatched WhatsApp confirmation to ${customer.phone} for appointment ${createdAppt.id}`);
+      } catch (err: any) {
+        this.logger.warn(`Could not dispatch WhatsApp appointment confirmation: ${err.message}`);
+      }
+    }
+
+    return createdAppt;
   }
 
   async cancel(tenantId: string, id: string) {
@@ -112,5 +150,56 @@ export class AppointmentService {
       where: { id: appt.id },
       data: { status: 'CANCELLED' },
     });
+  }
+
+  /**
+   * Generate RFC 5545 iCalendar feed for Google / Apple Calendar sync.
+   */
+  async generateIcalFeed(tenantId: string): Promise<string> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const clinicName = tenant?.name || 'ZeroDesk Clinic';
+
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        tenantId,
+        status: { not: 'CANCELLED' },
+      },
+      include: { customer: true, service: true },
+      orderBy: { scheduledAt: 'asc' },
+      take: 100,
+    });
+
+    const formatIcalDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const ical = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ZeroDesk//Appointment Schedule//EN',
+      `X-WR-CALNAME:${clinicName} Appointments`,
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+    ];
+
+    for (const appt of appointments) {
+      const start = appt.scheduledAt;
+      const end = new Date(start.getTime() + (appt.durationMins || 30) * 60 * 1000);
+      const summary = `${appt.service?.name || 'Consultation'} - ${appt.customer?.name || 'Patient'}`;
+      const description = `Patient: ${appt.customer?.name}\\nPhone: ${appt.customer?.phone || 'N/A'}\\nNotes: ${appt.notes || 'None'}`;
+
+      ical.push(
+        'BEGIN:VEVENT',
+        `UID:appt-${appt.id}@zerodesk.in`,
+        `DTSTAMP:${formatIcalDate(new Date())}`,
+        `DTSTART:${formatIcalDate(start)}`,
+        `DTEND:${formatIcalDate(end)}`,
+        `SUMMARY:${summary}`,
+        `DESCRIPTION:${description}`,
+        `STATUS:${appt.status === 'COMPLETED' ? 'CONFIRMED' : 'TENTATIVE'}`,
+        'END:VEVENT'
+      );
+    }
+
+    ical.push('END:VCALENDAR');
+    return ical.join('\r\n');
   }
 }

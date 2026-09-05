@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
+import { api } from '@/lib/api-client';
 
 export interface PrescriptionRecord {
   id: string;
@@ -619,6 +620,38 @@ export function usePatients() {
         const defaults = DEFAULT_PATIENTS_BY_NICHE[currentNiche] || [];
         savePatients(defaults);
       }
+
+      // Background sync with NestJS backend
+      api.get<{ data: any[]; total: number }>('/customers?page=1&limit=100').then((res) => {
+        if (res && Array.isArray(res.data) && res.data.length > 0) {
+          const backendPatients: PatientRecord[] = res.data.map((c: any) => {
+            const meta = c.metadata || {};
+            return {
+              id: meta.pid || `PID-${(c.id || '').slice(0, 4).toUpperCase()}`,
+              nicheId: (meta.nicheId as NicheId) || currentNiche,
+              name: c.name || 'Unnamed Customer',
+              phone: c.phone || '',
+              email: c.email || undefined,
+              gender: meta.gender || 'Other',
+              age: meta.age || undefined,
+              priority: meta.priority || 'Standard',
+              tags: c.tags || [],
+              registrationDate: c.createdAt ? c.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+              totalVisits: meta.totalVisits || 0,
+              ltv: Number(c.lifetimeValue || 0),
+              lastVisit: meta.lastVisit,
+              prescriptions: meta.prescriptions || [],
+              uploadedFiles: meta.uploadedFiles || [],
+              treatmentPlans: meta.treatmentPlans || [],
+              _backendId: c.id,
+            } as any;
+          });
+          setPatients(backendPatients);
+          savePatients(backendPatients);
+        }
+      }).catch(() => {
+        // Backend offline or local dev, fallback to cached state
+      });
     };
 
     loadData();
@@ -663,17 +696,59 @@ export function usePatients() {
     
     const updated = [newPatient, ...patients];
     savePatients(updated);
+
+    // Background sync to backend
+    api.post('/customers', {
+      name: newPatient.name,
+      phone: newPatient.phone,
+      email: newPatient.email,
+      tags: newPatient.tags || [],
+      lifetimeValue: newPatient.ltv || 0,
+      metadata: {
+        pid: newPatient.id,
+        nicheId: currentNiche,
+        gender: newPatient.gender,
+        age: newPatient.age,
+        priority: newPatient.priority,
+      },
+    }).then((created) => {
+      if (created?.id) {
+        (newPatient as any)._backendId = created.id;
+      }
+    }).catch(() => {});
+
     return newPatient;
   }, [currentNiche, patients, savePatients]);
 
   const updatePatient = useCallback((id: string, updates: Partial<PatientRecord>) => {
     const updated = patients.map(p => p.id === id ? { ...p, ...updates } : p);
     savePatients(updated);
+
+    const target = patients.find(p => p.id === id);
+    if (target) {
+      const backendId = (target as any)._backendId || target.id;
+      api.put(`/customers/${backendId}`, {
+        name: updates.name || target.name,
+        phone: updates.phone || target.phone,
+        email: updates.email || target.email,
+        tags: updates.tags || target.tags,
+        metadata: {
+          ...((target as any).metadata || {}),
+          ...updates,
+        },
+      }).catch(() => {});
+    }
   }, [patients, savePatients]);
 
   const deletePatient = useCallback((id: string) => {
+    const target = patients.find(p => p.id === id);
     const updated = patients.filter(p => p.id !== id);
     savePatients(updated);
+
+    if (target) {
+      const backendId = (target as any)._backendId || target.id;
+      api.delete(`/customers/${backendId}`).catch(() => {});
+    }
   }, [patients, savePatients]);
 
   const getPatientById = useCallback((id: string) => {

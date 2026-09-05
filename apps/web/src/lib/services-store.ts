@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
+import { api } from '@/lib/api-client';
 
 export interface ServiceOffering {
   id: string;
@@ -649,6 +650,30 @@ export function useServices() {
       // Fallback
     }
     setServices(DEFAULT_SERVICES_BY_NICHE[currentNiche] || []);
+
+    // Background sync with NestJS /v1/services
+    api.get<any[]>('/services').then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: ServiceOffering[] = res.map((s: any) => ({
+          id: s.id,
+          nicheId: currentNiche,
+          name: s.name,
+          category: s.category || 'General',
+          duration: s.durationMins || 30,
+          price: Number(s.price || 0),
+          description: s.description || '',
+          staffRole: s.staffRole || 'Specialist',
+          isActive: s.isActive ?? true,
+          gstEnabled: true,
+          gstRate: 18,
+          isPackage: false,
+        }));
+        setServices(mapped);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`${SERVICES_STORAGE_KEY_PREFIX}${currentNiche}`, JSON.stringify(mapped));
+        }
+      }
+    }).catch(() => {});
   }, [currentNiche]);
 
   // Listen to custom sync events across components
@@ -690,17 +715,32 @@ export function useServices() {
     };
     const updated = [newService, ...services];
     saveServices(updated);
+
+    // Background sync to backend
+    api.post('/services', {
+      name: newService.name,
+      category: newService.category,
+      price: newService.price,
+      durationMins: newService.duration,
+      description: newService.description,
+      isActive: newService.isActive,
+    }).catch(() => {});
+
     return newService;
   }, [currentNiche, services, saveServices]);
 
   const updateService = useCallback((id: string, patch: Partial<ServiceOffering>) => {
     const updated = services.map(s => s.id === id ? { ...s, ...patch } : s);
     saveServices(updated);
+
+    api.put(`/services/${id}`, patch).catch(() => {});
   }, [services, saveServices]);
 
   const deleteService = useCallback((id: string) => {
     const updated = services.filter(s => s.id !== id);
     saveServices(updated);
+
+    api.delete(`/services/${id}`).catch(() => {});
   }, [services, saveServices]);
 
   const toggleServiceStatus = useCallback((id: string) => {

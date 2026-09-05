@@ -42,4 +42,9 @@ export class AppointmentController {
   async cancel(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.appointmentService.cancel(tenantId, id);
   }
+
+  @Get('ical/:tenantId')
+  async getIcalFeed(@Param('tenantId') tenantId: string) {
+    return this.appointmentService.generateIcalFeed(tenantId);
+  }
 }
