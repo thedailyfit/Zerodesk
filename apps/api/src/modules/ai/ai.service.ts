@@ -3,7 +3,7 @@ import { ContextService } from './context.service';
 import { PromptService } from './prompt.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 import { ConfigService } from '@nestjs/config';
 
 export interface AiResponse {
@@ -34,6 +34,58 @@ export class AiService {
     this.openai = new OpenAI({
       apiKey: this.configService.get('OPENAI_API_KEY') || 'sk-dummy-key',
     });
+  }
+
+  /**
+   * Transcribe incoming audio voice notes via OpenAI Whisper or Sarvam AI STT.
+   */
+  async transcribeAudio(buffer: Buffer, mimeType = 'audio/ogg', filename = 'voicenote.ogg'): Promise<string> {
+    // 1. Try OpenAI Whisper primary
+    const apiKey = this.configService.get('OPENAI_API_KEY');
+    if (apiKey && !apiKey.startsWith('sk-dummy')) {
+      try {
+        const file = await toFile(buffer, filename, { type: mimeType });
+        const response = await this.openai.audio.transcriptions.create({
+          file,
+          model: 'whisper-1',
+        });
+        if (response.text) {
+          return response.text.trim();
+        }
+      } catch (err: any) {
+        this.logger.warn(`OpenAI Whisper transcription error: ${err.message}. Trying Sarvam fallback...`);
+      }
+    }
+
+    // 2. Try Sarvam AI Saaras Indic STT fallback
+    const sarvamKey = this.configService.get('SARVAM_API_KEY');
+    if (sarvamKey) {
+      try {
+        const formData = new FormData();
+        const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
+        formData.append('file', blob, filename);
+        formData.append('model', 'saaras:v2');
+
+        const sarvamRes = await fetch('https://api.sarvam.ai/speech-to-text', {
+          method: 'POST',
+          headers: {
+            'api-subscription-key': sarvamKey,
+          },
+          body: formData,
+        });
+
+        if (sarvamRes.ok) {
+          const sJson = await sarvamRes.json();
+          if (sJson.transcript) {
+            return sJson.transcript.trim();
+          }
+        }
+      } catch (sErr: any) {
+        this.logger.warn(`Sarvam AI STT error: ${sErr.message}`);
+      }
+    }
+
+    return '';
   }
 
   /**

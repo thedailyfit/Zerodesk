@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { RagService } from '../knowledge-base/rag.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -744,4 +744,119 @@ RULES:
       metadata,
     };
   }
+
+  /**
+   * Persist completed call into PostgreSQL Conversation and Message records,
+   * meter subscription minutes, and emit WebSocket real-time update.
+   */
+  async recordCallCompletion(
+    tenantId: string,
+    callerPhone: string,
+    durationSeconds: number,
+    roomName?: string,
+    metadata?: Record<string, any>,
+  ) {
+    try {
+      const cleanPhone = (callerPhone || '').replace(/[^0-9+]/g, '');
+      const normalizedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+${cleanPhone}`;
+
+      let customer = await this.prisma.customer.findFirst({
+        where: {
+          tenantId,
+          phone: { contains: cleanPhone.slice(-10) || '0000000000' },
+        },
+      });
+
+      if (!customer) {
+        customer = await this.prisma.customer.create({
+          data: {
+            tenantId,
+            name: metadata?.callerName || `Caller ${cleanPhone.slice(-4) || 'Unknown'}`,
+            phone: normalizedPhone || '+910000000000',
+            tags: ['lead', 'phone_inbound'],
+            metadata: { source: 'PHONE_INBOUND' },
+          },
+        });
+      }
+
+      const conversation = await this.prisma.conversation.create({
+        data: {
+          tenantId,
+          customerId: customer.id,
+          channel: 'VOICE',
+          status: 'ACTIVE',
+          aiSummary: `Inbound Call (${Math.ceil(durationSeconds / 60)} min)`,
+          sentiment: metadata?.sentiment || 'NEUTRAL',
+          metadata: {
+            roomName,
+            duration: durationSeconds,
+            callStatus: metadata?.status || 'COMPLETED',
+            recordingUrl: metadata?.recordingUrl || null,
+            sentiment: metadata?.sentiment || 'NEUTRAL',
+            summary: metadata?.summary || `Inbound phone consultation lasting ${durationSeconds} seconds.`,
+          },
+        },
+      });
+
+      const summaryText = metadata?.summary || `Voice call completed (${durationSeconds}s duration). AI receptionist answered inquiries.`;
+      await this.prisma.message.create({
+        data: {
+          tenantId,
+          conversationId: conversation.id,
+          role: 'ASSISTANT',
+          content: `📞 [Call Summary]: ${summaryText}`,
+          metadata: {
+            duration: durationSeconds,
+            recordingUrl: metadata?.recordingUrl || null,
+          },
+        },
+      });
+
+      const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
+      await this.prisma.subscription.updateMany({
+        where: { tenantId },
+        data: {
+          voiceMinutesUsed: { increment: billedMinutes },
+        },
+      });
+
+      this.eventEmitter.emit('inbox.update', {
+        tenantId,
+        conversationId: conversation.id,
+        channel: 'VOICE',
+        lastMessage: `📞 Inbound call (${billedMinutes} min)`,
+        timestamp: new Date(),
+      });
+
+      this.logger.log(`Recorded call completion for tenant ${tenantId}, customer ${customer.id}, room ${roomName} (${durationSeconds}s)`);
+      return { status: 'recorded', conversationId: conversation.id, billedMinutes };
+    } catch (err: any) {
+      this.logger.error(`Failed to record call completion: ${err.message}`, err.stack);
+      return { status: 'error', error: err.message };
+    }
+  }
+
+  /**
+   * Listen to voice.call.ended event and persist call records
+   */
+  @OnEvent('voice.call.ended')
+  async handleVoiceCallEnded(event: VoiceCallEvent) {
+    if (!event.tenantId) {
+      return;
+    }
+    const duration = event.duration || 60;
+    await this.recordCallCompletion(
+      event.tenantId,
+      event.phoneNumber || 'Unknown',
+      duration,
+      event.callId,
+      {
+        status: event.status || 'COMPLETED',
+        summary: event.metadata?.summary || event.transcript,
+        recordingUrl: event.metadata?.recordingUrl,
+        sentiment: event.metadata?.sentiment,
+      },
+    );
+  }
 }
+

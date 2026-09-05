@@ -19,17 +19,50 @@ export class WhatsappAiListener {
     tenantId: string;
     customerId: string;
     conversationId: string;
+    messageId?: string;
     message: string;
     messageType: string;
+    mediaUrl?: string;
     from: string;
+    phoneNumberId?: string;
+    accessToken?: string;
   }) {
-    // Only process text messages with actual content
-    if (!payload.message || payload.messageType !== 'text') {
-      return;
-    }
-
     try {
-      const { tenantId, customerId, conversationId, message, from } = payload;
+      const { tenantId, customerId, conversationId, messageId, message, messageType, mediaUrl, from, accessToken } = payload;
+      let effectiveMessage = message;
+
+      // Handle WhatsApp Voice Notes (audio/ogg)
+      if (messageType === 'audio' && mediaUrl && accessToken) {
+        this.logger.log(`Processing WhatsApp voice note for tenant ${tenantId} from ${from} (Media ID: ${mediaUrl})`);
+        try {
+          const media = await this.whatsappService.downloadMedia(mediaUrl, accessToken);
+          const transcription = await this.aiService.transcribeAudio(media.buffer, media.mimeType);
+
+          if (transcription) {
+            this.logger.log(`Transcribed WhatsApp voice note: "${transcription}"`);
+            effectiveMessage = transcription;
+
+            // Update stored message with transcript
+            if (messageId) {
+              await this.prisma.message.update({
+                where: { id: messageId },
+                data: {
+                  content: `[Voice Note]: "${transcription}"`,
+                },
+              });
+            }
+          } else {
+            this.logger.warn(`Could not transcribe voice note for media ${mediaUrl}`);
+            return;
+          }
+        } catch (mediaErr: any) {
+          this.logger.error(`Failed to download/transcribe WhatsApp voice note: ${mediaErr.message}`);
+          return;
+        }
+      } else if (messageType !== 'text' || !effectiveMessage) {
+        // Skip unsupported non-text media types (e.g. raw stickers/locations)
+        return;
+      }
 
       // 1. Check conversation state (skip auto-reply if human agent has taken over)
       const conversation = await this.prisma.conversation.findUnique({
@@ -60,7 +93,7 @@ export class WhatsappAiListener {
       const aiResult = await this.aiService.generateResponse(
         tenantId,
         customerId,
-        message,
+        effectiveMessage,
         'WHATSAPP',
         conversationId,
       );

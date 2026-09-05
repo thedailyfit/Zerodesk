@@ -26,6 +26,16 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, sarvam, elevenlabs, silero
 
+try:
+    from livekit.plugins import deepgram
+except ImportError:
+    deepgram = None
+
+try:
+    from livekit.plugins import cartesia
+except ImportError:
+    cartesia = None
+
 # Load .env variables
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -59,6 +69,7 @@ class CallContext:
         self.maps_url = maps_url
         self.room_name = room_name
         self.booking_link_sent = False
+        self.call_start_time = time.time()
 
 
 def extract_call_context(ctx: JobContext) -> CallContext:
@@ -284,6 +295,46 @@ async def enforce_call_duration_cap(session: AgentSession, ctx: JobContext, call
 
 
 # ==========================================
+# POST-CALL PERSISTENCE & NOTIFICATION
+# ==========================================
+
+async def notify_call_completion(call_ctx: CallContext, status: str = "COMPLETED", duration: Optional[int] = None):
+    """Notify backend API of call termination to persist CallLog and update Unified Inbox."""
+    if duration is None:
+        duration = max(1, int(time.time() - call_ctx.call_start_time))
+
+    payload = {
+        "tenantId": call_ctx.tenant_id,
+        "callerPhone": call_ctx.caller_phone or "Unknown",
+        "duration": duration,
+        "status": status,
+        "roomName": call_ctx.room_name,
+        "clinicName": call_ctx.clinic_name,
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-internal-key": INTERNAL_VOICE_SECRET,
+        "x-tenant-id": call_ctx.tenant_id,
+    }
+
+    try:
+        async with aiohttp.ClientSession() as http_session:
+            async with http_session.post(
+                f"{ZERODESK_API}/v1/voice/call-completed",
+                json=payload,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=5.0),
+            ) as resp:
+                if resp.status < 300:
+                    logger.info(f"Call completion recorded successfully for {call_ctx.room_name} ({duration}s)")
+                else:
+                    logger.warning(f"Backend returned status {resp.status} on call completion notification")
+    except Exception as e:
+        logger.error(f"Failed to post call completion to backend: {e}")
+
+
+# ==========================================
 # MAIN AGENT ENTRYPOINT
 # ==========================================
 
@@ -314,7 +365,7 @@ STRICT GUIDELINES:
 - Always maintain empathy, politeness, and high clarity.
 """
 
-    # 3. Configurable STT provider with graceful fallback cascade
+    # 3. Configurable STT provider with multi-tier graceful fallback cascade
     selected_stt = None
     if os.getenv("SARVAM_API_KEY"):
         try:
@@ -322,10 +373,16 @@ STRICT GUIDELINES:
         except Exception as e:
             logger.warning(f"Sarvam STT failed ({e}), falling back...")
 
+    if not selected_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
+        try:
+            selected_stt = deepgram.STT(model="nova-2-general")
+        except Exception as e:
+            logger.warning(f"Deepgram STT failed ({e}), falling back...")
+
     if not selected_stt and os.getenv("OPENAI_API_KEY"):
         selected_stt = openai.STT()
 
-    # 4. Configurable TTS provider with graceful fallback
+    # 4. Configurable TTS provider with multi-tier graceful fallback cascade
     selected_tts = None
     if os.getenv("ELEVENLABS_API_KEY"):
         try:
@@ -334,7 +391,13 @@ STRICT GUIDELINES:
                 voice_id=VOICE_ID,
             )
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS failed ({e}), falling back to OpenAI...")
+            logger.warning(f"ElevenLabs TTS failed ({e}), falling back to secondary...")
+
+    if not selected_tts and os.getenv("CARTESIA_API_KEY") and cartesia:
+        try:
+            selected_tts = cartesia.TTS()
+        except Exception as e:
+            logger.warning(f"Cartesia TTS failed ({e}), falling back to OpenAI...")
 
     if not selected_tts:
         selected_tts = openai.TTS(voice="alloy")
@@ -362,6 +425,7 @@ STRICT GUIDELINES:
     def on_disconnected():
         duration_task.cancel()
         logger.info(f"Voice call ended cleanly for room {call_ctx.room_name}, tenant: {call_ctx.tenant_id}")
+        asyncio.create_task(notify_call_completion(call_ctx, "COMPLETED"))
 
     await session.start(
         room=ctx.room,

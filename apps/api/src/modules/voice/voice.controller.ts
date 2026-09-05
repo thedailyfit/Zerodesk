@@ -135,6 +135,39 @@ export class VoiceController {
     return this.voiceService.sendDuringCallWhatsApp(tenantId, body.to, body.infoType);
   }
 
+  @Post('call-completed')
+  @UseGuards(InternalVoiceGuard)
+  async recordCallCompleted(
+    @Headers('x-tenant-id') tenantIdHeader: string,
+    @Body()
+    body: {
+      tenantId?: string;
+      callerPhone: string;
+      duration: number;
+      status?: string;
+      roomName?: string;
+      clinicName?: string;
+      summary?: string;
+      recordingUrl?: string;
+      sentiment?: string;
+    },
+  ) {
+    const tenantId = body.tenantId || tenantIdHeader;
+    return this.voiceService.recordCallCompletion(
+      tenantId,
+      body.callerPhone,
+      body.duration,
+      body.roomName,
+      {
+        status: body.status || 'COMPLETED',
+        clinicName: body.clinicName,
+        summary: body.summary,
+        recordingUrl: body.recordingUrl,
+        sentiment: body.sentiment,
+      },
+    );
+  }
+
   @Post('sip-dispatch-webhook')
   async sipDispatchWebhook(@Body() payload: any) {
     return this.voiceService.handleSipDispatchWebhook(payload);

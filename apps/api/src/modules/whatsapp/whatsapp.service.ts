@@ -109,7 +109,7 @@ export class WhatsappService {
             const conversation = await this.findOrCreateConversation(tenantId, customer.id);
 
             // Store incoming message
-            await this.prisma.message.create({
+            const savedMessage = await this.prisma.message.create({
               data: {
                 tenantId,
                 conversationId: conversation.id,
@@ -126,8 +126,10 @@ export class WhatsappService {
               tenantId,
               customerId: customer.id,
               conversationId: conversation.id,
+              messageId: savedMessage.id,
               message: messageContent.text,
               messageType: msg.type,
+              mediaUrl: messageContent.mediaUrl,
               from: msg.from,
               phoneNumberId,
               accessToken: tenantConfig.accessToken,
@@ -311,6 +313,50 @@ export class WhatsappService {
     );
 
     return response.json();
+  }
+
+  /**
+   * Download media payload (audio voice note, image, document) from Meta Cloud API.
+   */
+  async downloadMedia(mediaId: string, accessToken: string): Promise<{ buffer: Buffer; mimeType: string }> {
+    try {
+      const metaRes = await fetch(`${this.graphApiUrl}/${mediaId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!metaRes.ok) {
+        throw new Error(`Failed to retrieve media URL for ${mediaId}: ${metaRes.statusText}`);
+      }
+
+      const metaData = await metaRes.json();
+      const mediaUrl = metaData?.url;
+      const mimeType = metaData?.mime_type || 'audio/ogg';
+
+      if (!mediaUrl) {
+        throw new Error(`No download URL in Meta media response for ${mediaId}`);
+      }
+
+      const binaryRes = await fetch(mediaUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!binaryRes.ok) {
+        throw new Error(`Failed to download binary payload from ${mediaUrl}: ${binaryRes.statusText}`);
+      }
+
+      const arrayBuffer = await binaryRes.arrayBuffer();
+      return {
+        buffer: Buffer.from(arrayBuffer),
+        mimeType,
+      };
+    } catch (err: any) {
+      this.logger.error(`Media download failed for ID ${mediaId}: ${err.message}`);
+      throw err;
+    }
   }
 
   // ========================================
