@@ -1,0 +1,20 @@
+﻿app = "zerodesk-voice-agent"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Non-sensitive runtime flags
+  PYTHONUNBUFFERED = "1"
+
+# Voice agents are long-running stateful workers connecting outbound to LiveKit WebRTC.
+# They do NOT require public inbound HTTP ports or sleep-after-idle scaling.
+[processes]
+  app = "python agent.py start"
+
+# Keep at least 1 instance active 24/7 in Mumbai (bom)
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
+  cpus = 1
