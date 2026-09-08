@@ -1,25 +1,53 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalDependencies": ["**/.env.*local"],
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
   "globalEnv": [
     "NEXT_PUBLIC_*",
     "CLERK_*",
     "POSTHOG_*",
     "DATABASE_URL",
-    "SENTRY_AUTH_TOKEN"
+    "SENTRY_AUTH_TOKEN",
+    "DOPPLER_CONFIG",
+    "DOPPLER_ENVIRONMENT",
+    "DOPPLER_PROJECT"
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ],
       "env": [
         "NODE_ENV",
         "NEXT_PUBLIC_*",
         "CLERK_*",
         "POSTHOG_*",
         "DATABASE_URL",
-        "SENTRY_AUTH_TOKEN"
+        "SENTRY_AUTH_TOKEN",
+        "DOPPLER_CONFIG",
+        "DOPPLER_ENVIRONMENT",
+        "DOPPLER_PROJECT"
+      ]
+    },
+    "@zerodesk/shared#build": {
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "@zerodesk/web#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
       ]
     },
     "dev": {
@@ -27,10 +55,14 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test": {
       "cache": false

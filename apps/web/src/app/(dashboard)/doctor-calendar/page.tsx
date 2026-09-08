@@ -33,13 +33,27 @@ export interface DoctorProfile {
   todayAppointments: number;
 }
 
+const DEFAULT_DOCTOR: DoctorProfile = {
+  id: 'doc-default-1',
+  name: 'Dr. Ananya Sharma',
+  specialty: 'Chief Consultant',
+  avatar: 'AS',
+  phone: '+91 98765 43210',
+  email: 'ananya@clinic.com',
+  status: 'Active',
+  hours: '09:00 AM - 05:00 PM',
+  bookedHours: 4,
+  totalHours: 8,
+  todayAppointments: 6,
+};
+
 const DEFAULT_STAFF_BY_NICHE: Record<NicheId, DoctorProfile[]> = {
-  skin: [],
-  dental: [],
-  spa: [],
-  salon: [],
-  realestate: [],
-  hotel: []
+  skin: [DEFAULT_DOCTOR],
+  dental: [DEFAULT_DOCTOR],
+  spa: [DEFAULT_DOCTOR],
+  salon: [DEFAULT_DOCTOR],
+  realestate: [DEFAULT_DOCTOR],
+  hotel: [DEFAULT_DOCTOR]
 };
 
 export default function DoctorCalendarPage() {
@@ -47,7 +61,7 @@ export default function DoctorCalendarPage() {
   const staffTerm = nicheConfig.terminology?.staff || 'Doctor';
   
   const [doctors, setDoctors] = useState<DoctorProfile[]>(() => DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(() => (DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin)[0]);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(() => (DEFAULT_STAFF_BY_NICHE[currentNiche] || [DEFAULT_DOCTOR])[0] || DEFAULT_DOCTOR);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Load from localStorage or defaults per niche
@@ -130,7 +144,7 @@ export default function DoctorCalendarPage() {
   const [editClinicalRoom, setEditClinicalRoom] = useState('Consult OT 1');
 
   const handleOpenEditShift = () => {
-    const parts = selectedDoctor.hours.split(' - ');
+    const parts = (selectedDoctor?.hours || '09:00 AM - 05:00 PM').split(' - ');
     if (parts.length === 2) {
       setEditShiftStart(parts[0]);
       setEditShiftEnd(parts[1]);
@@ -298,7 +312,7 @@ export default function DoctorCalendarPage() {
                     Edit Shift
                   </button>
                 </div>
-                <span className="text-sm font-bold font-mono text-blue-400 mt-1 block">{selectedDoctor.hours.split(' - ')[0]} - {selectedDoctor.hours.split(' - ')[1]}</span>
+                <span className="text-sm font-bold font-mono text-blue-400 mt-1 block">{(selectedDoctor?.hours || '09:00 AM - 05:00 PM').split(' - ')[0]} - {(selectedDoctor?.hours || '09:00 AM - 05:00 PM').split(' - ')[1]}</span>
               </div>
 
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
