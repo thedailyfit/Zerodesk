@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AiService } from '../ai/ai.service';
 import { WhatsappService } from './whatsapp.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PromptGuardService } from '../../common/security/prompt-guard.service';
 
 @Injectable()
 export class WhatsappAiListener {
@@ -12,6 +13,7 @@ export class WhatsappAiListener {
     private readonly aiService: AiService,
     private readonly whatsappService: WhatsappService,
     private readonly prisma: PrismaService,
+    private readonly promptGuard: PromptGuardService,
   ) {}
 
   @OnEvent('whatsapp.message.received')
@@ -40,14 +42,18 @@ export class WhatsappAiListener {
 
           if (transcription) {
             this.logger.log(`Transcribed WhatsApp voice note: "${transcription}"`);
-            effectiveMessage = transcription;
+            const { sanitized, isInjected } = this.promptGuard.sanitizeUserInput(transcription);
+            if (isInjected) {
+              this.logger.warn(`[SECURITY ALERT] Audio note prompt injection detected for tenant ${tenantId} from ${from}: "${transcription}"`);
+            }
+            effectiveMessage = sanitized;
 
-            // Update stored message with transcript
+            // Update stored message with sanitized transcript
             if (messageId) {
               await this.prisma.message.update({
                 where: { id: messageId },
                 data: {
-                  content: `[Voice Note]: "${transcription}"`,
+                  content: `[Voice Note]: "${sanitized}"`,
                 },
               });
             }

@@ -94,7 +94,21 @@ export default function CreateTemplatePage() {
       createdAt: new Date().toISOString()
     };
 
-    // Save to local storage for current niche
+    // Save to backend database via API and sync with local storage
+    try {
+      import('@/lib/api-client').then(({ apiClient }) => {
+        apiClient('/automations', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: title,
+            category,
+            triggerType: channel,
+            definition: newTemplate,
+          }),
+        }).catch(() => {});
+      });
+    } catch {}
+
     const key = `zerodesk_custom_templates_${currentNiche}`;
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
     localStorage.setItem(key, JSON.stringify([newTemplate, ...existing]));

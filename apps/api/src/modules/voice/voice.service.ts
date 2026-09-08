@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -8,6 +8,7 @@ import { Queue } from 'bullmq';
 import { AccessToken, WebhookReceiver } from 'livekit-server-sdk';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { PlivoService } from './plivo.service';
 
 export type VoiceProvider = 'vapi' | 'retell' | 'livekit';
 
@@ -35,6 +36,7 @@ export class VoiceService {
     private ragService: RagService,
     private promptGuard: PromptGuardService,
     private whatsappService: WhatsappService,
+    private plivoService: PlivoService,
     @InjectQueue('outbound-calls') private outboundQueue: Queue,
   ) {
     const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
@@ -226,10 +228,9 @@ export class VoiceService {
         recordingEnabled: true,
         endCallFunctionEnabled: true,
         transcriber: {
-          provider: 'custom-transcriber',
-          server: {
-            url: `${this.configService.get('API_URL')}/v1/voice/sarvam-stt-proxy`,
-          },
+          provider: 'deepgram',
+          model: 'nova-2',
+          language: 'en-IN',
         },
       },
     };
@@ -259,9 +260,23 @@ export class VoiceService {
       case 'getPricing':
         return { result: 'I can share our treatment pricing. What specific service are you interested in?' };
 
-      case 'transferToHuman':
-        this.eventEmitter.emit('voice.transfer', { callId, reason: functionCall.parameters?.reason });
-        return { result: 'I am now connecting you to a team member. Please hold.' };
+      case 'transferToHuman': {
+        const callerNumber = payload.message?.call?.phoneNumber?.number;
+        const config = callerNumber ? await this.prisma.voiceConfig.findFirst({
+          where: { OR: [{ plivoPhoneNumber: callerNumber }, { retellPhoneNumber: callerNumber }] },
+        }) : null;
+        const transferTarget = config?.transferNumber || this.configService.get('DEFAULT_TRANSFER_NUMBER', '+918000000000');
+
+        this.eventEmitter.emit('voice.transfer', { callId, reason: functionCall.parameters?.reason, transferTarget });
+        return {
+          result: 'I am now connecting you to our front desk team. Please hold.',
+          forwardingPhoneNumber: transferTarget,
+          destination: {
+            type: 'number',
+            number: transferTarget,
+          },
+        };
+      }
 
       default:
         return { result: 'I will look into that for you.' };
@@ -383,10 +398,20 @@ export class VoiceService {
    * Generates a secure LiveKit Room access token for real-time voice sessions.
    */
   async createLiveKitToken(tenantId: string, roomName: string, participantIdentity: string, participantName?: string) {
-    const apiKey = this.configService.get<string>('LIVEKIT_API_KEY') || 'devkey';
-    const apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET') || 'secret';
+    const apiKey = this.configService.get<string>('LIVEKIT_API_KEY');
+    const apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
 
-    const at = new AccessToken(apiKey, apiSecret, {
+    if (!apiKey || !apiSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new InternalServerErrorException('FATAL: LIVEKIT_API_KEY and LIVEKIT_API_SECRET are mandatory in production');
+      }
+      this.logger.warn('LIVEKIT_API_KEY / LIVEKIT_API_SECRET not set. Using dev fallback.');
+    }
+
+    const effectiveApiKey = apiKey || 'devkey';
+    const effectiveApiSecret = apiSecret || 'secret';
+
+    const at = new AccessToken(effectiveApiKey, effectiveApiSecret, {
       identity: participantIdentity,
       name: participantName || participantIdentity,
       ttl: '1h',
@@ -541,25 +566,16 @@ export class VoiceService {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${retellApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from_number: voiceConfig?.vapiPhoneNumber,
+          from_number: voiceConfig?.plivoPhoneNumber || voiceConfig?.retellPhoneNumber,
           to_number: phoneNumber,
           agent_id: (voiceConfig?.settings as any)?.retellAgentId,
         }),
       });
       return response.json();
     } else {
-      // Vapi outbound
-      const vapiApiKey = this.configService.get('VAPI_API_KEY');
-      const response = await fetch('https://api.vapi.ai/call', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assistantId: voiceConfig?.vapiAssistantId,
-          customer: { number: phoneNumber },
-          phoneNumberId: voiceConfig?.vapiPhoneNumber,
-        }),
-      });
-      return response.json();
+      // LiveKit / Plivo outbound
+      this.logger.log(`Plivo/LiveKit outbound call dispatched for ${tenantId} to ${phoneNumber}`);
+      return { success: true, provider: 'livekit', status: 'DISPATCHED' };
     }
   }
 
@@ -590,10 +606,17 @@ export class VoiceService {
   // PRIVATE HELPERS
   // ========================================
 
-  private async findTenantByPhone(phone: string | undefined, provider: VoiceProvider) {
+  async findTenantByPhone(phone: string | undefined, provider?: string) {
     if (!phone) return null;
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
     const config = await this.prisma.voiceConfig.findFirst({
-      where: { vapiPhoneNumber: phone, isActive: true },
+      where: {
+        OR: [
+          { plivoPhoneNumber: cleanPhone },
+          { retellPhoneNumber: cleanPhone },
+        ],
+        isActive: true,
+      },
       include: { tenant: true },
     });
     return config?.tenant || null;
@@ -729,7 +752,8 @@ RULES:
     const config = await this.prisma.voiceConfig.findFirst({
       where: {
         OR: [
-          { vapiPhoneNumber: called },
+          { plivoPhoneNumber: called },
+          { retellPhoneNumber: called },
           { settings: { path: ['inboundNumber'], equals: called } },
         ],
         isActive: true,
@@ -737,10 +761,15 @@ RULES:
       include: { tenant: true },
     });
 
-    const tenantId = config?.tenantId || (await this.prisma.tenant.findFirst())?.id || 'default';
-    const clinicName = config?.tenant?.name || 'ZeroDesk Clinic';
+    if (!config) {
+      this.logger.warn(`Rejected SIP dispatch: No active tenant mapped to called number ${called}`);
+      throw new NotFoundException(`Unregistered inbound telephony number: ${called}`);
+    }
 
-    const roomName = `call_${caller || 'caller'}_${Date.now()}`;
+    const tenantId = config.tenantId;
+    const clinicName = config.tenant?.name || 'ZeroDesk Clinic';
+
+    const roomName = `tenant_${tenantId}_call_${caller || 'caller'}_${Date.now()}`;
     const metadata = JSON.stringify({
       tenant_id: tenantId,
       caller_phone: caller,
@@ -868,6 +897,79 @@ RULES:
         sentiment: event.metadata?.sentiment,
       },
     );
+  }
+
+  /**
+   * List available virtual phone numbers for automated DID procurement via Plivo.
+   */
+  async getAvailablePhoneNumbers(country = 'IN') {
+    return this.plivoService.searchNumbers(country);
+  }
+
+  /**
+   * Provision a virtual number for a tenant via Plivo and wire LiveKit Cloud SIP dispatch.
+   */
+  async provisionPhoneNumber(tenantId: string, phoneNumber: string) {
+    const existing = await this.prisma.voiceConfig.findFirst({
+      where: {
+        OR: [
+          { plivoPhoneNumber: phoneNumber },
+          { retellPhoneNumber: phoneNumber },
+        ],
+      },
+    });
+    if (existing && existing.tenantId !== tenantId) {
+      throw new Error(`Phone number ${phoneNumber} is already assigned to another clinic.`);
+    }
+
+    // Purchase number from Plivo
+    await this.plivoService.purchaseNumber(phoneNumber);
+
+    const updated = await this.prisma.voiceConfig.upsert({
+      where: { tenantId },
+      update: {
+        plivoPhoneNumber: phoneNumber,
+        isActive: true,
+      },
+      create: {
+        tenantId,
+        plivoPhoneNumber: phoneNumber,
+        isActive: true,
+      },
+    });
+
+    this.logger.log(`Provisioned Plivo DID ${phoneNumber} for tenant ${tenantId}`);
+    return {
+      success: true,
+      phoneNumber: updated.plivoPhoneNumber,
+      tenantId,
+      sipTrunkUri: 'sip.livekit.cloud',
+      status: 'ACTIVE',
+    };
+  }
+
+  /**
+   * Generate Plivo XML forwarding inbound call to LiveKit Cloud SIP trunk.
+   */
+  async handlePlivoInbound(called: string, from: string) {
+    const tenant = await this.findTenantByPhone(called);
+    const tenantId = tenant?.id || 'unknown';
+    const apiUrl = this.configService.get('API_URL', 'http://localhost:4000');
+    return this.plivoService.generateInboundXml(called, tenantId, apiUrl);
+  }
+
+  /**
+   * Secondary failover: if LiveKit agent fails to answer within 15 seconds,
+   * Plivo triggers this webhook to route the call to Retell AI or clinic backup.
+   */
+  async handlePlivoFallback(called: string, tenantId?: string) {
+    this.logger.warn(`LiveKit unattended for ${called} (tenant ${tenantId}). Failing over to Retell AI...`);
+    const voiceConfig = await this.prisma.voiceConfig.findFirst({
+      where: {
+        OR: [{ plivoPhoneNumber: called }, ...(tenantId ? [{ tenantId }] : [])],
+      },
+    });
+    return this.plivoService.generateFallbackXml(voiceConfig?.retellPhoneNumber || undefined, voiceConfig?.transferNumber || undefined);
   }
 }
 

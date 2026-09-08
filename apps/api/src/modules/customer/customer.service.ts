@@ -30,8 +30,14 @@ export class CustomerService {
 
   async update(tenantId: string, id: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    // Note: update requires id to be unique.
-    return db.customers.update({ where: { id, tenantId }, data });
+    try {
+      return await db.customers.update({ where: { id, tenantId }, data });
+    } catch (error: any) {
+      if (error?.code === 'P2025' || error?.message?.includes('Record to update not found')) {
+        throw new NotFoundException('Customer not found');
+      }
+      throw error;
+    }
   }
 
   async findOrCreateByPhone(tenantId: string, phone: string, name?: string) {
@@ -56,16 +62,41 @@ export class CustomerService {
   }
 
   async getConversations(tenantId: string, id: string) {
-    return this.tenantPrisma.forTenant(tenantId).prisma.conversation.findMany({
-      where: { customerId: id, tenantId },
+    const db = this.tenantPrisma.forTenant(tenantId);
+    return db.client.conversation.findMany({
+      where: { customerId: id },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async getTimeline(tenantId: string, id: string) {
-    return this.tenantPrisma.forTenant(tenantId).prisma.activity.findMany({
-      where: { customerId: id, tenantId },
+    const db = this.tenantPrisma.forTenant(tenantId);
+    return db.client.activity.findMany({
+      where: { customerId: id },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /**
+   * Look up patient by phone number with recent appointments for pre-call recognition.
+   */
+  async findByPhone(tenantId: string, phone: string) {
+    const db = this.tenantPrisma.forTenant(tenantId);
+    const clean = phone.replace(/[^0-9+]/g, '');
+    const customer = await db.customers.findFirst({
+      where: {
+        OR: [
+          { phone: clean },
+          { phone: clean.slice(-10) },
+        ],
+      },
+      include: {
+        appointments: {
+          orderBy: { scheduledAt: 'desc' },
+          take: 3,
+        },
+      },
+    });
+    return customer || null;
   }
 }

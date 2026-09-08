@@ -8,6 +8,7 @@ import {
   Crown, Users, User, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 import type { NicheId } from '@/config/niches/types';
 
 type Step = 1 | 2 | 3;
@@ -46,7 +47,6 @@ export default function OnboardingPage() {
     localStorage.setItem('zerodesk-role', formData.role);
     
     try {
-      const { apiClient } = await import('@/lib/api-client');
       await apiClient('/tenants/me', {
         method: 'PUT',
         body: JSON.stringify({
@@ -54,8 +54,8 @@ export default function OnboardingPage() {
           industry: formData.niche,
         }),
       });
-    } catch {
-      // Local fallback
+    } catch (err) {
+      console.warn('Backend onboarding sync notice:', err);
     }
 
     // Redirect to dashboard

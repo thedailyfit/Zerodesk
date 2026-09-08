@@ -141,25 +141,19 @@ export default function TestKnowledgeBasePage() {
           excerpt: item.content || item.excerpt || 'Verified clinic protocol',
         }));
       } else {
-        chunks = [
-          {
-            id: 'chk-1',
-            docTitle: currentNiche === 'dental' ? 'Dental Pricing & Crown Menu' : currentNiche === 'spa' ? 'Spa Menu & Massage SOP' : 'Standard Pricing & Service Protocol',
-            category: 'PRICING',
-            score: 92,
-            excerpt: `Verified ${nicheConfig.label} operational policy: Standard rates apply per session. Package discounts of 15% are applied for prepaid schedules. Clear upfront consultation is mandatory.`
-          }
-        ];
+        chunks = [];
       }
 
-      const topScore = chunks[0]?.score || 90;
-      const generatedAnswer = `Based on your verified ${nicheConfig.label} Knowledge Base (${chunks[0]?.docTitle || 'Official SOP'}):\n\n"${q}" is resolved in accordance with verified clinical protocols. Complete details regarding consultation duration, certified specialist availability, and post-procedure guidance are readily accessible.`;
+      const topScore = chunks.length > 0 ? chunks[0].score : 0;
+      const generatedAnswer = chunks.length > 0
+        ? `Based on verified knowledge chunk (${chunks[0].docTitle}):\n\n${chunks[0].excerpt}`
+        : `No matching documents found in your knowledge base for "${q}". Please upload clinic protocols, pricing schedules, or doctor FAQs in the Knowledge Base to enable AI answers.`;
 
       const resultObj = {
         query: q,
         answer: generatedAnswer,
         similarity: topScore,
-        latencyMs: latency || 110,
+        latencyMs: latency || 45,
         matchedChunks: chunks,
       };
 

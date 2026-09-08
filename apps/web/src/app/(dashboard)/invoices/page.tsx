@@ -151,24 +151,34 @@ export default function InvoicesPage() {
     reader.readAsDataURL(file);
   };
 
+  const escapeHtml = (val: any): string => {
+    if (val === null || val === undefined) return '';
+    return String(val)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
   const handlePrintInvoice = (inv: InvoiceRecord) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     
     const itemsHtml = inv.lineItems.map(item => `
       <tr>
-        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${item.serviceName}</td>
-        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${item.quantity}</td>
-        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">₹${item.unitPrice}</td>
-        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${item.gstRate}%</td>
-        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600;">₹${item.totalPrice}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${escapeHtml(item.serviceName)}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${Number(item.quantity) || 1}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">₹${Number(item.unitPrice) || 0}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px;">${Number(item.gstRate) || 0}%</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600;">₹${Number(item.totalPrice) || 0}</td>
       </tr>
     `).join('');
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>${inv.invoiceNo}</title>
+          <title>${escapeHtml(inv.invoiceNo)}</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #0f172a; max-width: 780px; margin: 0 auto; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 24px; }
@@ -184,19 +194,19 @@ export default function InvoicesPage() {
         <body>
           <div class="header">
             <div>
-              <div class="clinic-name">${template.clinicName}</div>
-              <div class="meta">${template.clinicAddress}</div>
-              <div class="meta">Phone: ${template.clinicPhone} | GST: ${template.clinicGST}</div>
+              <div class="clinic-name">${escapeHtml(template.clinicName)}</div>
+              <div class="meta">${escapeHtml(template.clinicAddress)}</div>
+              <div class="meta">Phone: ${escapeHtml(template.clinicPhone)} | GST: ${escapeHtml(template.clinicGST)}</div>
             </div>
             <div style="text-align: right;">
               <h2 style="margin: 0; font-size: 24px; color: #0f172a;">TAX INVOICE</h2>
-              <div style="font-size: 13px; font-weight: 600; color: #2563eb; margin-top: 4px;">#${inv.invoiceNo}</div>
-              <div class="meta" style="margin-top: 4px;">Date: ${inv.createdDate}</div>
+              <div style="font-size: 13px; font-weight: 600; color: #2563eb; margin-top: 4px;">#${escapeHtml(inv.invoiceNo)}</div>
+              <div class="meta" style="margin-top: 4px;">Date: ${escapeHtml(inv.createdDate)}</div>
             </div>
           </div>
 
           <div style="font-size: 13px; margin-bottom: 20px;">
-            <strong>Billed To:</strong> ${inv.customerName} (${inv.phone})
+            <strong>Billed To:</strong> ${escapeHtml(inv.customerName)} (${escapeHtml(inv.phone)})
           </div>
 
           <table>
@@ -215,13 +225,13 @@ export default function InvoicesPage() {
           </table>
 
           <div class="summary">
-            <div class="row"><span>Subtotal:</span><span>₹${inv.subtotal}</span></div>
-            <div class="row"><span>GST (18%):</span><span>₹${inv.totalGst}</span></div>
-            <div class="total-row"><span>Grand Total:</span><span>₹${inv.grandTotal}</span></div>
+            <div class="row"><span>Subtotal:</span><span>₹${Number(inv.subtotal) || 0}</span></div>
+            <div class="row"><span>GST (18%):</span><span>₹${Number(inv.totalGst) || 0}</span></div>
+            <div class="total-row"><span>Grand Total:</span><span>₹${Number(inv.grandTotal) || 0}</span></div>
           </div>
 
           <div style="margin-top: 40px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; text-align: center;">
-            ${template.footerNote}
+            ${escapeHtml(template.footerNote)}
           </div>
 
           <script>

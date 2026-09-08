@@ -23,6 +23,124 @@ export class AppointmentService {
     return [];
   }
 
+  /**
+   * Resolve an available doctor or suggest alternative doctor/slots with patient consent.
+   */
+  async resolveDoctorAndSlot(
+    tenantId: string,
+    scheduledAt: Date,
+    durationMins: number,
+    preferredDoctorId?: string,
+    preferredDoctorName?: string,
+  ) {
+    const slotStart = new Date(scheduledAt.getTime() - (durationMins - 1) * 60 * 1000);
+    const slotEnd = new Date(scheduledAt.getTime() + (durationMins - 1) * 60 * 1000);
+
+    // Fetch active staff/doctors
+    let activeStaff: any[] = [];
+    if (this.prisma.staffMember) {
+      activeStaff = await this.prisma.staffMember.findMany({
+        where: { tenantId, isActive: true },
+      });
+    }
+
+    let requestedDoctor: any = null;
+    if (preferredDoctorId) {
+      requestedDoctor = activeStaff.find((s) => s.id === preferredDoctorId) || null;
+    } else if (preferredDoctorName) {
+      requestedDoctor = activeStaff.find((s) => s.name.toLowerCase().includes(preferredDoctorName.toLowerCase())) || null;
+    }
+
+    if (requestedDoctor) {
+      // Check if requested doctor is free
+      const conflict = await this.prisma.appointment.findFirst({
+        where: {
+          tenantId,
+          staffId: requestedDoctor.id,
+          status: { not: 'CANCELLED' },
+          scheduledAt: { gte: slotStart, lte: slotEnd },
+        },
+      });
+
+      if (!conflict) {
+        return { assignedStaffId: requestedDoctor.id, assignedStaffName: requestedDoctor.name, conflict: false };
+      }
+
+      // Requested doctor is busy! Find alternative available doctor for the exact same slot
+      const bookedAppts = await this.prisma.appointment.findMany({
+        where: {
+          tenantId,
+          status: { not: 'CANCELLED' },
+          scheduledAt: { gte: slotStart, lte: slotEnd },
+        },
+        select: { staffId: true },
+      });
+      const bookedStaffIds = bookedAppts.map((a) => a.staffId).filter(Boolean);
+
+      const alternativeDoctor = activeStaff.find(
+        (s) => s.id !== requestedDoctor.id && !bookedStaffIds.includes(s.id),
+      );
+
+      // Next available slots for the requested doctor
+      const alternativeSlot1 = new Date(scheduledAt.getTime() + 2 * 60 * 60 * 1000);
+      const alternativeSlot2 = new Date(scheduledAt.getTime() + 3 * 60 * 60 * 1000);
+
+      const formatSlot = (d: Date) =>
+        d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      return {
+        conflict: true,
+        status: 'REQUESTED_DOCTOR_UNAVAILABLE',
+        requestedDoctor: requestedDoctor.name,
+        alternativeDoctor: alternativeDoctor
+          ? { id: alternativeDoctor.id, name: alternativeDoctor.name, specialization: alternativeDoctor.specialization || 'Physician' }
+          : null,
+        alternativeSlots: [formatSlot(alternativeSlot1), formatSlot(alternativeSlot2)],
+        requiresConsent: true,
+      };
+    }
+
+    // No specific doctor requested: Round-Robin Load Balancing
+    if (activeStaff.length > 0) {
+      const dayStart = new Date(scheduledAt);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(scheduledAt);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dayAppointments = await this.prisma.appointment.findMany({
+        where: {
+          tenantId,
+          status: { not: 'CANCELLED' },
+          scheduledAt: { gte: dayStart, lte: dayEnd },
+        },
+        select: { staffId: true, scheduledAt: true },
+      });
+
+      const busyAtSlotStaffIds = dayAppointments
+        .filter((a) => a.scheduledAt >= slotStart && a.scheduledAt <= slotEnd)
+        .map((a) => a.staffId);
+
+      const availableStaff = activeStaff.filter((s) => !busyAtSlotStaffIds.includes(s.id));
+
+      if (availableStaff.length > 0) {
+        // Find staff with least appointment load today
+        const counts = new Map<string, number>();
+        for (const s of availableStaff) counts.set(s.id, 0);
+        for (const a of dayAppointments) {
+          if (a.staffId && counts.has(a.staffId)) {
+            counts.set(a.staffId, (counts.get(a.staffId) || 0) + 1);
+          }
+        }
+
+        availableStaff.sort((a, b) => (counts.get(a.id) || 0) - (counts.get(b.id) || 0));
+        const selected = availableStaff[0];
+        return { assignedStaffId: selected.id, assignedStaffName: selected.name, conflict: false };
+      }
+    }
+
+    return { assignedStaffId: null, assignedStaffName: null, conflict: false };
+  }
+
   async book(tenantId: string, data: any) {
     const scheduledAt = new Date(data.scheduledAt || Date.now());
     const durationMins = data.durationMins || 30;
@@ -58,17 +176,47 @@ export class AppointmentService {
     });
   }
 
-  async bookFromVoice(tenantIdentifier: string, data: {
+  async bookFromPublic(data: {
+    slug: string;
     customerName: string;
-    customerPhone?: string;
+    customerPhone: string;
     serviceName?: string;
+    doctorName?: string;
+    staffId?: string;
+    allowAlternativeDoctor?: boolean;
     date?: string;
     time?: string;
     dateTime?: string;
-    source?: string;
     notes?: string;
   }) {
-    // Support either tenant UUID or slug (e.g. from public booking link)
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { slug: data.slug },
+    });
+    if (!tenant) {
+      throw new NotFoundException(`Clinic with slug '${data.slug}' not found`);
+    }
+    return this.bookFromVoice(tenant.id, {
+      ...data,
+      source: 'WEB_BOOKING',
+    });
+  }
+
+  async bookFromVoice(
+    tenantIdentifier: string,
+    data: {
+      customerName: string;
+      customerPhone?: string;
+      serviceName?: string;
+      doctorName?: string;
+      staffId?: string;
+      allowAlternativeDoctor?: boolean;
+      date?: string;
+      time?: string;
+      dateTime?: string;
+      source?: string;
+      notes?: string;
+    },
+  ) {
     let tenantId = tenantIdentifier;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantIdentifier);
     if (!isUuid && this.prisma.tenant) {
@@ -77,6 +225,8 @@ export class AppointmentService {
       });
       if (resolvedTenant) {
         tenantId = resolvedTenant.id;
+      } else {
+        throw new NotFoundException(`Tenant '${tenantIdentifier}' not found`);
       }
     }
 
@@ -127,21 +277,79 @@ export class AppointmentService {
       scheduledAt = new Date(Date.now() + 24 * 3600 * 1000);
     }
 
-    const createdAppt = await this.prisma.appointment.create({
-      data: {
-        tenantId,
-        customerId: customer.id,
-        serviceId,
-        scheduledAt,
-        durationMins: 30,
-        status: 'SCHEDULED',
-        source: 'VOICE_AI',
-        notes: data.notes || `Booked by Voice AI for ${data.serviceName || 'Consultation'}`,
-      },
-      include: {
-        customer: true,
-        service: true,
-      },
+    const durationMins = 30;
+    const slotStart = new Date(scheduledAt.getTime() - (durationMins - 1) * 60 * 1000);
+    const slotEnd = new Date(scheduledAt.getTime() + (durationMins - 1) * 60 * 1000);
+
+    // Multi-Doctor Resolution & Client Consent Check
+    let staffId: string | null = data.staffId || null;
+    const slotCheck = await this.resolveDoctorAndSlot(
+      tenantId,
+      scheduledAt,
+      durationMins,
+      data.staffId,
+      data.doctorName,
+    );
+
+    if (slotCheck.conflict && slotCheck.requiresConsent) {
+      if (!data.allowAlternativeDoctor) {
+        // Patient consent required
+        this.logger.log(`Requested doctor ${slotCheck.requestedDoctor} unavailable. Returning alternative offer to caller.`);
+        return {
+          status: 'REQUESTED_DOCTOR_UNAVAILABLE',
+          requestedDoctor: slotCheck.requestedDoctor,
+          alternativeDoctor: slotCheck.alternativeDoctor,
+          alternativeSlots: slotCheck.alternativeSlots,
+          requiresConsent: true,
+          message: `Dr. ${slotCheck.requestedDoctor} is fully booked at this time. However, Dr. ${slotCheck.alternativeDoctor?.name || 'another physician'} is available at this time, or Dr. ${slotCheck.requestedDoctor} has openings at ${slotCheck.alternativeSlots.join(', ')}. Would you like to book with Dr. ${slotCheck.alternativeDoctor?.name}? `,
+        };
+      } else if (slotCheck.alternativeDoctor) {
+        // Patient consented to alternative doctor
+        staffId = slotCheck.alternativeDoctor.id;
+        this.logger.log(`Patient consented to alternative doctor: ${slotCheck.alternativeDoctor.name} (${staffId})`);
+      }
+    } else if (!slotCheck.conflict && slotCheck.assignedStaffId) {
+      staffId = slotCheck.assignedStaffId;
+    }
+
+    const createdAppt = await this.prisma.$transaction(async (tx) => {
+      // Concurrency check: ensure slot is not already taken
+      const conflicting = await tx.appointment.findFirst({
+        where: {
+          tenantId,
+          status: { not: 'CANCELLED' },
+          scheduledAt: {
+            gte: slotStart,
+            lte: slotEnd,
+          },
+          ...(staffId ? { staffId } : serviceId ? { serviceId } : {}),
+        },
+      });
+
+      if (conflicting) {
+        throw new ConflictException(
+          `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) is already booked. Please choose another time.`,
+        );
+      }
+
+      return tx.appointment.create({
+        data: {
+          tenantId,
+          customerId: customer.id,
+          serviceId,
+          staffId,
+          scheduledAt,
+          durationMins,
+          status: 'SCHEDULED' as any,
+          source: (data.source as any) || 'VOICE_AI',
+          notes: data.notes || `Booked by ${data.source || 'Voice AI'} for ${data.serviceName || 'Consultation'}`,
+        },
+        include: {
+          customer: true,
+          service: true,
+          staff: true,
+        },
+      });
     });
 
     // Automated WhatsApp Appointment Confirmation
@@ -159,9 +367,13 @@ export class AppointmentService {
           hour: '2-digit',
           minute: '2-digit',
         });
+        const doctorName = (createdAppt as any).staff?.name;
+        const doctorLine = doctorName ? `👨‍⚕️ Doctor: Dr. ${doctorName}\n` : '';
 
-        const text = `✅ Appointment Confirmed at ${clinicName}!\n\n` +
+        const text =
+          `✅ Appointment Confirmed at ${clinicName}!\n\n` +
           `👤 Patient: ${customer.name}\n` +
+          doctorLine +
           `🩺 Service: ${createdAppt.service?.name || data.serviceName || 'Consultation'}\n` +
           `📅 Date: ${formattedDate}\n` +
           `⏰ Time: ${formattedTime}\n\n` +
@@ -202,7 +414,7 @@ export class AppointmentService {
         tenantId,
         status: { not: 'CANCELLED' },
       },
-      include: { customer: true, service: true },
+      include: { customer: true, service: true, staff: true },
       orderBy: { scheduledAt: 'asc' },
       take: 100,
     });
@@ -221,8 +433,9 @@ export class AppointmentService {
     for (const appt of appointments) {
       const start = appt.scheduledAt;
       const end = new Date(start.getTime() + (appt.durationMins || 30) * 60 * 1000);
-      const summary = `${appt.service?.name || 'Consultation'} - ${appt.customer?.name || 'Patient'}`;
-      const description = `Patient: ${appt.customer?.name}\\nPhone: ${appt.customer?.phone || 'N/A'}\\nNotes: ${appt.notes || 'None'}`;
+      const doctorPart = appt.staff?.name ? ` (Dr. ${appt.staff.name})` : '';
+      const summary = `${appt.service?.name || 'Consultation'}${doctorPart} - ${appt.customer?.name || 'Patient'}`;
+      const description = `Patient: ${appt.customer?.name}\\nPhone: ${appt.customer?.phone || 'N/A'}\\nDoctor: ${appt.staff?.name || 'Assigned'}\\nNotes: ${appt.notes || 'None'}`;
 
       ical.push(
         'BEGIN:VEVENT',
@@ -233,7 +446,7 @@ export class AppointmentService {
         `SUMMARY:${summary}`,
         `DESCRIPTION:${description}`,
         `STATUS:${appt.status === 'COMPLETED' ? 'CONFIRMED' : 'TENTATIVE'}`,
-        'END:VEVENT'
+        'END:VEVENT',
       );
     }
 

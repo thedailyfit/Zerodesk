@@ -115,14 +115,25 @@ export default function ToneCheckPage() {
       const isShouting = text === text.toUpperCase() && text.length > 15;
       const isNegative = hasKeywords || isShouting || lower.includes('unacceptable') || lower.includes('refund');
 
-      const sentimentScore = isNegative ? Math.floor(Math.random() * 20) + 12 : 78;
-      const frustration = isNegative ? Math.floor(Math.random() * 25) + 75 : 15;
-      const urgency = isNegative ? 94 : 30;
+      const keywordMatches = negativeKeywords.filter(k => lower.includes(k));
+      const keywordImpact = Math.min(50, keywordMatches.length * 20);
+      const shoutingImpact = isShouting ? 25 : 0;
+      const totalNegativePenalty = keywordImpact + shoutingImpact;
+
+      const sentimentScore = isNegative 
+        ? Math.max(5, 40 - totalNegativePenalty) 
+        : Math.min(95, 80 + (text.length > 20 ? 5 : 0));
+      
+      const frustration = isNegative 
+        ? Math.min(98, 60 + totalNegativePenalty) 
+        : Math.max(5, 20 - keywordMatches.length * 5);
+        
+      const urgency = isNegative ? 90 : 25;
 
       const actions = isNegative ? [
         '⚡ Negative Tone Threshold Breached (< 35%)',
         '🛡️ Switched AI mode to "Maximum Empathy & De-escalation"',
-        '🚨 Dispatched High-Priority WhatsApp Alert to Staff On-Duty',
+        '🚨 Dispatched High-Priority Alert to On-Duty Staff',
         '🔄 Initiated Instant Live Human Hand-off Protocol'
       ] : [
         '✅ Sentiment within normal operating parameters',
@@ -137,11 +148,11 @@ export default function ToneCheckPage() {
         triggeredActions: actions,
         aiResponse: isNegative 
           ? deescalationPrompt 
-          : `Hello! I would be glad to assist you with your ${nicheConfig.label} appointment and questions today.`
+          : `Hello! I would be glad to assist you with your ${nicheConfig?.label || 'clinic'} appointment and questions today.`
       });
 
       setIsSimulating(false);
-    }, 700);
+    }, 400);
   };
 
   return (

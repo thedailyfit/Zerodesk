@@ -44,4 +44,28 @@ export class ServiceService {
       },
     });
   }
+
+  async findPublicBySlug(slug: string) {
+    if (!slug) return [];
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!tenant) return [];
+    return this.prisma.service.findMany({
+      where: {
+        tenantId: tenant.id,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        durationMins: true,
+        price: true,
+        description: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
 }

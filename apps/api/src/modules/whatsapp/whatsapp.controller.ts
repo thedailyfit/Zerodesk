@@ -53,4 +53,13 @@ export class WhatsappController {
   async sendMessage(@TenantId() tenantId: string, @Body() data: any) {
     return this.whatsappService.sendMessage(tenantId, data.to, data.message);
   }
+
+  @Post('embedded-signup')
+  @UseGuards(AuthGuard, TenantGuard)
+  async embeddedSignup(
+    @TenantId() tenantId: string,
+    @Body() payload: { code?: string; accessToken?: string; wabaId?: string; phoneNumberId?: string },
+  ) {
+    return this.whatsappService.handleEmbeddedSignup(tenantId, payload);
+  }
 }

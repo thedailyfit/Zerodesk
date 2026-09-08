@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Check } from 'lucide-react';
+import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Check, RefreshCw, Calendar, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
 import { useNiche } from '@/components/providers/niche-provider';
-
-import type { NicheId } from '@/config/niches/types';
+import { apiClient } from '@/lib/api-client';
 
 const COLUMNS = [
-  { id: 'checked-in', title: 'Checked In', color: 'blue' },
-  { id: 'waiting', title: 'Waiting', color: 'amber' },
-  { id: 'with-doctor', title: 'In Service', color: 'green' },
-  { id: 'treatment', title: 'In Progress', color: 'indigo' },
-  { id: 'checkout', title: 'Checkout', color: 'emerald' },
+  { id: 'checked-in', title: 'Checked In', color: 'blue', dbStatus: 'PENDING' },
+  { id: 'waiting', title: 'Waiting', color: 'amber', dbStatus: 'CONFIRMED' },
+  { id: 'with-doctor', title: 'In Service', color: 'green', dbStatus: 'IN_PROGRESS' },
+  { id: 'treatment', title: 'In Progress', color: 'indigo', dbStatus: 'IN_PROGRESS' },
+  { id: 'checkout', title: 'Checkout', color: 'emerald', dbStatus: 'COMPLETED' },
 ] as const;
 
 type ColumnId = typeof COLUMNS[number]['id'];
@@ -28,85 +28,9 @@ interface PatientItem {
   elapsed: string;
   col: ColumnId;
   vip: boolean;
+  phone?: string;
+  rawStatus?: string;
 }
-
-const DEFAULT_WAITING_ROOM_BY_NICHE: Record<NicheId, PatientItem[]> = {
-  skin: [
-    { id: 'sk-w1', pid: 'SK-1001', name: 'Priya Sharma', time: '10:00 AM', service: 'HydraFacial Deep Cleanse', elapsed: '2 min', col: 'checked-in', vip: true },
-    { id: 'sk-w2', pid: 'SK-1002', name: 'Vikram Singh', time: '10:15 AM', service: 'Laser Hair Removal', elapsed: '5 min', col: 'checked-in', vip: false },
-    { id: 'sk-w3', pid: 'SK-1003', name: 'Sneha Patel', time: '09:45 AM', service: 'Chemical Peel & Glow', elapsed: '15 min', col: 'waiting', vip: false },
-    { id: 'sk-w4', pid: 'SK-1004', name: 'Rahul Desai', time: '09:15 AM', service: 'Dermatology Consultation', elapsed: '45 min', col: 'with-doctor', vip: false },
-    { id: 'sk-w5', pid: 'SK-1005', name: 'Anjali Verma', time: '08:30 AM', service: 'PRP Hair Therapy', elapsed: '1h 15m', col: 'treatment', vip: true },
-    { id: 'sk-w6', pid: 'SK-1006', name: 'Deepak Menon', time: '09:00 AM', service: 'Post-Laser Checkout', elapsed: '5 min', col: 'checkout', vip: false },
-  ],
-  dental: [
-    { id: 'dt-w1', pid: 'DT-2001', name: 'Ananya Reddy', time: '10:00 AM', service: 'Invisalign 3D Scan', elapsed: '3 min', col: 'checked-in', vip: true },
-    { id: 'dt-w2', pid: 'DT-2002', name: 'Karthik Menon', time: '10:15 AM', service: 'Implant Placement Prep', elapsed: '8 min', col: 'checked-in', vip: false },
-    { id: 'dt-w3', pid: 'DT-2003', name: 'Neha Gupta', time: '09:45 AM', service: 'Teeth Whitening Sitting', elapsed: '12 min', col: 'waiting', vip: false },
-    { id: 'dt-w4', pid: 'DT-2004', name: 'Rohit Sharma', time: '09:15 AM', service: 'Root Canal Sitting 2', elapsed: '35 min', col: 'with-doctor', vip: true },
-    { id: 'dt-w5', pid: 'DT-2005', name: 'Pooja Iyer', time: '08:45 AM', service: 'Scaling & Fluoride Polish', elapsed: '50 min', col: 'treatment', vip: false },
-    { id: 'dt-w6', pid: 'DT-2006', name: 'Vikram Seth', time: '09:00 AM', service: 'Crown Delivery Billing', elapsed: '4 min', col: 'checkout', vip: false },
-  ],
-  spa: [
-    { id: 'sp-w1', pid: 'SP-3001', name: 'Meera Kapoor', time: '10:00 AM', service: 'Ayurvedic Abhyanga Massage', elapsed: '4 min', col: 'checked-in', vip: true },
-    { id: 'sp-w2', pid: 'SP-3002', name: 'Aman Verma', time: '10:15 AM', service: 'Deep Tissue Recovery', elapsed: '6 min', col: 'checked-in', vip: false },
-    { id: 'sp-w3', pid: 'SP-3003', name: 'Simran Kaur', time: '09:50 AM', service: 'Aromatherapy Body Wrap', elapsed: '14 min', col: 'waiting', vip: false },
-    { id: 'sp-w4', pid: 'SP-3004', name: 'Karan Patel', time: '09:20 AM', service: 'Hot Stone Thermal Therapy', elapsed: '40 min', col: 'with-doctor', vip: true },
-    { id: 'sp-w5', pid: 'SP-3005', name: 'Anita Desai', time: '08:30 AM', service: 'Panchakarma Steam Therapy', elapsed: '1h 10m', col: 'treatment', vip: true },
-    { id: 'sp-w6', pid: 'SP-3006', name: 'Rohan Bose', time: '09:00 AM', service: 'Herbal Tea & Bill Settlement', elapsed: '5 min', col: 'checkout', vip: false },
-  ],
-  salon: [
-    { id: 'sl-w1', pid: 'SL-4001', name: 'Divya Nair', time: '10:00 AM', service: 'Balayage Color & Gloss', elapsed: '5 min', col: 'checked-in', vip: true },
-    { id: 'sl-w2', pid: 'SL-4002', name: 'Sameer Khan', time: '10:15 AM', service: 'Keratin Hair Smoothening', elapsed: '7 min', col: 'checked-in', vip: false },
-    { id: 'sl-w3', pid: 'SL-4003', name: 'Riya Sharma', time: '09:40 AM', service: 'Bridal Trial Makeup', elapsed: '20 min', col: 'waiting', vip: true },
-    { id: 'sl-w4', pid: 'SL-4004', name: 'Arjun Singh', time: '09:15 AM', service: 'Nail Extensions Sculpting', elapsed: '45 min', col: 'with-doctor', vip: false },
-    { id: 'sl-w5', pid: 'SL-4005', name: 'Kavita Joshi', time: '08:45 AM', service: 'Moroccan Foot Spa Pedicure', elapsed: '55 min', col: 'treatment', vip: false },
-    { id: 'sl-w6', pid: 'SL-4006', name: 'Pooja Bhatt', time: '09:00 AM', service: 'Blowdry & Styling Invoice', elapsed: '6 min', col: 'checkout', vip: false },
-  ],
-  realestate: [
-    { id: 're-w1', pid: 'RE-5001', name: 'Rajesh Gupta', time: '10:00 AM', service: 'Villa Guided Site Tour Briefing', elapsed: '3 min', col: 'checked-in', vip: true },
-    { id: 're-w2', pid: 'RE-5002', name: 'Sunita Reddy', time: '10:15 AM', service: 'Commercial Floor Plan Review', elapsed: '10 min', col: 'waiting', vip: false },
-    { id: 're-w3', pid: 'RE-5003', name: 'Ravi Kumar', time: '09:30 AM', service: 'NRI Video Call Walkthrough', elapsed: '30 min', col: 'with-doctor', vip: true },
-    { id: 're-w4', pid: 'RE-5004', name: 'Alok Mishra', time: '09:00 AM', service: 'Allotment Token Clearance', elapsed: '5 min', col: 'checkout', vip: false },
-  ],
-  hotel: [
-    { id: 'ht-w1', pid: 'HT-6001', name: 'Amit Patel', time: '10:00 AM', service: 'Executive Suite Check-in & Keycard', elapsed: '2 min', col: 'checked-in', vip: true },
-    { id: 'ht-w2', pid: 'HT-6002', name: 'Shruti Hasan', time: '10:15 AM', service: 'Presidential Suite Concierge Brief', elapsed: '8 min', col: 'waiting', vip: true },
-    { id: 'ht-w3', pid: 'HT-6003', name: 'Vikas Khanna', time: '09:30 AM', service: 'Banquet Hall Tasting & Review', elapsed: '35 min', col: 'with-doctor', vip: false },
-    { id: 'ht-w4', pid: 'HT-6004', name: 'Neha Sharma', time: '09:00 AM', service: 'Express Checkout & Airport Cab', elapsed: '4 min', col: 'checkout', vip: false },
-  ],
-};
-
-const DEFAULT_BOOKED_BY_NICHE: Record<NicheId, { pid: string; name: string; time: string; service: string; vip: boolean }[]> = {
-  skin: [
-    { pid: 'SK-1007', name: 'Kiran Thapar', time: '11:00 AM', service: 'Botox Anti-Aging Consult', vip: true },
-    { pid: 'SK-1008', name: 'Pooja Hegde', time: '11:30 AM', service: 'Acne Scar Subcision', vip: false },
-    { pid: 'SK-1009', name: 'Rohan Mehra', time: '12:00 PM', service: 'Dermabrasion Glow', vip: false },
-  ],
-  dental: [
-    { pid: 'DT-2007', name: 'Meera Nambiar', time: '11:00 AM', service: 'Aligner Review Checkup', vip: true },
-    { pid: 'DT-2008', name: 'Arunav Roy', time: '11:30 AM', service: 'Wisdom Tooth Consultation', vip: false },
-    { pid: 'DT-2009', name: 'Shweta Nanda', time: '12:00 PM', service: 'Zirconia Bridge Trial', vip: false },
-  ],
-  spa: [
-    { pid: 'SP-3007', name: 'Tara Alisha', time: '11:00 AM', service: 'Shirodhara Mind Calm', vip: true },
-    { pid: 'SP-3008', name: 'Devendra Rao', time: '11:30 AM', service: 'Foot Reflexology & Herbal Soak', vip: false },
-    { pid: 'SP-3009', name: 'Kavita Menon', time: '12:00 PM', service: 'Balinese Relaxation Therapy', vip: true },
-  ],
-  salon: [
-    { pid: 'SL-4007', name: 'Sunita Sharma', time: '11:00 AM', service: 'Hair Spa Deep Moisture', vip: false },
-    { pid: 'SL-4008', name: 'Rahul Verma', time: '11:30 AM', service: 'Precision Fade & Beard Sculpt', vip: false },
-    { pid: 'SL-4009', name: 'Simran Kaur', time: '12:00 PM', service: 'Global Color Touch-up', vip: true },
-  ],
-  realestate: [
-    { pid: 'RE-5005', name: 'Nandini Das', time: '11:00 AM', service: 'Luxury Penthouse Preview', vip: true },
-    { pid: 'RE-5006', name: 'Gautam Adani', time: '11:30 AM', service: 'Commercial Lease Agreement', vip: true },
-  ],
-  hotel: [
-    { pid: 'HT-6005', name: 'Rahul Bajaj', time: '11:00 AM', service: 'Weekend Dining & Spa Pass', vip: true },
-    { pid: 'HT-6006', name: 'Rajinikanth', time: '11:30 AM', service: 'Royal Suite Check-in', vip: true },
-  ],
-};
 
 const COLOR_MAP: Record<string, string> = {
   blue: 'border-l-blue-500 bg-blue-500/5',
@@ -126,40 +50,67 @@ const BORDER_MAP: Record<string, string> = {
 
 export default function WaitingRoomPage() {
   const { currentNiche, nicheConfig } = useNiche();
-  const [patients, setPatients] = useState<PatientItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`zerodesk_waiting_room_${currentNiche}`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch {}
-      }
-    }
-    return DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin;
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`zerodesk_waiting_room_${currentNiche}`);
-      if (saved) {
-        try {
-          setPatients(JSON.parse(saved));
-          return;
-        } catch {}
-      }
-    }
-    setPatients(DEFAULT_WAITING_ROOM_BY_NICHE[currentNiche] || DEFAULT_WAITING_ROOM_BY_NICHE.skin);
-  }, [currentNiche]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`zerodesk_waiting_room_${currentNiche}`, JSON.stringify(patients));
-    }
-  }, [patients, currentNiche]);
-
-  const bookedAppointments = DEFAULT_BOOKED_BY_NICHE[currentNiche] || DEFAULT_BOOKED_BY_NICHE.skin;
+  const [patients, setPatients] = useState<PatientItem[]>([]);
+  const [allAppointments, setAllAppointments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeMoveMenu, setActiveMoveMenu] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const fetchAppointments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await apiClient<any[]>('/appointments');
+      if (Array.isArray(data)) {
+        setAllAppointments(data);
+
+        // Map appointments to waiting room items
+        const mapped: PatientItem[] = data
+          .filter((appt) => appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW')
+          .map((appt) => {
+            let col: ColumnId = 'checked-in';
+            if (appt.status === 'COMPLETED') col = 'checkout';
+            else if (appt.status === 'IN_PROGRESS') col = 'with-doctor';
+            else if (appt.status === 'CONFIRMED') col = 'waiting';
+            else if (appt.status === 'PENDING') col = 'checked-in';
+
+            const apptDate = appt.date ? new Date(appt.date) : new Date();
+            const timeStr = appt.startTime || apptDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const diffMin = Math.max(0, Math.round((Date.now() - apptDate.getTime()) / 60000));
+            const elapsed = diffMin > 60 ? `${Math.floor(diffMin / 60)}h ${diffMin % 60}m` : `${diffMin || 1} min`;
+
+            return {
+              id: appt.id,
+              pid: appt.id.slice(0, 8).toUpperCase(),
+              name: appt.customer?.name || 'Walk-in Client',
+              time: timeStr,
+              service: appt.service?.name || 'General Consultation',
+              elapsed,
+              col,
+              vip: (appt.customer?.lifetimeValue || 0) > 15000,
+              phone: appt.customer?.phone,
+              rawStatus: appt.status,
+            };
+          });
+
+        setPatients(mapped);
+      } else {
+        setPatients([]);
+      }
+    } catch (err) {
+      console.warn('Waiting room: using fallback empty state due to API error', err);
+      setPatients([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments, currentNiche]);
 
   // Close search dropdown on click outside
   useEffect(() => {
@@ -172,35 +123,40 @@ export default function WaitingRoomPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter booked appointments not already checked in
-  const existingPids = new Set(patients.map(p => p.pid));
-  const availableBookings = bookedAppointments.filter(b => !existingPids.has(b.pid));
-  
-  const filteredBookings = availableBookings.filter(b => 
-    b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.pid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.service.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleMovePatient = async (patientId: string, newCol: ColumnId) => {
+    setActiveMoveMenu(null);
+    const colDef = COLUMNS.find((c) => c.id === newCol);
+    const nextStatus = colDef?.dbStatus || 'CONFIRMED';
 
-  const handleCheckInPatient = (booking: typeof bookedAppointments[0]) => {
-    const newPatient: PatientItem = {
-      id: Date.now().toString(),
-      pid: booking.pid,
-      name: booking.name,
-      time: booking.time,
-      service: booking.service,
-      elapsed: 'Just checked in',
-      col: 'checked-in',
-      vip: booking.vip,
-    };
-    setPatients(prev => [newPatient, ...prev]);
-    setSearchQuery('');
-    setIsDropdownOpen(false);
+    // Optimistic UI update
+    setPatients((prev) => prev.map((p) => (p.id === patientId ? { ...p, col: newCol } : p)));
+
+    try {
+      setIsUpdating(true);
+      await apiClient(`/appointments/${patientId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: nextStatus }),
+      });
+    } catch (e) {
+      console.error('Failed to update appointment stage:', e);
+      fetchAppointments();
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleMovePatient = (patientId: string, newCol: ColumnId) => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, col: newCol } : p));
-    setActiveMoveMenu(null);
+  const filteredBookings = allAppointments.filter(
+    (b) =>
+      b.status === 'PENDING' &&
+      ((b.customer?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (b.service?.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const handleCheckInPatient = async (appt: any) => {
+    setSearchQuery('');
+    setIsDropdownOpen(false);
+    await handleMovePatient(appt.id, 'waiting');
   };
 
   return (
@@ -209,26 +165,37 @@ export default function WaitingRoomPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <Radio className="text-green-500 animate-pulse" /> Live {nicheConfig.terminology?.waitingRoom || "Waiting Room"}
+            <Radio className="text-green-500 animate-pulse" /> Live {nicheConfig?.terminology?.waitingRoom || 'Waiting Room'}
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">Real-time {nicheConfig.terminology?.customer?.toLowerCase() || "patient"} status & stage tracking</p>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">
+            Real-time {nicheConfig?.terminology?.customer?.toLowerCase() || 'patient'} status & queue tracking
+          </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchAppointments()}
+            disabled={isLoading}
+            className="p-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition"
+            title="Refresh queue"
+          >
+            <RefreshCw size={16} className={cn(isLoading && 'animate-spin text-blue-400')} />
+          </button>
+
           {/* Autocomplete Search Bar */}
-          <div ref={searchRef} className="relative w-full md:w-96">
+          <div ref={searchRef} className="relative w-full md:w-80">
             <div className="relative">
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder={`Search Booked ${nicheConfig.terminology?.appointment || "Appointment"} / ID...`}
+                placeholder={`Search ${nicheConfig?.terminology?.customer || 'Patient'}...`}
                 value={searchQuery}
                 onFocus={() => setIsDropdownOpen(true)}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setIsDropdownOpen(true);
                 }}
-                className="w-full pl-10 pr-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)] shadow-sm"
+                className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--color-text)] shadow-sm"
               />
             </div>
 
@@ -242,38 +209,33 @@ export default function WaitingRoomPage() {
                   className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 max-h-72 overflow-y-auto divide-y divide-slate-800/60 p-2"
                 >
                   <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>Booked Appointments Ready for Check-in</span>
+                    <span>Pending Appointments</span>
                     <span>{filteredBookings.length} Available</span>
                   </div>
 
                   {filteredBookings.length === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-500">
-                      No matching booked appointments found.
+                      No matching pending appointments found.
                     </div>
                   ) : (
                     filteredBookings.map((b) => (
                       <div
-                        key={b.pid}
+                        key={b.id}
                         onClick={() => handleCheckInPatient(b)}
-                        className="p-2.5 rounded-xl hover:bg-slate-800/80 cursor-pointer transition-colors flex items-center justify-between group"
+                        className="p-3 hover:bg-slate-800/80 rounded-xl cursor-pointer transition flex items-center justify-between group"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-mono text-xs font-bold border border-blue-500/20">
-                            {b.pid.split('-')[1]}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-200 group-hover:text-blue-400 transition">
+                              {b.customer?.name || 'Guest'}
+                            </span>
                           </div>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-xs text-white group-hover:text-blue-400 transition-colors">{b.name}</span>
-                              <span className="text-[10px] font-mono text-slate-400">({b.pid})</span>
-                              {b.vip && <Star size={10} className="text-amber-400 fill-amber-400" />}
-                            </div>
-                            <p className="text-[10px] text-slate-400">{b.service} · Scheduled {b.time}</p>
+                          <div className="text-[11px] text-slate-400 mt-0.5">
+                            {b.service?.name || 'Service'} &bull; {b.startTime || 'Scheduled Today'}
                           </div>
                         </div>
-
-                        <button className="flex items-center gap-1 text-[10px] font-bold bg-blue-500 text-white px-2.5 py-1 rounded-lg opacity-90 group-hover:opacity-100 transition-all shadow-sm">
-                          <UserCheck size={12} />
-                          <span>Check In</span>
+                        <button className="px-2.5 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-medium transition flex items-center gap-1">
+                          <UserCheck size={12} /> Check-In
                         </button>
                       </div>
                     ))
@@ -283,108 +245,111 @@ export default function WaitingRoomPage() {
             </AnimatePresence>
           </div>
 
-          <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" /> LIVE
-          </div>
+          <Link
+            href="/appointments"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition shrink-0"
+          >
+            <UserPlus size={14} /> Book Patient
+          </Link>
         </div>
       </div>
 
       {/* Kanban Board Columns */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden flex gap-4 pb-4">
-        {COLUMNS.map((col, colIndex) => {
-          const colPatients = patients.filter(p => p.col === col.id);
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 min-h-0 overflow-x-auto pb-2">
+        {COLUMNS.map((col) => {
+          const colPatients = patients.filter((p) => p.col === col.id);
+
           return (
-            <div key={col.id} className="w-72 shrink-0 flex flex-col h-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm">
-              <div className={cn("p-4 border-b border-[var(--color-border)] flex items-center justify-between", BORDER_MAP[col.color].split(' ')[1])}>
-                <h3 className="font-bold text-sm">{col.title}</h3>
-                <span className="bg-slate-900 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border border-slate-800 text-slate-200">
+            <div
+              key={col.id}
+              className="flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-3 min-w-[240px] shadow-sm overflow-hidden"
+            >
+              {/* Column Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)] mb-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className={cn('w-2.5 h-2.5 rounded-full', {
+                    'bg-blue-500': col.color === 'blue',
+                    'bg-amber-500': col.color === 'amber',
+                    'bg-green-500': col.color === 'green',
+                    'bg-indigo-500': col.color === 'indigo',
+                    'bg-emerald-500': col.color === 'emerald',
+                  })} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">{col.title}</span>
+                </div>
+                <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full border', BORDER_MAP[col.color])}>
                   {colPatients.length}
                 </span>
               </div>
-              
-              <div className="p-3 space-y-3 flex-1 overflow-y-auto">
-                {colPatients.map((patient, i) => (
-                  <motion.div
-                    key={patient.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: (colIndex * 0.05) + (i * 0.05) }}
-                    className={cn(
-                      "p-3 rounded-xl border border-[var(--color-glass-border)] backdrop-blur-md shadow-sm flex flex-col gap-2.5 border-l-4 relative group",
-                      COLOR_MAP[col.color]
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar3D name={patient.name} size="sm" />
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-bold text-xs text-[var(--color-text)] flex items-center gap-1">
-                              {patient.name}
-                              {patient.vip && <Star size={11} className="text-amber-400 fill-amber-400" />}
-                            </h4>
+
+              {/* Cards List */}
+              <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                {colPatients.length === 0 ? (
+                  <div className="h-32 border border-dashed border-[var(--color-border)] rounded-xl flex flex-col items-center justify-center text-center p-3 text-[var(--color-text-muted)] text-xs">
+                    <Clock size={18} className="mb-1 opacity-40" />
+                    <span>No {nicheConfig?.terminology?.customer?.toLowerCase() || 'patients'}</span>
+                  </div>
+                ) : (
+                  colPatients.map((patient) => (
+                    <motion.div
+                      layout
+                      key={patient.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={cn(
+                        'border-l-4 rounded-xl p-3.5 bg-[var(--color-surface-hover)] border border-[var(--color-border)] shadow-sm relative group hover:border-[var(--color-border-hover)] transition',
+                        COLOR_MAP[col.color]
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <Avatar3D name={patient.name} size="sm" />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-[var(--color-text)] line-clamp-1">{patient.name}</span>
+                              {patient.vip && <Star size={11} className="text-amber-400 fill-amber-400 shrink-0" />}
+                            </div>
+                            <span className="text-[10px] text-[var(--color-text-muted)]">{patient.pid}</span>
                           </div>
-                          <span className="inline-block bg-slate-950/80 px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-300 border border-slate-800 font-bold mt-0.5">
-                            {patient.pid}
-                          </span>
+                        </div>
+
+                        {/* Move Dropdown Menu */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setActiveMoveMenu(activeMoveMenu === patient.id ? null : patient.id)}
+                            className="p-1.5 rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition"
+                            title="Move Stage"
+                          >
+                            <ArrowRightLeft size={13} />
+                          </button>
+
+                          {activeMoveMenu === patient.id && (
+                            <div className="absolute right-0 top-full mt-1 bg-slate-900 border border-slate-800 rounded-xl shadow-xl z-30 py-1 w-36 text-xs divide-y divide-slate-800/60">
+                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase">Move To:</div>
+                              {COLUMNS.filter((c) => c.id !== col.id).map((targetCol) => (
+                                <button
+                                  key={targetCol.id}
+                                  onClick={() => handleMovePatient(patient.id, targetCol.id)}
+                                  className="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-between"
+                                >
+                                  <span>{targetCol.title}</span>
+                                  <Check size={11} className="opacity-0 group-hover:opacity-100" />
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Edit / Move Dropdown Trigger */}
-                      <div className="relative">
-                        <button
-                          onClick={() => setActiveMoveMenu(activeMoveMenu === patient.id ? null : patient.id)}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-[10px] font-bold rounded-lg flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
-                        >
-                          <ArrowRightLeft size={10} /> Move
-                        </button>
-
-                        {/* Move Column Dropdown */}
-                        <AnimatePresence>
-                          {activeMoveMenu === patient.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 top-full mt-1.5 w-44 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl z-50 p-1.5 text-xs space-y-1"
-                            >
-                              <div className="px-2 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                Shift Patient Stage
-                              </div>
-                              {COLUMNS.map(c => (
-                                <button
-                                  key={c.id}
-                                  onClick={() => handleMovePatient(patient.id, c.id)}
-                                  className={cn(
-                                    "w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-medium flex items-center justify-between transition-colors",
-                                    patient.col === c.id
-                                      ? "bg-blue-600 text-white font-bold"
-                                      : "text-slate-300 hover:bg-slate-800"
-                                  )}
-                                >
-                                  <span>{c.title}</span>
-                                  {patient.col === c.id && <Check size={12} />}
-                                </button>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                      <div className="mt-2.5 pt-2 border-t border-[var(--color-border)]/60 flex items-center justify-between text-[11px] text-[var(--color-text-muted)]">
+                        <span className="line-clamp-1 font-medium text-[var(--color-text)]">{patient.service}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Clock size={11} />
+                          <span>{patient.time}</span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <p className="text-[11px] text-[var(--color-text-muted)] font-medium pl-1 truncate">
-                      {patient.service}
-                    </p>
-
-                    <div className="flex items-center justify-between text-[10px] font-medium pt-2 border-t border-[var(--color-glass-border)]">
-                      <span className="text-slate-400 font-mono">{patient.time}</span>
-                      <span className="flex items-center gap-1 text-slate-300 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-                        <Clock size={10} /> {patient.elapsed}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                )}
               </div>
             </div>
           );

@@ -6,14 +6,15 @@ export class PromptGuardService {
 
   // Blacklisted injection / jailbreak patterns
   private readonly dangerousPatterns: RegExp[] = [
-    /ignore\s+(all\s+)?(previous|prior|above)\s+instructions/i,
+    /ignore\s+(all\s+)?(previous|prior|above|system|safety|existing)?\s*(instructions|rules|directives|guidelines|guardrails)/i,
     /system\s+prompt\s+(reveal|leak|print|show|expose)/i,
     /you\s+are\s+now\s+(in\s+)?(developer|dan|jailbreak|unrestricted|god)\s+mode/i,
     /reveal\s+(your\s+)?(api|secret|master|env|database)\s+key/i,
     /repeat\s+(everything|the\s+words)\s+above/i,
-    /override\s+all\s+safety\s+rules/i,
+    /override\s+(all\s+)?(safety\s+)?(rules|instructions|directives|system\s+prompts)/i,
     /print\s+process\.env/i,
     /exfiltrate\s+data/i,
+    /free\s+(hydra[- ]?facials?|treatments?|services?|consultations?)\s+(without|skip|bypass)/i,
   ];
 
   /**

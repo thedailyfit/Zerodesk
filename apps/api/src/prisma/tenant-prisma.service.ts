@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
@@ -45,21 +45,18 @@ export class TenantPrismaService {
     return {
       tenantId,
       client: this.getExtendedClient(tenantId),
-      prisma: this.prisma,
       customers: {
         findMany: (args: any = {}) =>
           this.prisma.customer.findMany({ ...args, where: { ...args.where, tenantId } }),
         findFirst: (args: any = {}) =>
           this.prisma.customer.findFirst({ ...args, where: { ...args.where, tenantId } }),
-        
-        // FIX P1-01: Removed findUnique wrapper entirely as it strips non-unique tenantId silently.
-        // Developers MUST use findFirst instead for guaranteed tenant isolation.
-        // findUnique: (args: any) => this.prisma.customer.findUnique(args),
-        
         create: (args: any) =>
           this.prisma.customer.create({ ...args, data: { ...args.data, tenantId } }),
         update: (args: any) =>
-          this.prisma.customer.update(args), // Note: relies on args.where.tenantId passed explicitly
+          this.prisma.customer.update({
+            ...args,
+            where: { ...args.where, tenantId },
+          }),
         count: (args: any = {}) =>
           this.prisma.customer.count({ ...args, where: { ...args.where, tenantId } }),
       },

@@ -26,25 +26,16 @@ export class VoiceController {
     return this.voiceService.updateConfig(tenantId, data);
   }
 
-  @Post('webhook/vapi')
-  @UseGuards(IdempotencyGuard)
-  async handleVapiWebhook(@Req() req: any, @Body() payload: any, @Headers('x-vapi-signature') signature: string) {
-    const secret = process.env.VAPI_WEBHOOK_SECRET;
-    if (process.env.NODE_ENV === 'production' || secret) {
-      if (!signature) {
-        throw new UnauthorizedException('Missing Vapi Signature');
-      }
-      if (secret) {
-        const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
-        const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
-        const signatureBuf = Buffer.from(signature, 'utf8');
-        const hashBuf = Buffer.from(hash, 'utf8');
-        if (signatureBuf.length !== hashBuf.length || !crypto.timingSafeEqual(signatureBuf, hashBuf)) {
-          throw new UnauthorizedException('Invalid Vapi Signature');
-        }
-      }
-    }
-    return this.voiceService.handleVapiWebhook(payload);
+  @Post('plivo-inbound')
+  async handlePlivoInbound(@Body() body: any, @Query('called') calledQuery?: string) {
+    const called = body?.To || calledQuery || '';
+    const from = body?.From || '';
+    return this.voiceService.handlePlivoInbound(called, from);
+  }
+
+  @Post('plivo-fallback')
+  async handlePlivoFallback(@Query('called') called?: string, @Query('tenantId') tenantId?: string) {
+    return this.voiceService.handlePlivoFallback(called || '', tenantId);
   }
 
   @Post('webhook/retell')
@@ -90,9 +81,6 @@ export class VoiceController {
   @UseGuards(IdempotencyGuard)
   async handleWebhook(@Req() req: any, @Body() payload: any) {
     // Auto-detect provider by payload shape
-    if (payload.message?.type || payload.message?.call) {
-      return this.handleVapiWebhook(req, payload, req.headers['x-vapi-signature']);
-    }
     if (payload.event || payload.call?.call_id) {
       return this.handleRetellWebhook(req, payload, req.headers['x-retell-signature']);
     }
@@ -169,7 +157,24 @@ export class VoiceController {
   }
 
   @Post('sip-dispatch-webhook')
+  @UseGuards(InternalVoiceGuard)
   async sipDispatchWebhook(@Body() payload: any) {
     return this.voiceService.handleSipDispatchWebhook(payload);
+  }
+
+  @Get('numbers/available')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getAvailableNumbers(@Query('country') country?: string) {
+    return this.voiceService.getAvailablePhoneNumbers(country || 'IN');
+  }
+
+  @Post('numbers/provision')
+  @UseGuards(AuthGuard, TenantGuard, RolesGuard)
+  @Roles('MANAGER')
+  async provisionNumber(
+    @TenantId() tenantId: string,
+    @Body() body: { phoneNumber: string; provider?: string },
+  ) {
+    return this.voiceService.provisionPhoneNumber(tenantId, body.phoneNumber);
   }
 }

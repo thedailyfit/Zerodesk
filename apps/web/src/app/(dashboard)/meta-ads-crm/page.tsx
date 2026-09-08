@@ -45,73 +45,11 @@ interface CampaignItem {
 }
 
 const DEFAULT_CAMPAIGNS_BY_NICHE: Record<NicheId, CampaignItem[]> = {
-  skin: [
-    { id: 'c-sk-1', name: 'Summer Glow & Laser Hair Promo', platform: 'Meta Ads', spend: '₹42,500', leads: 68, cpl: 145, roas: '4.2x', status: 'ACTIVE' },
-    { id: 'c-sk-2', name: 'Search Intent - Dermatologist Near Me', platform: 'Google Ads', spend: '₹28,000', leads: 34, cpl: 210, roas: '3.8x', status: 'ACTIVE' },
-    { id: 'c-sk-3', name: 'Retargeting - Acne Scars Consultation', platform: 'Meta Ads', spend: '₹15,200', leads: 28, cpl: 130, roas: '5.1x', status: 'ACTIVE' },
-  ],
-  dental: [
-    { id: 'c-dt-1', name: 'Invisalign Clear Aligners Early Bird', platform: 'Meta Ads', spend: '₹55,000', leads: 42, cpl: 280, roas: '6.4x', status: 'ACTIVE' },
-    { id: 'c-dt-2', name: 'Search Intent - Dental Implants Center', platform: 'Google Ads', spend: '₹38,000', leads: 29, cpl: 320, roas: '5.2x', status: 'ACTIVE' },
-    { id: 'c-dt-3', name: 'Laser Teeth Whitening Instant Booking', platform: 'Meta Ads', spend: '₹18,500', leads: 35, cpl: 160, roas: '4.1x', status: 'ACTIVE' },
-  ],
-  spa: [
-    { id: 'c-sp-1', name: 'Ayurvedic Monsoon Rejuvenation Retreat', platform: 'Meta Ads', spend: '₹35,000', leads: 54, cpl: 175, roas: '4.8x', status: 'ACTIVE' },
-    { id: 'c-sp-2', name: 'Luxury Couple Spa Weekend Getaway', platform: 'Meta Ads', spend: '₹24,000', leads: 38, cpl: 190, roas: '5.5x', status: 'ACTIVE' },
-    { id: 'c-sp-3', name: 'Deep Tissue & Stress Relief Therapy', platform: 'Google Ads', spend: '₹16,000', leads: 22, cpl: 220, roas: '3.9x', status: 'ACTIVE' },
-  ],
-  salon: [
-    { id: 'c-sl-1', name: 'Bridal Makeup 2026 Advance Booking', platform: 'Meta Ads', spend: '₹48,000', leads: 62, cpl: 220, roas: '7.1x', status: 'ACTIVE' },
-    { id: 'c-sl-2', name: 'Balayage Color & Olaplex Treatment Promo', platform: 'Meta Ads', spend: '₹32,000', leads: 48, cpl: 165, roas: '4.6x', status: 'ACTIVE' },
-    { id: 'c-sl-3', name: 'Keratin Smoothening Festive Discount', platform: 'Google Ads', spend: '₹19,500', leads: 31, cpl: 180, roas: '4.0x', status: 'ACTIVE' },
-  ],
-  realestate: [
-    { id: 'c-re-1', name: '3BHK Luxury Gated Villas Launch', platform: 'Meta Ads', spend: '₹1,20,000', leads: 74, cpl: 450, roas: '12.5x', status: 'ACTIVE' },
-    { id: 'c-re-2', name: 'High-Yield Commercial Office Spaces', platform: 'Google Ads', spend: '₹85,000', leads: 38, cpl: 620, roas: '9.8x', status: 'ACTIVE' },
-    { id: 'c-re-3', name: 'NRI Direct Investment Highway Plots', platform: 'Meta Ads', spend: '₹45,000', leads: 30, cpl: 510, roas: '8.2x', status: 'ACTIVE' },
-  ],
-  hotel: [
-    { id: 'c-ht-1', name: 'Weekend Luxury Suite Staycation Pass', platform: 'Meta Ads', spend: '₹60,000', leads: 82, cpl: 240, roas: '5.8x', status: 'ACTIVE' },
-    { id: 'c-ht-2', name: 'Grand Ballroom Wedding & Banquet Leads', platform: 'Google Ads', spend: '₹45,000', leads: 26, cpl: 480, roas: '11.2x', status: 'ACTIVE' },
-  ],
+  skin: [], dental: [], spa: [], salon: [], realestate: [], hotel: []
 };
 
 const DEFAULT_LEADS_BY_NICHE: Record<NicheId, AdLead[]> = {
-  skin: [
-    { id: 'l-sk-1', name: 'Rahul Sharma', phone: '+91 98765 12345', email: 'rahul.s@example.com', campaignName: 'Summer Glow & Laser Hair Promo', adSetName: 'Audience_25_45', source: 'Meta Ads', costPerLead: 145, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-sk-2', name: 'Priya Patel', phone: '+91 98765 23456', email: 'priya.p@example.com', campaignName: 'Search Intent - Dermatologist Near Me', adSetName: 'Retargeting_V1', source: 'Google Ads', costPerLead: 210, status: 'Contacted', date: 'Today, 09:15 AM' },
-    { id: 'l-sk-3', name: 'Amit Kumar', phone: '+91 98765 34567', email: 'amit.k@example.com', campaignName: 'Retargeting - Acne Scars Consultation', adSetName: 'Lookalike_1%', source: 'Meta Ads', costPerLead: 130, status: 'New', date: 'Yesterday, 04:45 PM' },
-    { id: 'l-sk-4', name: 'Neha Gupta', phone: '+91 98765 45678', email: 'neha.g@example.com', campaignName: 'Summer Glow & Laser Hair Promo', adSetName: 'Broad_City', source: 'Meta Ads', costPerLead: 155, status: 'Converted', date: 'Yesterday, 02:20 PM' },
-    { id: 'l-sk-5', name: 'Vikram Singh', phone: '+91 98765 56789', email: 'vikram.s@example.com', campaignName: 'Search Intent - Dermatologist Near Me', adSetName: 'Search_Intent', source: 'Google Ads', costPerLead: 280, status: 'Lost', date: 'Aug 15, 11:10 AM' },
-  ],
-  dental: [
-    { id: 'l-dt-1', name: 'Rohan Mehra', phone: '+91 91234 11111', email: 'rohan.m@example.com', campaignName: 'Invisalign Clear Aligners Early Bird', adSetName: 'Orthodontics_20_35', source: 'Meta Ads', costPerLead: 280, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-dt-2', name: 'Deepika Sen', phone: '+91 91234 22222', email: 'deepika.s@example.com', campaignName: 'Search Intent - Dental Implants Center', adSetName: 'Implants_Intent', source: 'Google Ads', costPerLead: 320, status: 'Contacted', date: 'Today, 09:15 AM' },
-    { id: 'l-dt-3', name: 'Siddharth Rao', phone: '+91 91234 33333', email: 'siddharth@example.com', campaignName: 'Laser Teeth Whitening Instant Booking', adSetName: 'Cosmetic_Smile', source: 'Meta Ads', costPerLead: 160, status: 'Converted', date: 'Yesterday, 04:45 PM' },
-    { id: 'l-dt-4', name: 'Ananya Deshmukh', phone: '+91 91234 44444', email: 'ananya.d@example.com', campaignName: 'Invisalign Clear Aligners Early Bird', adSetName: 'Aligners_Lookalike', source: 'Meta Ads', costPerLead: 290, status: 'New', date: 'Yesterday, 02:20 PM' },
-    { id: 'l-dt-5', name: 'Karan Johar', phone: '+91 91234 55555', email: 'karan.j@example.com', campaignName: 'Search Intent - Dental Implants Center', adSetName: 'Implants_Intent', source: 'Google Ads', costPerLead: 340, status: 'Lost', date: 'Aug 15, 11:10 AM' },
-  ],
-  spa: [
-    { id: 'l-sp-1', name: 'Kavita Menon', phone: '+91 99887 11111', email: 'kavita.m@example.com', campaignName: 'Ayurvedic Monsoon Rejuvenation Retreat', adSetName: 'Wellness_Enthusiasts', source: 'Meta Ads', costPerLead: 175, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-sp-2', name: 'Aditya Roy', phone: '+91 99887 22222', email: 'aditya.r@example.com', campaignName: 'Luxury Couple Spa Weekend Getaway', adSetName: 'Couples_Anniversary', source: 'Meta Ads', costPerLead: 190, status: 'Contacted', date: 'Today, 09:15 AM' },
-    { id: 'l-sp-3', name: 'Tara Sharma', phone: '+91 99887 33333', email: 'tara.s@example.com', campaignName: 'Deep Tissue & Stress Relief Therapy', adSetName: 'Pain_Relief_Search', source: 'Google Ads', costPerLead: 220, status: 'Converted', date: 'Yesterday, 04:45 PM' },
-    { id: 'l-sp-4', name: 'Manish Tiwari', phone: '+91 99887 44444', email: 'manish.t@example.com', campaignName: 'Ayurvedic Monsoon Rejuvenation Retreat', adSetName: 'Ayurveda_Lookalike', source: 'Meta Ads', costPerLead: 180, status: 'New', date: 'Yesterday, 02:20 PM' },
-  ],
-  salon: [
-    { id: 'l-sl-1', name: 'Simran Walia', phone: '+91 98123 11111', email: 'simran.w@example.com', campaignName: 'Bridal Makeup 2026 Advance Booking', adSetName: 'Brides_To_Be_2026', source: 'Meta Ads', costPerLead: 220, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-sl-2', name: 'Tanvi Shah', phone: '+91 98123 22222', email: 'tanvi.s@example.com', campaignName: 'Balayage Color & Olaplex Treatment Promo', adSetName: 'Hair_Color_Trend', source: 'Meta Ads', costPerLead: 165, status: 'Contacted', date: 'Today, 09:15 AM' },
-    { id: 'l-sl-3', name: 'Varun Grover', phone: '+91 98123 33333', email: 'varun.g@example.com', campaignName: 'Keratin Smoothening Festive Discount', adSetName: 'Keratin_Search', source: 'Google Ads', costPerLead: 180, status: 'Converted', date: 'Yesterday, 04:45 PM' },
-    { id: 'l-sl-4', name: 'Pooja Hegde', phone: '+91 98123 44444', email: 'pooja.h@example.com', campaignName: 'Bridal Makeup 2026 Advance Booking', adSetName: 'Wedding_Lookalike', source: 'Meta Ads', costPerLead: 210, status: 'Contacted', date: 'Yesterday, 02:20 PM' },
-  ],
-  realestate: [
-    { id: 'l-re-1', name: 'Suresh Singhania', phone: '+91 90011 11111', email: 'suresh.s@example.com', campaignName: '3BHK Luxury Gated Villas Launch', adSetName: 'HNIs_RealEstate', source: 'Meta Ads', costPerLead: 450, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-re-2', name: 'Alok Goenka', phone: '+91 90011 22222', email: 'alok.g@example.com', campaignName: 'High-Yield Commercial Office Spaces', adSetName: 'Commercial_Investors', source: 'Google Ads', costPerLead: 620, status: 'Contacted', date: 'Today, 09:15 AM' },
-    { id: 'l-re-3', name: 'Harsh Vardhan', phone: '+91 90011 33333', email: 'harsh.v@example.com', campaignName: 'NRI Direct Investment Highway Plots', adSetName: 'NRI_Targeting', source: 'Meta Ads', costPerLead: 510, status: 'Converted', date: 'Yesterday, 04:45 PM' },
-  ],
-  hotel: [
-    { id: 'l-ht-1', name: 'Vikramaditya Birla', phone: '+91 97766 11111', email: 'vikram.b@example.com', campaignName: 'Grand Ballroom Wedding & Banquet Leads', adSetName: 'Wedding_Planners', source: 'Google Ads', costPerLead: 480, status: 'New', date: 'Today, 10:30 AM' },
-    { id: 'l-ht-2', name: 'Shalini Passi', phone: '+91 97766 22222', email: 'shalini.p@example.com', campaignName: 'Weekend Luxury Suite Staycation Pass', adSetName: 'Staycation_Luxury', source: 'Meta Ads', costPerLead: 240, status: 'Contacted', date: 'Today, 09:15 AM' },
-  ],
+  skin: [], dental: [], spa: [], salon: [], realestate: [], hotel: []
 };
 
 export default function MetaAdsCrmPage() {
@@ -158,7 +96,7 @@ export default function MetaAdsCrmPage() {
   const avgCpl = leads.reduce((acc, l) => acc + l.costPerLead, 0) / leads.length || 0;
   const converted = leads.filter(l => l.status === 'Converted').length;
   const conversionRate = totalLeads ? Math.round((converted / totalLeads) * 100) : 0;
-  const totalSpend = 85700;
+  const totalSpend = campaigns.reduce((acc, c) => acc + (parseFloat(c.spend.replace(/[^0-9.]/g, '')) || 0), 0);
 
   const handleUpdateStatus = (leadId: string, newStatus: LeadStatus) => {
     const updated = leads.map(l => l.id === leadId ? { ...l, status: newStatus } : l);

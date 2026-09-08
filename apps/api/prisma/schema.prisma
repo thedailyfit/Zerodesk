@@ -360,6 +360,7 @@ model Appointment {
   staff    StaffMember? @relation(fields: [staffId], references: [id])
 
   @@unique([id, tenantId])
+  @@unique([tenantId, scheduledAt, staffId], map: "unique_tenant_slot_staff")
   @@index([tenantId, scheduledAt, status])
   @@index([tenantId, customerId])
   @@index([tenantId, serviceId])
@@ -372,18 +373,23 @@ model Appointment {
 // ============================================================
 
 model VoiceConfig {
-  id               String   @id @default(uuid()) @db.Uuid
-  tenantId         String   @unique @map("tenant_id") @db.Uuid
-  vapiAssistantId  String?  @map("vapi_assistant_id")
-  vapiPhoneNumber  String?  @unique @map("vapi_phone_number")
-  voicePersonality String   @default("professional") @map("voice_personality")
-  greeting         String?
-  languages        String[] @default(["en"])
-  transferNumber   String?  @map("transfer_number")
-  isActive         Boolean  @default(true) @map("is_active")
-  settings         Json     @default("{}")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @unique @map("tenant_id") @db.Uuid
+  plivoPhoneNumber  String?  @unique @map("plivo_phone_number")
+  plivoAuthId       String?  @map("plivo_auth_id")
+  plivoAuthToken    String?  @map("plivo_auth_token")
+  plivoAppId        String?  @map("plivo_app_id")
+  livekitTrunkId    String?  @map("livekit_trunk_id")
+  retellPhoneNumber String?  @unique @map("retell_phone_number")
+  retellAgentId     String?  @map("retell_agent_id")
+  voicePersonality  String   @default("professional") @map("voice_personality")
+  greeting          String?
+  languages         String[] @default(["en"])
+  transferNumber    String?  @map("transfer_number")
+  isActive          Boolean  @default(true) @map("is_active")
+  settings          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 

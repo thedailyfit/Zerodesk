@@ -34,226 +34,12 @@ export interface DoctorProfile {
 }
 
 const DEFAULT_STAFF_BY_NICHE: Record<NicheId, DoctorProfile[]> = {
-  skin: [
-    {
-      id: 'doc-sk-1',
-      name: 'Dr. Meenakshi Rao',
-      specialty: 'Senior Dermatologist & Aesthetician',
-      avatar: 'MR',
-      phone: '+91 98765 43210',
-      email: 'meenakshi@glowclinic.com',
-      status: 'Active',
-      hours: '09:00 AM - 05:00 PM',
-      bookedHours: 6.5,
-      totalHours: 8,
-      todayAppointments: 8
-    },
-    {
-      id: 'doc-sk-2',
-      name: 'Dr. Arun Kumar',
-      specialty: 'Hair Restoration & Cosmetologist',
-      avatar: 'AK',
-      phone: '+91 98123 45678',
-      email: 'arun@glowclinic.com',
-      status: 'In Surgery',
-      hours: '10:00 AM - 06:00 PM',
-      bookedHours: 7,
-      totalHours: 8,
-      todayAppointments: 5
-    },
-    {
-      id: 'doc-sk-3',
-      name: 'Dr. Kavita Reddy',
-      specialty: 'Clinical Dermatology Specialist',
-      avatar: 'KR',
-      phone: '+91 97654 32109',
-      email: 'kavita@glowclinic.com',
-      status: 'On Break',
-      hours: '09:30 AM - 04:30 PM',
-      bookedHours: 4.5,
-      totalHours: 7,
-      todayAppointments: 6
-    }
-  ],
-  dental: [
-    {
-      id: 'doc-dt-1',
-      name: 'Dr. Arvind Sharma',
-      specialty: 'Chief Endodontist & Microscopic RCT Lead',
-      avatar: 'AS',
-      phone: '+91 91234 56780',
-      email: 'dr.sharma@dentalcare.com',
-      status: 'Active',
-      hours: '09:00 AM - 05:00 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 7
-    },
-    {
-      id: 'doc-dt-2',
-      name: 'Dr. Priya Nair',
-      specialty: 'Orthodontist & Clear Aligner Specialist',
-      avatar: 'PN',
-      phone: '+91 91234 56781',
-      email: 'dr.priya@dentalcare.com',
-      status: 'Active',
-      hours: '10:00 AM - 06:00 PM',
-      bookedHours: 6.5,
-      totalHours: 8,
-      todayAppointments: 9
-    },
-    {
-      id: 'doc-dt-3',
-      name: 'Dr. Rohan Verma',
-      specialty: 'Implantologist & Cosmetic Dentist',
-      avatar: 'RV',
-      phone: '+91 91234 56782',
-      email: 'dr.rohan@dentalcare.com',
-      status: 'In Surgery',
-      hours: '09:30 AM - 04:30 PM',
-      bookedHours: 5.5,
-      totalHours: 7,
-      todayAppointments: 4
-    }
-  ],
-  spa: [
-    {
-      id: 'doc-sp-1',
-      name: 'Master Somchai',
-      specialty: 'Ayurvedic & Deep Tissue Master Therapist',
-      avatar: 'MS',
-      phone: '+91 99887 76655',
-      email: 'somchai@serenityspa.com',
-      status: 'Active',
-      hours: '09:00 AM - 06:00 PM',
-      bookedHours: 7.0,
-      totalHours: 8,
-      todayAppointments: 6
-    },
-    {
-      id: 'doc-sp-2',
-      name: 'Maya Sen',
-      specialty: 'Holistic Aromatherapist & Body Treatment Specialist',
-      avatar: 'MS',
-      phone: '+91 99887 76656',
-      email: 'maya@serenityspa.com',
-      status: 'On Break',
-      hours: '10:00 AM - 07:00 PM',
-      bookedHours: 5.0,
-      totalHours: 8,
-      todayAppointments: 5
-    },
-    {
-      id: 'doc-sp-3',
-      name: 'Ananya Ayurvedic Healer',
-      specialty: 'BAMS Panchakarma & Shirodhara Physician',
-      avatar: 'AH',
-      phone: '+91 99887 76657',
-      email: 'ananya@serenityspa.com',
-      status: 'Active',
-      hours: '09:30 AM - 05:30 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 7
-    }
-  ],
-  salon: [
-    {
-      id: 'doc-sl-1',
-      name: 'Zara Khan',
-      specialty: 'Master Hair Stylist & Creative Director',
-      avatar: 'ZK',
-      phone: '+91 98123 45670',
-      email: 'zara@luxurysalon.com',
-      status: 'Active',
-      hours: '10:00 AM - 07:00 PM',
-      bookedHours: 7.5,
-      totalHours: 8,
-      todayAppointments: 8
-    },
-    {
-      id: 'doc-sl-2',
-      name: 'Rohit Mehra',
-      specialty: 'Senior Hair Colorist & Balayage Specialist',
-      avatar: 'RM',
-      phone: '+91 98123 45671',
-      email: 'rohit@luxurysalon.com',
-      status: 'In Surgery',
-      hours: '10:00 AM - 06:30 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 5
-    },
-    {
-      id: 'doc-sl-3',
-      name: 'Tanya Roy',
-      specialty: 'Celebrity Bridal & HD Airbrush Makeup Artist',
-      avatar: 'TR',
-      phone: '+91 98123 45672',
-      email: 'tanya@luxurysalon.com',
-      status: 'Active',
-      hours: '09:00 AM - 05:00 PM',
-      bookedHours: 6.5,
-      totalHours: 8,
-      todayAppointments: 6
-    }
-  ],
-  realestate: [
-    {
-      id: 'doc-re-1',
-      name: 'Vikram Aditya',
-      specialty: 'Senior Luxury Property Advisor (Villas & Penthouses)',
-      avatar: 'VA',
-      phone: '+91 90011 22334',
-      email: 'vikram@zerorealty.com',
-      status: 'Active',
-      hours: '09:00 AM - 06:00 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 4
-    },
-    {
-      id: 'doc-re-2',
-      name: 'Rajesh Gupta',
-      specialty: 'Commercial Asset & Grade-A Floor Plate Specialist',
-      avatar: 'RG',
-      phone: '+91 90011 22335',
-      email: 'rajesh@zerorealty.com',
-      status: 'Active',
-      hours: '09:30 AM - 06:00 PM',
-      bookedHours: 5.5,
-      totalHours: 8,
-      todayAppointments: 5
-    }
-  ],
-  hotel: [
-    {
-      id: 'doc-ht-1',
-      name: 'Kabir Mehta',
-      specialty: 'Chief Concierge & VIP Guest Relations Head',
-      avatar: 'KM',
-      phone: '+91 97766 55443',
-      email: 'kabir@grandhotel.com',
-      status: 'Active',
-      hours: '08:00 AM - 05:00 PM',
-      bookedHours: 7.0,
-      totalHours: 8,
-      todayAppointments: 10
-    },
-    {
-      id: 'doc-ht-2',
-      name: 'Sunita Rao',
-      specialty: 'Front Office & Guest Experience Manager',
-      avatar: 'SR',
-      phone: '+91 97766 55444',
-      email: 'sunita@grandhotel.com',
-      status: 'Active',
-      hours: '09:00 AM - 06:00 PM',
-      bookedHours: 6.0,
-      totalHours: 8,
-      todayAppointments: 8
-    }
-  ]
+  skin: [],
+  dental: [],
+  spa: [],
+  salon: [],
+  realestate: [],
+  hotel: []
 };
 
 export default function DoctorCalendarPage() {
@@ -394,8 +180,14 @@ export default function DoctorCalendarPage() {
             {staffTerm} List ({doctors.length})
           </h2>
 
-          {doctors.map((doc) => {
-            const isSelected = selectedDoctor.id === doc.id;
+          {doctors.length === 0 ? (
+            <div className="p-8 border border-dashed border-[var(--color-border)] rounded-2xl text-center space-y-2 text-xs text-[var(--color-text-muted)]">
+              <UserCheck size={28} className="mx-auto opacity-30 text-blue-500 mb-2" />
+              <p className="font-semibold text-[var(--color-text)]">No {staffTerm} Profiles</p>
+              <p>Add staff or doctors to manage their shifts and schedules.</p>
+            </div>
+          ) : doctors.map((doc) => {
+            const isSelected = selectedDoctor?.id === doc.id;
             const utilPercent = Math.round((doc.bookedHours / doc.totalHours) * 100);
 
             return (

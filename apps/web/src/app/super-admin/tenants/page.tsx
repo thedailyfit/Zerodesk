@@ -26,6 +26,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useSuperAdminStore, AdminTenant } from '@/lib/superadmin-store';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api-client';
+import { useEffect } from 'react';
 
 export default function SuperAdminTenantsPage() {
   const router = useRouter();
@@ -33,6 +35,32 @@ export default function SuperAdminTenantsPage() {
   const [search, setSearch] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('All');
   const [editingTenant, setEditingTenant] = useState<AdminTenant | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTenants() {
+      try {
+        const liveTenants = await apiClient<any[]>('/admin/tenants');
+        if (isMounted && Array.isArray(liveTenants) && liveTenants.length > 0) {
+          liveTenants.forEach((t: any) => {
+            updateTenant(t.id, {
+              ...t,
+              voiceMinutesUsed: t.subscription?.voiceMinutesUsed || 0,
+              voiceMinutesLimit: t.subscription?.voiceMinutesLimit || 500,
+              whatsappMessagesUsed: t.subscription?.whatsappMessagesUsed || 0,
+              whatsappMessagesLimit: t.subscription?.whatsappMessagesLimit || 2000,
+              llmTokensUsed: t.subscription?.llmTokensUsed || 0,
+              llmTokensLimit: t.subscription?.llmTokensLimit || 1000000,
+            });
+          });
+        }
+      } catch (err) {
+        console.warn('Could not sync admin tenants from backend API:', err);
+      }
+    }
+    loadTenants();
+    return () => { isMounted = false; };
+  }, []);
 
   const niches = ['All', 'Clinic', 'Real Estate', 'Dental', 'Hotel', 'Coaching', 'Fintech', 'Dealership', 'FMCG'];
 
@@ -42,10 +70,23 @@ export default function SuperAdminTenantsPage() {
     return matchesSearch && matchesNiche;
   });
 
-  const handleSaveTenant = (e: React.FormEvent) => {
+  const handleSaveTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTenant) return;
     updateTenant(editingTenant.id, editingTenant);
+    try {
+      await apiClient(`/admin/tenants/${editingTenant.id}/limits`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          voiceMinutesLimit: editingTenant.voiceMinutesLimit,
+          whatsappMessagesLimit: editingTenant.whatsappMessagesLimit,
+          llmTokensLimit: editingTenant.llmTokensLimit,
+          assignedLlmId: editingTenant.assignedLlmId,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync tenant limits to backend:', err);
+    }
     toast.success(`Updated ${editingTenant.name} settings successfully!`);
     setEditingTenant(null);
   };

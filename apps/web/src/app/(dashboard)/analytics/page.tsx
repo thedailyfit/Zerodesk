@@ -55,10 +55,12 @@ const baseCallData = [
   { date: 'Sun', calls: 25, resolved: 23, missed: 2 },
 ];
 
-const baseHourlyData = Array.from({ length: 12 }, (_, i) => ({
+// Deterministic business-hour traffic weights (8:00 AM to 7:00 PM)
+const HOURLY_WEIGHTS = [0.03, 0.06, 0.09, 0.14, 0.16, 0.13, 0.11, 0.10, 0.08, 0.05, 0.03, 0.02];
+const baseHourlyData = HOURLY_WEIGHTS.map((weight, i) => ({
   hour: `${(i + 8).toString().padStart(2, '0')}:00`,
-  calls: Math.floor(Math.random() * 15) + 2,
-  messages: Math.floor(Math.random() * 25) + 5,
+  calls: Math.round(weight * 60),
+  messages: Math.round(weight * 110),
 }));
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -85,6 +87,8 @@ export default function AnalyticsPage() {
     appointmentsToday?: number;
     totalRevenue?: number;
     totalCalls?: number;
+    totalMessages?: number;
+    resolutionRate?: number;
   } | null>(null);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
 
@@ -92,18 +96,21 @@ export default function AnalyticsPage() {
     let isMounted = true;
     async function loadLiveAnalytics() {
       try {
-        const [overviewRes, callsRes] = await Promise.all([
+        const [overviewRes, callsRes, messagesRes] = await Promise.all([
           apiClient<any>('/analytics/overview').catch(() => null),
           apiClient<any>('/analytics/calls').catch(() => null),
+          apiClient<any>('/analytics/messages').catch(() => null),
         ]);
 
         if (isMounted && overviewRes) {
           setLiveKpis({
-            totalCustomers: overviewRes.totalCustomers,
-            activeLeads: overviewRes.activeLeads,
-            appointmentsToday: overviewRes.appointmentsToday,
-            totalRevenue: overviewRes.totalRevenue,
-            totalCalls: callsRes?.totalCalls || (overviewRes.totalCustomers ? Math.round(overviewRes.totalCustomers * 1.8) : undefined),
+            totalCustomers: overviewRes.totalCustomers ?? 0,
+            activeLeads: overviewRes.activeLeads ?? 0,
+            appointmentsToday: overviewRes.appointmentsToday ?? 0,
+            totalRevenue: overviewRes.totalRevenue ?? 0,
+            totalCalls: callsRes?.totalCalls ?? (overviewRes.totalCustomers ? Math.round(overviewRes.totalCustomers * 1.8) : 0),
+            totalMessages: messagesRes?.totalMessages ?? 0,
+            resolutionRate: callsRes?.resolutionRate ?? 94.2,
           });
           setIsLiveConnected(true);
         }
@@ -113,35 +120,39 @@ export default function AnalyticsPage() {
     }
     loadLiveAnalytics();
     return () => { isMounted = false; };
-  }, []);
+  }, [selectedTimeframe]);
 
   const mult = TIMEFRAME_MULTIPLIERS[selectedTimeframe] || 1;
 
-  const totalCallsVal = liveKpis?.totalCalls
-    ? Math.round(liveKpis.totalCalls * (mult < 1 ? mult : mult / 2))
+  const totalCallsVal = liveKpis?.totalCalls !== undefined
+    ? liveKpis.totalCalls
     : Math.round(341 * mult);
 
-  const appointmentsVal = liveKpis?.appointmentsToday
-    ? Math.max(liveKpis.appointmentsToday, Math.round(156 * mult))
+  const totalMessagesVal = liveKpis?.totalMessages !== undefined && liveKpis.totalMessages > 0
+    ? liveKpis.totalMessages
+    : Math.round(528 * mult);
+
+  const appointmentsVal = liveKpis?.appointmentsToday !== undefined
+    ? liveKpis.appointmentsToday
     : Math.round(156 * mult);
 
-  const newLeadsVal = liveKpis?.activeLeads
-    ? Math.max(liveKpis.activeLeads, Math.round(89 * mult))
+  const newLeadsVal = liveKpis?.activeLeads !== undefined
+    ? liveKpis.activeLeads
     : Math.round(89 * mult);
 
   const kpis = [
     { label: 'Total Calls', value: totalCallsVal, change: 12.5, icon: Phone, color: 'text-blue-400' },
-    { label: 'Total Messages', value: Math.round(528 * mult), change: 8.3, icon: MessageCircle, color: 'text-emerald-400' },
+    { label: 'Total Messages', value: totalMessagesVal, change: 8.3, icon: MessageCircle, color: 'text-emerald-400' },
     { label: 'Appointments', value: appointmentsVal, change: 4.8, icon: Calendar, color: 'text-blue-400' },
     { label: 'New Leads', value: newLeadsVal, change: 15.7, icon: Users, color: 'text-amber-400' },
     { label: 'Avg Response', value: '1.2s', change: -18.5, icon: Clock, color: 'text-cyan-400' },
-    { label: 'Conversion Rate', value: '34%', change: 5.1, icon: Target, color: 'text-emerald-400' },
+    { label: 'Conversion Rate', value: `${liveKpis?.resolutionRate ?? 34}%`, change: 5.1, icon: Target, color: 'text-emerald-400' },
   ];
 
   const channelData = [
-    { name: 'Voice', value: totalCallsVal, color: '#3b82f6' },
-    { name: 'WhatsApp', value: Math.round(528 * mult), color: '#10b981' },
-    { name: 'Web Chat', value: Math.round(167 * mult), color: '#0ea5e9' },
+    { name: 'Voice', value: totalCallsVal || 1, color: '#3b82f6' },
+    { name: 'WhatsApp', value: totalMessagesVal || 1, color: '#10b981' },
+    { name: 'Web Chat', value: Math.round(totalMessagesVal * 0.3) || 1, color: '#0ea5e9' },
   ];
 
   const scaledCallData = baseCallData.map(d => ({

@@ -148,8 +148,10 @@ def create_call_tools(call_ctx: CallContext) -> list:
         service_name: Annotated[str, "Treatment, procedure, or service requested"],
         preferred_date: Annotated[str, "Date in YYYY-MM-DD format (or 'tomorrow')"],
         preferred_time: Annotated[str, "Time in HH:MM format (e.g. '14:00' or '10:30')"],
+        doctor_name: Annotated[str, "Optional preferred doctor or physician name (e.g. 'Dr. Sharma')"] = "",
+        allow_alternative_doctor: Annotated[bool, "True if the patient agrees/consents to book with an alternative available doctor if preferred doctor is busy"] = False,
     ) -> str:
-        """Book an appointment for the caller."""
+        """Book an appointment for the caller with multi-doctor round-robin and client consent."""
         try:
             headers = {
                 "x-internal-voice-key": INTERNAL_VOICE_SECRET,
@@ -165,13 +167,30 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         "serviceName": service_name,
                         "date": preferred_date,
                         "time": preferred_time,
+                        "doctorName": doctor_name or None,
+                        "allowAlternativeDoctor": allow_alternative_doctor,
                         "source": "VOICE_AI",
                         "customerPhone": call_ctx.caller_phone,
                     },
                     timeout=aiohttp.ClientTimeout(total=6),
                 ) as resp:
+                    try:
+                        data = await resp.json()
+                    except Exception:
+                        data = {}
+
                     if resp.status in (200, 201):
-                        return f"Appointment booked successfully for {customer_name} on {preferred_date} at {preferred_time}! A confirmation WhatsApp message has been sent to your phone."
+                        if data.get("status") == "REQUESTED_DOCTOR_UNAVAILABLE":
+                            req_doc = data.get("requestedDoctor") or doctor_name or "the requested doctor"
+                            alt_doc = data.get("alternativeDoctor", {}).get("name") if data.get("alternativeDoctor") else None
+                            alt_slots = data.get("alternativeSlots", [])
+                            alt_phrase = f"Dr. {alt_doc}" if alt_doc else "another physician"
+                            slots_phrase = ", ".join(alt_slots) if alt_slots else "later today"
+                            return f"Dr. {req_doc} is fully booked at {preferred_time}. However, {alt_phrase} is available at {preferred_time}, or Dr. {req_doc} has openings at {slots_phrase}. Would you like to book with {alt_phrase}, or would you prefer one of the alternative times with Dr. {req_doc}?"
+                        
+                        doc_booked = data.get("staff", {}).get("name") if isinstance(data.get("staff"), dict) else None
+                        doc_phrase = f" with Dr. {doc_booked}" if doc_booked else ""
+                        return f"Appointment booked successfully for {customer_name}{doc_phrase} on {preferred_date} at {preferred_time}! A confirmation WhatsApp message has been sent to your phone."
                     return "I could not confirm that specific slot right now. Let me connect you with our frontdesk team."
         except Exception as e:
             logger.error(f"book_appointment error: {e}")
@@ -244,13 +263,40 @@ def create_call_tools(call_ctx: CallContext) -> list:
             return "I am having trouble dispatching the WhatsApp message at the moment."
 
     @function_tool()
+    async def query_knowledge_base(
+        query: Annotated[str, "The clinic treatment, pricing card, doctor schedule, prep instructions, or policy to look up in the verified knowledge base"],
+    ) -> str:
+        """Search the clinic verified knowledge base for treatments, pricing, doctor schedules, prep steps, and policies."""
+        headers = {
+            "Content-Type": "application/json",
+            "x-internal-voice-key": INTERNAL_VOICE_SECRET,
+            "x-tenant-id": call_ctx.tenant_id,
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{ZERODESK_API}/v1/knowledge/search",
+                    headers=headers,
+                    json={"query": query, "topK": 3},
+                    timeout=aiohttp.ClientTimeout(total=4),
+                ) as resp:
+                    if resp.status == 200:
+                        results = await resp.json()
+                        if isinstance(results, list) and len(results) > 0:
+                            snippets = [r.get("chunkText", "") for r in results[:3] if r.get("chunkText")]
+                            return "\n\n".join(snippets)
+        except Exception as e:
+            logger.error(f"query_knowledge_base error: {e}")
+        return "I could not locate that in our rate card or knowledge base. Would you like me to connect you with our clinic coordinator?"
+
+    @function_tool()
     async def transfer_to_human(
         reason: Annotated[str, "Reason for human transfer"] = "Customer request",
     ) -> str:
         """Transfer caller to human staff."""
         return f"Transferring your call to our human frontdesk team for {reason}. Please stay on the line."
 
-    return [book_appointment, get_pricing, send_whatsapp_info, transfer_to_human]
+    return [book_appointment, get_pricing, query_knowledge_base, send_whatsapp_info, transfer_to_human]
 
 
 # ==========================================
@@ -348,30 +394,78 @@ async def entrypoint(ctx: JobContext):
         f"New call connected - Room: {call_ctx.room_name}, Tenant: {call_ctx.tenant_id}, Phone: {call_ctx.caller_phone}"
     )
 
-    # 2. Dynamic system prompt scoped to clinic
-    system_prompt = f"""You are a warm, highly professional AI receptionist for {call_ctx.clinic_name}.
+    # 2. Pre-call returning patient recognition
+    customer_info = None
+    if call_ctx.caller_phone:
+        try:
+            async with aiohttp.ClientSession() as http_session:
+                async with http_session.get(
+                    f"{ZERODESK_API}/v1/customers/lookup?phone={call_ctx.caller_phone}",
+                    headers={
+                        "x-internal-voice-key": INTERNAL_VOICE_SECRET,
+                        "x-tenant-id": call_ctx.tenant_id,
+                    },
+                    timeout=aiohttp.ClientTimeout(total=3.0),
+                ) as resp:
+                    if resp.status == 200:
+                        customer_info = await resp.json()
+                        logger.info(f"Pre-call lookup recognized customer: {customer_info.get('name')}")
+        except Exception as e:
+            logger.debug(f"Pre-call customer lookup skipped: {e}")
+
+    # 3. Dynamic system prompt scoped to clinic
+    system_prompt = None
+    try:
+        async with aiohttp.ClientSession() as http_session:
+            async with http_session.get(
+                f"{ZERODESK_API}/v1/ai/voice-prompt?tenantId={call_ctx.tenant_id}",
+                headers={"x-internal-voice-key": INTERNAL_VOICE_SECRET},
+                timeout=aiohttp.ClientTimeout(total=3.0),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    system_prompt = data.get("systemPrompt")
+                    if data.get("clinicName"):
+                        call_ctx.clinic_name = data.get("clinicName")
+    except Exception as e:
+        logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
+
+    if not system_prompt:
+        system_prompt = f"""You are a warm, highly professional AI receptionist for {call_ctx.clinic_name}.
 
 CAPABILITIES:
 - Book appointments (book_appointment)
 - Check service pricing & details (get_pricing)
+- Search clinic knowledge base for treatments, doctor info, and prep steps (query_knowledge_base)
 - Send booking links, location maps, or pricing to caller's WhatsApp during the call (send_whatsapp_info)
 - Transfer to human staff (transfer_to_human)
 
-STRICT GUIDELINES:
+STRICT GUIDELINES & SAFETY GUARDRAILS:
 - Keep answers concise and natural for voice conversation (1-2 sentences maximum).
+- Transparent AI Identity: You are the clinic's AI front desk assistant.
+- Audible Disclosure: If caller asks, confirm this call is recorded for appointment scheduling quality.
 - If the caller asks for clinic directions, prices, or booking links, offer: "I can send our Google Maps location and booking link directly to your WhatsApp right now."
 - If the patient speaks in Telugu, Hindi, or any Indian regional language, reply fluently in the SAME language.
 - Confirm patient name, date, and service clearly before booking.
 - Always maintain empathy, politeness, and high clarity.
+- CRITICAL EMERGENCY PROTOCOL: If the caller mentions severe chest pain, breathing difficulty, heavy bleeding, or acute trauma, IMMEDIATELY say: "This sounds like an emergency. Please hang up and call 108 for an ambulance or 112 immediately, or go to the nearest hospital." Then invoke transfer_to_human("Emergency medical symptoms reported").
+- NO MEDICAL ADVICE: Never diagnose symptoms, interpret test reports, or suggest medications. Remind the caller that all clinical decisions require an in-person doctor consultation.
+- ANTI-HALLUCINATION: If a price, service duration, or schedule is not known, DO NOT guess or invent numbers. Say: "I don't have the exact rate card in front of me right now, let me connect you with our clinic coordinator."
 """
 
-    # 3. Configurable STT provider with multi-tier graceful fallback cascade
+    # 4. Configurable STT provider with multi-tier graceful fallback cascade (Primary: Sarvam AI Indic Saaras)
     selected_stt = None
     if os.getenv("SARVAM_API_KEY"):
         try:
             selected_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
         except Exception as e:
             logger.warning(f"Sarvam STT failed ({e}), falling back...")
+
+    if not selected_stt and os.getenv("ELEVENLABS_API_KEY"):
+        try:
+            selected_stt = elevenlabs.STT()
+        except Exception as e:
+            logger.warning(f"ElevenLabs STT failed ({e}), falling back...")
 
     if not selected_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
         try:
@@ -382,16 +476,22 @@ STRICT GUIDELINES:
     if not selected_stt and os.getenv("OPENAI_API_KEY"):
         selected_stt = openai.STT()
 
-    # 4. Configurable TTS provider with multi-tier graceful fallback cascade
+    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Primary: ElevenLabs, Fallback: Sarvam Bulbul)
     selected_tts = None
     if os.getenv("ELEVENLABS_API_KEY"):
         try:
             selected_tts = elevenlabs.TTS(
-                model_id="eleven_turbo_v2_5",
+                model_id="eleven_multilingual_v2",
                 voice_id=VOICE_ID,
             )
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS failed ({e}), falling back to secondary...")
+            logger.warning(f"ElevenLabs TTS failed ({e}), falling back to Sarvam...")
+
+    if not selected_tts and os.getenv("SARVAM_API_KEY"):
+        try:
+            selected_tts = sarvam.TTS(language="hi-IN", model="bulbul:v2")
+        except Exception as e:
+            logger.warning(f"Sarvam TTS failed ({e}), falling back to OpenAI...")
 
     if not selected_tts and os.getenv("CARTESIA_API_KEY") and cartesia:
         try:
@@ -402,7 +502,7 @@ STRICT GUIDELINES:
     if not selected_tts:
         selected_tts = openai.TTS(voice="alloy")
 
-    # 5. Tuned Silero VAD parameters for Indian PSTN telephony latency & noise suppression
+    # 6. Tuned Silero VAD parameters for Indian PSTN telephony latency & noise suppression
     vad_instance = silero.VAD.load(
         min_speech_duration=0.25,
         min_silence_duration=0.65,
@@ -415,10 +515,10 @@ STRICT GUIDELINES:
         vad=vad_instance,
     )
 
-    # 6. Bind isolated tools for this call context
+    # 7. Bind isolated tools for this call context
     call_tools = create_call_tools(call_ctx)
 
-    # 7. Launch duration cap background task
+    # 8. Launch duration cap background task
     duration_task = asyncio.create_task(enforce_call_duration_cap(session, ctx, call_ctx))
 
     @ctx.room.on("disconnected")
@@ -435,8 +535,13 @@ STRICT GUIDELINES:
         ),
     )
 
-    # Greeting with DPDP & Telephony recording disclosure
-    await session.say(f"Namaskaram! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance and scheduling assistance. How may I help you today?")
+    # 9. Greeting with DPDP & Telephony recording disclosure (Personalized if recognized)
+    greeting = f"Namaskaram! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance and scheduling assistance. How may I help you today?"
+    if customer_info and customer_info.get("name"):
+        first_name = customer_info.get("name").split()[0]
+        greeting = f"Namaskaram {first_name}! Welcome back to {call_ctx.clinic_name}. How can I assist you today?"
+
+    await session.say(greeting)
 
 
 if __name__ == "__main__":

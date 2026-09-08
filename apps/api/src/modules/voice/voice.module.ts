@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { VoiceController } from './voice.controller';
 import { VoiceService } from './voice.service';
+import { PlivoService } from './plivo.service';
 import { KnowledgeModule } from '../knowledge-base/knowledge.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { OutboundCallProcessor } from './outbound-call.processor';
@@ -15,8 +16,8 @@ import { OutboundCallProcessor } from './outbound-call.processor';
     }),
   ],
   controllers: [VoiceController],
-  providers: [VoiceService, OutboundCallProcessor],
-  exports: [VoiceService, BullModule],
+  providers: [VoiceService, PlivoService, OutboundCallProcessor],
+  exports: [VoiceService, PlivoService, BullModule],
 })
 export class VoiceModule {}
 

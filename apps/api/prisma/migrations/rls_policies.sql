@@ -3,7 +3,6 @@
 -- Ensures database-level multi-tenant isolation even if application logic fails
 -- ==============================================================================
 
--- 1. Enable RLS on core tenant-scoped tables
 ALTER TABLE "customers" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "conversations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "messages" ENABLE ROW LEVEL SECURITY;
@@ -18,6 +17,22 @@ ALTER TABLE "invoice_items" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_documents" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_chunks" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "automation_workflows" ENABLE ROW LEVEL SECURITY;
+
+-- Force RLS even for table owner to prevent accidental multi-tenant bypass
+ALTER TABLE "customers" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "conversations" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "messages" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "appointments" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "services" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "staff_members" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "leads" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "tasks" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "activities" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "invoices" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "invoice_items" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "knowledge_documents" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "knowledge_chunks" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "automation_workflows" FORCE ROW LEVEL SECURITY;
 
 -- 2. Drop existing policies if any
 DROP POLICY IF EXISTS tenant_isolation_customers ON "customers";

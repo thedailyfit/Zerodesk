@@ -27,7 +27,7 @@ interface PhoneNumberItem {
   isPrimary: boolean;
   forwardingSource: string;
   assignedAgent: string;
-  provider: 'Twilio (India)' | 'Plivo' | 'Tata Tele';
+  provider: 'Plivo (LiveKit Cloud)' | 'Plivo' | 'Retell Failover';
   status: 'ACTIVE' | 'ON_HOLD' | 'PENDING_KYC' | 'UNASSIGNED';
   webhookUrl: string;
   monthlyCost: string;
@@ -39,32 +39,32 @@ const INITIAL_NUMBERS: PhoneNumberItem[] = [
     number: '+91 40 1234 5678',
     isPrimary: true,
     forwardingSource: '+91 40 2355 1234 (Landline)',
-    assignedAgent: 'DermAI Receptionist (vapi_agent_hyderabad_v4)',
-    provider: 'Twilio (India)',
+    assignedAgent: 'Clinic Voice AI (LiveKit Cloud + Sarvam STT)',
+    provider: 'Plivo (LiveKit Cloud)',
     status: 'ACTIVE',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/vapi-webhook',
-    monthlyCost: '₹1,200 / mo'
+    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
+    monthlyCost: '₹850 / mo'
   },
   {
     id: 'num_2',
     number: '+91 40 8765 4321',
     isPrimary: false,
     forwardingSource: '',
-    assignedAgent: 'VIP Concierge (vapi_agent_vip_v2)',
-    provider: 'Twilio (India)',
+    assignedAgent: 'VIP Concierge (LiveKit Cloud)',
+    provider: 'Plivo (LiveKit Cloud)',
     status: 'ON_HOLD',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/vapi-webhook',
-    monthlyCost: '₹1,200 / mo'
+    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
+    monthlyCost: '₹850 / mo'
   },
   {
     id: 'num_3',
     number: '+91 40 5555 9999',
     isPrimary: false,
     forwardingSource: '+91 40 9999 8888 (Support)',
-    assignedAgent: 'After-Hours Outbound (retell_agent_99a)',
-    provider: 'Plivo',
+    assignedAgent: 'After-Hours Emergency (Retell AI Failover)',
+    provider: 'Retell Failover',
     status: 'ACTIVE',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/vapi-webhook',
+    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-fallback',
     monthlyCost: '₹950 / mo'
   },
   {
@@ -73,10 +73,10 @@ const INITIAL_NUMBERS: PhoneNumberItem[] = [
     isPrimary: false,
     forwardingSource: '',
     assignedAgent: 'Unassigned',
-    provider: 'Twilio (India)',
+    provider: 'Plivo (LiveKit Cloud)',
     status: 'PENDING_KYC',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/vapi-webhook',
-    monthlyCost: '₹1,200 / mo'
+    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
+    monthlyCost: '₹850 / mo'
   }
 ];
 
@@ -308,9 +308,9 @@ export default function PhoneNumbersPage() {
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Link Voice Agent ID</label>
                   <select className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-blue-300 font-mono">
-                    <option value="agent_1">DermAI Receptionist (vapi_agent_hyderabad_v4)</option>
-                    <option value="agent_2">VIP Concierge (vapi_agent_vip_v2)</option>
-                    <option value="agent_3">After-Hours Outbound (retell_agent_99a)</option>
+                    <option value="agent_1">Clinic Receptionist (livekit_agent_receptionist_v1)</option>
+                    <option value="agent_2">VIP Concierge (livekit_agent_vip_v1)</option>
+                    <option value="agent_3">After-Hours Outbound (retell_agent_failover_v1)</option>
                   </select>
                 </div>
               </div>

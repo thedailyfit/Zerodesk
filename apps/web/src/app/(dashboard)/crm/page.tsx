@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
+import { apiClient } from '@/lib/api-client';
 import {
   Plus,
   X,
@@ -126,28 +127,44 @@ export default function AutomatedLeadsPage() {
   const [newLead, setNewLead] = useState<Partial<Lead>>({ stage: 'new', channel: 'VOICE', dealValue: 0 });
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(`zerodesk_crm_${currentNiche}`);
-      if (saved) {
-        setLeads(JSON.parse(saved));
-        return;
+    let isMounted = true;
+    async function fetchLeads() {
+      try {
+        const data = await apiClient<any[]>('/crm/leads');
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mapped: Lead[] = data.map((d: any, idx: number) => ({
+            id: d.id,
+            name: d.name || d.customer?.name || 'Customer',
+            phone: d.phone || d.customer?.phone || '',
+            email: d.email || d.customer?.email || '',
+            channel: (d.source || 'VOICE').toUpperCase() as Lead['channel'],
+            stage: d.stage?.slug || d.status || 'new',
+            dealValue: Number(d.dealValue || d.value || 0),
+            aiScore: d.aiScore || d.score || 75,
+            assignedTo: d.assignedTo || 'Sales Desk',
+            daysInStage: d.daysInStage || 0,
+            summary: d.summary || 'Lead synced from backend CRM.',
+            priority: d.priority || 'Standard',
+            createdAt: d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-IN') : 'Recent',
+            activities: Array.isArray(d.activities) && d.activities.length > 0 ? d.activities : [
+              { id: `act_${idx}`, type: 'NOTE', text: 'Lead created via omnichannel intake.', time: 'Recent', author: 'System' }
+            ],
+          }));
+          setLeads(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not load leads from backend:', err);
       }
-    } catch (e) {
-      console.error('Failed to load leads from localStorage', e);
+      if (isMounted) {
+        setLeads(getDefaultLeads(currentNiche));
+      }
     }
-    setLeads(getDefaultLeads(currentNiche));
+    fetchLeads();
+    return () => { isMounted = false; };
   }, [currentNiche]);
 
-  const saveLeads = (updated: Lead[]) => {
-    setLeads(updated);
-    try {
-      localStorage.setItem(`zerodesk_crm_${currentNiche}`, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save leads to localStorage', e);
-    }
-  };
-
-  const handleUpdateStage = (leadId: string, newStage: string) => {
+  const handleUpdateStage = async (leadId: string, newStage: string) => {
     const updated = leads.map(l => {
       if (l.id === leadId) {
         return {
@@ -162,15 +179,25 @@ export default function AutomatedLeadsPage() {
       }
       return l;
     });
-    saveLeads(updated);
+    setLeads(updated);
     if (selectedLead?.id === leadId) setSelectedLead(updated.find(l => l.id === leadId) || null);
+
+    try {
+      await apiClient(`/crm/leads/${leadId}/stage`, {
+        method: 'PUT',
+        body: JSON.stringify({ stageId: newStage }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync lead stage update to backend:', err);
+    }
   };
 
-  const handleCreateLead = (e: React.FormEvent) => {
+  const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLead.name || !newLead.phone) return;
+    const tempId = `lead_${Date.now()}`;
     const created: Lead = {
-      id: `lead_${Date.now()}`,
+      id: tempId,
       name: newLead.name,
       phone: newLead.phone,
       channel: newLead.channel || 'VOICE',
@@ -183,9 +210,27 @@ export default function AutomatedLeadsPage() {
       createdAt: 'Just now',
       activities: []
     };
-    saveLeads([created, ...leads]);
+    setLeads([created, ...leads]);
     setIsAddModalOpen(false);
     setNewLead({ stage: 'new', channel: 'VOICE', dealValue: 0 });
+
+    try {
+      const res = await apiClient<any>('/crm/leads', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: created.name,
+          phone: created.phone,
+          source: created.channel,
+          dealValue: created.dealValue,
+          status: created.stage,
+        }),
+      });
+      if (res?.id) {
+        setLeads(prev => prev.map(l => l.id === tempId ? { ...l, id: res.id } : l));
+      }
+    } catch (err) {
+      console.warn('Failed to create lead in backend API:', err);
+    }
   };
 
   const toggleStageCollapse = (slug: string) => {

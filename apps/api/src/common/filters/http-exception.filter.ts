@@ -17,6 +17,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       const res = exception.getResponse();
       message = typeof res === 'string' ? res : (res as any).message || message;
+    } else if ((exception as any)?.code === 'P2025') {
+      status = HttpStatus.NOT_FOUND;
+      message = 'The requested resource was not found';
+    } else if ((exception as any)?.code === 'P2002') {
+      status = HttpStatus.CONFLICT;
+      message = 'A record with this identifier already exists';
     }
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Query, Headers, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Query, Param } from '@nestjs/common';
 import { ServiceService } from './service.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -15,13 +15,17 @@ export class ServiceController {
   }
 
   @Get('search')
+  @UseGuards(AuthGuard, TenantGuard)
   async search(
-    @Headers('x-tenant-id') headerTenantId: string,
+    @TenantId() tenantId: string,
     @Query('query') query: string,
-    @Req() req: any,
   ) {
-    const tenantId = req.tenantId || headerTenantId;
     return this.serviceService.search(tenantId, query || '');
+  }
+
+  @Get('public/:slug')
+  async getPublicServices(@Param('slug') slug: string) {
+    return this.serviceService.findPublicBySlug(slug);
   }
 
   @Post()
@@ -30,3 +34,4 @@ export class ServiceController {
     return this.serviceService.create(tenantId, data);
   }
 }
+

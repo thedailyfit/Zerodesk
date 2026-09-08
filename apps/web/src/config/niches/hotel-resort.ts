@@ -50,8 +50,6 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Hospitality', roles: ['ADMIN', 'STAFF'], divider: true },
-    { name: 'Room Rack (Tape Chart)', href: '/room-rack', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
-    { name: 'Housekeeping', href: '/housekeeping', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Check-in Lobby', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Room Occupancy Chart', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guest Profiles', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },

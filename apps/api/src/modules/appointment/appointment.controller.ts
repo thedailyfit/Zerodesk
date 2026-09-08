@@ -1,13 +1,19 @@
 import { Controller, Get, Post, Put, Param, Body, UseGuards, Headers, Query, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AppointmentService } from './appointment.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { InternalVoiceGuard } from '../../common/guards/internal-voice.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
+import { PublicBookDto } from './dto/public-book.dto';
+import { CalendarSyncService } from './calendar-sync.service';
 
 @Controller('appointments')
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) {}
+  constructor(
+    private readonly appointmentService: AppointmentService,
+    private readonly calendarSyncService: CalendarSyncService,
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard, TenantGuard)
@@ -38,15 +44,13 @@ export class AppointmentController {
   }
 
   @Post('public-book')
-  async publicBook(
-    @Headers('x-tenant-id') headerTenantId: string,
-    @Body() data: any,
-  ) {
-    const tenantId = headerTenantId || data.tenantId || data.slug;
-    return this.appointmentService.bookFromVoice(tenantId, {
-      ...data,
-      source: 'WEB_BOOKING',
-    });
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  async publicBook(@Body() dto: PublicBookDto) {
+    // Anti-bot honeypot validation: reject bots immediately
+    if (dto.hp_company_field && dto.hp_company_field.trim().length > 0) {
+      throw new UnauthorizedException('Security validation failed');
+    }
+    return this.appointmentService.bookFromPublic(dto);
   }
 
   @Put(':id/cancel')
@@ -71,5 +75,21 @@ export class AppointmentController {
     }
 
     return this.appointmentService.generateIcalFeed(tenantId);
+  }
+
+  @Get('external-busy-slots')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getExternalBusySlots(
+    @TenantId() tenantId: string,
+    @Query('doctorId') doctorId?: string,
+    @Query('date') date?: string,
+  ) {
+    return this.calendarSyncService.getExternalBusySlots(tenantId, doctorId, date);
+  }
+
+  @Post('sync-calendar')
+  @UseGuards(AuthGuard, TenantGuard)
+  async syncCalendar(@TenantId() tenantId: string) {
+    return this.calendarSyncService.reconcileCalendar(tenantId);
   }
 }
