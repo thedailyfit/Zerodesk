@@ -1,9 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
   PieChart as PieIcon,
+  Calendar,
+  IndianRupee,
+  Receipt
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -14,120 +18,101 @@ import {
   Tooltip, 
   ResponsiveContainer, 
 } from 'recharts';
-import { formatCurrency } from '@/lib/utils';
-
-const monthlyRevenue = [
-  { month: 'June 2026', revenue: 1850000, target: 2000000, bookings: 142 },
-  { month: 'July 2026', revenue: 2240000, target: 2200000, bookings: 168 },
-  { month: 'August 2026 (MTD)', revenue: 2580000, target: 2800000, bookings: 195 },
-];
-
-const treatmentRevenue = [
-  { service: 'Laser Hair Removal', revenue: 950000, share: '36.8%' },
-  { service: 'Hair Transplant Surgery', revenue: 840000, share: '32.5%' },
-  { service: 'PRP Therapy & Growth', revenue: 420000, share: '16.2%' },
-  { service: 'Chemical Peels & Facials', revenue: 240000, share: '9.3%' },
-  { service: 'Consultations & Meds', revenue: 130000, share: '5.2%' },
-];
+import { apiClient } from '@/lib/api-client';
+import Link from 'next/link';
 
 export default function SalesPage() {
-  const currentMonth = monthlyRevenue[2];
-  const targetPct = Math.round((currentMonth.revenue / currentMonth.target) * 100);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSalesData() {
+      try {
+        setLoading(true);
+        const res = await apiClient('/invoices');
+        if (Array.isArray(res)) {
+          const paid = res.filter((i: any) => i.status === 'PAID');
+          const sum = paid.reduce((acc: number, inv: any) => acc + (Number(inv.amount || inv.total) || 0), 0);
+          setTotalRevenue(sum);
+          setTotalInvoices(paid.length);
+
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const grouped: Record<string, { revenue: number; bookings: number }> = {};
+
+          paid.forEach((inv: any) => {
+            const d = new Date(inv.createdAt || inv.date);
+            const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+            if (!grouped[key]) grouped[key] = { revenue: 0, bookings: 0 };
+            grouped[key].revenue += Number(inv.amount || inv.total) || 0;
+            grouped[key].bookings++;
+          });
+
+          const formatted = Object.entries(grouped).map(([month, val]) => ({
+            month,
+            revenue: val.revenue,
+            target: val.revenue * 1.2,
+            bookings: val.bookings
+          }));
+
+          setRevenueData(formatted.length > 0 ? formatted : [
+            { month: 'Current Month', revenue: sum, target: 500000, bookings: paid.length }
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to load sales data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSalesData();
+  }, []);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] flex items-center gap-2">
-            <span>Sales & 3-Month Revenue Analytics</span>
-            <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-mono font-semibold">
-              90 Days Performance
-            </span>
-          </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Track business growth, monthly target benchmarks, and revenue per treatment over the last 3 months.
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Sales & Collections Overview</h1>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">Real-time revenue metrics from paid clinic invoices</p>
+        </div>
+        <Link href="/invoices" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all">
+          <Receipt size={14} /> Open Invoices
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+          <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Total Invoiced Revenue</span>
+          <p className="text-3xl font-black text-emerald-400 mt-2 font-mono">₹{totalRevenue.toLocaleString('en-IN')}</p>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">{totalInvoices} total settled invoices</p>
+        </div>
+
+        <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+          <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Average Invoice Value</span>
+          <p className="text-3xl font-black text-blue-400 mt-2 font-mono">
+            ₹{totalInvoices > 0 ? Math.round(totalRevenue / totalInvoices).toLocaleString('en-IN') : 0}
           </p>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">Per transaction average</p>
         </div>
       </div>
 
-      {/* Target Progress Bar Card */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900 border border-blue-500/30 shadow-xl backdrop-blur-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">August 2026 Target Progress</span>
-            <h2 className="text-3xl font-extrabold text-white mt-1 flex items-center gap-3">
-              {formatCurrency(currentMonth.revenue)}
-              <span className="text-xs font-semibold text-slate-400">/ {formatCurrency(currentMonth.target)} Target</span>
-            </h2>
-          </div>
-
-          <div className="text-right">
-            <span className="text-3xl font-extrabold text-emerald-400">{targetPct}%</span>
-            <p className="text-xs text-slate-400">Target Achieved MTD</p>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min(100, targetPct)}%` }}
-            transition={{ duration: 1 }}
-            className="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-emerald-400 rounded-full shadow-lg"
-          />
-        </div>
-      </div>
-
-      {/* 3 Months Revenue Comparison Chart & Treatment Share */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] shadow-md space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-              <TrendingUp size={18} className="text-emerald-400" />
-              3-Month Revenue Trend (June - August 2026)
-            </h3>
-            <span className="text-xs text-emerald-400 font-mono font-bold">+39.4% Growth</span>
-          </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
+      <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+        <h2 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider mb-6">Historical Monthly Performance</h2>
+        <div className="h-[280px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+              <XAxis dataKey="month" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
               <Tooltip 
-                formatter={(val: any) => [formatCurrency(val), 'Revenue']}
-                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                contentStyle={{ backgroundColor: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', borderRadius: '12px', color: 'var(--color-text)' }}
+                formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Revenue']}
               />
-              <Bar dataKey="revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Actual Revenue" />
-              <Bar dataKey="target" fill="#334155" radius={[6, 6, 0, 0]} name="Monthly Target" />
+              <Bar dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Treatment Revenue Share */}
-        <div className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] shadow-md space-y-4">
-          <h3 className="text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-            <PieIcon size={18} className="text-blue-400" />
-            Revenue Share by Treatment
-          </h3>
-
-          <div className="space-y-3 pt-2">
-            {treatmentRevenue.map((item) => (
-              <div key={item.service} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[var(--color-text)]">{item.service}</span>
-                  <span className="font-mono text-blue-300 font-bold">{formatCurrency(item.revenue)}</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
-                    style={{ width: item.share }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

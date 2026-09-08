@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Clock, 
@@ -8,11 +9,12 @@ import {
   Users, 
   Sparkles, 
   CheckCircle2, 
-  AlertCircle,
-  Eye,
-  ShieldCheck,
-  Zap,
-  TrendingDown
+  AlertCircle, 
+  Eye, 
+  ShieldCheck, 
+  Zap, 
+  TrendingDown,
+  Calendar
 } from "lucide-react";
 import { 
   BarChart, 
@@ -22,300 +24,267 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell
+  Cell 
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
+import Link from "next/link";
 
-const hourlyData = [
-  { time: "09:00", delay: 4 },
-  { time: "10:00", delay: 10 },
-  { time: "11:00", delay: 16 },
-  { time: "12:00", delay: 12 },
-  { time: "13:00", delay: 6 },
-  { time: "14:00", delay: 24 },
-  { time: "15:00", delay: 18 },
-  { time: "16:00", delay: 12 },
-  { time: "17:00", delay: 8 },
-  { time: "18:00", delay: 3 }
-];
-
-const topCauses = [
-  { cause: "Late Patient Arrivals", percentage: 42, note: "AI sends automatic 15-min pre-arrival WhatsApp nudge" },
-  { cause: "Extended Consultation / Procedure", percentage: 28, note: "Slot buffer auto-adjusted to +15m" },
-  { cause: "Treatment Room Sanitization", percentage: 16, note: "Turnover time within normal 8m SLA" },
-  { cause: "Walk-in Priority Squeeze", percentage: 9, note: "Frontdesk walk-in slot balancing active" },
-  { cause: "Staff Shift Transitions", percentage: 5, note: "Doctor shift overlap optimal" }
-];
-
-const aiWatchlistItems = [
-  {
-    title: "Appointment Gap & Slot Waste (> 30 min)",
-    status: "Healthy",
-    statusType: "success",
-    detail: "ZeroDesk AI filled 2 afternoon slot gaps today via WhatsApp flash recall.",
-    metric: "0 empty gaps"
-  },
-  {
-    title: "Late Patient Arrivals Pattern",
-    status: "Monitoring",
-    statusType: "warning",
-    detail: "3 patients arrived 10+ mins past schedule between 1:30 PM - 3:00 PM.",
-    metric: "3 flagged today"
-  },
-  {
-    title: "Treatment Room & Chair Turnover Time",
-    status: "Optimal",
-    statusType: "success",
-    detail: "Average chair sanitization and prep turnaround is 7.5 minutes (Target: < 10 min).",
-    metric: "7.5 min avg"
-  },
-  {
-    title: "Peak Hour Wait Time Surge (2:00 PM Spike)",
-    status: "Alert",
-    statusType: "alert",
-    detail: "Consultation queue reached +14 mins at 2:00 PM due to complex VIP procedure.",
-    metric: "+14 min peak"
-  },
-  {
-    title: "Staff Frontdesk Response SLA",
-    status: "Optimal",
-    statusType: "success",
-    detail: "Frontdesk check-in time averaged 2.4 minutes per patient entry.",
-    metric: "2.4 min avg"
-  }
+const DEFAULT_HOURS = [
+  { time: "09:00", delay: 0 },
+  { time: "10:00", delay: 0 },
+  { time: "11:00", delay: 0 },
+  { time: "12:00", delay: 0 },
+  { time: "13:00", delay: 0 },
+  { time: "14:00", delay: 0 },
+  { time: "15:00", delay: 0 },
+  { time: "16:00", delay: 0 },
+  { time: "17:00", delay: 0 },
+  { time: "18:00", delay: 0 }
 ];
 
 export default function OperationalDelaysPage() {
+  const [loading, setLoading] = useState(true);
+  const [hourlyData, setHourlyData] = useState(DEFAULT_HOURS);
+  const [stats, setStats] = useState({
+    avgDelay: 0,
+    peakWait: 0,
+    onScheduleRate: 100,
+    delayedCount: 0,
+    totalToday: 0
+  });
+
+  useEffect(() => {
+    async function loadDelayTelemetry() {
+      try {
+        setLoading(true);
+        const res = await apiClient('/appointments');
+        if (Array.isArray(res)) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const todayAppts = res.filter((a: any) => (a.scheduledAt || a.date || '').slice(0, 10) === todayStr);
+
+          // Group by hour
+          const hourBuckets: Record<string, number> = {
+            "09:00": 0, "10:00": 0, "11:00": 0, "12:00": 0,
+            "13:00": 0, "14:00": 0, "15:00": 0, "16:00": 0,
+            "17:00": 0, "18:00": 0
+          };
+
+          let totalDelay = 0;
+          let delayedCount = 0;
+          let maxDelay = 0;
+
+          todayAppts.forEach((a: any) => {
+            const date = new Date(a.scheduledAt || a.date);
+            const hour = String(date.getHours()).padStart(2, '0') + ':00';
+            const delayMin = a.delayMins || (a.status === 'SCHEDULED' && date.getTime() < Date.now() ? Math.round((Date.now() - date.getTime()) / 60000) : 0);
+            
+            if (delayMin > 5) {
+              delayedCount++;
+              totalDelay += delayMin;
+              if (delayMin > maxDelay) maxDelay = delayMin;
+            }
+            if (hourBuckets[hour] !== undefined) {
+              hourBuckets[hour] = Math.max(hourBuckets[hour], delayMin);
+            }
+          });
+
+          const formattedHourly = Object.entries(hourBuckets).map(([time, delay]) => ({
+            time,
+            delay: Math.min(delay, 60)
+          }));
+
+          const onSchedule = todayAppts.length > 0 
+            ? Math.round(((todayAppts.length - delayedCount) / todayAppts.length) * 100) 
+            : 100;
+
+          const avg = delayedCount > 0 ? Math.round(totalDelay / delayedCount) : 0;
+
+          setHourlyData(formattedHourly);
+          setStats({
+            avgDelay: avg,
+            peakWait: maxDelay,
+            onScheduleRate: onSchedule,
+            delayedCount,
+            totalToday: todayAppts.length
+          });
+        }
+      } catch (err) {
+        console.error('Error loading operational delay data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDelayTelemetry();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Operations & Delay Watchlist</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">
+            Operational Delays & Wait Times
+          </h1>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            Real-time chair turnover, doctor schedule variance, and patient queue analytics
+          </p>
         </div>
-
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            AI Autonomous Watch Active
-          </span>
+          <Link href="/appointments" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all">
+            <Calendar size={14} /> View Appointments
+          </Link>
         </div>
       </div>
 
-      {/* 4 Clean Operational KPI Cards */}
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="space-y-6"
       >
-        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Average Wait Time</p>
-              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
-                12 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
-              </h3>
+        {/* Metric Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div variants={itemVariants} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Avg Consultation Delay</span>
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                <Clock size={18} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              <Clock size={20} />
-            </div>
-          </div>
-          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingDown size={14} />
-            -4 min compared to last week
-          </p>
-        </motion.div>
+            <p className="text-2xl font-black text-[var(--color-text)] tracking-tight mb-1">{stats.avgDelay} min</p>
+            <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+              <TrendingDown size={14} /> Optimal threshold &lt; 15m
+            </p>
+          </motion.div>
 
-        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Turnover Time</p>
-              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
-                7.5 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
-              </h3>
+          <motion.div variants={itemVariants} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Peak Wait Time</span>
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                <AlertTriangle size={18} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Activity size={20} />
-            </div>
-          </div>
-          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={13} />
-            Within 10m target SLA
-          </p>
-        </motion.div>
+            <p className="text-2xl font-black text-[var(--color-text)] tracking-tight mb-1">{stats.peakWait} min</p>
+            <p className="text-[11px] text-[var(--color-text-muted)] font-medium">
+              {stats.peakWait > 0 ? "Under buffer limit" : "No queue backlog"}
+            </p>
+          </motion.div>
 
-        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Staff Frontdesk SLA</p>
-              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
-                2.4 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
-              </h3>
+          <motion.div variants={itemVariants} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">On-Schedule Rate</span>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                <Activity size={18} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              <Users size={20} />
-            </div>
-          </div>
-          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={13} />
-            Fast Check-in Flow
-          </p>
-        </motion.div>
+            <p className="text-2xl font-black text-[var(--color-text)] tracking-tight mb-1">{stats.onScheduleRate}%</p>
+            <p className="text-[11px] text-emerald-400 font-medium">
+              {stats.totalToday} total sittings today
+            </p>
+          </motion.div>
 
-        <motion.div variants={itemVariants} className="p-5 rounded-2xl bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm space-y-2">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Patient Turnaround</p>
-              <h3 className="text-3xl font-extrabold text-[var(--color-text)] font-mono mt-1">
-                44 <span className="text-sm font-normal text-[var(--color-text-muted)]">min</span>
-              </h3>
+          <motion.div variants={itemVariants} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Active Buffer Interventions</span>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                <Zap size={18} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Clock size={20} />
-            </div>
-          </div>
-          <p className="text-xs text-amber-400 font-semibold flex items-center gap-1">
-            <AlertCircle size={13} />
-            Slight afternoon surge
-          </p>
-        </motion.div>
-      </motion.div>
-
-      {/* Hourly Delay Timeline & Top Causes */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Hourly Delay Timeline (09:00 - 18:00)</h3>
-              <p className="text-xs text-[var(--color-text-muted)]">Average waiting minutes per scheduled time block</p>
-            </div>
-            <span className="text-xs font-mono font-bold text-blue-400">Peak: 14:00 (24m)</span>
-          </div>
-
-          <div className="h-[260px] w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
-                <XAxis 
-                  dataKey="time" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  dy={8}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'var(--color-border)', opacity: 0.3 }}
-                  contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '8px', color: 'var(--color-text)' }}
-                />
-                <Bar dataKey="delay" radius={[4, 4, 0, 0]}>
-                  {hourlyData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.delay > 20 ? '#f97316' : entry.delay > 12 ? '#3b82f6' : '#10b981'} 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            <p className="text-2xl font-black text-[var(--color-text)] tracking-tight mb-1">Active</p>
+            <p className="text-[11px] text-blue-400 font-medium">Auto WhatsApp reminders live</p>
+          </motion.div>
         </div>
 
-        {/* Top Causes */}
-        <div className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Delay Drivers Breakdown</h3>
-          <div className="space-y-4">
-            {topCauses.map((cause, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-[var(--color-text)]">{cause.cause}</span>
-                  <span className="font-mono font-bold text-blue-400">{cause.percentage}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-[var(--color-bg)] rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      idx === 0 ? "bg-amber-500" : "bg-blue-600"
-                    )}
-                    style={{ width: `${cause.percentage}%` }}
+        {/* Hourly Delay Chart & Operational Causes */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Hourly Delay Telemetry</h2>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Average wait duration in minutes across clinic consultation hours</p>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> &lt; 10m Normal</span>
+                <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div> 10-20m Buffer</span>
+              </div>
+            </div>
+
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                  <XAxis dataKey="time" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} unit="m" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', borderRadius: '12px', color: 'var(--color-text)' }}
+                    formatter={(val: any) => [`${val} minutes`, 'Delay']}
                   />
-                </div>
-                <p className="text-[10px] text-[var(--color-text-muted)]">{cause.note}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ZeroDesk AI Watchlist Section (Replacing Department Bottlenecks) */}
-      <div className="bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
-              <Eye size={18} />
+                  <Bar dataKey="delay" radius={[6, 6, 0, 0]}>
+                    {hourlyData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.delay <= 5 ? '#10b981' : entry.delay <= 15 ? '#f59e0b' : '#ef4444'} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          </motion.div>
+
+          {/* AI Operational Watchlist */}
+          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm flex flex-col justify-between">
             <div>
-              <h2 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
-                ZeroDesk AI Operational Watchlist
+              <h2 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Sparkles size={16} className="text-blue-400" />
+                ZeroDesk AI Queue Optimization
               </h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Autonomous parameters watched 24/7 by AI assistant to ensure smooth client operations.
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full font-bold">
-            Live Stream
-          </span>
-        </div>
+              <div className="space-y-3 text-xs">
+                <div className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-[var(--color-text)]">Round-Robin Doctor Balancing</span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold">Active</span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-[11px]">When a physician runs over 15 mins, alternative available doctors are offered with client consent.</p>
+                </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-          {aiWatchlistItems.map((item, i) => (
-            <div
-              key={i}
-              className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-2 hover:border-blue-500/40 transition-all"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-bold text-[var(--color-text)] leading-tight">{item.title}</span>
-                <span className={cn(
-                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
-                  item.statusType === 'success' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                  item.statusType === 'warning' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                  "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                )}>
-                  {item.status}
-                </span>
-              </div>
+                <div className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-[var(--color-text)]">2-Hour WhatsApp Reminder</span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold">Enforced</span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-[11px]">Automatic pre-arrival prompt sent to patients to confirm punctual arrival.</p>
+                </div>
 
-              <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
-                {item.detail}
-              </p>
-
-              <div className="pt-2 border-t border-[var(--color-border)]/60 flex items-center justify-between text-[10px]">
-                <span className="text-[var(--color-text-muted)]">Metric Status</span>
-                <span className="font-mono font-bold text-blue-400">{item.metric}</span>
+                <div className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-[var(--color-text)]">Late Arrival Buffer Squeeze</span>
+                    <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 font-bold">Dynamic</span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-[11px]">Next appointments are gently staggered by +5m to prevent waiting room overflow.</p>
+                </div>
               </div>
             </div>
-          ))}
+
+            <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+              <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-emerald-400" /> Clinic SLA Protection</span>
+              <span>v2.4 Engine</span>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

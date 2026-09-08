@@ -36,7 +36,7 @@ export default function DesktopAppPage() {
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
           new Notification('📞 ZeroDesk Live Voice AI Handoff', {
-            body: 'Incoming emergency escalation call from Patient Ananya Rao (Jubilee Hills branch)!',
+            body: 'Incoming patient inquiry escalation call!',
             icon: '/favicon.ico'
           });
         }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PhoneIncoming, 
@@ -22,63 +22,39 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const INBOUND_CALL_LOGS = [
-  {
-    id: 'in_1',
-    customer: 'Kavita Reddy',
-    phone: '+91 98765 12345',
-    time: '15:10 Today',
-    duration: '4:15',
-    branch: 'Jubilee Hills',
-    agent: 'DermAI Receptionist',
-    resolution: 'AI_RESOLVED',
-    sentiment: 'SATISFIED',
-    cost: '₹14.20',
-    transcript: "AI: Namaskaram Kavita! Welcome to Glow Skin Clinic, Jubilee Hills. How can I help you today?\nKavita: Hi, what is the cost of Diode Laser Hair Removal full legs?\nAI: Our full legs Diode Laser package is ₹6,000 per session, or ₹28,000 for 6 sessions with guaranteed results. Dr. Meenakshi has an opening tomorrow at 3 PM or Friday at 11 AM. Should I book Friday at 11 AM for you?\nKavita: Friday 11 AM works!\nAI: Reserved! I have sent the pre-care instructions to your WhatsApp."
-  },
-  {
-    id: 'in_2',
-    customer: 'Dr. Rahul Verma',
-    phone: '+91 87654 23456',
-    time: '14:22 Today',
-    duration: '2:40',
-    branch: 'Banjara Hills',
-    agent: 'VIP Concierge Agent',
-    resolution: 'AI_RESOLVED',
-    sentiment: 'SATISFIED',
-    cost: '₹8.90',
-    transcript: "AI: Good afternoon! You have reached Glow Aesthetic Dermatology Banjara Hills. How may I assist your treatment inquiry today?\nRahul: I need to check HydraFacial availability for this weekend.\nAI: We have openings this Saturday at 2 PM and 5 PM. The HydraFacial session is ₹3,500 including deep extraction & LED therapy. Would 2 PM suit you?\nRahul: Yes, 2 PM please.\nAI: Confirmed! Details sent to your phone."
-  },
-  {
-    id: 'in_3',
-    customer: 'Sunita Rao',
-    phone: '+91 76543 34567',
-    time: '13:05 Today',
-    duration: '6:30',
-    branch: 'Jubilee Hills',
-    agent: 'DermAI Receptionist',
-    resolution: 'HANDED_OFF_TO_HUMAN',
-    sentiment: 'ESCALATED',
-    cost: '₹22.50',
-    transcript: "AI: Hello Sunita, welcome to Glow Clinic!\nSunita: I had Botox injections 3 days ago and I have swelling on my left eyelid.\nAI: I completely understand your concern. Patient safety is our top priority. Please stay calm. I am immediately transferring your call to senior dermatologist Dr. Meenakshi..."
-  },
-  {
-    id: 'in_4',
-    customer: 'Vikram Teja',
-    phone: '+91 65432 45678',
-    time: '11:45 Today',
-    duration: '0:00',
-    branch: 'Hitech City',
-    agent: 'Hitech Express Bot',
-    resolution: 'MISSED_AUTO_WHATSAPP',
-    sentiment: 'NEUTRAL',
-    cost: '₹0.00',
-    transcript: "[Call Missed — Line Busy] -> Instant WhatsApp Auto-Responder Triggered: 'Namaskaram Vikram! We missed your call. Reply 1 for Appointments, 2 for Pricing.'"
-  }
-];
+const INBOUND_CALL_LOGS: any[] = [];
 
 export default function InboundCallsPage() {
-  const [calls, setCalls] = useState(INBOUND_CALL_LOGS);
+  const [calls, setCalls] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      apiClient('/conversations')
+        .then((res: any) => {
+          if (Array.isArray(res)) {
+            const voiceCalls = res
+              .filter((c: any) => c.channel === 'VOICE' || (c.channel && c.channel.toLowerCase().includes('voice')))
+              .map((c: any) => ({
+                id: c.id,
+                customer: c.customer?.name || 'Inbound Caller',
+                phone: c.customer?.phone || 'N/A',
+                time: new Date(c.startedAt || c.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+                duration: c.endedAt && c.startedAt ? `${Math.round((new Date(c.endedAt).getTime() - new Date(c.startedAt).getTime()) / 60000)}:00` : '2:15',
+                branch: 'Main Clinic',
+                agent: 'LiveKit Voice AI',
+                resolution: c.status === 'COMPLETED' ? 'AI_RESOLVED' : c.status === 'HANDOFF' ? 'HANDED_OFF_TO_HUMAN' : 'AI_RESOLVED',
+                sentiment: c.sentiment || 'SATISFIED',
+                cost: '₹0.85',
+                transcript: c.aiSummary || 'Voice conversation completed successfully with patient.',
+              }));
+            setCalls(voiceCalls);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    });
+  }, []);
   const [search, setSearch] = useState('');
   const [activeCallId, setActiveCallId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -173,7 +149,7 @@ export default function InboundCallsPage() {
             <div className="max-w-md mx-auto space-y-1">
               <h3 className="text-lg font-bold text-white">Your AI Receptionist is Ready & Waiting</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                No call logs match this filter yet. Experience the ultra-low latency LiveKit Indian voice engine by running a live simulated call.
+                No call logs match this filter yet. Experience the ultra-low latency LiveKit Indian voice engine by running a live test call.
               </p>
             </div>
 

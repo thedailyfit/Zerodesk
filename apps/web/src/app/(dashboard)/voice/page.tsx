@@ -22,12 +22,12 @@ import type { NicheId } from '@/config/niches/types';
 
 // Voice library that acts as a global pool (will be populated from superadmin later)
 const VOICES_LIBRARY = [
-  { id: 'v_1', name: 'Kavita Soft Tone', gender: 'Female', accent: 'Indian English', style: 'Warm, Welcoming', tags: ['Receptionist', 'Calm'] },
-  { id: 'v_2', name: 'Dr. Sharma Assistant', gender: 'Male', accent: 'Indian English', style: 'Professional, Precise', tags: ['Medical', 'Authoritative'] },
-  { id: 'v_3', name: 'Priya Reassuring', gender: 'Female', accent: 'Hindi/English', style: 'Empathetic, Slow', tags: ['Support', 'Care'] },
-  { id: 'v_4', name: 'Vikram Executive', gender: 'Male', accent: 'British English', style: 'Crisp, Formal', tags: ['Luxury', 'Corporate'] },
-  { id: 'v_5', name: 'Zara Chic Tone', gender: 'Female', accent: 'American English', style: 'Upbeat, Trendy', tags: ['Salon', 'Friendly'] },
-  { id: 'v_6', name: 'Kabir Warm Host', gender: 'Male', accent: 'Indian English', style: 'Deep, Hospitable', tags: ['Hospitality', 'Smooth'] },
+  { id: 'v_1', name: 'Aarohi (Warm Indian)', gender: 'Female', accent: 'Indian English', style: 'Warm, Welcoming', tags: ['Receptionist', 'Calm'] },
+  { id: 'v_2', name: 'Arjun (Clinical Specialist)', gender: 'Male', accent: 'Indian English', style: 'Professional, Precise', tags: ['Medical', 'Authoritative'] },
+  { id: 'v_3', name: 'Diya (Empathetic Care)', gender: 'Female', accent: 'Hindi/English', style: 'Empathetic, Slow', tags: ['Support', 'Care'] },
+  { id: 'v_4', name: 'Karan (Executive Concierge)', gender: 'Male', accent: 'Indian English', style: 'Crisp, Formal', tags: ['Luxury', 'Corporate'] },
+  { id: 'v_5', name: 'Tara (Aesthetic Host)', gender: 'Female', accent: 'Indian English', style: 'Upbeat, Trendy', tags: ['Salon', 'Friendly'] },
+  { id: 'v_6', name: 'Rohan (Hospitality Host)', gender: 'Male', accent: 'Indian English', style: 'Deep, Hospitable', tags: ['Hospitality', 'Smooth'] },
 ];
 
 const LANGUAGES = [
@@ -57,7 +57,7 @@ export default function VoiceAgentLibraryPage() {
       setIsPlayingAudio(null);
     } else {
       setIsPlayingAudio(id);
-      setTimeout(() => setIsPlayingAudio(null), 3000); // Mock audio duration
+      setTimeout(() => setIsPlayingAudio(null), 3000); // Audio preview duration
     }
   };
 

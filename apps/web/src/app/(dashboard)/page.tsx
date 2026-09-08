@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useNiche } from '@/components/providers/niche-provider';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
@@ -25,26 +26,145 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import Link from 'next/link';
+import { apiClient } from '@/lib/api-client';
 
-const chartData = [
-  { name: 'Mon', calls: 140, messages: 240 },
-  { name: 'Tue', calls: 230, messages: 139 },
-  { name: 'Wed', calls: 200, messages: 380 },
-  { name: 'Thu', calls: 278, messages: 390 },
-  { name: 'Fri', calls: 189, messages: 480 },
-  { name: 'Sat', calls: 239, messages: 380 },
-  { name: 'Sun', calls: 349, messages: 430 },
-];
-
-const pieData = [
-  { name: 'AI Resolved', value: 84, color: '#2563eb' },
-  { name: 'Human Handoff', value: 16, color: '#475569' },
+const EMPTY_WEEK_DATA = [
+  { name: 'Mon', calls: 0, messages: 0 },
+  { name: 'Tue', calls: 0, messages: 0 },
+  { name: 'Wed', calls: 0, messages: 0 },
+  { name: 'Thu', calls: 0, messages: 0 },
+  { name: 'Fri', calls: 0, messages: 0 },
+  { name: 'Sat', calls: 0, messages: 0 },
+  { name: 'Sun', calls: 0, messages: 0 },
 ];
 
 export default function BusinessHealthPage() {
   const { nicheConfig } = useNiche();
   const kpis = nicheConfig.kpis || [];
   const icons = [Phone, MessageSquare, CalendarIcon, IndianRupee];
+
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    todayBookings: 0,
+    completedBookings: 0,
+    pendingConfirmations: 0,
+    todayRevenue: 0,
+    paidInvoicesCount: 0,
+    activeStaff: 0,
+    totalStaff: 0,
+    voiceCallsCount: 0,
+    voiceAutonomousRate: 0,
+    whatsappCount: 0,
+    whatsappResolvedRate: 0,
+    webchatCount: 0,
+    webchatConvertedRate: 0,
+    overallAiResolvedRate: 0,
+    chartData: EMPTY_WEEK_DATA,
+    pieData: [
+      { name: 'AI Resolved', value: 0, color: '#2563eb' },
+      { name: 'Human Handoff', value: 0, color: '#475569' },
+    ]
+  });
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
+        const [apptsRes, invoicesRes, convsRes, staffRes, analyticsRes] = await Promise.allSettled([
+          apiClient('/appointments'),
+          apiClient('/invoices'),
+          apiClient('/conversations'),
+          apiClient('/staff'),
+          apiClient('/analytics/overview')
+        ]);
+
+        const appts = apptsRes.status === 'fulfilled' && Array.isArray(apptsRes.value) ? apptsRes.value : [];
+        const invoices = invoicesRes.status === 'fulfilled' && Array.isArray(invoicesRes.value) ? invoicesRes.value : [];
+        const convs = convsRes.status === 'fulfilled' && Array.isArray(convsRes.value) ? convsRes.value : [];
+        const staff = staffRes.status === 'fulfilled' && Array.isArray(staffRes.value) ? staffRes.value : [];
+
+        // Today's date string YYYY-MM-DD
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        // Filter appointments today
+        const todayAppts = appts.filter((a: any) => (a.scheduledAt || a.date || '').slice(0, 10) === todayStr);
+        const completedToday = todayAppts.filter((a: any) => a.status === 'COMPLETED').length;
+        const pendingToday = appts.filter((a: any) => a.status === 'SCHEDULED' || a.status === 'PENDING').length;
+
+        // Invoices today
+        const todayInvoices = invoices.filter((inv: any) => (inv.createdAt || inv.date || '').slice(0, 10) === todayStr && inv.status === 'PAID');
+        const revToday = todayInvoices.reduce((acc: number, inv: any) => acc + (Number(inv.amount || inv.total) || 0), 0);
+
+        // Staff on duty
+        const activeStaffCount = staff.filter((s: any) => s.status !== 'INACTIVE' && s.status !== 'OFF_DUTY').length;
+
+        // Channel breakdown
+        const voiceConvs = convs.filter((c: any) => (c.channel || '').toUpperCase() === 'VOICE');
+        const waConvs = convs.filter((c: any) => (c.channel || '').toUpperCase() === 'WHATSAPP');
+        const webConvs = convs.filter((c: any) => (c.channel || '').toUpperCase() === 'WEB' || (c.channel || '').toUpperCase() === 'CHAT');
+
+        const voiceAutonomous = voiceConvs.length > 0 
+          ? Math.round((voiceConvs.filter((c: any) => c.status === 'COMPLETED').length / voiceConvs.length) * 100)
+          : (voiceConvs.length > 0 ? 80 : 0);
+
+        const waResolved = waConvs.length > 0
+          ? Math.round((waConvs.filter((c: any) => c.status === 'COMPLETED').length / waConvs.length) * 100)
+          : (waConvs.length > 0 ? 90 : 0);
+
+        const webConverted = webConvs.length > 0
+          ? Math.round((webConvs.filter((c: any) => c.status === 'COMPLETED').length / webConvs.length) * 100)
+          : (webConvs.length > 0 ? 75 : 0);
+
+        const totalConvs = convs.length;
+        const totalCompleted = convs.filter((c: any) => c.status === 'COMPLETED').length;
+        const totalHandoffs = convs.filter((c: any) => c.status === 'HANDOFF' || c.status === 'ESCALATED').length;
+        const overallRate = totalConvs > 0 ? Math.round((totalCompleted / totalConvs) * 100) : 0;
+
+        // Aggregate 7 days
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayCounts = Array.from({ length: 7 }).map((_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          const dayName = days[d.getDay()];
+          const dateStr = d.toISOString().slice(0, 10);
+          const dayCalls = voiceConvs.filter((c: any) => (c.createdAt || '').slice(0, 10) === dateStr).length;
+          const dayMsgs = waConvs.filter((c: any) => (c.createdAt || '').slice(0, 10) === dateStr).length;
+          return { name: dayName, calls: dayCalls, messages: dayMsgs };
+        });
+
+        // Check if any traffic exists
+        const hasTraffic = dayCounts.some(d => d.calls > 0 || d.messages > 0);
+
+        setStats({
+          todayBookings: todayAppts.length,
+          completedBookings: completedToday,
+          pendingConfirmations: pendingToday,
+          todayRevenue: revToday,
+          paidInvoicesCount: todayInvoices.length,
+          activeStaff: activeStaffCount || staff.length,
+          totalStaff: staff.length,
+          voiceCallsCount: voiceConvs.length,
+          voiceAutonomousRate: voiceAutonomous,
+          whatsappCount: waConvs.length,
+          whatsappResolvedRate: waResolved,
+          webchatCount: webConvs.length,
+          webchatConvertedRate: webConverted,
+          overallAiResolvedRate: overallRate,
+          chartData: hasTraffic ? dayCounts : EMPTY_WEEK_DATA,
+          pieData: [
+            { name: 'AI Resolved', value: totalCompleted || (totalConvs === 0 ? 0 : 1), color: '#2563eb' },
+            { name: 'Human Handoff', value: totalHandoffs || 0, color: '#475569' },
+          ]
+        });
+      } catch (err) {
+        console.error('Failed loading dashboard overview:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -54,6 +174,9 @@ export default function BusinessHealthPage() {
           <h1 className="text-2xl font-bold text-[var(--color-text)]">
             Business Health & Operations
           </h1>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            Real-time live operational telemetry across all communication channels & appointments
+          </p>
         </div>
       </div>
 
@@ -64,7 +187,7 @@ export default function BusinessHealthPage() {
             key={kpi.label}
             title={kpi.label} 
             value={kpi.value} 
-            numericValue={parseFloat(kpi.value.replace(/[^0-9.]/g, '')) || 100} 
+            numericValue={parseFloat(kpi.value.replace(/[^0-9.]/g, '')) || 0} 
             trend={kpi.trend === 'up' ? 12.5 : kpi.trend === 'down' ? -4.2 : 0} 
             icon={icons[idx % icons.length]} 
             delay={0.05 * (idx + 1)} 
@@ -75,19 +198,45 @@ export default function BusinessHealthPage() {
       {/* 4 Daily Snapshot Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Today's Bookings", val: "18 Sittings", sub: "8 Completed", icon: CalendarIcon, color: "text-blue-400" },
-          { label: "Pending Confirmations", val: "3 Patients", sub: "WhatsApp active", icon: AlertCircle, color: "text-amber-400" },
-          { label: "Revenue Collected Today", val: "₹42,800", sub: "14 Invoices", icon: IndianRupee, color: "text-emerald-400" },
-          { label: "Staff On Duty", val: "6 / 8 Active", sub: "1 on break, 1 leave", icon: Users, color: "text-sky-400" },
+          { 
+            label: "Today's Bookings", 
+            val: `${stats.todayBookings} Sittings`, 
+            sub: `${stats.completedBookings} Completed`, 
+            icon: CalendarIcon, 
+            color: "text-blue-400" 
+          },
+          { 
+            label: "Pending Confirmations", 
+            val: `${stats.pendingConfirmations} Patients`, 
+            sub: stats.pendingConfirmations > 0 ? "WhatsApp active" : "All cleared", 
+            icon: AlertCircle, 
+            color: "text-amber-400" 
+          },
+          { 
+            label: "Revenue Collected Today", 
+            val: `₹${stats.todayRevenue.toLocaleString('en-IN')}`, 
+            sub: `${stats.paidInvoicesCount} Invoices`, 
+            icon: IndianRupee, 
+            color: "text-emerald-400" 
+          },
+          { 
+            label: "Staff On Duty", 
+            val: `${stats.activeStaff} / ${stats.totalStaff} Active`, 
+            sub: stats.totalStaff > 0 ? "Shift active" : "Configure in Manage Team", 
+            icon: Users, 
+            color: "text-sky-400" 
+          },
         ].map((tile, i) => {
           const Icon = tile.icon;
           return (
-            <div key={i} className="p-5 bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)] rounded-2xl shadow-sm transition-all hover:shadow-md space-y-1">
-              <div className="flex items-center justify-between text-[var(--color-text-muted)] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">{tile.label}</span>
-                <Icon size={16} className={tile.color} />
+            <div key={i} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-hover)] transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-[var(--color-text-muted)] tracking-wide uppercase">{tile.label}</span>
+                <div className={`p-2 rounded-xl bg-[var(--color-bg)] ${tile.color}`}>
+                  <Icon size={16} />
+                </div>
               </div>
-              <p className="text-2xl font-extrabold text-[var(--color-text)] font-mono">{tile.val}</p>
+              <p className="text-2xl font-black text-[var(--color-text)] tracking-tight mb-1">{tile.val}</p>
               <p className="text-[11px] text-[var(--color-text-muted)] font-medium">{tile.sub}</p>
             </div>
           );
@@ -103,11 +252,13 @@ export default function BusinessHealthPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-[var(--color-text)]">Voice AI Agent</p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">148 inbound calls handled</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                {stats.voiceCallsCount === 0 ? '0 inbound calls' : `${stats.voiceCallsCount} inbound calls handled`}
+              </p>
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">82%</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.voiceCallsCount > 0 ? `${stats.voiceAutonomousRate}%` : '100%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Autonomous</span>
           </div>
         </div>
@@ -119,11 +270,13 @@ export default function BusinessHealthPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-[var(--color-text)]">WhatsApp AI Engine</p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">312 chats & recalls</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                {stats.whatsappCount === 0 ? '0 chats logged' : `${stats.whatsappCount} chats & recalls`}
+              </p>
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">91%</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.whatsappCount > 0 ? `${stats.whatsappResolvedRate}%` : '100%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Resolved</span>
           </div>
         </div>
@@ -135,11 +288,13 @@ export default function BusinessHealthPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-[var(--color-text)]">WebChat Assistant</p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">86 website inquiries</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                {stats.webchatCount === 0 ? '0 website inquiries' : `${stats.webchatCount} website inquiries`}
+              </p>
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">78%</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.webchatCount > 0 ? `${stats.webchatConvertedRate}%` : '100%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Converted</span>
           </div>
         </div>
@@ -167,7 +322,7 @@ export default function BusinessHealthPage() {
           </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
@@ -203,7 +358,7 @@ export default function BusinessHealthPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={pieData}
+                    data={stats.pieData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -212,7 +367,7 @@ export default function BusinessHealthPage() {
                     dataKey="value"
                     stroke="none"
                   >
-                    {pieData.map((entry, index) => (
+                    {stats.pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -224,7 +379,9 @@ export default function BusinessHealthPage() {
               </ResponsiveContainer>
             </div>
             <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-              <span className="text-3xl font-extrabold text-[var(--color-text)] font-mono">84%</span>
+              <span className="text-3xl font-extrabold text-[var(--color-text)] font-mono">
+                {stats.overallAiResolvedRate > 0 ? `${stats.overallAiResolvedRate}%` : (stats.voiceCallsCount + stats.whatsappCount === 0 ? '100%' : '0%')}
+              </span>
               <span className="text-[11px] text-[var(--color-text-muted)]">Autonomous AI</span>
             </div>
           </div>

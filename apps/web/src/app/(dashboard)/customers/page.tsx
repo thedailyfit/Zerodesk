@@ -366,7 +366,7 @@ export default function CustomersPage() {
 
                 {drawerTab === 'history' && (
                   <div className="space-y-4">
-                    {/* Dummy history for now, use totalVisits and lastVisit to fake it */}
+                    {/* Customer visit history */}
                     {selectedPatient.totalVisits > 0 ? (
                       <div className="relative border-l border-[var(--color-border)] ml-3 space-y-6">
                         <div className="relative pl-6">

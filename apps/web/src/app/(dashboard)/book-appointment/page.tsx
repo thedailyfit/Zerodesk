@@ -131,10 +131,37 @@ export default function BookAppointmentPage() {
   } | null>(null);
 
   // Recent Walk-ins Local Log
-  const [recentBookings, setRecentBookings] = useState([
-    { token: 'T-101', name: 'Vikram Singh', service: 'HydraFacial Glow', doctor: 'Dr. Meenakshi', time: '10:00 AM', status: 'In Waiting Room' },
-    { token: 'T-102', name: 'Priya Sharma', service: 'Chemical Peel', doctor: 'Dr. Arun', time: '10:45 AM', status: 'With Doctor' },
-  ]);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [staffOptions, setStaffOptions] = useState<any[]>([]);
+
+  useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      apiClient('/staff').then((res: any) => {
+        if (Array.isArray(res) && res.length > 0) {
+          setStaffOptions(res);
+          setSelectedDoctor(res[0].name || 'Duty Specialist');
+        }
+      }).catch(() => {});
+
+      apiClient('/appointments').then((res: any) => {
+        if (Array.isArray(res)) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const mapped = res
+            .filter((a: any) => (a.scheduledAt || a.date || '').slice(0, 10) === todayStr)
+            .slice(0, 5)
+            .map((a: any, idx: number) => ({
+              token: `T-${101 + idx}`,
+              name: a.customer?.name || 'Inquiry Patient',
+              service: a.service?.name || 'Consultation',
+              doctor: a.staff?.name || 'Duty Specialist',
+              time: a.scheduledAt ? new Date(a.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '10:00 AM',
+              status: a.status === 'COMPLETED' ? 'Completed' : a.status === 'IN_PROGRESS' ? 'With Doctor' : 'In Waiting Room'
+            }));
+          setRecentBookings(mapped);
+        }
+      }).catch(() => {});
+    });
+  }, []);
 
   // Selected Service object
   const selectedService = useMemo(() => {
@@ -334,7 +361,7 @@ export default function BookAppointmentPage() {
                       <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
                       <input
                         type="text"
-                        placeholder={`Search existing ${customerLabel.toLowerCase()} by Name, Phone Number, or ID (e.g. Priya / 98765 / PID-8421)...`}
+                        placeholder={`Search existing ${customerLabel.toLowerCase()} by Name, Phone Number, or Patient ID...`}
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
                         className="w-full pl-9 pr-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -622,11 +649,16 @@ export default function BookAppointmentPage() {
                   onChange={(e) => setSelectedDoctor(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Dr. Meenakshi (Senior Consultant)">Dr. Meenakshi (Senior Consultant)</option>
-                  <option value="Dr. Arun (Specialist)">Dr. Arun (Specialist)</option>
-                  <option value="Dr. Kavitha (Aesthetics)">Dr. Kavitha (Aesthetics)</option>
-                  <option value="Dr. Ramesh (Lead Specialist)">Dr. Ramesh (Lead Specialist)</option>
-                  <option value="Duty Floor Specialist">Duty Floor Specialist (Available Now)</option>
+                  {staffOptions.length > 0 ? (
+                    staffOptions.map((s: any) => (
+                      <option key={s.id} value={s.name}>{s.name} ({s.role || 'Specialist'})</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Duty Specialist (Available Now)">Duty Specialist (Available Now)</option>
+                      <option value="Lead Consultant">Lead Consultant</option>
+                    </>
+                  )}
                 </select>
                 <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 mt-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>

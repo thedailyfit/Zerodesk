@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Phone, 
@@ -33,55 +33,39 @@ interface PhoneNumberItem {
   monthlyCost: string;
 }
 
-const INITIAL_NUMBERS: PhoneNumberItem[] = [
-  {
-    id: 'num_1',
-    number: '+91 40 1234 5678',
-    isPrimary: true,
-    forwardingSource: '+91 40 2355 1234 (Landline)',
-    assignedAgent: 'Clinic Voice AI (LiveKit Cloud + Sarvam STT)',
-    provider: 'Plivo (LiveKit Cloud)',
-    status: 'ACTIVE',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
-    monthlyCost: '₹850 / mo'
-  },
-  {
-    id: 'num_2',
-    number: '+91 40 8765 4321',
-    isPrimary: false,
-    forwardingSource: '',
-    assignedAgent: 'VIP Concierge (LiveKit Cloud)',
-    provider: 'Plivo (LiveKit Cloud)',
-    status: 'ON_HOLD',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
-    monthlyCost: '₹850 / mo'
-  },
-  {
-    id: 'num_3',
-    number: '+91 40 5555 9999',
-    isPrimary: false,
-    forwardingSource: '+91 40 9999 8888 (Support)',
-    assignedAgent: 'After-Hours Emergency (Retell AI Failover)',
-    provider: 'Retell Failover',
-    status: 'ACTIVE',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-fallback',
-    monthlyCost: '₹950 / mo'
-  },
-  {
-    id: 'num_4',
-    number: '+91 40 3333 4444',
-    isPrimary: false,
-    forwardingSource: '',
-    assignedAgent: 'Unassigned',
-    provider: 'Plivo (LiveKit Cloud)',
-    status: 'PENDING_KYC',
-    webhookUrl: 'https://api.zerodesk.com/v1/voice/plivo-inbound',
-    monthlyCost: '₹850 / mo'
-  }
-];
+const INITIAL_NUMBERS: PhoneNumberItem[] = [];
 
 export default function PhoneNumbersPage() {
-  const [numbers, setNumbers] = useState(INITIAL_NUMBERS);
+  const [numbers, setNumbers] = useState<PhoneNumberItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      apiClient('/tenants/me').then((t: any) => {
+        if (t && (t.virtualPhoneNumber || t.phone)) {
+          setNumbers([
+            {
+              id: 'num_primary',
+              number: t.virtualPhoneNumber || t.phone,
+              isPrimary: true,
+              forwardingSource: t.forwardingNumber || 'Direct PSTN',
+              assignedAgent: 'LiveKit Voice AI (Indian Telecom Inbound)',
+              provider: 'Plivo (LiveKit Cloud)',
+              status: 'ACTIVE',
+              webhookUrl: 'https://api.zerodesk.com/v1/voice/sip-dispatch-webhook',
+              monthlyCost: 'Included in Plan'
+            }
+          ]);
+        } else {
+          setNumbers([]);
+        }
+      }).catch(() => {
+        setNumbers([]);
+      }).finally(() => {
+        setLoading(false);
+      });
+    });
+  }, []);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);

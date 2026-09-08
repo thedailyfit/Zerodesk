@@ -74,14 +74,7 @@ const TYPE_CONFIG = {
   },
 };
 
-const STAFF_BY_NICHE: Record<NicheId, string[]> = {
-  skin: ['Dr. Meenakshi', 'Dr. Arun', 'Kavita', 'Rekha', 'Sunita'],
-  dental: ['Dr. Arvind Sharma', 'Dr. Priya Nair', 'Dr. Rohan Verma', 'Hygienist Sarah', 'Assistant Pooja'],
-  spa: ['Master Somchai', 'Maya Sen', 'Ananya Ayurvedic Healer', 'Therapist David', 'Hostess Leela'],
-  salon: ['Zara Khan', 'Rohit Mehra', 'Tanya Roy', 'Maya Nail Artist', 'Assistant Vikrant'],
-  realestate: ['Vikram Property Advisor', 'Rajesh Commercial Head', 'Legal Consultant Adv. Bose', 'Associate Priya'],
-  hotel: ['Chief Concierge Kabir', 'Front Desk Hostess Sneha', 'Banquet Coordinator Ritu', 'VIP Host Daniel'],
-};
+const DEFAULT_STAFF: string[] = ['Duty Specialist', 'Lead Consultant'];
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -104,7 +97,7 @@ export default function DoctorSlotsPage() {
   const [selectedStaff, setSelectedStaff] = useState<string>('All Staff');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
+  const [staffList, setStaffList] = useState<string[]>(DEFAULT_STAFF);
   const [focusHour, setFocusHour] = useState<number>(9);
 
   useEffect(() => {
@@ -138,9 +131,15 @@ export default function DoctorSlotsPage() {
           });
           setAppointments(mapped);
         } else {
-          setAppointments([]);
         }
-      }).catch(() => setAppointments([]));
+      }).catch(() => {});
+
+      apiClient<any[]>('/staff').then((res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          const names = res.map((s: any) => s.name).filter(Boolean);
+          if (names.length > 0) setStaffList(names);
+        }
+      }).catch(() => {});
     });
     setSelectedStaff('All Staff');
   }, [currentNiche]);
@@ -189,7 +188,7 @@ export default function DoctorSlotsPage() {
       phone: '+91 99999 88888',
       service: 'General Consultation',
       type: 'consult',
-      staff: selectedStaff !== 'All Staff' ? selectedStaff : 'Dr. Meenakshi',
+      staff: selectedStaff !== 'All Staff' ? selectedStaff : 'Duty Specialist',
       status: 'Pending',
       room: 'Consult Room 1',
       notes: ''
@@ -438,7 +437,7 @@ function DetailHoursView({
   setIsModalOpen: (open: boolean) => void;
 }) {
   const { currentNiche } = useNiche();
-  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
+  const [staffList, setStaffList] = useState<string[]>(DEFAULT_STAFF);
   const totalHours = intervalMinutes === 15 ? 2 : 4;
   const totalSlots = (totalHours * 60) / intervalMinutes;
 
@@ -613,7 +612,7 @@ function FullDayView({
   setIsModalOpen: (open: boolean) => void;
 }) {
   const { currentNiche } = useNiche();
-  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
+  const staffList = DEFAULT_STAFF;
   const startHour = mode === '12h' ? 8 : 0;
   const hoursCount = mode === '12h' ? 12 : 24;
   const hours = Array.from({ length: hoursCount }, (_, i) => startHour + i);
@@ -757,7 +756,7 @@ function WeeklyGridMode({
                     phone: '',
                     service: 'General Consultation',
                     type: 'consult',
-                    staff: 'Dr. Meenakshi',
+                    staff: 'Duty Specialist',
                     status: 'Confirmed'
                   });
                   setIsModalOpen(true);
@@ -930,7 +929,7 @@ function FifteenDaysMatrixMode({
                     phone: '',
                     service: 'Consultation',
                     type: 'consult',
-                    staff: 'Dr. Meenakshi',
+                    staff: 'Duty Specialist',
                     status: 'Confirmed'
                   });
                   setIsModalOpen(true);
@@ -962,7 +961,7 @@ function QuickEditModal({
   onShift: (id: string, deltaMins: number) => void;
 }) {
   const { currentNiche } = useNiche();
-  const staffList = STAFF_BY_NICHE[currentNiche] || STAFF_BY_NICHE.skin;
+  const staffList = DEFAULT_STAFF;
   const [formData, setFormData] = useState<Appointment>({ ...appointment });
 
   return (

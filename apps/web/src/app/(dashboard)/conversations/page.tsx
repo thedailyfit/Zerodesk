@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Phone, MessageCircle, Globe, ArrowUpRight, Clock } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
-
 import { Avatar3D } from '@/components/ui/avatar-3d';
-import { useNiche } from '@/components/providers/niche-provider';
+import { apiClient } from '@/lib/api-client';
 
 const channelConfig: Record<string, { icon: typeof Phone; label: string; color: string }> = {
   VOICE: { icon: Phone, label: 'Voice Call', color: 'text-blue-400' },
@@ -16,7 +15,9 @@ const channelConfig: Record<string, { icon: typeof Phone; label: string; color: 
 
 const statusConfig: Record<string, { label: string; style: string }> = {
   ACTIVE: { label: 'Active', style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  COMPLETED: { label: 'Closed', style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
   CLOSED: { label: 'Closed', style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
+  HANDOFF: { label: 'Transferred', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
   TRANSFERRED: { label: 'Transferred', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
 };
 
@@ -27,43 +28,53 @@ const sentimentStyle: Record<string, { label: string; style: string }> = {
 };
 
 export default function ConversationsPage() {
-  const { currentNiche } = useNiche();
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getConversations = () => {
-    if (currentNiche === 'dental') {
-      return [
-        { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I have severe tooth pain in my upper molar, is root canal available today?', aiSummary: 'Urgent RCT inquiry scheduled for 4 PM', sentiment: 'POSITIVE', duration: '3:45', time: new Date(Date.now() - 300000) },
-        { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you send the cost comparison between metal and invisible aligners?', aiSummary: 'Sent Aligner pricing PDF via WhatsApp', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
-        { id: '3', customer: 'Sneha Reddy', phone: '+91 65432 10987', channel: 'VOICE', status: 'CLOSED', lastMessage: 'The doctor explained the crown fitting very clearly', aiSummary: 'Post-op crown fitting check complete', sentiment: 'POSITIVE', duration: '2:10', time: new Date(Date.now() - 3600000) },
-      ];
-    }
-    if (currentNiche === 'realestate') {
-      return [
-        { id: '1', customer: 'Vikramaditya Varma', phone: '+91 98490 12345', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'Are the East-facing 3BHK luxury villas still available at the Gachibowli project?', aiSummary: '3BHK villa inquiry + site visit scheduled for Saturday', sentiment: 'POSITIVE', duration: '4:15', time: new Date(Date.now() - 300000) },
-        { id: '2', customer: 'Anand Rao', phone: '+91 97000 88991', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Please share the RERA approval certificate and updated price sheet', aiSummary: 'Sent RERA doc + payment schedule', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
-      ];
-    }
-    if (currentNiche === 'hotel') {
-      return [
-        { id: '1', customer: 'Dr. Srinivas Reddy', phone: '+91 98765 11223', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to reserve the Presidential Ocean Suite with airport pickup for 3 nights', aiSummary: 'VIP suite booking confirmed with early check-in', sentiment: 'POSITIVE', duration: '3:20', time: new Date(Date.now() - 300000) },
-        { id: '2', customer: 'Pooja Hegde', phone: '+91 87654 44332', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'What is the banquet capacity and catering menu for a 300-guest wedding reception?', aiSummary: 'Sent Grand Ballroom banquet brochure and dining menu', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
-      ];
-    }
-    return [
-      { id: '1', customer: 'Rajesh Kumar', phone: '+91 98765 43210', channel: 'VOICE', status: 'ACTIVE', lastMessage: 'I want to book an appointment for laser skin treatment', aiSummary: 'Customer interested in laser treatment', sentiment: 'POSITIVE', duration: '4:32', time: new Date(Date.now() - 300000) },
-      { id: '2', customer: 'Priya Sharma', phone: '+91 87654 32109', channel: 'WHATSAPP', status: 'ACTIVE', lastMessage: 'Can you share the price list for hair treatments and PRP?', aiSummary: 'Requested pricing for hair treatments', sentiment: 'NEUTRAL', time: new Date(Date.now() - 900000) },
-      { id: '3', customer: 'Amit Patel', phone: '+91 76543 21098', channel: 'WEB_CHAT', status: 'CLOSED', lastMessage: 'Thank you, I will visit tomorrow at 11 AM', aiSummary: 'Appointment confirmed for tomorrow', sentiment: 'POSITIVE', time: new Date(Date.now() - 1800000) },
-      { id: '4', customer: 'Sneha Reddy', phone: '+91 65432 10987', channel: 'VOICE', status: 'CLOSED', lastMessage: 'The doctor was very helpful with my skin routine', aiSummary: 'Follow-up call for post-treatment feedback', sentiment: 'POSITIVE', duration: '2:15', time: new Date(Date.now() - 3600000) },
-    ];
-  };
+  useEffect(() => {
+    async function loadConversations() {
+      try {
+        setLoading(true);
+        const res = await apiClient('/conversations');
+        if (Array.isArray(res)) {
+          const mapped = res.map((c: any) => {
+            const rawChannel = (c.channel || 'VOICE').toUpperCase();
+            const channel = rawChannel.includes('WHATSAPP') ? 'WHATSAPP' : rawChannel.includes('WEB') ? 'WEB_CHAT' : 'VOICE';
+            const durationSec = c.endedAt && c.startedAt 
+              ? Math.round((new Date(c.endedAt).getTime() - new Date(c.startedAt).getTime()) / 1000)
+              : null;
+            const durationStr = durationSec ? `${Math.floor(durationSec / 60)}:${String(durationSec % 60).padStart(2, '0')}` : undefined;
 
-  const conversations = getConversations();
+            return {
+              id: c.id,
+              customer: c.customer?.name || 'Inquiry Contact',
+              phone: c.customer?.phone || 'N/A',
+              channel,
+              status: c.status || 'COMPLETED',
+              lastMessage: c.messages?.[c.messages.length - 1]?.content || c.aiSummary || 'Inquiry consultation completed.',
+              aiSummary: c.aiSummary || 'Patient engaged with AI Receptionist.',
+              sentiment: c.sentiment || 'POSITIVE',
+              duration: durationStr,
+              time: new Date(c.startedAt || c.createdAt),
+            };
+          });
+          setConversations(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load conversations from API:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadConversations();
+  }, []);
 
   const filtered = conversations.filter((c) => {
     if (filter !== 'ALL' && c.channel !== filter) return false;
-    if (search && !c.customer.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !c.customer.toLowerCase().includes(search.toLowerCase()) && !c.phone.includes(search)) return false;
     return true;
   });
 
@@ -82,7 +93,7 @@ export default function ConversationsPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search conversations by patient name or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all"
@@ -108,48 +119,65 @@ export default function ConversationsPage() {
 
       {/* Conversation List */}
       <div className="space-y-2">
-        {filtered.map((conv, i) => {
-          const channel = channelConfig[conv.channel];
-          const status = statusConfig[conv.status];
-          const ChannelIcon = channel.icon;
-          return (
-            <motion.div
-              key={conv.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="group p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-xl hover:bg-[var(--color-glass-hover)] hover:border-[var(--color-border-hover)] transition-all cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <Avatar3D name={conv.customer} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-[var(--color-text)]">{conv.customer}</span>
-                      <span className="text-xs text-[var(--color-text-muted)] font-mono">{conv.phone}</span>
-                      <span className={cn("px-2 py-0.5 text-[10px] rounded-full border font-medium", (sentimentStyle[conv.sentiment] || sentimentStyle.NEUTRAL).style)}>
-                        {(sentimentStyle[conv.sentiment] || sentimentStyle.NEUTRAL).label}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate font-medium">{conv.lastMessage}</p>
-                    <p className="text-[11px] text-blue-400 mt-1 italic flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      {conv.aiSummary}
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 px-4 bg-[var(--color-surface)] border border-dashed border-[var(--color-border)] rounded-2xl">
+            <MessageCircle className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3 opacity-30" />
+            <h3 className="font-bold text-base text-[var(--color-text)]">No Conversations Found</h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-sm mx-auto">
+              Live patient interactions across LiveKit Voice AI, WhatsApp Engine, and WebChat will appear here automatically.
+            </p>
+          </div>
+        ) : (
+          filtered.map((c) => {
+            const channel = channelConfig[c.channel] || channelConfig.VOICE;
+            const ChannelIcon = channel.icon;
+            const status = statusConfig[c.status] || statusConfig.COMPLETED;
+            const sentiment = sentimentStyle[c.sentiment] || sentimentStyle.POSITIVE;
+
+            return (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all"
+              >
+                <Avatar3D name={c.customer} size="md" />
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm text-[var(--color-text)] truncate">{c.customer}</span>
+                    <span className="text-xs text-[var(--color-text-muted)] font-mono">{c.phone}</span>
+                    <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", status.style)}>
+                      {status.label}
+                    </span>
+                    <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", sentiment.style)}>
+                      {sentiment.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] truncate">{c.lastMessage}</p>
+                  {c.aiSummary && (
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1 flex items-center gap-1 truncate">
+                      <span className="text-blue-400 font-semibold">AI Summary:</span> {c.aiSummary}
                     </p>
-                  </div>
+                  )}
                 </div>
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={cn("px-2 py-0.5 text-xs rounded-full border", status.style)}>{status.label}</span>
-                  <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-                    <Clock size={12} />
-                    <span>{timeAgo(conv.time)}</span>
-                    {conv.duration && <span>· {conv.duration}</span>}
+
+                <div className="flex flex-col items-end gap-1 shrink-0 text-right">
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <ChannelIcon size={13} className={channel.color} />
+                    <span>{channel.label}</span>
                   </div>
+                  <span className="text-[11px] text-[var(--color-text-muted)]">{timeAgo(c.time)}</span>
+                  {c.duration && (
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] flex items-center gap-0.5">
+                      <Clock size={10} /> {c.duration}
+                    </span>
+                  )}
                 </div>
-              </div>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+            );
+          })
+        )}
       </div>
     </div>
   );

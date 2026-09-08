@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
+  Users,
   Inbox, 
   MessageSquare, 
   Phone, 
@@ -66,185 +67,7 @@ interface UnifiedContact {
   messages: UnifiedMessage[];
 }
 
-const MOCK_CONTACTS: UnifiedContact[] = [
-  {
-    id: 'c1',
-    name: 'Kavita Reddy',
-    phone: '+91 98765 12345',
-    email: 'kavita.reddy@gmail.com',
-    leadScore: 92,
-    sentiment: 'SATISFIED',
-    lastChannel: 'voice',
-    lastMessage: 'Reserved Friday at 11 AM for Diode Laser',
-    lastActive: '10m ago',
-    unreadCount: 1,
-    tags: ['Laser Hair Removal', 'VIP Lead', 'High Intent'],
-    appointment: 'Friday, 11:00 AM (Dr. Meenakshi)',
-    messages: [
-      {
-        id: 'm1',
-        sender: 'ai',
-        channel: 'voice',
-        content: 'Namaskaram Kavita! Welcome to Glow Skin Clinic, Jubilee Hills. How can I assist your treatment inquiry today?',
-        time: '15:10',
-        duration: '4:15',
-        metadata: { intent: 'Inquiry & Booking', sentiment: 'SATISFIED', recordingCost: '₹14.20' }
-      },
-      {
-        id: 'm2',
-        sender: 'customer',
-        channel: 'voice',
-        content: 'Hi! What is the price for Diode Laser full legs, and do you have slots this Friday?',
-        time: '15:11',
-      },
-      {
-        id: 'm3',
-        sender: 'ai',
-        channel: 'voice',
-        content: 'Our full legs Diode Laser is ₹6,000 per session or ₹28,000 for a 6-session package with guaranteed results. Dr. Meenakshi has an opening this Friday at 11 AM. Shall I reserve it?',
-        time: '15:12',
-      },
-      {
-        id: 'm4',
-        sender: 'customer',
-        channel: 'voice',
-        content: 'Yes please, 11 AM works perfect.',
-        time: '15:13',
-      },
-      {
-        id: 'm5',
-        sender: 'system',
-        channel: 'whatsapp',
-        content: '📅 Appointment Confirmed: Friday 11:00 AM with Dr. Meenakshi. Pre-care: Shave 24h prior, avoid sun exposure.',
-        time: '15:14',
-        status: 'read'
-      },
-      {
-        id: 'm6',
-        sender: 'customer',
-        channel: 'whatsapp',
-        content: 'Thank you! Can you share clinic location on maps?',
-        time: '15:18',
-        status: 'delivered'
-      }
-    ]
-  },
-  {
-    id: 'c2',
-    name: 'Dr. Rahul Verma',
-    phone: '+91 87654 23456',
-    email: 'r.verma@apexhealth.in',
-    leadScore: 85,
-    sentiment: 'SATISFIED',
-    lastChannel: 'whatsapp',
-    lastMessage: 'Confirmed HydraFacial for Saturday at 2 PM',
-    lastActive: '45m ago',
-    unreadCount: 0,
-    tags: ['HydraFacial', 'Doctor Referral'],
-    appointment: 'Saturday, 2:00 PM',
-    messages: [
-      {
-        id: 'm201',
-        sender: 'customer',
-        channel: 'webchat',
-        content: 'Hi, what HydraFacial packages do you offer at Banjara Hills?',
-        time: '14:15',
-      },
-      {
-        id: 'm202',
-        sender: 'ai',
-        channel: 'webchat',
-        content: 'Hello! Our Signature HydraFacial includes deep aqua-extraction, glycolic peel & LED therapy for ₹3,500. Can I help you schedule a weekend session?',
-        time: '14:16',
-      },
-      {
-        id: 'm203',
-        sender: 'system',
-        channel: 'whatsapp',
-        content: 'Dr. Rahul, your Saturday 2:00 PM session has been reserved at Banjara Hills branch.',
-        time: '14:22',
-        status: 'read'
-      }
-    ]
-  },
-  {
-    id: 'c3',
-    name: 'Sunita Rao',
-    phone: '+91 76543 34567',
-    email: 'sunita.rao@outlook.com',
-    leadScore: 70,
-    sentiment: 'ESCALATED',
-    lastChannel: 'voice',
-    lastMessage: 'Transferred call to Dr. Meenakshi (Post-Op Check)',
-    lastActive: '2h ago',
-    unreadCount: 0,
-    tags: ['Botox Post-Care', 'Urgent Handoff'],
-    messages: [
-      {
-        id: 'm301',
-        sender: 'ai',
-        channel: 'voice',
-        content: 'Namaskaram Sunita! Welcome to Glow Skin Clinic.',
-        time: '13:05',
-        duration: '6:30',
-        metadata: { intent: 'Post-Procedure Emergency', sentiment: 'ESCALATED' }
-      },
-      {
-        id: 'm302',
-        sender: 'customer',
-        channel: 'voice',
-        content: 'I had Botox 3 days ago and my left eyelid has slight swelling.',
-        time: '13:06',
-      },
-      {
-        id: 'm303',
-        sender: 'ai',
-        channel: 'voice',
-        content: 'Patient safety is our highest priority. Please stay calm. I am immediately patching you through to senior dermatologist Dr. Meenakshi.',
-        time: '13:07',
-      }
-    ]
-  },
-  {
-    id: 'c4',
-    name: 'Vikram Teja',
-    phone: '+91 65432 45678',
-    email: 'vikram.t@techcorp.com',
-    leadScore: 60,
-    sentiment: 'NEUTRAL',
-    lastChannel: 'whatsapp',
-    lastMessage: 'Auto WhatsApp sent after busy line',
-    lastActive: '3h ago',
-    unreadCount: 0,
-    tags: ['Missed Call Followup'],
-    messages: [
-      {
-        id: 'm401',
-        sender: 'system',
-        channel: 'whatsapp',
-        content: 'Namaskaram Vikram! We missed your call. Reply 1 for Appointments, 2 for Treatment Pricing, or 3 to speak with frontdesk.',
-        time: '11:45',
-        status: 'read'
-      },
-      {
-        id: 'm402',
-        sender: 'customer',
-        channel: 'whatsapp',
-        content: '2',
-        time: '11:46',
-        status: 'read'
-      },
-      {
-        id: 'm403',
-        sender: 'ai',
-        channel: 'whatsapp',
-        content: 'Here is our complete 2026 treatment price menu: https://glowclinic.in/pricing. Would you like a free consultation slot?',
-        time: '11:47',
-        status: 'read'
-      }
-    ]
-  }
-];
+const INITIAL_CONTACTS: UnifiedContact[] = [];
 
 export default function UnifiedInboxPage() {
   const { currentNiche } = useNiche();
@@ -271,7 +94,7 @@ export default function UnifiedInboxPage() {
     return () => cleanup?.();
   }, [getToken]);
 
-  const contacts = (store.contacts && store.contacts.length > 0) ? store.contacts : MOCK_CONTACTS;
+  const contacts = (store.contacts && store.contacts.length > 0) ? store.contacts : INITIAL_CONTACTS;
   const activeSelectedId = store.selectedContactId || selectedContactId;
   const selectedContact = contacts.find(c => c.id === activeSelectedId) || contacts[0];
 
@@ -442,6 +265,14 @@ export default function UnifiedInboxPage() {
 
         {/* Center Column: Interactive Unified Chat Timeline (5 cols) */}
         <div className="lg:col-span-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col min-h-0 overflow-hidden shadow-sm">
+          {!selectedContact ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[var(--color-text-muted)]">
+              <MessageSquare className="w-12 h-12 mb-3 opacity-30 text-blue-500" />
+              <h4 className="font-bold text-sm text-[var(--color-text)]">No Active Conversation Selected</h4>
+              <p className="text-xs text-[var(--color-text-muted)] max-w-xs mt-1">Select a patient or caller from the left to view cross-channel history, transcripts, and send direct WhatsApp follow-ups.</p>
+            </div>
+          ) : (
+            <>
           
           {/* Chat header */}
           <div className="p-3.5 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg)]">
@@ -613,10 +444,19 @@ export default function UnifiedInboxPage() {
               </button>
             </div>
           </form>
+            </>
+          )}
         </div>
 
         {/* Right Column: Lead Intelligence & Quick CRM (3 cols) */}
         <div className="lg:col-span-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 flex flex-col min-h-0 overflow-y-auto space-y-5 shadow-sm">
+          {!selectedContact ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[var(--color-text-muted)]">
+              <Users className="w-10 h-10 mb-2 opacity-30 text-indigo-500" />
+              <p className="text-xs text-[var(--color-text-muted)]">Lead intelligence profile will appear here when a contact is selected.</p>
+            </div>
+          ) : (
+            <>
           
           {/* Patient / Lead Profile Card */}
           <div className="text-center pb-4 border-b border-[var(--color-border)]">
@@ -689,7 +529,8 @@ export default function UnifiedInboxPage() {
               <ChevronRight size={14} className="text-slate-500" />
             </button>
           </div>
-
+            </>
+          )}
         </div>
 
       </div>

@@ -460,7 +460,7 @@ export default function ManageTeamPage() {
                     <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Employee Name</label>
                     <input
                       type="text"
-                      placeholder="e.g. Ramesh Verma"
+                      placeholder="e.g. Staff Full Name"
                       value={inviteName}
                       onChange={(e) => setInviteName(e.target.value)}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"

@@ -72,48 +72,6 @@ const SOURCE_ICONS: Record<Lead['channel'], { label: string; icon: React.Compone
 export default function AutomatedLeadsPage() {
   const { currentNiche } = useNiche();
 
-  const getDefaultLeads = (niche: string): Lead[] => {
-    const baseLeads: {
-      name: string;
-      channel: Lead['channel'];
-      stage: string;
-      dealValue: number;
-      aiScore: number;
-      daysInStage: number;
-      priority: Lead['priority'];
-    }[] = [
-      { name: 'Arjun Reddy', channel: 'VOICE', stage: 'new', dealValue: 25000, aiScore: 88, daysInStage: 0, priority: 'High' },
-      { name: 'Sneha Sharma', channel: 'WHATSAPP', stage: 'new', dealValue: 15000, aiScore: 72, daysInStage: 1, priority: 'Standard' },
-      { name: 'Rahul Desai', channel: 'WEB_CHAT', stage: 'contacted', dealValue: 45000, aiScore: 92, daysInStage: 2, priority: 'VIP' },
-      { name: 'Pooja Singh', channel: 'REFERRAL', stage: 'contacted', dealValue: 12000, aiScore: 65, daysInStage: 3, priority: 'Medium' },
-      { name: 'Kiran Patel', channel: 'WALK_IN', stage: 'qualified', dealValue: 85000, aiScore: 95, daysInStage: 1, priority: 'VIP' },
-      { name: 'Anita Bose', channel: 'VOICE', stage: 'qualified', dealValue: 32000, aiScore: 78, daysInStage: 4, priority: 'High' },
-      { name: 'Vikram Iyer', channel: 'WHATSAPP', stage: 'proposal', dealValue: 55000, aiScore: 89, daysInStage: 2, priority: 'High' },
-      { name: 'Amit Shah', channel: 'REFERRAL', stage: 'won', dealValue: 120000, aiScore: 98, daysInStage: 0, priority: 'VIP' },
-      { name: 'Riya Sen', channel: 'VOICE', stage: 'won', dealValue: 22000, aiScore: 85, daysInStage: 0, priority: 'Medium' },
-      { name: 'Sanjay Kumar', channel: 'ADS', stage: 'lost', dealValue: 10000, aiScore: 45, daysInStage: 10, priority: 'Standard' },
-    ];
-
-    return baseLeads.map((l, i) => ({
-      id: `lead_${niche}_${i}`,
-      name: l.name,
-      phone: `+91 98${Math.floor(10000000 + Math.random() * 90000000)}`,
-      email: `${l.name.split(' ')[0].toLowerCase()}@example.com`,
-      channel: l.channel,
-      stage: l.stage,
-      dealValue: l.dealValue,
-      aiScore: l.aiScore,
-      assignedTo: 'Sales Team',
-      daysInStage: l.daysInStage,
-      summary: `Automated AI lead captured via ${l.channel}. High intent score (${l.aiScore}/100).`,
-      priority: l.priority,
-      createdAt: 'Recent',
-      activities: [
-        { id: `a_${i}`, type: 'NOTE', text: 'Initial inquiry qualified by AI frontdesk.', time: 'Recent', author: 'AI Engine' }
-      ]
-    }));
-  };
-
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedStages, setCollapsedStages] = useState<Record<string, boolean>>({});
@@ -157,7 +115,7 @@ export default function AutomatedLeadsPage() {
         console.warn('Could not load leads from backend:', err);
       }
       if (isMounted) {
-        setLeads(getDefaultLeads(currentNiche));
+        setLeads([]);
       }
     }
     fetchLeads();

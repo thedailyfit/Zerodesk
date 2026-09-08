@@ -715,7 +715,7 @@ export default function InvoicesPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Ramesh Verma"
+                    placeholder="e.g. Patient Full Name"
                     value={customer}
                     onChange={(e) => setCustomer(e.target.value)}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Target,
@@ -48,17 +48,32 @@ const STAGES: { id: PipelineStage; label: string; color: string }[] = [
   { id: 'CLOSED_WON', label: 'Closed & Registered', color: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' }
 ];
 
-const INITIAL_DEALS: Deal[] = [
-  { id: 'deal-01', clientName: 'Vikram & Ananya Singhal', phone: '+91 98201 55667', property: 'Godrej Horizon 3BHK (Floor 18)', dealValue: 18500000, stage: 'NEW_LEAD', agent: 'Kunal Sharma', source: 'Meta Ads', daysInStage: 1, lastContact: '2 hrs ago' },
-  { id: 'deal-02', clientName: 'Rajesh & Kavita Rao', phone: '+91 99401 88990', property: 'Prestige Lavender 4BHK Villa', dealValue: 34000000, stage: 'VISIT_SCHEDULED', agent: 'Neha Kapoor', source: 'Google Ads', daysInStage: 2, lastContact: 'Yesterday' },
-  { id: 'deal-03', clientName: 'Amitabh Bansal', phone: '+91 98110 33221', property: 'DLF Crest 3BHK Penthouse', dealValue: 27500000, stage: 'VISITED', agent: 'Kunal Sharma', source: 'Referral', daysInStage: 4, lastContact: '3 days ago' },
-  { id: 'deal-04', clientName: 'Dr. Siddharth Verma', phone: '+91 98220 99881', property: 'Oberoi Sky City 3BHK Luxury', dealValue: 22000000, stage: 'NEGOTIATION', agent: 'Neha Kapoor', source: 'Meta Ads', daysInStage: 3, lastContact: '5 hrs ago' },
-  { id: 'deal-05', clientName: 'Rohit & Shweta Mehra', phone: '+91 97110 44556', property: 'Brigade Cosmopolis 2BHK', dealValue: 12500000, stage: 'LEGAL_AGREEMENT', agent: 'Sanjay Dutt', source: 'Walk-in', daysInStage: 5, lastContact: 'Yesterday' },
-  { id: 'deal-06', clientName: 'Pooja & Sameer Joshi', phone: '+91 98330 11223', property: 'Sobha Dream Acres 3BHK', dealValue: 16000000, stage: 'CLOSED_WON', agent: 'Kunal Sharma', source: 'Google Ads', daysInStage: 12, lastContact: 'Finalized' }
-];
+const INITIAL_DEALS: Deal[] = [];
 
 export default function PipelinePage() {
-  const [deals, setDeals] = useState<Deal[]>(INITIAL_DEALS);
+  const [deals, setDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      apiClient('/crm/leads').then((res: any) => {
+        if (Array.isArray(res) && res.length > 0) {
+          const mapped: Deal[] = res.map((r: any) => ({
+            id: r.id,
+            clientName: r.name || r.customer?.name || 'Inquiry Client',
+            phone: r.phone || r.customer?.phone || '',
+            property: r.summary || 'Consultation / Service Inquiry',
+            dealValue: Number(r.dealValue || r.value || 0),
+            stage: (r.stage?.slug || 'NEW_LEAD') as PipelineStage,
+            agent: r.assignedTo || 'Specialist Advisor',
+            source: (r.source || 'Meta Ads') as any,
+            daysInStage: r.daysInStage || 0,
+            lastContact: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : 'Recent'
+          }));
+          setDeals(mapped);
+        }
+      }).catch(() => {});
+    });
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<string>('ALL');
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -68,7 +83,7 @@ export default function PipelinePage() {
     property: '',
     dealValue: '',
     stage: 'NEW_LEAD' as PipelineStage,
-    agent: 'Kunal Sharma',
+    agent: 'Specialist Advisor',
     source: 'Meta Ads' as const
   });
 
@@ -106,7 +121,7 @@ export default function PipelinePage() {
       property: '',
       dealValue: '',
       stage: 'NEW_LEAD',
-      agent: 'Kunal Sharma',
+      agent: 'Specialist Advisor',
       source: 'Meta Ads'
     });
   };
@@ -192,7 +207,7 @@ export default function PipelinePage() {
             className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
           >
             <option value="ALL">All Sales Agents</option>
-            <option value="Kunal Sharma">Kunal Sharma</option>
+            <option value="Specialist Advisor">Specialist Advisor</option>
             <option value="Neha Kapoor">Neha Kapoor</option>
             <option value="Sanjay Dutt">Sanjay Dutt</option>
           </select>
@@ -326,7 +341,7 @@ export default function PipelinePage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Vikram & Ananya Singhal"
+                    placeholder="e.g. Client Name"
                     value={newDeal.clientName}
                     onChange={(e) => setNewDeal({ ...newDeal, clientName: e.target.value })}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -378,7 +393,7 @@ export default function PipelinePage() {
                       onChange={(e) => setNewDeal({ ...newDeal, agent: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
                     >
-                      <option value="Kunal Sharma">Kunal Sharma</option>
+                      <option value="Specialist Advisor">Specialist Advisor</option>
                       <option value="Neha Kapoor">Neha Kapoor</option>
                       <option value="Sanjay Dutt">Sanjay Dutt</option>
                     </select>

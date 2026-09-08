@@ -30,171 +30,44 @@ interface HandoffRequest {
 
 const NOW = new Date();
 
-const MOCK_DATA: HandoffRequest[] = [
-  {
-    id: 'REQ-001',
-    source: 'Voice AI',
-    customerName: 'Sarah Jenkins',
-    contact: '+91 98765 43210',
-    email: 'sarah.j@example.com',
-    summary: 'Pricing inquiry for full body treatment',
-    status: 'PENDING',
-    urgency: 'CRITICAL',
-    timestamp: new Date(NOW.getTime() - 3 * 60000),
-    category: 'Sales',
-    estimatedValue: 15000,
-    aiTranscript: [
-      { role: 'ai', message: 'Hello! Welcome to our clinic. How can I assist you today?' },
-      { role: 'customer', message: 'Hi, I wanted to know the price for the full body wellness package.' },
-      { role: 'ai', message: 'Our standard full body package starts at ₹12,000. Would you like me to book a consultation to discuss the exact pricing based on your needs?' },
-      { role: 'customer', message: 'I need to speak to someone right now, I have specific questions before I book.' }
-    ],
-    internalNotes: []
-  },
-  {
-    id: 'REQ-002',
-    source: 'WhatsApp AI',
-    customerName: 'Rahul Sharma',
-    contact: '+91 91234 56789',
-    summary: 'Slot conflict reschedule',
-    status: 'PENDING',
-    urgency: 'HIGH',
-    timestamp: new Date(NOW.getTime() - 8 * 60000),
-    category: 'Scheduling',
-    aiTranscript: [
-      { role: 'ai', message: 'Your appointment is confirmed for tomorrow at 10 AM.' },
-      { role: 'customer', message: 'I can\'t make it at 10. Can we do 12?' },
-      { role: 'ai', message: 'Let me check... I\'m sorry, but 12 PM is fully booked. How about 2 PM?' },
-      { role: 'customer', message: 'No, it has to be morning. Let me talk to a human please.' }
-    ],
-    internalNotes: []
-  },
-  {
-    id: 'REQ-003',
-    source: 'Voice AI',
-    customerName: 'Emily Clark',
-    contact: '+91 99887 76655',
-    email: 'e.clark@domain.com',
-    summary: 'Pre-treatment prep questions',
-    status: 'ACCEPTED',
-    urgency: 'NORMAL',
-    assignedTo: 'Frontdesk Staff',
-    timestamp: new Date(NOW.getTime() - 25 * 60000),
-    category: 'Medical Query',
-    aiTranscript: [
-      { role: 'ai', message: 'Just a reminder, please do not eat anything 12 hours before the procedure.' },
-      { role: 'customer', message: 'Wait, I just had a small snack, is that going to be a problem?' },
-      { role: 'ai', message: 'Fasting is required. If you have eaten, you may need to speak to a staff member for guidance.' },
-      { role: 'customer', message: 'Okay, transfer me to someone who can help.' }
-    ],
-    internalNotes: [
-      { author: 'Jane Doe', note: 'Checked with Dr. Smith, a small snack 8 hours prior is okay but need to confirm exactly what she ate.', time: '10 mins ago' }
-    ]
-  },
-  {
-    id: 'REQ-004',
-    source: 'Webchat AI',
-    customerName: 'Vikram Mehta',
-    contact: '+91 98712 34567',
-    summary: 'Insurance verification',
-    status: 'COMPLETED',
-    urgency: 'LOW',
-    assignedTo: 'Manager',
-    timestamp: new Date(NOW.getTime() - 60 * 60000),
-    category: 'Billing',
-    aiTranscript: [
-      { role: 'ai', message: 'Do you have your insurance card handy?' },
-      { role: 'customer', message: 'Yes, it is from MaxBupa. Policy #MB123456' },
-      { role: 'ai', message: 'I am unable to verify that policy number automatically. Let me connect you with our billing specialist.' }
-    ],
-    internalNotes: [
-      { author: 'Mike Ross', note: 'Verified manually. Sent confirmation email to customer.', time: '40 mins ago' }
-    ]
-  },
-  {
-    id: 'REQ-005',
-    source: 'WhatsApp AI',
-    customerName: 'Priya Patel',
-    contact: '+91 99000 11222',
-    summary: 'Urgent allergic reaction follow-up',
-    status: 'PENDING',
-    urgency: 'HIGH',
-    timestamp: new Date(NOW.getTime() - 2 * 60000),
-    category: 'Medical Emergency',
-    aiTranscript: [
-      { role: 'ai', message: 'How are you feeling after yesterday\'s treatment?' },
-      { role: 'customer', message: 'Not good, my skin is very red and itchy.' },
-      { role: 'ai', message: 'I\'m sorry to hear that. Should I schedule an immediate follow-up?' },
-      { role: 'customer', message: 'Yes, but I need to talk to a doctor NOW.' }
-    ],
-    internalNotes: []
-  },
-  {
-    id: 'REQ-006',
-    source: 'Voice AI',
-    customerName: 'Arjun Nair',
-    contact: '+91 99988 77766',
-    summary: 'Package upgrade inquiry',
-    status: 'ACCEPTED',
-    urgency: 'NORMAL',
-    assignedTo: 'Manager',
-    timestamp: new Date(NOW.getTime() - 40 * 60000),
-    category: 'Sales',
-    estimatedValue: 25000,
-    aiTranscript: [
-      { role: 'ai', message: 'You are currently on the Silver tier. Are you interested in upgrading?' },
-      { role: 'customer', message: 'What do I get with the Gold tier?' },
-      { role: 'ai', message: 'The Gold tier includes 3 extra sessions and priority booking.' },
-      { role: 'customer', message: 'I might be interested, can someone call me to discuss the exact price difference?' }
-    ],
-    internalNotes: [
-      { author: 'Sarah Connor', note: 'Called twice, no answer. Will try again in an hour.', time: '5 mins ago' }
-    ]
-  },
-  {
-    id: 'REQ-007',
-    source: 'Webchat AI',
-    customerName: 'Meena Krishnan',
-    contact: '+91 91111 22222',
-    email: 'meena.k@gmail.com',
-    summary: 'Payment dispute/refund',
-    status: 'PENDING',
-    urgency: 'CRITICAL',
-    timestamp: new Date(NOW.getTime() - 1 * 60000),
-    category: 'Billing',
-    aiTranscript: [
-      { role: 'ai', message: 'Your payment of ₹5000 was successful.' },
-      { role: 'customer', message: 'What? I was supposed to be charged ₹3000! Why is it 5000?' },
-      { role: 'ai', message: 'I see a discrepancy. I will escalate this to a billing manager.' }
-    ],
-    internalNotes: []
-  },
-  {
-    id: 'REQ-008',
-    source: 'WhatsApp AI',
-    customerName: 'David Chen',
-    contact: '+91 92222 33333',
-    summary: 'Post-procedure recovery concern',
-    status: 'IN_PROGRESS',
-    urgency: 'NORMAL',
-    assignedTo: 'Doctor',
-    timestamp: new Date(NOW.getTime() - 15 * 60000),
-    category: 'Medical Query',
-    aiTranscript: [
-      { role: 'ai', message: 'Please ensure you rest for 24 hours.' },
-      { role: 'customer', message: 'Can I take painkillers if it hurts too much?' },
-      { role: 'ai', message: 'You can take over-the-counter pain medication, but for severe pain please consult the doctor.' },
-      { role: 'customer', message: 'I think it is severe. Let me talk to the doctor.' }
-    ],
-    internalNotes: [
-      { author: 'Dr. House', note: 'Reviewing file now, will call him shortly.', time: '2 mins ago' }
-    ]
-  }
-];
+const INITIAL_HANDOFF_REQUESTS: HandoffRequest[] = [];
 
 export default function HumanHandoffRequestsPage() {
-  const [requests, setRequests] = useState<HandoffRequest[]>(MOCK_DATA);
-  const [selectedId, setSelectedId] = useState<string | null>(MOCK_DATA[0].id);
+  const [requests, setRequests] = useState<HandoffRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      apiClient('/conversations')
+        .then((res: any) => {
+          if (Array.isArray(res)) {
+            const mapped: HandoffRequest[] = res
+              .filter((c: any) => c.status === 'HANDOFF' || c.status === 'WAITING' || (c.metadata && c.metadata.needsHuman))
+              .map((c: any) => ({
+                id: c.id,
+                source: c.channel === 'VOICE' ? 'Voice AI' : 'WhatsApp AI',
+                customerName: c.customer?.name || 'Inquiry Caller',
+                contact: c.customer?.phone || '',
+                email: c.customer?.email,
+                summary: c.aiSummary || 'Patient requested to speak with frontdesk coordinator',
+                status: 'PENDING',
+                urgency: 'HIGH',
+                timestamp: new Date(c.startedAt || c.createdAt),
+                category: 'Clinical Inquiry',
+                aiTranscript: (c.messages || []).map((m: any) => ({
+                  role: m.role === 'CUSTOMER' ? 'customer' : 'ai',
+                  message: m.content || '',
+                })),
+                internalNotes: [],
+              }));
+            setRequests(mapped);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    });
+  }, []);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [urgencyFilter, setUrgencyFilter] = useState<string>('ALL');

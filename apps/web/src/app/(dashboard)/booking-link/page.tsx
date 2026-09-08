@@ -388,7 +388,7 @@ export default function BookingLinkAdminPage() {
               </span>
             </div>
 
-            {/* Mocked Standalone Card */}
+            {/* Booking Card Preview */}
             <div className="bg-white text-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-5">
               <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white space-y-1">
                 <h3 className="font-extrabold text-lg">Schedule an Appointment</h3>

@@ -12,12 +12,15 @@ import {
   Sparkles,
   Scissors,
   Stethoscope,
-  Clock
+  Clock,
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
+import { apiClient } from '@/lib/api-client';
 
 export interface DoctorProfile {
   id: string;
@@ -33,64 +36,65 @@ export interface DoctorProfile {
   todayAppointments: number;
 }
 
-const DEFAULT_DOCTOR: DoctorProfile = {
-  id: 'doc-default-1',
-  name: 'Dr. Ananya Sharma',
-  specialty: 'Chief Consultant',
-  avatar: 'AS',
-  phone: '+91 98765 43210',
-  email: 'ananya@clinic.com',
-  status: 'Active',
-  hours: '09:00 AM - 05:00 PM',
-  bookedHours: 4,
-  totalHours: 8,
-  todayAppointments: 6,
-};
-
-const DEFAULT_STAFF_BY_NICHE: Record<NicheId, DoctorProfile[]> = {
-  skin: [DEFAULT_DOCTOR],
-  dental: [DEFAULT_DOCTOR],
-  spa: [DEFAULT_DOCTOR],
-  salon: [DEFAULT_DOCTOR],
-  realestate: [DEFAULT_DOCTOR],
-  hotel: [DEFAULT_DOCTOR]
-};
-
 export default function DoctorCalendarPage() {
   const { currentNiche, nicheConfig } = useNiche();
   const staffTerm = nicheConfig.terminology?.staff || 'Doctor';
   
-  const [doctors, setDoctors] = useState<DoctorProfile[]>(() => DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile>(() => (DEFAULT_STAFF_BY_NICHE[currentNiche] || [DEFAULT_DOCTOR])[0] || DEFAULT_DOCTOR);
+  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load from localStorage or defaults per niche
+  // Load real staff and appointments from NestJS API
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(`zerodesk_doctors_${currentNiche}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setDoctors(parsed);
-          setSelectedDoctor(parsed[0]);
-          return;
+    async function fetchStaffData() {
+      try {
+        setLoading(true);
+        const [staffRes, apptsRes] = await Promise.allSettled([
+          apiClient('/staff'),
+          apiClient('/appointments')
+        ]);
+
+        const staffList = staffRes.status === 'fulfilled' && Array.isArray(staffRes.value) ? staffRes.value : [];
+        const apptsList = apptsRes.status === 'fulfilled' && Array.isArray(apptsRes.value) ? apptsRes.value : [];
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        if (staffList.length > 0) {
+          const mapped: DoctorProfile[] = staffList.map((s: any) => {
+            const staffAppts = apptsList.filter((a: any) => a.staffId === s.id && (a.scheduledAt || '').slice(0, 10) === todayStr);
+            const bookedHrs = Math.min(staffAppts.length * 0.75, 8);
+            return {
+              id: s.id,
+              name: s.name || 'Practitioner',
+              specialty: s.role || s.specialty || 'Lead Specialist',
+              avatar: (s.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
+              phone: s.phone || 'N/A',
+              email: s.email || '',
+              status: s.status === 'ON_DUTY' ? 'Active' : s.status === 'ON_BREAK' ? 'On Break' : 'Active',
+              hours: '09:00 AM - 05:00 PM',
+              bookedHours: Math.round(bookedHrs),
+              totalHours: 8,
+              todayAppointments: staffAppts.length
+            };
+          });
+          setDoctors(mapped);
+          setSelectedDoctor(mapped[0]);
+        } else {
+          setDoctors([]);
+          setSelectedDoctor(null);
         }
+      } catch (err) {
+        console.error('Failed to load staff/appointments for doctor calendar:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error('Failed to load doctors from localStorage', e);
     }
-    const defaults = DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin;
-    setDoctors(defaults);
-    setSelectedDoctor(defaults[0]);
+
+    fetchStaffData();
   }, [currentNiche]);
 
   const saveDoctors = (updated: DoctorProfile[]) => {
     setDoctors(updated);
-    try {
-      localStorage.setItem(`zerodesk_doctors_${currentNiche}`, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save doctors to localStorage', e);
-    }
   };
 
   // New Doctor Form
@@ -132,8 +136,8 @@ export default function DoctorCalendarPage() {
   const handleToggleStatus = (id: string, newStatus: DoctorProfile['status']) => {
     const updated = doctors.map(d => d.id === id ? { ...d, status: newStatus } : d);
     saveDoctors(updated);
-    if (selectedDoctor.id === id) {
-      setSelectedDoctor(prev => ({ ...prev, status: newStatus }));
+    if (selectedDoctor && selectedDoctor.id === id) {
+      setSelectedDoctor({ ...selectedDoctor, status: newStatus });
     }
   };
 
@@ -154,10 +158,11 @@ export default function DoctorCalendarPage() {
 
   const handleSaveShift = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedDoctor) return;
     const newHours = `${editShiftStart} - ${editShiftEnd}`;
     const updated = doctors.map(d => d.id === selectedDoctor.id ? { ...d, hours: newHours } : d);
     saveDoctors(updated);
-    setSelectedDoctor(prev => ({ ...prev, hours: newHours }));
+    setSelectedDoctor({ ...selectedDoctor, hours: newHours });
     setIsEditShiftModalOpen(false);
   };
 
@@ -268,11 +273,11 @@ export default function DoctorCalendarPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-base flex items-center justify-center shadow-lg">
-                  {selectedDoctor.avatar}
+                  {selectedDoctor?.avatar}
                 </div>
                 <div>
-                  <h2 className="font-bold text-base text-[var(--color-text)]">{selectedDoctor.name}</h2>
-                  <p className="text-xs text-[var(--color-text-muted)]">{selectedDoctor.specialty} • {selectedDoctor.hours}</p>
+                  <h2 className="font-bold text-base text-[var(--color-text)]">{selectedDoctor?.name}</h2>
+                  <p className="text-xs text-[var(--color-text-muted)]">{selectedDoctor?.specialty} • {selectedDoctor?.hours}</p>
                 </div>
               </div>
 
@@ -281,10 +286,10 @@ export default function DoctorCalendarPage() {
                 {(['Active', 'On Break', 'In Surgery', 'Off Duty'] as const).map((st) => (
                   <button
                     key={st}
-                    onClick={() => handleToggleStatus(selectedDoctor.id, st)}
+                    onClick={() => selectedDoctor && handleToggleStatus(selectedDoctor.id, st)}
                     className={cn(
                       "px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all",
-                      selectedDoctor.status === st
+                      selectedDoctor?.status === st
                         ? "bg-blue-600 text-white shadow-sm"
                         : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                     )}
@@ -299,7 +304,7 @@ export default function DoctorCalendarPage() {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
                 <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Today&apos;s Load</span>
-                <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor.todayAppointments} Patients</span>
+                <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor?.todayAppointments || 0} Patients</span>
               </div>
 
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] flex flex-col justify-between">
@@ -468,7 +473,7 @@ export default function DoctorCalendarPage() {
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-500" />
-                  Edit Shift Timing ({selectedDoctor.name})
+                  Edit Shift Timing ({selectedDoctor?.name})
                 </h3>
                 <button 
                   onClick={() => setIsEditShiftModalOpen(false)}
