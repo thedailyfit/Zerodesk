@@ -1,4 +1,4 @@
-﻿app = "zerodesk-voice-agent"
+app = "zerodesk-voice-agent"
 primary_region = "bom"
 
 [build]
