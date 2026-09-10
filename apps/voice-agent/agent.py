@@ -87,8 +87,8 @@ def extract_call_context(ctx: JobContext) -> CallContext:
             meta = json.loads(ctx.room.metadata)
             tenant_id = meta.get("tenant_id") or meta.get("tenantId", "")
             caller_phone = meta.get("caller_phone") or meta.get("phoneNumber", "")
-            clinic_name = meta.get("clinic_name") or meta.get("clinicName", clinic_name)
-            clinic_address = meta.get("clinic_address") or meta.get("clinicAddress", "")
+            clinic_name = meta.get("business_name") or meta.get("businessName") or meta.get("clinic_name") or meta.get("clinicName", clinic_name)
+            clinic_address = meta.get("business_address") or meta.get("address") or meta.get("clinic_address") or meta.get("clinicAddress", "")
             booking_url = meta.get("booking_url") or meta.get("bookingUrl", "")
             maps_url = meta.get("maps_url") or meta.get("mapsUrl", "")
         except Exception as e:
@@ -100,7 +100,7 @@ def extract_call_context(ctx: JobContext) -> CallContext:
             job_meta = json.loads(ctx.job.metadata)
             tenant_id = tenant_id or job_meta.get("tenant_id") or job_meta.get("tenantId", "")
             caller_phone = caller_phone or job_meta.get("caller_phone", "")
-            clinic_name = job_meta.get("clinic_name", clinic_name)
+            clinic_name = job_meta.get("business_name") or job_meta.get("businessName") or job_meta.get("clinic_name", clinic_name)
         except Exception:
             pass
 
@@ -431,14 +431,13 @@ async def entrypoint(ctx: JobContext):
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
 
     if not system_prompt:
-        system_prompt = f"""You are a warm, highly professional AI receptionist for {call_ctx.clinic_name}.
+        system_prompt = f"""You are a warm, highly professional AI front desk receptionist and concierge for {call_ctx.clinic_name}.
+Your primary duties are to welcome callers, answer questions about our services and offerings across all business categories, schedule visits or appointments, and provide directions or rate information.
 
-CAPABILITIES:
-- Book appointments (book_appointment)
-- Check service pricing & details (get_pricing)
-- Search clinic knowledge base for treatments, doctor info, and prep steps (query_knowledge_base)
-- Send booking links, location maps, or pricing to caller's WhatsApp during the call (send_whatsapp_info)
-- Transfer to human staff (transfer_to_human)
+MULTI-LANGUAGE & REGIONAL CODE-SWITCHING:
+- You are natively multi-lingual: fluent in Indian English, Hindi, Telugu, Tamil, Kannada, and conversational Hinglish/Telugish.
+- Seamlessly adapt to the caller's language: If the caller speaks Hindi, reply in Hindi. If they speak Telugu, reply in Telugu. If they speak Tamil or Kannada, reply in that language. If they code-switch (mix English with regional words), respond naturally in the same friendly cadence.
+- Never ask the caller to switch to English; always honor their preferred mother tongue.
 
 STRICT GUIDELINES & SAFETY GUARDRAILS:
 - Keep answers concise and natural for voice conversation (1-2 sentences maximum).

@@ -1,16 +1,24 @@
 {
   "$schema": "https://livekit.io/schemas/sip-dispatch-rule.json",
-  "name": "zerodesk-inbound-trunk-dispatch",
-  "description": "Dynamic SIP Dispatch Rule for ZeroDesk Indian Telephony (Exotel / Airtel IQ)",
+  "name": "zerodesk-inbound-plivo-dispatch",
+  "description": "Dynamic SIP Dispatch Rule for ZeroDesk Indian Telephony (Plivo) across All Niches",
   "rules": [
     {
-      "name": "inbound-clinic-dispatch",
+      "name": "inbound-plivo-dispatch",
       "dispatchRuleIndividual": {
         "roomPrefix": "call_"
       },
       "metadata": {
-        "provider": "exotel_india",
-        "region": "ap-south-1"
+        "provider": "plivo",
+        "region": "ap-south-1",
+        "language_mode": "multilingual_indic",
+        "supported_languages": [
+          "en-IN",
+          "hi-IN",
+          "te-IN",
+          "ta-IN",
+          "kn-IN"
+        ]
       },
       "roomConfig": {
         "agents": [
