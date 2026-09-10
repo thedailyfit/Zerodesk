@@ -1,4 +1,4 @@
-﻿const { execSync } = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -28,18 +28,10 @@ async function main() {
     }
   }
 
-  console.log('1️⃣ Synchronizing Database Tables via Prisma db push...');
-  try {
-    execSync('pnpm --filter @zerodesk/api db:push', { stdio: 'inherit', env: process.env });
-    console.log('✅ Tables synchronized in Supabase.\n');
-  } catch (err) {
-    console.error('❌ Failed to push schema to Supabase:', err.message);
-    process.exit(1);
-  }
+  const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  const prisma = new PrismaClient({ datasources: { db: { url: directUrl } } });
 
-  console.log('2️⃣ Applying Row-Level Security policies & HNSW vector index...');
-  const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-
+  console.log('1️⃣ Verifying PostgreSQL Extensions (vector, uuid-ossp)...');
   try {
     await prisma.$connect();
     console.log('✅ Connected to database.\n');
@@ -47,11 +39,31 @@ async function main() {
     try {
       await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS "vector";');
       await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-      console.log('✅ Vector & UUID extensions confirmed.\n');
+      console.log('✅ Vector & UUID extensions enabled in PostgreSQL/Supabase.\n');
     } catch (extErr) {
-      console.warn('⚠️ Extension warning:', extErr.message);
+      console.warn('⚠️ Extension note:', extErr.message);
     }
+  } catch (connErr) {
+    console.warn('⚠️ Direct connection check warning:', connErr.message);
+  }
 
+  console.log('2️⃣ Synchronizing Database Tables via Prisma db push...');
+  try {
+    execSync('pnpm --filter @zerodesk/api db:push', {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        DIRECT_URL: directUrl,
+      },
+    });
+    console.log('✅ Tables synchronized in Supabase.\n');
+  } catch (err) {
+    console.error('❌ Failed to push schema to Supabase:', err.message);
+    process.exit(1);
+  }
+
+  console.log('3️⃣ Applying Row-Level Security policies & HNSW vector index...');
+  try {
     const rlsPath = path.join(__dirname, '../apps/api/prisma/migrations/rls_policies.sql');
     if (fs.existsSync(rlsPath)) {
       const sql = fs.readFileSync(rlsPath, 'utf8');
@@ -65,7 +77,7 @@ async function main() {
           await prisma.$executeRawUnsafe(statement);
         } catch (stmtErr) {
           if (!statement.includes('DROP POLICY')) {
-            console.warn(`⚠️ Warning: ${stmtErr.message}`);
+            console.warn(`⚠️ Warning executing statement: ${stmtErr.message}`);
           }
         }
       }
