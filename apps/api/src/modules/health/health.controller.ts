@@ -21,6 +21,7 @@ export class HealthController {
   }
 
   @Get('health')
+  @Get('v1/health')
   async check() {
     let dbStatus = 'down';
     let redisStatus = 'down';
@@ -55,7 +56,8 @@ export class HealthController {
       timestamp: new Date().toISOString(),
     };
 
-    if (!isHealthy && process.env.NODE_ENV === 'production') {
+    // Cold-start protection: Only throw 503 if container has been up > 30s and DB is still down
+    if (!isHealthy && process.env.NODE_ENV === 'production' && process.uptime() > 30) {
       throw new ServiceUnavailableException(healthData);
     }
 

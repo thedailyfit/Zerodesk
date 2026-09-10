@@ -51,7 +51,7 @@ async function bootstrap() {
 
   // Global prefix with root & docs exclude
   app.setGlobalPrefix('v1', {
-    exclude: ['/', 'health', 'docs', 'docs-json'],
+    exclude: ['/', 'health', 'v1/health', 'docs', 'docs-json'],
   });
 
   // Validation

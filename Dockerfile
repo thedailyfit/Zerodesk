@@ -22,10 +22,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/api ./apps/api
+COPY --chown=node:node --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/packages ./packages
+COPY --chown=node:node --from=builder /app/apps/api ./apps/api
 
 EXPOSE 4000
 
