@@ -762,8 +762,17 @@ RULES:
     });
 
     if (!config) {
-      this.logger.warn(`Rejected SIP dispatch: No active tenant mapped to called number ${called}`);
-      throw new NotFoundException(`Unregistered inbound telephony number: ${called}`);
+      this.logger.warn(`Unregistered inbound telephony number ${called}. Routing to triage room.`);
+      const triageRoom = `triage_call_${caller || 'caller'}_${Date.now()}`;
+      return {
+        room_name: triageRoom,
+        metadata: JSON.stringify({
+          tenant_id: 'triage',
+          caller_phone: caller,
+          clinic_name: 'Customer Support',
+          source: 'SIP_UNKNOWN_NUMBER',
+        }),
+      };
     }
 
     const tenantId = config.tenantId;
@@ -970,6 +979,34 @@ RULES:
       },
     });
     return this.plivoService.generateFallbackXml(voiceConfig?.retellPhoneNumber || undefined, voiceConfig?.transferNumber || undefined);
+  }
+
+  /**
+   * Proxy audio transcription requests to Sarvam AI STT API.
+   */
+  async proxySarvamStt(body: any) {
+    const apiKey = this.configService.get<string>('SARVAM_API_KEY');
+    if (!apiKey) {
+      throw new InternalServerErrorException('Sarvam AI API key is not configured');
+    }
+    try {
+      const response = await fetch('https://api.sarvam.ai/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'api-subscription-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Sarvam API returned ${response.status}: ${errText}`);
+      }
+      return await response.json();
+    } catch (err: any) {
+      this.logger.error(`Sarvam STT proxy error: ${err.message}`);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 }
 

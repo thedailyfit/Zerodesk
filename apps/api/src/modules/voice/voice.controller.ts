@@ -177,4 +177,10 @@ export class VoiceController {
   ) {
     return this.voiceService.provisionPhoneNumber(tenantId, body.phoneNumber);
   }
+
+  @Post('sarvam-stt-proxy')
+  @UseGuards(InternalVoiceGuard)
+  async sarvamSttProxy(@Body() body: any) {
+    return this.voiceService.proxySarvamStt(body);
+  }
 }
