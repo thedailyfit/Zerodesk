@@ -40,13 +40,13 @@ export default function InboundCallsPage() {
                 customer: c.customer?.name || 'Inbound Caller',
                 phone: c.customer?.phone || 'N/A',
                 time: new Date(c.startedAt || c.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-                duration: c.endedAt && c.startedAt ? `${Math.round((new Date(c.endedAt).getTime() - new Date(c.startedAt).getTime()) / 60000)}:00` : '2:15',
-                branch: 'Main Clinic',
+                duration: c.endedAt && c.startedAt ? `${Math.round((new Date(c.endedAt).getTime() - new Date(c.startedAt).getTime()) / 60000)}m` : (c.duration ? `${Math.round(c.duration / 60)}m` : '-'),
+                branch: c.tenant?.name || 'Clinic',
                 agent: 'LiveKit Voice AI',
                 resolution: c.status === 'COMPLETED' ? 'AI_RESOLVED' : c.status === 'HANDOFF' ? 'HANDED_OFF_TO_HUMAN' : 'AI_RESOLVED',
                 sentiment: c.sentiment || 'SATISFIED',
-                cost: '₹0.85',
-                transcript: c.aiSummary || 'Voice conversation completed successfully with patient.',
+                cost: c.duration ? `₹${((c.duration / 60) * 0.45).toFixed(2)}` : '-',
+                transcript: c.aiSummary || c.transcript || 'Inbound call logged without transcript.',
               }));
             setCalls(voiceCalls);
           }
@@ -90,15 +90,15 @@ export default function InboundCallsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
           <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Total Inbound Calls (24h)</p>
-          <p className="text-2xl font-extrabold text-[var(--color-text)] mt-1">42 Calls</p>
+          <p className="text-2xl font-extrabold text-[var(--color-text)] mt-1">{calls.length} Calls</p>
         </div>
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
           <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">AI Resolution Rate</p>
-          <p className="text-2xl font-extrabold text-emerald-400 mt-1">92.8%</p>
+          <p className="text-2xl font-extrabold text-emerald-400 mt-1">{calls.length > 0 ? Math.round((calls.filter(c => c.resolution === 'AI_RESOLVED').length / calls.length) * 100) + '%' : '0%'}</p>
         </div>
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl">
           <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Human Handoffs</p>
-          <p className="text-2xl font-extrabold text-blue-400 mt-1">3 Calls (Clinical)</p>
+          <p className="text-2xl font-extrabold text-blue-400 mt-1">{calls.filter(c => c.resolution === 'HANDED_OFF_TO_HUMAN').length} Calls</p>
         </div>
     </div>
 

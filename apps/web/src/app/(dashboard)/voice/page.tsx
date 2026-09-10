@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic, 
@@ -17,6 +17,7 @@ import {
   Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
 
@@ -50,6 +51,40 @@ export default function VoiceAgentLibraryPage() {
 
   // Live Testing State
   const [isLiveTesting, setIsLiveTesting] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    apiClient<any>('/voice/config')
+      .then((res) => {
+        if (isMounted && res) {
+          if (res.voiceId) setSelectedVoiceId(res.voiceId);
+          if (res.agentName) setDisplayName(res.agentName);
+          if (res.language) setPreferredLanguage(res.language);
+          if (res.systemPrompt) setRoleDescription(res.systemPrompt);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleSaveVoiceConfig = async () => {
+    try {
+      await apiClient('/voice/config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          voiceId: selectedVoiceId,
+          agentName: displayName,
+          language: preferredLanguage,
+          systemPrompt: roleDescription,
+        }),
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.warn('Failed to save voice config:', err);
+    }
+  };
 
   const toggleAudio = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -226,8 +261,9 @@ export default function VoiceAgentLibraryPage() {
               </div>
 
               <div className="pt-4 border-t border-[var(--color-border)] flex justify-end">
-                <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all">
-                  Save Configuration
+                <button onClick={handleSaveVoiceConfig} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2">
+                  {saveSuccess && <Check size={16} className="text-emerald-300" />}
+                  <span>{saveSuccess ? 'Configuration Saved!' : 'Save Configuration'}</span>
                 </button>
               </div>
             </div>

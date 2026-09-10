@@ -15,8 +15,12 @@ import {
   Activity,
   User,
   Zap,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  Sparkles,
+  Clock
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn, formatCurrency } from '@/lib/utils';
 
 export interface LeadActivity {
@@ -74,6 +78,7 @@ export default function AutomatedLeadsPage() {
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'high_intent' | 'whatsapp' | 'voice' | 'fast_response'>('all');
   const [collapsedStages, setCollapsedStages] = useState<Record<string, boolean>>({});
   
   // Modals & Drawers
@@ -195,11 +200,18 @@ export default function AutomatedLeadsPage() {
     setCollapsedStages(prev => ({ ...prev, [slug]: !prev[slug] }));
   };
 
-  const filteredLeads = leads.filter(l => 
-    !searchQuery || 
-    l.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    l.phone.includes(searchQuery)
-  );
+  const filteredLeads = leads.filter(l => {
+    const matchesSearch = !searchQuery || 
+      l.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      l.phone.includes(searchQuery);
+    if (!matchesSearch) return false;
+
+    if (activeFilter === 'high_intent') return l.aiScore >= 80;
+    if (activeFilter === 'whatsapp') return l.channel === 'WHATSAPP';
+    if (activeFilter === 'voice') return l.channel === 'VOICE';
+    if (activeFilter === 'fast_response') return l.daysInStage === 0;
+    return true;
+  });
 
   const totalValue = leads.filter(l => l.stage !== 'lost').reduce((acc, l) => acc + l.dealValue, 0);
 
@@ -269,6 +281,30 @@ export default function AutomatedLeadsPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Clinic Lead Command Center Urgency & Quality Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        {[
+          { id: 'all', label: 'All Inquiries' },
+          { id: 'high_intent', label: '🔥 High Intent (Score ≥ 80)' },
+          { id: 'whatsapp', label: '💬 WhatsApp Leads' },
+          { id: 'voice', label: '📞 Voice AI Calls' },
+          { id: 'fast_response', label: '⚡ Fresh Today' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveFilter(tab.id as any)}
+            className={cn(
+              "px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0",
+              activeFilter === tab.id
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Vertical Pipeline Accordion Sections (Fits Screen Cleanly Without Horizontal Slider) */}
@@ -355,22 +391,32 @@ export default function AutomatedLeadsPage() {
                             {STAGES.map(s => <option key={s.slug} value={s.slug}>{s.name}</option>)}
                           </select>
 
-                          {/* Action Links */}
-                          <div className="flex items-center gap-1">
+                          {/* Action Links: 1-Click WhatsApp & 1-Click Appointment Booking */}
+                          <div className="flex items-center gap-1.5">
                             <a
                               href={`tel:${lead.phone}`}
-                              className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                              title="Call Patient"
+                              className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
                             >
                               <Phone size={12} />
                             </a>
                             <a
-                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${lead.name}, thank you for contacting our clinic! Would you like to check available appointment slots with our doctor?`)}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                              title="WhatsApp Instant Greeting"
+                              className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
                             >
                               <MessageSquare size={12} />
                             </a>
+                            <Link
+                              href={`/book-appointment?customer=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone)}`}
+                              title="Convert to Confirmed Appointment"
+                              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[11px] font-semibold transition-colors"
+                            >
+                              <Calendar size={12} />
+                              <span>Book Slot</span>
+                            </Link>
                           </div>
                         </div>
                       </div>

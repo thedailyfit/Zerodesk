@@ -123,7 +123,7 @@ export default function PhoneNumbersPage() {
           </div>
           <div>
             <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Active Phone Numbers</p>
-            <p className="text-2xl font-extrabold text-[var(--color-text)]">3 Active / 1 Pending</p>
+            <p className="text-2xl font-extrabold text-[var(--color-text)]">{numbers.filter(n => n.status === 'ACTIVE').length} Active / {numbers.length} Total</p>
           </div>
         </div>
 
@@ -159,7 +159,22 @@ export default function PhoneNumbersPage() {
 
       {/* Numbers Table List */}
       <div className="space-y-4">
-        {filteredNumbers.map((num) => (
+        {filteredNumbers.length === 0 ? (
+          <div className="text-center py-16 px-4 border border-dashed border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)]">
+            <Phone size={36} className="mx-auto text-blue-500 mb-3 opacity-60" />
+            <h3 className="text-base font-bold text-[var(--color-text)]">No Phone Numbers Assigned</h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-sm mx-auto">
+              Provision a virtual DID number or connect your existing SIP / Telecom trunk to start receiving AI-managed calls.
+            </p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all inline-flex items-center gap-1.5"
+            >
+              <Plus size={14} />
+              <span>Provision Number</span>
+            </button>
+          </div>
+        ) : filteredNumbers.map((num) => (
           <div
             key={num.id}
             className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-blue-500/40 shadow-sm"

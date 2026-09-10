@@ -115,8 +115,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'New Patient Onboarding & Pre-Consult',
     category: 'Patient Care',
     active: true,
-    lastRun: '10 mins ago',
-    runCount24h: 12,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'New Registration', details: 'Form submitted' },
@@ -130,12 +130,12 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Post-Procedure AI Voice Follow-up',
     category: 'Patient Care',
     active: true,
-    lastRun: '2 hours ago',
-    runCount24h: 4,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 98,
     steps: [
       { id: 's1', type: 'trigger', label: 'Procedure Completed', details: 'Status = Done' },
-      { id: 's2', type: 'email', label: 'Send Care Guide', details: 'PDF attachment' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp PDF Care Guide', details: 'Post-Op Care Guide Sheet' },
       { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 24 hours' },
       { id: 's4', type: 'call', label: 'AI Voice Check-in', details: 'Agent: Post-Op Care' }
     ]
@@ -145,8 +145,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'AI Frontdesk: No-Show Rescheduler',
     category: 'Appointments',
     active: true,
-    lastRun: '1 hour ago',
-    runCount24h: 3,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 85,
     steps: [
       { id: 's1', type: 'trigger', label: 'No-Show Status', details: 'Appt missed' },
@@ -160,12 +160,12 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'AI Frontdesk: Missed Call Recovery',
     category: 'Voice AI',
     active: true,
-    lastRun: '5 mins ago',
-    runCount24h: 22,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 95,
     steps: [
       { id: 's1', type: 'trigger', label: 'Missed Call', details: 'Inbound failed' },
-      { id: 's2', type: 'whatsapp', label: 'AI Chatbot Handoff', details: 'Ask for intent' },
+      { id: 's2', type: 'whatsapp', label: 'Instant WhatsApp Greeting (<60s)', details: 'Book slot or request doctor callback' },
       { id: 's3', type: 'crm_update', label: 'Log Missed Call Lead', details: 'Update CRM' }
     ]
   },
@@ -174,12 +174,12 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Multi-Channel Appt Confirmation',
     category: 'Appointments',
     active: true,
-    lastRun: 'Just now',
-    runCount24h: 45,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 99,
     steps: [
       { id: 's1', type: 'trigger', label: 'Booking Created', details: 'New appt' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Confirmation', details: 'Date/Time details' },
+      { id: 's2', type: 'whatsapp', label: 'WhatsApp Location & Booking Card', details: 'Date, Time & Google Maps Pin' },
       { id: 's3', type: 'wait', label: 'Wait 24h before appt', details: 'Relative delay' },
       { id: 's4', type: 'call', label: 'AI Reminder Call', details: 'Agent: Frontdesk AI' }
     ]
@@ -189,8 +189,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Clinic Mgmt: Waitlist Slot Backfill',
     category: 'Operations',
     active: true,
-    lastRun: 'Yesterday',
-    runCount24h: 8,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'Appt Cancelled', details: '< 24h notice' },
@@ -204,8 +204,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Payment Receipt & Ledger Sync',
     category: 'Billing',
     active: true,
-    lastRun: '30 mins ago',
-    runCount24h: 18,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'Payment Received', details: 'Stripe webhook' },
@@ -219,15 +219,15 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Google Review via AI Request',
     category: 'Reviews',
     active: true,
-    lastRun: '4 hours ago',
-    runCount24h: 15,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 75,
     steps: [
       { id: 's1', type: 'trigger', label: 'Appt Completed', details: 'Status = Done' },
       { id: 's2', type: 'wait', label: 'Wait 2h', details: 'Cooldown' },
-      { id: 's3', type: 'whatsapp', label: 'WhatsApp Review Link', details: 'Google My Business' },
-      { id: 's4', type: 'wait', label: 'Wait 48h', details: 'If no review clicked' },
-      { id: 's5', type: 'call', label: 'AI Feedback Call', details: 'Ask for internal feedback' }
+      { id: 's3', type: 'whatsapp', label: 'WhatsApp CSAT Rating (1-5★)', details: 'Patient Experience Pulse' },
+      { id: 's4', type: 'trigger', label: 'Review Shield Router', details: '5★ → Google Review | 1-3★ → Private Clinic Alert' },
+      { id: 's5', type: 'task', label: 'Escalate Low Rating', details: 'Instant Alert to Clinic Manager' }
     ]
   },
   {
@@ -235,8 +235,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Patient Recall: 6-Month Checkup',
     category: 'Marketing',
     active: true,
-    lastRun: '12 hours ago',
-    runCount24h: 5,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 90,
     steps: [
       { id: 's1', type: 'trigger', label: 'Time Since Last Visit', details: '= 180 Days' },
@@ -250,8 +250,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'AI Frontdesk: After-Hours Voicemail Logic',
     category: 'Voice AI',
     active: true,
-    lastRun: 'Today 7:00 AM',
-    runCount24h: 1,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'Incoming Call', details: 'Outside Business Hours' },
@@ -264,8 +264,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'Treatment Plan AI Follow-up',
     category: 'Patient Care',
     active: true,
-    lastRun: '2 days ago',
-    runCount24h: 10,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'Proposal/Est Sent', details: 'CRM update' },
@@ -279,8 +279,8 @@ const INITIAL_WORKFLOWS: WorkflowItem[] = [
     name: 'VIP Patient Concierge Boarding',
     category: 'Patient Care',
     active: true,
-    lastRun: 'Yesterday',
-    runCount24h: 2,
+    lastRun: 'Ready',
+    runCount24h: 0,
     successRate: 100,
     steps: [
       { id: 's1', type: 'trigger', label: 'VIP Tag Applied', details: 'CRM update' },

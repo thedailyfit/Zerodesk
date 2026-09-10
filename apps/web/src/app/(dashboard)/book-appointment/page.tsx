@@ -64,7 +64,7 @@ export default function BookAppointmentPage() {
     return activeServices.find(s => s.category.toLowerCase() === 'registration' || s.name.toLowerCase().includes('registration'));
   }, [activeServices]);
 
-  const registrationFee = isClinic ? (regFeeOffering?.price ?? 300) : 0;
+  const registrationFee = isClinic ? (regFeeOffering?.price ?? 0) : 0;
 
   // Service Tab (Consultation, Individual Services, Treatment Packages)
   const [serviceTab, setServiceTab] = useState<'consultation' | 'individual' | 'package'>('consultation');
@@ -83,11 +83,7 @@ export default function BookAppointmentPage() {
         )
       );
       if (consultServices.length > 0) return consultServices;
-      return [
-        { id: 'cons-1', name: `General ${staffLabel} Consultation`, duration: 30, price: 800, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
-        { id: 'cons-2', name: `Senior Specialist Comprehensive Assessment`, duration: 45, price: 1500, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
-        { id: 'cons-3', name: `Follow-up Review Consultation`, duration: 20, price: 500, category: 'Consultation', isPackage: false, isActive: true, totalSessions: 1, packageValidityDays: 0 },
-      ];
+      return activeServices.filter(s => !s.isPackage);
     }
     if (serviceTab === 'package') {
       return activeServices.filter(s => s.isPackage);
@@ -231,7 +227,7 @@ export default function BookAppointmentPage() {
     e.preventDefault();
 
     let customerName = selectedCustomer?.name || 'Walk-in Guest';
-    let customerPhone = selectedCustomer?.phone || '+91 98765 00000';
+    let customerPhone = selectedCustomer?.phone || '';
     let finalCustomerId = selectedCustomer?.id || '';
 
     if (isNewCustomer) {

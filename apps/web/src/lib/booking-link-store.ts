@@ -22,11 +22,10 @@ export interface BookingLinkConfig {
 }
 
 const DEFAULT_CONFIG: BookingLinkConfig = {
-  slug: 'dr-appointment',
-  businessName: 'ZeroDesk Clinic',
-  coverImage: '',
-  doctorEmail: 'doctor@zerodesk.in',
-  enabledServiceIds: ['1', '2', '3', '4'],
+  slug: '',
+  businessName: '',
+  doctorEmail: '',
+  enabledServiceIds: [],
   slotDuration: 30,
   workingHoursStart: 9,
   workingHoursEnd: 18,
@@ -34,9 +33,9 @@ const DEFAULT_CONFIG: BookingLinkConfig = {
   reminderOptions: ['1day', '1hour', '10min'],
   reminderChannels: ['email', 'sms'],
   confirmationChannels: ['email'],
-  webhookEnabled: true,
-  webhookUrl: 'https://api.zerodesk.in/v1/frontdesk/bookings',
-  webhookLabel: 'Ops workflow',
+  webhookEnabled: false,
+  webhookUrl: '',
+  webhookLabel: '',
   isActive: true,
 };
 

@@ -63,7 +63,6 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Properties & Services', href: '/services', icon: Sparkles, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['ADMIN', 'STAFF'] },
     { name: 'Leads / Prospects', href: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Conversations', href: '/conversations', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Human Handoff Requests', href: '/human-handoff-requests', icon: UserCheck, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     
     { name: 'Automation', roles: ['ADMIN', 'MANAGER'], divider: true },

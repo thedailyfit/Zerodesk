@@ -649,7 +649,7 @@ export function useServices() {
     } catch {
       // Fallback
     }
-    setServices(DEFAULT_SERVICES_BY_NICHE[currentNiche] || []);
+    setServices([]);
 
     // Background sync with NestJS /v1/services
     api.get<any[]>('/services').then((res) => {

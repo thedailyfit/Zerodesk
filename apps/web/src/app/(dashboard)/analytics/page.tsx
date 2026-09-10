@@ -34,35 +34,6 @@ import {
 } from 'recharts';
 import { cn, formatNumber, formatCurrency } from '@/lib/utils';
 
-// Dynamic Multiplier based on timeframe selected
-const TIMEFRAME_MULTIPLIERS: Record<string, number> = {
-  '1D': 0.15,
-  '7D': 1,
-  '15D': 2.1,
-  '30D': 4.2,
-  '45D': 6.3,
-  '90D': 12.5,
-  'custom': 5.0,
-};
-
-const baseCallData = [
-  { date: 'Mon', calls: 42, resolved: 38, missed: 4 },
-  { date: 'Tue', calls: 55, resolved: 50, missed: 5 },
-  { date: 'Wed', calls: 38, resolved: 35, missed: 3 },
-  { date: 'Thu', calls: 62, resolved: 58, missed: 4 },
-  { date: 'Fri', calls: 71, resolved: 65, missed: 6 },
-  { date: 'Sat', calls: 48, resolved: 44, missed: 4 },
-  { date: 'Sun', calls: 25, resolved: 23, missed: 2 },
-];
-
-// Deterministic business-hour traffic weights (8:00 AM to 7:00 PM)
-const HOURLY_WEIGHTS = [0.03, 0.06, 0.09, 0.14, 0.16, 0.13, 0.11, 0.10, 0.08, 0.05, 0.03, 0.02];
-const baseHourlyData = HOURLY_WEIGHTS.map((weight, i) => ({
-  hour: `${(i + 8).toString().padStart(2, '0')}:00`,
-  calls: Math.round(weight * 60),
-  messages: Math.round(weight * 110),
-}));
-
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
   return (
@@ -122,59 +93,43 @@ export default function AnalyticsPage() {
     return () => { isMounted = false; };
   }, [selectedTimeframe]);
 
-  const mult = TIMEFRAME_MULTIPLIERS[selectedTimeframe] || 1;
-
-  const totalCallsVal = liveKpis?.totalCalls !== undefined
-    ? liveKpis.totalCalls
-    : Math.round(341 * mult);
-
-  const totalMessagesVal = liveKpis?.totalMessages !== undefined && liveKpis.totalMessages > 0
-    ? liveKpis.totalMessages
-    : Math.round(528 * mult);
-
-  const appointmentsVal = liveKpis?.appointmentsToday !== undefined
-    ? liveKpis.appointmentsToday
-    : Math.round(156 * mult);
-
-  const newLeadsVal = liveKpis?.activeLeads !== undefined
-    ? liveKpis.activeLeads
-    : Math.round(89 * mult);
+  const totalCallsVal = liveKpis?.totalCalls ?? 0;
+  const totalMessagesVal = liveKpis?.totalMessages ?? 0;
+  const appointmentsVal = liveKpis?.appointmentsToday ?? 0;
+  const newLeadsVal = liveKpis?.activeLeads ?? 0;
 
   const kpis = [
-    { label: 'Total Calls', value: totalCallsVal, change: 12.5, icon: Phone, color: 'text-blue-400' },
-    { label: 'Total Messages', value: totalMessagesVal, change: 8.3, icon: MessageCircle, color: 'text-emerald-400' },
-    { label: 'Appointments', value: appointmentsVal, change: 4.8, icon: Calendar, color: 'text-blue-400' },
-    { label: 'New Leads', value: newLeadsVal, change: 15.7, icon: Users, color: 'text-amber-400' },
-    { label: 'Avg Response', value: '1.2s', change: -18.5, icon: Clock, color: 'text-cyan-400' },
-    { label: 'Conversion Rate', value: `${liveKpis?.resolutionRate ?? 34}%`, change: 5.1, icon: Target, color: 'text-emerald-400' },
+    { label: 'Total Calls', value: totalCallsVal, change: 0, icon: Phone, color: 'text-blue-400' },
+    { label: 'Total Messages', value: totalMessagesVal, change: 0, icon: MessageCircle, color: 'text-emerald-400' },
+    { label: 'Appointments', value: appointmentsVal, change: 0, icon: Calendar, color: 'text-blue-400' },
+    { label: 'New Leads', value: newLeadsVal, change: 0, icon: Users, color: 'text-amber-400' },
+    { label: 'Avg AI Response', value: totalCallsVal > 0 || totalMessagesVal > 0 ? '1.2s' : '-', change: 0, icon: Clock, color: 'text-cyan-400' },
+    { label: 'Resolution Rate', value: `${liveKpis?.resolutionRate ?? 0}%`, change: 0, icon: Target, color: 'text-emerald-400' },
   ];
 
   const channelData = [
-    { name: 'Voice', value: totalCallsVal || 1, color: '#3b82f6' },
-    { name: 'WhatsApp', value: totalMessagesVal || 1, color: '#10b981' },
-    { name: 'Web Chat', value: Math.round(totalMessagesVal * 0.3) || 1, color: '#0ea5e9' },
+    { name: 'Voice', value: totalCallsVal, color: '#3b82f6' },
+    { name: 'WhatsApp', value: totalMessagesVal, color: '#10b981' },
+    { name: 'Web Chat', value: Math.max(0, (liveKpis?.totalCustomers ?? 0) - totalCallsVal - totalMessagesVal), color: '#0ea5e9' },
   ];
 
-  const scaledCallData = baseCallData.map(d => ({
-    ...d,
-    calls: Math.round(d.calls * (mult < 1 ? 1 : mult / 2)),
-    resolved: Math.round(d.resolved * (mult < 1 ? 1 : mult / 2)),
-    missed: Math.round(d.missed * (mult < 1 ? 1 : mult / 2)),
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const scaledCallData = daysOfWeek.map(d => ({
+    date: d,
+    calls: 0,
+    resolved: 0,
+    missed: 0,
   }));
 
-  const hourlyData = baseHourlyData.map(d => ({
-    ...d,
-    calls: Math.round(d.calls * (mult < 1 ? 1 : Math.min(mult, 3))),
-    messages: Math.round(d.messages * (mult < 1 ? 1 : Math.min(mult, 3))),
+  const hourlyData = [
+    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  ].map(h => ({
+    hour: h,
+    calls: 0,
+    messages: 0,
   }));
 
-  const serviceData = [
-    { service: 'Laser Treatment', bookings: Math.round(45 * mult), revenue: Math.round(675000 * mult) },
-    { service: 'Hair Transplant', bookings: Math.round(12 * mult), revenue: Math.round(960000 * mult) },
-    { service: 'Chemical Peel', bookings: Math.round(38 * mult), revenue: Math.round(190000 * mult) },
-    { service: 'PRP Therapy', bookings: Math.round(22 * mult), revenue: Math.round(440000 * mult) },
-    { service: 'Consultation', bookings: Math.round(89 * mult), revenue: Math.round(44500 * mult) },
-  ];
+  const serviceData: { service: string; bookings: number; revenue: number }[] = [];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -303,33 +258,45 @@ export default function AnalyticsPage() {
           className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
         >
           <h3 className="text-sm font-bold text-[var(--color-text)] mb-4">Inquiries by Channel ({selectedTimeframe})</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={channelData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={4}
-                dataKey="value"
-              >
-                {channelData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+          {channelData.every(c => c.value === 0) ? (
+            <div className="h-[240px] flex flex-col items-center justify-center text-center p-6 border border-dashed border-[var(--color-border)] rounded-xl">
+              <MessageCircle size={32} className="text-slate-500 mb-2 opacity-60" />
+              <p className="text-sm font-medium text-[var(--color-text)]">No Channel Traffic Yet</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-xs">
+                Inbound voice calls and WhatsApp messages will populate this breakdown in real-time.
+              </p>
+            </div>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={channelData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {channelData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-6 mt-2">
+                {channelData.map((ch) => (
+                  <div key={ch.name} className="flex items-center gap-2 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ch.color }} />
+                    <span className="text-[var(--color-text-muted)]">{ch.name}</span>
+                    <span className="font-bold text-[var(--color-text)]">{ch.value}</span>
+                  </div>
                 ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-6 mt-2">
-            {channelData.map((ch) => (
-              <div key={ch.name} className="flex items-center gap-2 text-xs">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ch.color }} />
-                <span className="text-[var(--color-text-muted)]">{ch.name}</span>
-                <span className="font-bold text-[var(--color-text)]">{ch.value}</span>
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </motion.div>
       </div>
 
@@ -362,27 +329,40 @@ export default function AnalyticsPage() {
           className="p-5 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl shadow-md"
         >
           <h3 className="text-sm font-bold text-[var(--color-text)] mb-4">Top Services Revenue ({selectedTimeframe})</h3>
-          <div className="space-y-3">
-            {serviceData.map((svc, i) => (
-              <div key={svc.service} className="flex items-center gap-3">
-                <span className="text-xs text-[var(--color-text-muted)] font-bold w-4">{i + 1}</span>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-[var(--color-text)]">{svc.service}</span>
-                    <span className="text-xs font-mono text-blue-400 font-bold">{formatCurrency(svc.revenue)}</span>
+          {serviceData.length === 0 ? (
+            <div className="h-[240px] flex flex-col items-center justify-center text-center p-6 border border-dashed border-[var(--color-border)] rounded-xl">
+              <Target size={32} className="text-slate-500 mb-2 opacity-60" />
+              <p className="text-sm font-medium text-[var(--color-text)]">No Service Revenue Recorded Yet</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-xs">
+                Completed bookings and quick-bill receipts will be analyzed here by procedure.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {serviceData.map((svc, i) => {
+                const maxRev = Math.max(...serviceData.map(s => s.revenue), 1);
+                return (
+                  <div key={svc.service} className="flex items-center gap-3">
+                    <span className="text-xs text-[var(--color-text-muted)] font-bold w-4">{i + 1}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-[var(--color-text)]">{svc.service}</span>
+                        <span className="text-xs font-mono text-blue-400 font-bold">{formatCurrency(svc.revenue)}</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (svc.revenue / maxRev) * 100)}%` }}
+                          transition={{ delay: 0.3 + i * 0.05, duration: 0.6 }}
+                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, (svc.revenue / Math.max(...serviceData.map(s => s.revenue))) * 100)}%` }}
-                      transition={{ delay: 0.3 + i * 0.05, duration: 0.6 }}
-                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

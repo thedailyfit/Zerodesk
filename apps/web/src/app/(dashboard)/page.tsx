@@ -180,19 +180,51 @@ export default function BusinessHealthPage() {
         </div>
       </div>
 
-      {/* 4 Core Niche KPI Cards */}
+      {/* 4 Core Niche KPI Cards (Live Real-Data Telemetry) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => (
-          <KPICard 
-            key={kpi.label}
-            title={kpi.label} 
-            value={kpi.value} 
-            numericValue={parseFloat(kpi.value.replace(/[^0-9.]/g, '')) || 0} 
-            trend={kpi.trend === 'up' ? 12.5 : kpi.trend === 'down' ? -4.2 : 0} 
-            icon={icons[idx % icons.length]} 
-            delay={0.05 * (idx + 1)} 
-          />
-        ))}
+        {[
+          {
+            label: "Total Inquiries Today",
+            value: (stats.voiceCallsCount + stats.whatsappCount + stats.webchatCount).toString(),
+            numericValue: stats.voiceCallsCount + stats.whatsappCount + stats.webchatCount,
+            trend: 0,
+            icon: Phone,
+          },
+          {
+            label: "Confirmed Sittings",
+            value: stats.todayBookings.toString(),
+            numericValue: stats.todayBookings,
+            trend: 0,
+            icon: CalendarIcon,
+          },
+          {
+            label: "Revenue Realized Today",
+            value: `₹${stats.todayRevenue.toLocaleString('en-IN')}`,
+            numericValue: stats.todayRevenue,
+            trend: 0,
+            icon: IndianRupee,
+          },
+          {
+            label: "Active Clinic Team",
+            value: `${stats.activeStaff} / ${stats.totalStaff}`,
+            numericValue: stats.activeStaff,
+            trend: 0,
+            icon: Users,
+          },
+        ].map((kpi, idx) => {
+          const Icon = kpi.icon;
+          return (
+            <KPICard 
+              key={kpi.label}
+              title={kpi.label} 
+              value={kpi.value} 
+              numericValue={kpi.numericValue} 
+              trend={kpi.trend} 
+              icon={Icon} 
+              delay={0.05 * (idx + 1)} 
+            />
+          );
+        })}
       </div>
 
       {/* 4 Daily Snapshot Tiles */}
@@ -258,7 +290,7 @@ export default function BusinessHealthPage() {
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.voiceCallsCount > 0 ? `${stats.voiceAutonomousRate}%` : '100%'}</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.voiceCallsCount > 0 ? `${stats.voiceAutonomousRate}%` : '0%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Autonomous</span>
           </div>
         </div>
@@ -276,7 +308,7 @@ export default function BusinessHealthPage() {
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.whatsappCount > 0 ? `${stats.whatsappResolvedRate}%` : '100%'}</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.whatsappCount > 0 ? `${stats.whatsappResolvedRate}%` : '0%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Resolved</span>
           </div>
         </div>
@@ -294,7 +326,7 @@ export default function BusinessHealthPage() {
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.webchatCount > 0 ? `${stats.webchatConvertedRate}%` : '100%'}</span>
+            <span className="text-sm font-bold text-emerald-400 font-mono">{stats.webchatCount > 0 ? `${stats.webchatConvertedRate}%` : '0%'}</span>
             <span className="text-[10px] text-[var(--color-text-muted)] block">Converted</span>
           </div>
         </div>
