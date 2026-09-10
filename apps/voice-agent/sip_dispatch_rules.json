@@ -15,7 +15,7 @@
       "roomConfig": {
         "agents": [
           {
-            "agentName": "zerodesk-voice-agent"
+            "agentName": "zerodesk-receptionist"
           }
         ]
       }
