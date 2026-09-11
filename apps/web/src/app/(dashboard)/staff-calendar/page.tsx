@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 
 export type ShiftType = 'duty' | 'lunch' | 'leave' | 'oncall';
 
@@ -123,7 +124,7 @@ export default function StaffCalendarPage() {
 
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 7, 6)); // Aug 6, 2026
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedStaffDetail, setSelectedStaffDetail] = useState<StaffMember | null>(null);
   const [staffList, setStaffList] = useState<StaffMember[]>(() => DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin);
   const [leaveRequests, setLeaveRequests] = useState(() => DEFAULT_LEAVE_REQUESTS_BY_NICHE[currentNiche] || DEFAULT_LEAVE_REQUESTS_BY_NICHE.skin);

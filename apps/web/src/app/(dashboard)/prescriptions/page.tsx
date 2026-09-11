@@ -8,6 +8,7 @@ import {
   Download, RefreshCw, X, Shield, Stethoscope, Pill, Check, ArrowRight
 } from 'lucide-react';
 import { useNiche } from '@/components/providers/niche-provider';
+import { usePatients } from '@/lib/patients-store';
 import type { ActiveNicheId } from '@/config/niches/types';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -81,6 +82,7 @@ const QUICK_DIAGNOSES_BY_NICHE: Record<string, string[]> = {
 };
 
 export default function PrescriptionsPage() {
+  const { patients } = usePatients();
   const { currentNiche, nicheConfig } = useNiche();
   const [activeTab, setActiveTab] = useState<'write' | 'settings' | 'history'>('write');
 
@@ -105,10 +107,10 @@ export default function PrescriptionsPage() {
 
   // Current Prescription Form
   const [rxNumber] = useState<string>(() => `RX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [patientName, setPatientName] = useState('Pooja Sharma');
-  const [patientAge, setPatientAge] = useState('28');
+  const [patientName, setPatientName] = useState('');
+  const [patientAge, setPatientAge] = useState('');
   const [patientGender, setPatientGender] = useState<'Female' | 'Male' | 'Other'>('Female');
-  const [patientPhone, setPatientPhone] = useState('+91 98450 12345');
+  const [patientPhone, setPatientPhone] = useState('');
   const [diagnosis, setDiagnosis] = useState(currentNiche === 'dental' ? 'Acute Irreversible Pulpitis' : 'Acne Vulgaris (Grade 2)');
   const [advice, setAdvice] = useState(
     currentNiche === 'dental' 
@@ -308,6 +310,30 @@ export default function PrescriptionsPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {patients && patients.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                      Quick-Select Patient from EMR
+                    </label>
+                    <select
+                      onChange={(e) => {
+                        const found = patients.find(p => p.id === e.target.value);
+                        if (found) {
+                          setPatientName(found.name);
+                          setPatientPhone(found.phone);
+                          if (found.age) setPatientAge(String(found.age));
+                          if (found.gender) setPatientGender(found.gender);
+                        }
+                      }}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">-- Choose Existing Patient or Type Below --</option>
+                      {patients.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Patient Name</label>
                   <input

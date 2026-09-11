@@ -805,7 +805,7 @@ export default function BillingPage() {
                     <span className="inline-block bg-blue-100 text-blue-800 font-mono font-bold px-3 py-1 rounded-full text-xs border border-blue-200">
                       TAX INVOICE
                     </span>
-                    <p className="text-[11px] font-mono text-slate-600 mt-2 font-bold">INV-{new Date().getFullYear()}-{Math.floor(1000 + Math.random() * 9000)}</p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-2 font-bold">INV-{new Date().getFullYear()}-{selectedPatient?.id ? String(selectedPatient.id).slice(-4).padStart(4, '0') : '1001'}</p>
                     <p className="text-[10px] text-slate-500">Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { formatCurrency, cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 import {
   Megaphone,
   Phone,
