@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, Plus, Trash2, Edit2, Copy, Save, X, Search,
@@ -11,74 +11,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
+import {
+  WorkflowItem,
+  WorkflowStep,
+  StepActionType,
+  getWorkflowsForNiche,
+  getCategoriesForNiche,
+  CATEGORY_COLORS
+} from '@/config/niches';
 
-// ---------------------------
-// TYPES
-// ---------------------------
-
-export type StepActionType =
-  | 'trigger'
-  | 'whatsapp'
-  | 'sms'
-  | 'email'
-  | 'wait'
-  | 'task'
-  | 'crm_update'
-  | 'call'
-  | 'survey'
-  | 'invoice';
-
-export interface WorkflowStep {
-  id: string;
-  type: StepActionType;
-  label: string;
-  details?: string;
-  icon?: any;
-}
-
-export type CategoryType = 
-  | 'Patient Care' 
-  | 'Marketing' 
-  | 'Appointments' 
-  | 'Billing' 
-  | 'Voice AI' 
-  | 'WhatsApp' 
-  | 'Reviews' 
-  | 'Operations';
-
-export interface WorkflowItem {
-  id: string;
-  name: string;
-  category: CategoryType;
-  active: boolean;
-  steps: WorkflowStep[];
-  lastRun?: string;
-  runCount24h?: number;
-  successRate?: number;
-}
-
-const ALL_CATEGORIES: ('All' | CategoryType)[] = [
-  'All',
-  'Patient Care',
-  'Marketing',
-  'Appointments',
-  'Billing',
-  'Voice AI',
-  'WhatsApp',
-  'Reviews',
-  'Operations'
-];
-
-const CATEGORY_COLORS: Record<CategoryType, string> = {
-  'Patient Care': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  'Marketing': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  'Appointments': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-  'Billing': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-  'Voice AI': 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
-  'WhatsApp': 'bg-green-500/10 text-green-600 border-green-500/20',
-  'Reviews': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  'Operations': 'bg-slate-500/10 text-slate-600 border-slate-500/20'
-};
+export type { WorkflowItem, WorkflowStep, StepActionType };
 
 const STEP_ICONS: Record<StepActionType, any> = {
   trigger: Zap,
@@ -105,191 +47,6 @@ const STEP_COLORS: Record<StepActionType, string> = {
   survey: 'bg-yellow-500',
   invoice: 'bg-indigo-500'
 };
-
-// ---------------------------
-// DEFAULT TEMPLATES
-// ---------------------------
-const INITIAL_WORKFLOWS: WorkflowItem[] = [
-  {
-    id: 'wf_1',
-    name: 'New Patient Onboarding & Pre-Consult',
-    category: 'Patient Care',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'New Registration', details: 'Form submitted' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Welcome Kit', details: 'Template: welcome_01' },
-      { id: 's3', type: 'wait', label: 'Wait 1h', details: 'Delay 1 hour' },
-      { id: 's4', type: 'whatsapp', label: 'Send Medical History Form', details: 'Pre-consultation link' }
-    ]
-  },
-  {
-    id: 'wf_2',
-    name: 'Post-Procedure AI Voice Follow-up',
-    category: 'Patient Care',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 98,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Procedure Completed', details: 'Status = Done' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp PDF Care Guide', details: 'Post-Op Care Guide Sheet' },
-      { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 24 hours' },
-      { id: 's4', type: 'call', label: 'AI Voice Check-in', details: 'Agent: Post-Op Care' }
-    ]
-  },
-  {
-    id: 'wf_3',
-    name: 'AI Frontdesk: No-Show Rescheduler',
-    category: 'Appointments',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 85,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'No-Show Status', details: 'Appt missed' },
-      { id: 's2', type: 'call', label: 'AI Voice Reschedule Call', details: 'Agent: Frontdesk AI' },
-      { id: 's3', type: 'wait', label: 'Wait 2h', details: 'If unanswered' },
-      { id: 's4', type: 'whatsapp', label: 'WhatsApp Reschedule Link', details: 'Fallback link' }
-    ]
-  },
-  {
-    id: 'wf_4',
-    name: 'AI Frontdesk: Missed Call Recovery',
-    category: 'Voice AI',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 95,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Missed Call', details: 'Inbound failed' },
-      { id: 's2', type: 'whatsapp', label: 'Instant WhatsApp Greeting (<60s)', details: 'Book slot or request doctor callback' },
-      { id: 's3', type: 'crm_update', label: 'Log Missed Call Lead', details: 'Update CRM' }
-    ]
-  },
-  {
-    id: 'wf_5',
-    name: 'Multi-Channel Appt Confirmation',
-    category: 'Appointments',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 99,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Booking Created', details: 'New appt' },
-      { id: 's2', type: 'whatsapp', label: 'WhatsApp Location & Booking Card', details: 'Date, Time & Google Maps Pin' },
-      { id: 's3', type: 'wait', label: 'Wait 24h before appt', details: 'Relative delay' },
-      { id: 's4', type: 'call', label: 'AI Reminder Call', details: 'Agent: Frontdesk AI' }
-    ]
-  },
-  {
-    id: 'wf_6',
-    name: 'Clinic Mgmt: Waitlist Slot Backfill',
-    category: 'Operations',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Appt Cancelled', details: '< 24h notice' },
-      { id: 's2', type: 'whatsapp', label: 'Broadcast to Waitlist', details: 'First 5 waitlisted' },
-      { id: 's3', type: 'wait', label: 'Wait 2h', details: 'Delay 2 hours' },
-      { id: 's4', type: 'task', label: 'Notify Frontdesk', details: 'If slot still empty' }
-    ]
-  },
-  {
-    id: 'wf_7',
-    name: 'Payment Receipt & Ledger Sync',
-    category: 'Billing',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Payment Received', details: 'Stripe webhook' },
-      { id: 's2', type: 'email', label: 'Email Invoice', details: 'PDF attachment' },
-      { id: 's3', type: 'whatsapp', label: 'WhatsApp Receipt', details: 'Quick conf' },
-      { id: 's4', type: 'invoice', label: 'Update Ledger', details: 'Sync accounting' }
-    ]
-  },
-  {
-    id: 'wf_8',
-    name: 'Google Review via AI Request',
-    category: 'Reviews',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 75,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Appt Completed', details: 'Status = Done' },
-      { id: 's2', type: 'wait', label: 'Wait 2h', details: 'Cooldown' },
-      { id: 's3', type: 'whatsapp', label: 'WhatsApp CSAT Rating (1-5★)', details: 'Patient Experience Pulse' },
-      { id: 's4', type: 'trigger', label: 'Review Shield Router', details: '5★ → Google Review | 1-3★ → Private Clinic Alert' },
-      { id: 's5', type: 'task', label: 'Escalate Low Rating', details: 'Instant Alert to Clinic Manager' }
-    ]
-  },
-  {
-    id: 'wf_9',
-    name: 'Patient Recall: 6-Month Checkup',
-    category: 'Marketing',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 90,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Time Since Last Visit', details: '= 180 Days' },
-      { id: 's2', type: 'whatsapp', label: 'Routine Checkup Prompt', details: 'Booking link' },
-      { id: 's3', type: 'wait', label: 'Wait 3d', details: 'Delay' },
-      { id: 's4', type: 'call', label: 'AI Outbound Recall Call', details: 'Agent: Frontdesk AI' }
-    ]
-  },
-  {
-    id: 'wf_10',
-    name: 'AI Frontdesk: After-Hours Voicemail Logic',
-    category: 'Voice AI',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Incoming Call', details: 'Outside Business Hours' },
-      { id: 's2', type: 'call', label: 'AI After-hours Agent', details: 'Take message' },
-      { id: 's3', type: 'task', label: 'Log Callback Task', details: 'For morning shift' }
-    ]
-  },
-  {
-    id: 'wf_11',
-    name: 'Treatment Plan AI Follow-up',
-    category: 'Patient Care',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'Proposal/Est Sent', details: 'CRM update' },
-      { id: 's2', type: 'wait', label: 'Wait 2d', details: 'Delay 48h' },
-      { id: 's3', type: 'call', label: 'AI Consult Follow-up Call', details: 'Answer questions' },
-      { id: 's4', type: 'task', label: 'Alert Doctor/Manager', details: 'If patient interested' }
-    ]
-  },
-  {
-    id: 'wf_12',
-    name: 'VIP Patient Concierge Boarding',
-    category: 'Patient Care',
-    active: true,
-    lastRun: 'Ready',
-    runCount24h: 0,
-    successRate: 100,
-    steps: [
-      { id: 's1', type: 'trigger', label: 'VIP Tag Applied', details: 'CRM update' },
-      { id: 's2', type: 'whatsapp', label: 'Personalized Welcome', details: 'Concierge msg' },
-      { id: 's3', type: 'wait', label: 'Wait 1d', details: 'Delay 24 hours' },
-      { id: 's4', type: 'task', label: 'Assign Dedicated Agent', details: 'Route to senior staff' }
-    ]
-  }
-];
 
 // ---------------------------
 // INLINE EDITOR COMPONENT
@@ -443,21 +200,32 @@ function InlineEditor({
 // MAIN COMPONENT
 // ---------------------------
 export default function AutomationsPage() {
-  const { nicheConfig } = useNiche();
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>(INITIAL_WORKFLOWS);
+  const { currentNiche, nicheConfig } = useNiche();
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>(() => getWorkflowsForNiche(currentNiche));
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'All' | CategoryType>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Initialize from local storage with smart fallback
+  const categories = useMemo(() => {
+    return ['All', ...getCategoriesForNiche(currentNiche)];
+  }, [currentNiche]);
+
+  // Reset activeCategory if it does not exist in the new niche
   useEffect(() => {
+    if (activeCategory !== 'All' && !getCategoriesForNiche(currentNiche).includes(activeCategory)) {
+      setActiveCategory('All');
+    }
+  }, [currentNiche, activeCategory]);
+
+  // Initialize and react to niche changes with namespaced storage
+  useEffect(() => {
+    const storageKey = `zd_automations_v4_${currentNiche}`;
     try {
-      const saved = localStorage.getItem('zd_automations_v3');
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Check if it's not just empty placeholder workflows
-          const hasRealSteps = parsed.some(wf => wf.steps && wf.steps.length > 1 && wf.name !== 'New Custom Workflow');
+          const hasRealSteps = parsed.some(wf => wf.steps && wf.steps.length > 1);
           if (hasRealSteps) {
             setWorkflows(parsed);
             return;
@@ -465,24 +233,41 @@ export default function AutomationsPage() {
         }
       }
     } catch (e) {
-      console.error('Failed to load workflows', e);
+      console.error(`Failed to load workflows for ${currentNiche}`, e);
     }
-    // Default to our rich 12 AI Frontdesk & Clinic Management templates
-    setWorkflows(INITIAL_WORKFLOWS);
-    localStorage.setItem('zd_automations_v3', JSON.stringify(INITIAL_WORKFLOWS));
-  }, []);
+    // Fallback to rich 12 niche-specific templates
+    const fresh = getWorkflowsForNiche(currentNiche);
+    setWorkflows(fresh);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(fresh));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [currentNiche]);
 
-  // Save to local storage whenever workflows change
+  // Save to local storage whenever workflows or currentNiche change
   useEffect(() => {
     if (workflows && workflows.length > 0) {
-      localStorage.setItem('zd_automations_v3', JSON.stringify(workflows));
+      const storageKey = `zd_automations_v4_${currentNiche}`;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(workflows));
+      } catch (e) {
+        console.error(e);
+      }
     }
-  }, [workflows]);
+  }, [workflows, currentNiche]);
 
   const resetToDefaults = () => {
-    if (confirm('Restore all 12 pre-installed AI Frontdesk & Clinic Management workflow templates?')) {
-      setWorkflows(INITIAL_WORKFLOWS);
-      localStorage.setItem('zd_automations_v3', JSON.stringify(INITIAL_WORKFLOWS));
+    const label = nicheConfig?.label || currentNiche;
+    if (confirm(`Restore all 12 pre-installed ${label} workflow templates?`)) {
+      const fresh = getWorkflowsForNiche(currentNiche);
+      setWorkflows(fresh);
+      const storageKey = `zd_automations_v4_${currentNiche}`;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(fresh));
+      } catch (e) {
+        console.error(e);
+      }
       setEditingId(null);
     }
   };
@@ -528,12 +313,12 @@ export default function AutomationsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-500 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-              ZeroDesk Smart Engine
+              ZeroDesk Smart Engine • {nicheConfig?.label || 'Omnichannel'}
             </span>
           </div>
           <h1 className="text-3xl font-bold text-[var(--color-text)] tracking-tight">1-Click Smart Actions</h1>
           <p className="text-[var(--color-text-muted)] mt-2 max-w-2xl text-base">
-            Automate patient journeys, missed-call WhatsApp follow-ups, and review collections with 1-click pre-configured AI triggers.
+            Automate {nicheConfig?.terminology?.customer ? `${nicheConfig.terminology.customer.toLowerCase()} journeys` : 'inquiry journeys'}, missed-call WhatsApp follow-ups, and retention with 1-click pre-configured AI triggers for {nicheConfig?.label || 'your business'}.
           </p>
         </div>
         
@@ -541,7 +326,7 @@ export default function AutomationsPage() {
           <button 
             onClick={resetToDefaults}
             className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border)] rounded-xl font-medium text-sm transition-all shadow-sm cursor-pointer"
-            title="Restore default AI Frontdesk & Clinic templates"
+            title={`Restore default ${nicheConfig?.label || 'niche'} templates`}
           >
             <RotateCcw className="w-4 h-4 text-blue-500" />
             Restore Templates
@@ -549,16 +334,17 @@ export default function AutomationsPage() {
 
           <button 
             onClick={() => {
+              const currentCategory = getCategoriesForNiche(currentNiche)[0] || 'Operations';
               const newWf: WorkflowItem = {
                 id: 'wf_' + Math.random().toString(36).substr(2, 9),
-                name: 'Custom Frontdesk Sequence',
-                category: 'Patient Care',
+                name: `Custom ${nicheConfig?.label || ''} Sequence`,
+                category: currentCategory,
                 active: false,
                 steps: [
-                  { id: 's1', type: 'trigger', label: 'New Patient Registration', details: 'Form submitted' },
-                  { id: 's2', type: 'whatsapp', label: 'WhatsApp Welcome Msg', details: 'Instant dispatch' },
+                  { id: 's1', type: 'trigger', label: `New ${nicheConfig?.terminology?.customer || 'Client'} Inquiry`, details: 'Inbound channel' },
+                  { id: 's2', type: 'whatsapp', label: 'Instant WhatsApp Welcome', details: 'Automated greeting' },
                   { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 1 day' },
-                  { id: 's4', type: 'call', label: 'AI Voice Check-in', details: 'Frontdesk AI' }
+                  { id: 's4', type: 'call', label: 'AI Voice Follow-up Call', details: 'Agent check-in' }
                 ]
               };
               setWorkflows([newWf, ...workflows]);
@@ -576,12 +362,12 @@ export default function AutomationsPage() {
       {/* Filters and Search */}
       <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-[var(--color-surface)] p-2 rounded-2xl border border-[var(--color-border)] shadow-sm">
         <div className="flex overflow-x-auto hide-scrollbar w-full py-2 px-2 gap-2">
-          {ALL_CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
+                "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all cursor-pointer",
                 activeCategory === cat 
                   ? "bg-blue-600 text-white shadow-sm"
                   : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"

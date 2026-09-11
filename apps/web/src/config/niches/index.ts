@@ -35,3 +35,5 @@ export {
   DENTAL_CLINIC_CONFIG,
   HOTEL_RESORT_CONFIG,
 };
+
+export * from './workflows';
