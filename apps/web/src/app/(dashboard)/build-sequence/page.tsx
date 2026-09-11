@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Plus, Settings, Play, CheckCircle2, XCircle, 
@@ -8,9 +9,13 @@ import {
   Calendar, CalendarX, UserPlus, CreditCard, PhoneMissed, 
   FileText, Webhook, Clock, TrendingUp, Star,
   MessageSquare, Mail, Phone, Smartphone, ClipboardList, 
-  Database, Globe, AlertCircle, ChevronDown, Check, X
+  Database, Globe, AlertCircle, ChevronDown, Check, X,
+  Sparkles, ArrowRight, Stethoscope, Sparkle, Home, Hotel, ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNiche } from '@/components/providers/niche-provider';
+import { NICHE_WORKFLOWS, WorkflowItem } from '@/config/niches/workflows';
+import type { NicheId, ActiveNicheId } from '@/config/niches/types';
 
 interface SequenceNode {
   id: string;
@@ -47,15 +52,52 @@ interface BuildSequence {
 const triggerTypes = [
   { id: 'new_appointment', label: 'New Appointment Booked', icon: Calendar },
   { id: 'appointment_cancelled', label: 'Appointment Cancelled', icon: CalendarX },
-  { id: 'new_patient', label: 'New Patient Registered', icon: UserPlus },
+  { id: 'new_patient', label: 'New Patient / Lead Registered', icon: UserPlus },
   { id: 'payment_received', label: 'Payment Received', icon: CreditCard },
-  { id: 'missed_call', label: 'Missed Call', icon: PhoneMissed },
-  { id: 'form_submitted', label: 'Form Submitted', icon: FileText },
-  { id: 'webhook_received', label: 'Webhook Received', icon: Webhook },
-  { id: 'schedule_cron', label: 'Schedule (Cron)', icon: Clock },
-  { id: 'lead_status_changed', label: 'Lead Status Changed', icon: TrendingUp },
-  { id: 'review_received', label: 'Review Received', icon: Star },
+  { id: 'missed_call', label: 'Missed Call Logged', icon: PhoneMissed },
+  { id: 'form_submitted', label: 'Website Form Submitted', icon: FileText },
+  { id: 'webhook_received', label: 'Webhook Inbound Trigger', icon: Webhook },
+  { id: 'schedule_cron', label: 'Recurring Schedule (Cron)', icon: Clock },
+  { id: 'lead_status_changed', label: 'Lead Stage Changed', icon: TrendingUp },
+  { id: 'review_received', label: 'Feedback / Review Received', icon: Star },
 ];
+
+const NICHE_SPECIFIC_TRIGGERS: Record<NicheId, Array<{ id: string; label: string; icon: any }>> = {
+  skin: [
+    { id: 'laser_session_done', label: 'Laser Session Done', icon: Sparkles },
+    { id: 'patch_test_clearance', label: 'Patch Test Clearance Due', icon: ShieldCheck },
+    { id: 'peel_completed', label: 'Chemical Peel Done', icon: Sparkle },
+    { id: 'glow_milestone', label: 'Glow Club Milestone', icon: Star },
+  ],
+  dental: [
+    { id: 'lab_crown_arrived', label: 'Lab Crown / Bridge Arrived', icon: Stethoscope },
+    { id: 'post_surgery_check', label: 'Post-Surgery Check Due', icon: Clock },
+    { id: 'aligner_step_due', label: 'Aligner Switch Step Due', icon: TrendingUp },
+    { id: 'acute_toothache', label: 'Acute Toothache Alert', icon: AlertCircle },
+  ],
+  spa: [
+    { id: 'aromatherapy_intake', label: 'Aroma Preference Logged', icon: Sparkles },
+    { id: 'massage_completed', label: 'Massage Session Completed', icon: CheckCircle2 },
+    { id: 'couples_suite_booked', label: 'Couples Suite Booked', icon: Calendar },
+    { id: 'membership_renewal', label: 'Membership Expiring Soon', icon: Clock },
+  ],
+  salon: [
+    { id: 'hair_spa_done', label: 'Hair Spa Session Completed', icon: Sparkles },
+    { id: 'color_retouch_due', label: 'Color Retouch Cadence Due', icon: Clock },
+  ],
+  realestate: [
+    { id: 'site_visit_booked', label: 'Site Visit / Free Cab Booked', icon: Home },
+    { id: 'cost_sheet_requested', label: 'Cost Sheet Requested', icon: FileText },
+    { id: 'token_kyc_paid', label: 'Token Paid & KYC Uploaded', icon: CreditCard },
+    { id: 'drone_update_ready', label: 'Slab Milestone Drone Update', icon: Globe },
+  ],
+  hotel: [
+    { id: 'flight_landed_cab', label: 'Airport Cab / Flight Landed', icon: Hotel },
+    { id: 'room_check_in', label: 'Guest Room Checked In', icon: CheckCircle2 },
+    { id: 'housekeeping_req', label: '1-Tap Housekeeping Requested', icon: ClipboardList },
+    { id: 'guest_checkout', label: 'Express Mobile Check-out', icon: Clock },
+  ],
+};
 
 const actionTypes = [
   { id: 'send_whatsapp', label: 'Send WhatsApp', icon: MessageSquare },
@@ -69,12 +111,19 @@ const actionTypes = [
 ];
 
 export default function BuildSequencePage() {
+  const { currentNiche, nicheConfig } = useNiche();
   const [sequences, setSequences] = useState<BuildSequence[]>([]);
   const [activeSequence, setActiveSequence] = useState<BuildSequence | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isTestRunning, setIsTestRunning] = useState(false);
   const [testResults, setTestResults] = useState<{ nodeId: string; status: 'running' | 'passed' | 'failed'; log?: string }[]>([]);
   const [showNodeSelectorFor, setShowNodeSelectorFor] = useState<string | null>(null); // nodeId to insert after
+  const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
+
+  const allTriggers = useMemo(() => [
+    ...triggerTypes,
+    ...(NICHE_SPECIFIC_TRIGGERS[currentNiche] || [])
+  ], [currentNiche]);
 
   useEffect(() => {
     const saved = localStorage.getItem('zerodesk_build_sequences');
@@ -90,6 +139,78 @@ export default function BuildSequencePage() {
   const saveSequences = (newSequences: BuildSequence[]) => {
     setSequences(newSequences);
     localStorage.setItem('zerodesk_build_sequences', JSON.stringify(newSequences));
+  };
+
+  const publishToSmartActions = () => {
+    if (!activeSequence) return;
+    saveCurrentSequence();
+
+    const triggerNode = activeSequence.nodes.find(n => n.type === 'trigger');
+    const triggerLabel = triggerNode?.label || (triggerNode?.triggerType ? allTriggers.find(t => t.id === triggerNode.triggerType)?.label : 'Custom Trigger') || 'Custom Trigger';
+
+    const stepTypeMap: Record<string, 'whatsapp' | 'call' | 'sms' | 'email' | 'wait' | 'task' | 'crm_update' | 'invoice'> = {
+      send_whatsapp: 'whatsapp',
+      voice_ai_call: 'call',
+      send_sms: 'sms',
+      send_email: 'email',
+      create_task: 'task',
+      update_crm: 'crm_update',
+      add_note: 'task',
+      webhook_post: 'crm_update',
+    };
+
+    const steps = activeSequence.nodes.map((node, i) => {
+      let type: 'trigger' | 'whatsapp' | 'sms' | 'email' | 'wait' | 'task' | 'crm_update' | 'call' | 'survey' | 'invoice' = 'whatsapp';
+      let label = node.label || 'Step';
+      let details: string | undefined = undefined;
+
+      if (node.type === 'trigger') {
+        type = 'trigger';
+        label = triggerLabel;
+      } else if (node.type === 'delay') {
+        type = 'wait';
+        label = `Wait ${node.config.duration || 1} ${node.config.unit || 'hours'}`;
+      } else if (node.type === 'action') {
+        type = stepTypeMap[node.actionType || ''] || 'whatsapp';
+        label = node.label || 'Action Step';
+        details = node.config.message || node.config.subject;
+      } else if (node.type === 'condition') {
+        type = 'task';
+        label = `Check ${node.conditionField || 'Condition'}`;
+      }
+      return { id: `step_${i + 1}`, type, label, details };
+    });
+
+    const newWorkflow: WorkflowItem = {
+      id: `custom_${Date.now()}`,
+      name: activeSequence.name || 'Custom Workflow',
+      category: 'General',
+      active: activeSequence.isActive,
+      steps: steps.length > 0 ? steps : [{ id: 's1', type: 'whatsapp', label: 'Automated WhatsApp' }],
+      lastRun: 'Just now',
+      runCount24h: 0,
+      successRate: 100,
+    };
+
+    const storageKey = `zd_automations_v4_${currentNiche}`;
+    let existingList: WorkflowItem[] = [];
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        existingList = JSON.parse(saved);
+      } catch (e) {
+        existingList = [...(NICHE_WORKFLOWS[currentNiche] || NICHE_WORKFLOWS.skin)];
+      }
+    } else {
+      existingList = [...(NICHE_WORKFLOWS[currentNiche] || NICHE_WORKFLOWS.skin)];
+    }
+
+    // Prepend new custom workflow
+    const updatedList = [newWorkflow, ...existingList.filter(w => w.id !== newWorkflow.id)];
+    localStorage.setItem(storageKey, JSON.stringify(updatedList));
+
+    setPublishSuccess(`Published "${activeSequence.name}" to 1-Click Smart Actions!`);
+    setTimeout(() => setPublishSuccess(null), 6000);
   };
 
   const createSequence = () => {
@@ -337,6 +458,14 @@ export default function BuildSequencePage() {
         </div>
         <div className="flex items-center space-x-3">
           <button 
+            onClick={publishToSmartActions}
+            className="flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-2 rounded-lg transition-all text-xs font-semibold shadow-md shadow-blue-500/20 active:scale-95"
+            title="Publish this visual sequence to 1-Click Smart Actions"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Publish to Smart Actions</span>
+          </button>
+          <button 
             onClick={saveCurrentSequence}
             className="flex items-center space-x-2 bg-[var(--color-bg)] border border-[var(--color-border)] hover:bg-[var(--color-surface)] px-4 py-2 rounded-lg transition-colors text-sm font-medium"
           >
@@ -400,7 +529,7 @@ export default function BuildSequencePage() {
                           className="bg-transparent border-none text-lg font-medium text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded px-1 -ml-1 w-full"
                         />
                         <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                          {node.type === 'trigger' && (node.triggerType ? triggerTypes.find(t => t.id === node.triggerType)?.label : 'Select a trigger event')}
+                          {node.type === 'trigger' && (node.triggerType ? allTriggers.find(t => t.id === node.triggerType)?.label : 'Select a trigger event')}
                           {node.type === 'action' && (node.actionType ? actionTypes.find(t => t.id === node.actionType)?.label : 'Choose an action')}
                           {node.type === 'condition' && (node.conditionField ? `If ${node.conditionField} ${node.conditionOperator} ${node.conditionValue}` : 'Set condition rules')}
                           {node.type === 'delay' && (node.config.duration ? `Wait for ${node.config.duration} ${node.config.unit || 'minutes'}` : 'Configure delay')}
@@ -506,7 +635,7 @@ export default function BuildSequencePage() {
                   <div>
                     <h3 className="font-semibold mb-4">Select Trigger Event</h3>
                     <div className="grid grid-cols-2 gap-3">
-                      {triggerTypes.map(trigger => {
+                      {allTriggers.map(trigger => {
                         const Icon = trigger.icon;
                         const isSelected = selectedNode.triggerType === trigger.id;
                         return (
@@ -875,6 +1004,37 @@ export default function BuildSequencePage() {
                 </div>
               )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Publish to Smart Actions Floating Toast */}
+      <AnimatePresence>
+        {publishSuccess && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-20 right-6 z-50 flex items-center gap-3 bg-slate-900 border border-emerald-500/50 text-emerald-200 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md"
+          >
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="text-xs">
+              <p className="font-semibold text-white">{publishSuccess}</p>
+              <p className="text-emerald-300/80 mt-0.5">Now live in 1-Click Smart Actions for {nicheConfig.label}.</p>
+            </div>
+            <Link 
+              href="/automations"
+              className="ml-2 flex items-center gap-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1.5 rounded-lg transition-colors shrink-0 shadow-sm"
+            >
+              <span>View</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <button 
+              onClick={() => setPublishSuccess(null)} 
+              className="text-slate-400 hover:text-white p-1 ml-1 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

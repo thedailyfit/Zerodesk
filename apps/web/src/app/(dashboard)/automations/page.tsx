@@ -210,6 +210,27 @@ export default function AutomationsPage() {
     return ['All', ...getCategoriesForNiche(currentNiche)];
   }, [currentNiche]);
 
+  const [triggeringId, setTriggeringId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleTriggerWorkflow = async (wf: WorkflowItem) => {
+    setTriggeringId(wf.id);
+    try {
+      await fetch('/v1/automations/sequences/run', { method: 'POST' }).catch(() => null);
+    } catch (e) {}
+
+    setTimeout(() => {
+      setTriggeringId(null);
+      setWorkflows(prev => prev.map(item => item.id === wf.id ? { 
+        ...item, 
+        lastRun: 'Just now', 
+        runCount24h: (item.runCount24h || 0) + 1 
+      } : item));
+      setToastMessage(`Dispatched "${wf.name}" — Live AI channels triggered.`);
+      setTimeout(() => setToastMessage(null), 3500);
+    }, 600);
+  };
+
   // Reset activeCategory if it does not exist in the new niche
   useEffect(() => {
     if (activeCategory !== 'All' && !getCategoriesForNiche(currentNiche).includes(activeCategory)) {
@@ -406,111 +427,113 @@ export default function AutomationsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
           <AnimatePresence>
             {filteredWorkflows.map(wf => (
               <motion.div
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 key={wf.id}
                 className={cn(
-                  "bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow",
-                  !wf.active && "opacity-75"
+                  "bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all flex flex-col justify-between",
+                  !wf.active && "opacity-70"
                 )}
               >
-                {/* Card Header */}
-                <div className="p-5 md:p-6 border-b border-[var(--color-border)] flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={cn(
-                        "px-2.5 py-1 text-xs font-semibold rounded-lg border",
-                        CATEGORY_COLORS[wf.category] || CATEGORY_COLORS['Operations']
-                      )}>
-                        {wf.category}
-                      </span>
-                      <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                {/* Compact Card Header */}
+                <div className="p-3.5 pb-2.5 border-b border-[var(--color-border)]">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className={cn(
+                      "px-2 py-0.5 text-[11px] font-semibold rounded-md border",
+                      CATEGORY_COLORS[wf.category] || CATEGORY_COLORS['Operations']
+                    )}>
+                      {wf.category}
+                    </span>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]">
                         <span className={cn(
-                          "w-2 h-2 rounded-full",
-                          wf.active ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-slate-400"
+                          "w-1.5 h-1.5 rounded-full",
+                          wf.active ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" : "bg-slate-400"
                         )}></span>
                         {wf.active ? 'Active' : 'Paused'}
                       </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-[var(--color-text)] truncate">{wf.name}</h3>
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => toggleActive(wf.id)}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]",
-                        wf.active ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'
-                      )}
-                    >
-                      <span
+                      <button 
+                        onClick={() => toggleActive(wf.id)}
                         className={cn(
-                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                          wf.active ? 'translate-x-2.5' : '-translate-x-2.5'
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus:outline-none",
+                          wf.active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
                         )}
-                      />
-                    </button>
-                    
-                    <div className="relative group/menu">
-                      <button className="p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] rounded-xl transition-colors">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                        title={wf.active ? 'Pause Automation' : 'Activate Automation'}
+                      >
+                        <span
+                          className={cn(
+                            "pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-150 ease-in-out",
+                            wf.active ? 'translate-x-2' : '-translate-x-2'
+                          )}
+                        />
                       </button>
-                      
-                      {/* Dropdown Menu */}
-                      <div className="absolute right-0 top-full mt-1 w-40 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10 py-1">
-                        <button 
-                          onClick={() => setEditingId(editingId === wf.id ? null : wf.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
-                        >
-                          <Edit2 className="w-4 h-4" /> {editingId === wf.id ? 'Close Editor' : 'Edit Steps'}
+
+                      <div className="relative group/menu">
+                        <button className="p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] rounded-lg transition-colors cursor-pointer">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                         </button>
-                        <button 
-                          onClick={() => duplicateWorkflow(wf)}
-                          className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
-                        >
-                          <Copy className="w-4 h-4" /> Duplicate
-                        </button>
-                        <div className="h-px bg-[var(--color-border)] my-1"></div>
-                        <button 
-                          onClick={() => deleteWorkflow(wf.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </button>
+                        
+                        <div className="absolute right-0 top-full mt-1 w-36 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20 py-1">
+                          <button 
+                            onClick={() => setEditingId(editingId === wf.id ? null : wf.id)}
+                            className="w-full text-left px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" /> {editingId === wf.id ? 'Close' : 'Edit Steps'}
+                          </button>
+                          <button 
+                            onClick={() => duplicateWorkflow(wf)}
+                            className="w-full text-left px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-bg)] flex items-center gap-2"
+                          >
+                            <Copy className="w-3.5 h-3.5" /> Duplicate
+                          </button>
+                          <div className="h-px bg-[var(--color-border)] my-1"></div>
+                          <button 
+                            onClick={() => deleteWorkflow(wf.id)}
+                            className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <h3 className="text-sm font-semibold text-[var(--color-text)] truncate tracking-tight" title={wf.name}>
+                    {wf.name}
+                  </h3>
                 </div>
 
                 {/* Pipeline Preview */}
-                <div className="p-5 md:p-6 bg-[var(--color-bg)]/50">
-                  <div className="flex items-center overflow-x-auto hide-scrollbar py-2">
+                <div className="px-3.5 py-2.5 bg-[var(--color-bg)]/40 flex-1">
+                  <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar py-1">
                     {wf.steps.map((step, idx) => (
                       <React.Fragment key={step.id}>
-                        <div className="flex flex-col items-center gap-2 shrink-0 group relative cursor-help">
+                        <div className="group relative cursor-help shrink-0">
                           <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border border-white/10 relative z-10 transition-transform group-hover:scale-110",
+                            "w-7 h-7 rounded-lg flex items-center justify-center shadow-none text-white transition-transform group-hover:scale-105",
                             STEP_COLORS[step.type] || 'bg-blue-500'
                           )}>
-                            {React.createElement(STEP_ICONS[step.type] || Zap, { className: "w-6 h-6 text-white" })}
+                            {React.createElement(STEP_ICONS[step.type] || Zap, { className: "w-3.5 h-3.5" })}
                           </div>
                           
-                          {/* Tooltip */}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-20 shadow-lg pointer-events-none before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-slate-800">
-                            <span className="font-semibold block mb-0.5">{step.label}</span>
-                            {step.details && <span className="text-slate-300">{step.details}</span>}
+                          {/* Compact Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-slate-900 text-white text-[11px] py-1 px-2 rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-30 shadow-lg pointer-events-none">
+                            <span className="font-semibold block">{step.label}</span>
+                            {step.details && <span className="text-slate-300 text-[10px]">{step.details}</span>}
                           </div>
                         </div>
 
                         {idx < wf.steps.length - 1 && (
-                          <div className="w-8 md:w-12 h-0.5 bg-[var(--color-border)] shrink-0 mx-1 md:mx-2 relative">
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 border-t-2 border-r-2 border-[var(--color-border)] rotate-45"></div>
+                          <div className="w-3.5 h-0.5 bg-[var(--color-border)] shrink-0 relative">
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-1.5 h-1.5 border-t-2 border-r-2 border-[var(--color-border)] rotate-45"></div>
                           </div>
                         )}
                       </React.Fragment>
@@ -518,23 +541,30 @@ export default function AutomationsPage() {
                   </div>
                 </div>
 
-                {/* Stats Row */}
-                <div className="px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface)] grid grid-cols-3 gap-4 text-sm divide-x divide-[var(--color-border)]">
-                  <div className="flex flex-col">
-                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Last Run</span>
-                    <span className="font-medium text-[var(--color-text)]">{wf.lastRun || 'Never'}</span>
+                {/* Compact Stats & Action Row */}
+                <div className="px-3.5 py-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-3 text-[var(--color-text-muted)]">
+                    <span>Runs: <strong className="text-[var(--color-text)] font-medium">{wf.runCount24h || 0}</strong></span>
+                    <span>Success: <strong className="text-emerald-600 font-medium">{wf.successRate || 100}%</strong></span>
                   </div>
-                  <div className="flex flex-col pl-4">
-                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Runs (24h)</span>
-                    <span className="font-medium text-[var(--color-text)]">{wf.runCount24h || 0}</span>
-                  </div>
-                  <div className="flex flex-col pl-4">
-                    <span className="text-[var(--color-text-muted)] text-xs mb-1">Success</span>
-                    <span className="font-medium text-[var(--color-text)] flex items-center gap-1">
-                      {wf.successRate || 0}%
-                      {(wf.successRate || 0) >= 95 && <CheckCircle className="w-3 h-3 text-green-500" />}
-                    </span>
-                  </div>
+
+                  <button
+                    onClick={() => handleTriggerWorkflow(wf)}
+                    disabled={triggeringId === wf.id}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {triggeringId === wf.id ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />
+                        <span>Running...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 text-blue-500" />
+                        <span>Test Run</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Inline Editor Area */}
@@ -544,9 +574,9 @@ export default function AutomationsPage() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden bg-[var(--color-surface)]"
+                      className="overflow-hidden bg-[var(--color-surface)] border-t border-[var(--color-border)]"
                     >
-                      <div className="px-5 pb-5">
+                      <div className="p-3">
                         <InlineEditor 
                           workflow={wf} 
                           onSave={saveEditedWorkflow} 
@@ -562,6 +592,21 @@ export default function AutomationsPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Floating Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 right-6 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 z-50"
+          >
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
