@@ -353,30 +353,7 @@ export default function AutomationsPage() {
             Restore Templates
           </button>
 
-          <button 
-            onClick={() => {
-              const currentCategory = getCategoriesForNiche(currentNiche)[0] || 'Operations';
-              const newWf: WorkflowItem = {
-                id: 'wf_' + Math.random().toString(36).substr(2, 9),
-                name: `Custom ${nicheConfig?.label || ''} Sequence`,
-                category: currentCategory,
-                active: false,
-                steps: [
-                  { id: 's1', type: 'trigger', label: `New ${nicheConfig?.terminology?.customer || 'Client'} Inquiry`, details: 'Inbound channel' },
-                  { id: 's2', type: 'whatsapp', label: 'Instant WhatsApp Welcome', details: 'Automated greeting' },
-                  { id: 's3', type: 'wait', label: 'Wait 24h', details: 'Delay 1 day' },
-                  { id: 's4', type: 'call', label: 'AI Voice Follow-up Call', details: 'Agent check-in' }
-                ]
-              };
-              setWorkflows([newWf, ...workflows]);
-              setEditingId(newWf.id);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-md shadow-blue-500/20 cursor-pointer"
-          >
-            <Plus className="w-5 h-5" />
-            Create Custom
-          </button>
+
         </div>
       </div>
 

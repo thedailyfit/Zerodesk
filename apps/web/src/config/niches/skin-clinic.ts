@@ -56,6 +56,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     { name: 'Shift Doctor Slot', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor\'s Calendar', href: '/doctor-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient Files', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Digital Prescriptions', href: '/prescriptions', icon: FileText, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
     { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
