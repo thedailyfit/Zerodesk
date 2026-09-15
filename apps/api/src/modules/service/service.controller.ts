@@ -4,6 +4,8 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 
+import { AuthOrInternalVoiceGuard } from '../../common/guards/auth-or-internal-voice.guard';
+
 @Controller('services')
 export class ServiceController {
   constructor(private readonly serviceService: ServiceService) {}
@@ -15,7 +17,7 @@ export class ServiceController {
   }
 
   @Get('search')
-  @UseGuards(AuthGuard, TenantGuard)
+  @UseGuards(AuthOrInternalVoiceGuard)
   async search(
     @TenantId() tenantId: string,
     @Query('query') query: string,
