@@ -263,6 +263,42 @@ async function main() {
   });
   console.log(`✅ Subscription created`);
 
+  // ============================================================
+  // 11. Global Voice Registry (ElevenLabs & Sarvam AI Indian Voices)
+  // ============================================================
+  const { CURATED_INDIAN_VOICES } = await import('./seed-voices');
+  for (const v of CURATED_INDIAN_VOICES) {
+    await prisma.globalVoiceRegistry.upsert({
+      where: { voiceId: v.voiceId },
+      update: {
+        provider: v.provider,
+        name: v.name,
+        gender: v.gender,
+        language: v.language,
+        accent: v.accent,
+        sampleText: v.sampleText,
+        previewUrl: v.previewUrl,
+        isDefault: v.isDefault,
+        isActive: v.isActive,
+        tags: v.tags,
+      },
+      create: {
+        provider: v.provider,
+        voiceId: v.voiceId,
+        name: v.name,
+        gender: v.gender,
+        language: v.language,
+        accent: v.accent,
+        sampleText: v.sampleText,
+        previewUrl: v.previewUrl,
+        isDefault: v.isDefault,
+        isActive: v.isActive,
+        tags: v.tags,
+      },
+    });
+  }
+  console.log(`✅ Global Voice Registry: Seeded ${CURATED_INDIAN_VOICES.length} Indian Voice AI Personas`);
+
   console.log('\n🎉 Database seeded successfully!\n');
   console.log(`Tenant ID: ${tenantId}`);
   console.log(`Admin: ${adminUser.email} (${adminUser.role})`);

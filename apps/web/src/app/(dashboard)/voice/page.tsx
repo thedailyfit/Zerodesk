@@ -21,14 +21,119 @@ import { apiClient } from '@/lib/api-client';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
 
-// Voice library that acts as a global pool (will be populated from superadmin later)
-const VOICES_LIBRARY = [
-  { id: 'v_1', name: 'Aarohi (Warm Indian)', gender: 'Female', accent: 'Indian English', style: 'Warm, Welcoming', tags: ['Receptionist', 'Calm'] },
-  { id: 'v_2', name: 'Arjun (Clinical Specialist)', gender: 'Male', accent: 'Indian English', style: 'Professional, Precise', tags: ['Medical', 'Authoritative'] },
-  { id: 'v_3', name: 'Diya (Empathetic Care)', gender: 'Female', accent: 'Hindi/English', style: 'Empathetic, Slow', tags: ['Support', 'Care'] },
-  { id: 'v_4', name: 'Karan (Executive Concierge)', gender: 'Male', accent: 'Indian English', style: 'Crisp, Formal', tags: ['Luxury', 'Corporate'] },
-  { id: 'v_5', name: 'Tara (Aesthetic Host)', gender: 'Female', accent: 'Indian English', style: 'Upbeat, Trendy', tags: ['Salon', 'Friendly'] },
-  { id: 'v_6', name: 'Rohan (Hospitality Host)', gender: 'Male', accent: 'Indian English', style: 'Deep, Hospitable', tags: ['Hospitality', 'Smooth'] },
+// Curated Indian Voice Personas Fleet (ElevenLabs & Sarvam AI)
+const DEFAULT_VOICES_LIBRARY = [
+  {
+    id: 'v_1',
+    voiceId: '90ipbRoKi4CpHXvKVtl0',
+    provider: 'elevenlabs',
+    name: 'Kavya (Empathetic Receptionist)',
+    gender: 'Female',
+    language: 'hi-IN',
+    accent: 'Indian English & Hinglish',
+    sampleText: 'Namaste! Welcome to our clinic. How may I assist you with scheduling your appointment today?',
+    tags: ['Best for OPDs', 'Warm & Empathetic', 'Bilingual Hinglish'],
+    isDefault: true,
+  },
+  {
+    id: 'v_2',
+    voiceId: 'cgSgspJ2msm6clMCkdW9',
+    provider: 'elevenlabs',
+    name: 'Aditi (Executive Consultant)',
+    gender: 'Female',
+    language: 'en-IN',
+    accent: 'Indian English (Clear & Polished)',
+    sampleText: 'Good day! Thank you for contacting our desk. I can assist you with portfolio inquiries, brochures, and site visit scheduling.',
+    tags: ['Luxury Real Estate', 'Consultancy', 'High Ticket'],
+  },
+  {
+    id: 'v_3',
+    voiceId: 'EXAVITQu4vr4xnSDxMaL',
+    provider: 'elevenlabs',
+    name: 'Sarah (International Concierge)',
+    gender: 'Female',
+    language: 'en-US',
+    accent: 'Global Neutral Accent',
+    sampleText: 'Hello and welcome! I am your 24/7 front desk concierge. How can I facilitate your visit or reservation today?',
+    tags: ['Boutique Hotels', 'NRI Friendly', 'Luxury Hospitality'],
+  },
+  {
+    id: 'v_4',
+    voiceId: 'pNInz6obpgDQGcFmaJgB',
+    provider: 'elevenlabs',
+    name: 'Adam (Senior Business Advisor)',
+    gender: 'Male',
+    language: 'en-IN',
+    accent: 'Indian English (Authoritative)',
+    sampleText: 'Hello! Thank you for reaching out. I can assist you with demo class scheduling, loan schemes, or vehicle servicing bookings.',
+    tags: ['Coaching Admissions', 'Fintech Loans', 'Auto Dealerships'],
+  },
+  {
+    id: 'v_5',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
+    provider: 'elevenlabs',
+    name: 'Daniel (Medical Specialist)',
+    gender: 'Male',
+    language: 'en-IN',
+    accent: 'Indian English (Calm & Precise)',
+    sampleText: 'Greetings. I am here to assist you with specialist OPD consultations, diagnostic follow-ups, and lab reports.',
+    tags: ['Hospitals', 'Diagnostics', 'Specialists'],
+  },
+  {
+    id: 'v_6',
+    voiceId: 'bulbul:kavya-hi',
+    provider: 'sarvam',
+    name: 'Bulbul Kavya (Native Hindi & Hinglish)',
+    gender: 'Female',
+    language: 'hi-IN',
+    accent: 'Native Hindi (Conversational Desk)',
+    sampleText: 'नमस्ते! हमारे क्लिनिक में आपका स्वागत है। क्या मैं आपके लिए डॉक्टर का अपॉइंटमेंट बुक करूँ?',
+    tags: ['100% Native Hindi', 'Zero Robotic Tone', 'Bilingual Hinglish'],
+  },
+  {
+    id: 'v_7',
+    voiceId: 'bulbul:arjun-hi',
+    provider: 'sarvam',
+    name: 'Bulbul Arjun (Native Hindi Executive)',
+    gender: 'Male',
+    language: 'hi-IN',
+    accent: 'Native Hindi (Fast & Direct)',
+    sampleText: 'नमस्ते! टेस्ट ड्राइव या सर्विस बुकिंग के लिए मैं आपकी पूरी मदद कर सकता हूँ। बताएं कब आना चाहेंगे?',
+    tags: ['Auto Service', 'Admissions', 'Hindi Native'],
+  },
+  {
+    id: 'v_8',
+    voiceId: 'bulbul:priya-te',
+    provider: 'sarvam',
+    name: 'Bulbul Priya (Native Telugu)',
+    gender: 'Female',
+    language: 'te-IN',
+    accent: 'Native Telugu (Warm & Polite)',
+    sampleText: 'నమస్కారం! మా క్లినిక్‌కి స్వాगతం. డాక్టర్ అపాయింట్‌మెంట్ లేదా వివరాల కోసం నేను మీకు ఎలా సహాయపడగలను?',
+    tags: ['South India Hub', 'Telugu Native', 'Regional Support'],
+  },
+  {
+    id: 'v_9',
+    voiceId: 'bulbul:ananya-ta',
+    provider: 'sarvam',
+    name: 'Bulbul Ananya (Native Tamil)',
+    gender: 'Female',
+    language: 'ta-IN',
+    accent: 'Native Tamil (Polite Concierge)',
+    sampleText: 'வணக்கம்! எங்கள் சேவை மையத்திற்கு வரவேற்கிறோம். இன்று உங்களுக்கு நான் எவ்வாறு உதவ முடியும்?',
+    tags: ['Tamil Nadu Hub', 'Tamil Native', 'Regional Support'],
+  },
+  {
+    id: 'v_10',
+    voiceId: 'bulbul:vikram-kn',
+    provider: 'sarvam',
+    name: 'Bulbul Vikram (Native Kannada)',
+    gender: 'Male',
+    language: 'kn-IN',
+    accent: 'Native Kannada (Professional)',
+    sampleText: 'ನಮಸ್ಕಾರ! ನಮ್ಮ ಸ್ವಾಗತ ಮೇಜಿಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಾಗಿ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?',
+    tags: ['Karnataka Hub', 'Kannada Native', 'Bangalore SMBs'],
+  },
 ];
 
 const LANGUAGES = [
@@ -36,12 +141,15 @@ const LANGUAGES = [
   { id: 'en-us', name: 'English (US)' },
   { id: 'hi-in', name: 'Hindi (हिंदी)' },
   { id: 'te-in', name: 'Telugu (తెలుగు)' },
+  { id: 'ta-in', name: 'Tamil (தமிழ்)' },
+  { id: 'kn-in', name: 'Kannada (ಕನ್ನಡ)' },
   { id: 'hi-en', name: 'Hinglish (Hybrid)' },
 ];
 
 export default function VoiceAgentLibraryPage() {
   const { currentNiche } = useNiche();
-  const [selectedVoiceId, setSelectedVoiceId] = useState(VOICES_LIBRARY[0].id);
+  const [voices, setVoices] = useState<any[]>(DEFAULT_VOICES_LIBRARY);
+  const [selectedVoiceId, setSelectedVoiceId] = useState(DEFAULT_VOICES_LIBRARY[0].voiceId);
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
   
   // Client Configuration State
@@ -55,6 +163,16 @@ export default function VoiceAgentLibraryPage() {
 
   useEffect(() => {
     let isMounted = true;
+    
+    // Fetch live personas synchronized from Super-Admin & Global Registry
+    apiClient<any[]>('/voice/personas')
+      .then((res) => {
+        if (isMounted && Array.isArray(res) && res.length > 0) {
+          setVoices(res);
+        }
+      })
+      .catch((err) => console.warn('Using default voice personas:', err));
+
     apiClient<any>('/voice/config')
       .then((res) => {
         if (isMounted && res) {
@@ -96,7 +214,7 @@ export default function VoiceAgentLibraryPage() {
     }
   };
 
-  const selectedVoice = VOICES_LIBRARY.find(v => v.id === selectedVoiceId) || VOICES_LIBRARY[0];
+  const selectedVoice = voices.find(v => (v.voiceId === selectedVoiceId || v.id === selectedVoiceId)) || voices[0] || DEFAULT_VOICES_LIBRARY[0];
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -134,19 +252,20 @@ export default function VoiceAgentLibraryPage() {
                 Select a Voice Model
               </h2>
               <span className="text-xs font-semibold px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">
-                {VOICES_LIBRARY.length} Available
+                {voices.length} Available
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {VOICES_LIBRARY.map((voice) => {
-                const isSelected = selectedVoiceId === voice.id;
+              {voices.map((voice) => {
+                const targetId = voice.voiceId || voice.id;
+                const isSelected = selectedVoiceId === targetId;
                 return (
                   <motion.div
-                    key={voice.id}
+                    key={targetId}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedVoiceId(voice.id)}
+                    onClick={() => setSelectedVoiceId(targetId)}
                     className={cn(
                       "relative p-4 rounded-2xl border cursor-pointer transition-all overflow-hidden group",
                       isSelected 
@@ -156,30 +275,41 @@ export default function VoiceAgentLibraryPage() {
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className={cn("font-bold text-base", isSelected ? "text-blue-500" : "text-[var(--color-text)]")}>
-                          {voice.name}
-                        </h3>
-                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{voice.gender} • {voice.accent}</p>
+                        <div className="flex items-center gap-2">
+                          <h3 className={cn("font-bold text-base", isSelected ? "text-blue-500" : "text-[var(--color-text)]")}>
+                            {voice.name}
+                          </h3>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase",
+                            voice.provider === 'elevenlabs' ? "bg-purple-500/15 text-purple-400" : "bg-orange-500/15 text-orange-400"
+                          )}>
+                            {voice.provider || 'AI'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{voice.gender} • {voice.accent || voice.language}</p>
                       </div>
                       <button 
-                        onClick={(e) => toggleAudio(voice.id, e)}
+                        onClick={(e) => toggleAudio(targetId, e)}
                         className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm",
-                          isPlayingAudio === voice.id 
+                          isPlayingAudio === targetId 
                             ? "bg-amber-500 text-white" 
                             : isSelected ? "bg-blue-500 text-white" : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] hover:bg-slate-200 dark:hover:bg-slate-700"
                         )}
                       >
-                        {isPlayingAudio === voice.id ? <Pause size={14} className="animate-pulse" /> : <Play size={14} className="ml-0.5" />}
+                        {isPlayingAudio === targetId ? <Pause size={14} className="animate-pulse" /> : <Play size={14} className="ml-0.5" />}
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 mt-4">
-                      <span className="px-2 py-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md text-[10px] font-medium text-[var(--color-text-muted)]">
-                        {voice.style}
-                      </span>
-                      {voice.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                    {voice.sampleText && (
+                      <p className="text-[11px] text-[var(--color-text-muted)] italic line-clamp-2 mb-3 bg-[var(--color-surface)] p-2 rounded-lg border border-[var(--color-border)]">
+                        "{voice.sampleText}"
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {voice.tags && voice.tags.map((tag: string) => (
+                        <span key={tag} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[10px] font-medium text-slate-600 dark:text-slate-400">
                           {tag}
                         </span>
                       ))}

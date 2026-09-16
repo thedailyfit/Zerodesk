@@ -66,6 +66,16 @@ export class VoiceService {
     });
   }
 
+  /**
+   * Get all active curated Indian Voice Personas from GlobalVoiceRegistry.
+   */
+  async getVoicePersonas() {
+    return this.prisma.globalVoiceRegistry.findMany({
+      where: { isActive: true },
+      orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
+    });
+  }
+
   // ========================================
   // VAPI INTEGRATION
   // ========================================

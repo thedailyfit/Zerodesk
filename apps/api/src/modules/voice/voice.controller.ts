@@ -13,6 +13,11 @@ import * as crypto from 'crypto';
 export class VoiceController {
   constructor(private readonly voiceService: VoiceService) {}
 
+  @Get('personas')
+  async getPersonas() {
+    return this.voiceService.getVoicePersonas();
+  }
+
   @Get('config')
   @UseGuards(AuthGuard, TenantGuard)
   async getConfig(@TenantId() tenantId: string) {

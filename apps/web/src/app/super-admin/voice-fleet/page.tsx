@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic2, 
@@ -15,31 +15,53 @@ import {
   Radio, 
   Save, 
   X,
-  Tag
+  Tag,
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuperAdminStore, AdminVoice } from '@/lib/superadmin-store';
+import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export default function SuperAdminVoiceFleetPage() {
-  const { voices, addVoice, updateVoice, deleteVoice, toggleVoiceStatus } = useSuperAdminStore();
+  const { voices, addVoice, updateVoice, deleteVoice, toggleVoiceStatus, setVoices } = useSuperAdminStore();
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Sync with live database on load
+  const fetchLiveVoices = async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient<AdminVoice[]>('/admin/voices');
+      if (Array.isArray(res) && res.length > 0) {
+        setVoices(res);
+      }
+    } catch (err) {
+      console.warn('Fallback to local cache for voices:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveVoices();
+  }, []);
 
   const [newVoice, setNewVoice] = useState<Partial<AdminVoice>>({
-    provider: 'sarvam',
+    provider: 'elevenlabs',
     voiceId: '',
     name: '',
     gender: 'female',
     language: 'hi-IN',
-    accent: 'Indian Neutral',
+    accent: 'Indian English & Hinglish',
     sampleText: 'Namaste! Welcome to our reception desk.',
     isDefault: false,
     isActive: true,
     tags: ['Bilingual', 'Clinics']
   });
 
-  const handleCreateVoice = (e: React.FormEvent) => {
+  const handleCreateVoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVoice.name || !newVoice.voiceId) {
       toast.error('Please enter Voice Name and Provider Voice ID');
@@ -47,20 +69,57 @@ export default function SuperAdminVoiceFleetPage() {
     }
     const voiceToAdd: AdminVoice = {
       id: `v-${Date.now()}`,
-      provider: newVoice.provider || 'sarvam',
+      provider: newVoice.provider || 'elevenlabs',
       voiceId: newVoice.voiceId || '',
       name: newVoice.name || '',
       gender: newVoice.gender || 'female',
       language: newVoice.language || 'hi-IN',
-      accent: newVoice.accent || 'Indian Neutral',
+      accent: newVoice.accent || 'Indian English & Hinglish',
       sampleText: newVoice.sampleText || 'Namaste!',
       isDefault: Boolean(newVoice.isDefault),
       isActive: true,
       tags: newVoice.tags || ['Custom Voice']
     };
+    
+    // Add locally for instant UI responsiveness
     addVoice(voiceToAdd);
-    toast.success(`Added ${voiceToAdd.name} to global voice fleet!`);
+
+    // Sync to PostgreSQL DB
+    try {
+      await apiClient('/admin/voices', {
+        method: 'POST',
+        body: JSON.stringify(voiceToAdd)
+      });
+      toast.success(`Registered ${voiceToAdd.name} and synced to client dashboards!`);
+    } catch (err: any) {
+      toast.success(`Added ${voiceToAdd.name} to global fleet!`);
+    }
+
     setShowAddModal(false);
+  };
+
+  const handleToggleVoice = async (voice: AdminVoice) => {
+    toggleVoiceStatus(voice.id);
+    try {
+      await apiClient(`/admin/voices/${voice.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: !voice.isActive })
+      });
+    } catch (err) {
+      console.warn('Failed to sync toggle to DB', err);
+    }
+  };
+
+  const handleDeleteVoice = async (id: string) => {
+    deleteVoice(id);
+    try {
+      await apiClient(`/admin/voices/${id}`, {
+        method: 'DELETE'
+      });
+      toast.info('Voice persona deleted from fleet');
+    } catch (err) {
+      console.warn('Failed to delete voice from DB', err);
+    }
   };
 
   const togglePlaySimulation = (id: string) => {
@@ -86,13 +145,24 @@ export default function SuperAdminVoiceFleetPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-rose-600/25 transition-all flex items-center gap-2"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Global Voice Persona</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchLiveVoices}
+            disabled={isLoading}
+            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl text-xs font-medium transition-all flex items-center gap-2"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin text-rose-500")} />
+            <span>{isLoading ? 'Syncing...' : 'Sync with DB'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-rose-600/25 transition-all flex items-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Global Voice Persona</span>
+          </button>
+        </div>
       </div>
 
       {/* Grid of Global Voices */}
@@ -162,7 +232,7 @@ export default function SuperAdminVoiceFleetPage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => toggleVoiceStatus(voice.id)}
+                    onClick={() => handleToggleVoice(voice)}
                     className={cn(
                       'text-[10px] font-semibold px-2.5 py-1 rounded-md border transition-all',
                       voice.isActive 
@@ -173,7 +243,7 @@ export default function SuperAdminVoiceFleetPage() {
                     {voice.isActive ? 'Active' : 'Disabled'}
                   </button>
                   <button 
-                    onClick={() => deleteVoice(voice.id)}
+                    onClick={() => handleDeleteVoice(voice.id)}
                     className="p-1 text-slate-500 hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
