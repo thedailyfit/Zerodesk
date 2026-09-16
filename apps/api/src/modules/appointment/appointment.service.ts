@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AppointmentService {
@@ -8,6 +9,7 @@ export class AppointmentService {
 
   constructor(
     private prisma: PrismaService,
+    @Optional() private redisService?: RedisService,
     @Optional() private whatsappService?: WhatsappService,
   ) {}
 
@@ -144,36 +146,62 @@ export class AppointmentService {
   async book(tenantId: string, data: any) {
     const scheduledAt = new Date(data.scheduledAt || Date.now());
     const durationMins = data.durationMins || 30;
+    const staffId = data.staffId || 'unassigned';
+    const slotTimestamp = Math.floor(scheduledAt.getTime() / 60000);
+    const lockKey = `slot_lock:${tenantId}:${staffId}:${slotTimestamp}`;
 
-    return this.prisma.$transaction(async (tx) => {
-      // Prevent double booking for the same staff or service within the time slot
-      if (data.staffId || data.serviceId) {
-        const slotEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
-        const conflicting = await tx.appointment.findFirst({
-          where: {
-            tenantId,
-            status: { not: 'CANCELLED' },
-            ...(data.staffId ? { staffId: data.staffId } : {}),
-            scheduledAt: {
-              gte: new Date(scheduledAt.getTime() - durationMins * 60 * 1000),
-              lte: slotEnd,
+    if (this.redisService) {
+      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
+      if (!acquired) {
+        throw new ConflictException('This time slot is currently being booked by another patient. Please choose another time.');
+      }
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        // Tier 2: PostgreSQL Transactional Advisory Lock
+        if (typeof (tx as any).$executeRaw === 'function') {
+          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`slot_${tenantId}_${staffId}_${slotTimestamp}`}))`;
+        }
+
+        // Prevent double booking for the same staff or service within the time slot
+        if (data.staffId || data.serviceId) {
+          const slotEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
+          const conflicting = await tx.appointment.findFirst({
+            where: {
+              tenantId,
+              status: { not: 'CANCELLED' },
+              ...(data.staffId ? { staffId: data.staffId } : {}),
+              scheduledAt: {
+                gte: new Date(scheduledAt.getTime() - durationMins * 60 * 1000),
+                lte: slotEnd,
+              },
             },
+          });
+          if (conflicting) {
+            throw new ConflictException('This time slot is already booked. Please choose another time.');
+          }
+        }
+
+        return tx.appointment.create({
+          data: {
+            ...data,
+            tenantId,
+            scheduledAt,
+            durationMins,
           },
         });
-        if (conflicting) {
-          throw new ConflictException('This time slot is already booked. Please choose another time.');
-        }
-      }
-
-      return tx.appointment.create({
-        data: {
-          ...data,
-          tenantId,
-          scheduledAt,
-          durationMins,
-        },
       });
-    });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new ConflictException('This time slot was just confirmed by another patient. Please choose another time.');
+      }
+      throw err;
+    } finally {
+      if (this.redisService) {
+        await this.redisService.del(lockKey);
+      }
+    }
   }
 
   async bookFromPublic(data: {
@@ -312,45 +340,76 @@ export class AppointmentService {
       staffId = slotCheck.assignedStaffId;
     }
 
-    const createdAppt = await this.prisma.$transaction(async (tx) => {
-      // Concurrency check: ensure slot is not already taken
-      const conflicting = await tx.appointment.findFirst({
-        where: {
-          tenantId,
-          status: { not: 'CANCELLED' },
-          scheduledAt: {
-            gte: slotStart,
-            lte: slotEnd,
-          },
-          ...(staffId ? { staffId } : serviceId ? { serviceId } : {}),
-        },
-      });
+    const slotTimestamp = Math.floor(scheduledAt.getTime() / 60000);
+    const lockKey = `slot_lock:${tenantId}:${staffId || 'unassigned'}:${slotTimestamp}`;
 
-      if (conflicting) {
+    if (this.redisService) {
+      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
+      if (!acquired) {
         throw new ConflictException(
-          `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) is already booked. Please choose another time.`,
+          `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) is currently being booked by another patient. Please choose another time.`,
         );
       }
+    }
 
-      return tx.appointment.create({
-        data: {
-          tenantId,
-          customerId: customer.id,
-          serviceId,
-          staffId,
-          scheduledAt,
-          durationMins,
-          status: 'SCHEDULED' as any,
-          source: (data.source as any) || 'VOICE_AI',
-          notes: data.notes || `Booked by ${data.source || 'Voice AI'} for ${data.serviceName || 'Consultation'}`,
-        },
-        include: {
-          customer: true,
-          service: true,
-          staff: true,
-        },
+    let createdAppt: any;
+    try {
+      createdAppt = await this.prisma.$transaction(async (tx) => {
+        // Tier 2: PostgreSQL Transactional Advisory Lock
+        if (typeof (tx as any).$executeRaw === 'function') {
+          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`slot_${tenantId}_${staffId}_${slotTimestamp}`}))`;
+        }
+
+        // Concurrency check: ensure slot is not already taken
+        const conflicting = await tx.appointment.findFirst({
+          where: {
+            tenantId,
+            status: { not: 'CANCELLED' },
+            scheduledAt: {
+              gte: slotStart,
+              lte: slotEnd,
+            },
+            ...(staffId ? { staffId } : serviceId ? { serviceId } : {}),
+          },
+        });
+
+        if (conflicting) {
+          throw new ConflictException(
+            `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) is already booked. Please choose another time.`,
+          );
+        }
+
+        return tx.appointment.create({
+          data: {
+            tenantId,
+            customerId: customer.id,
+            serviceId,
+            staffId,
+            scheduledAt,
+            durationMins,
+            status: 'SCHEDULED' as any,
+            source: (data.source as any) || 'VOICE_AI',
+            notes: data.notes || `Booked by ${data.source || 'Voice AI'} for ${data.serviceName || 'Consultation'}`,
+          },
+          include: {
+            customer: true,
+            service: true,
+            staff: true,
+          },
+        });
       });
-    });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new ConflictException(
+          `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) was just confirmed by another patient. Please choose another time.`,
+        );
+      }
+      throw err;
+    } finally {
+      if (this.redisService) {
+        await this.redisService.del(lockKey);
+      }
+    }
 
     // Automated WhatsApp Appointment Confirmation
     if (this.whatsappService && customer.phone && customer.phone !== '+919999999999') {

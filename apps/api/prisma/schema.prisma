@@ -25,6 +25,7 @@ model Tenant {
   settings           Json     @default("{}")
   subscriptionTier   String   @default("trial") @map("subscription_tier")
   subscriptionStatus String   @default("active") @map("subscription_status")
+  planTier           String   @default("starter") @map("plan_tier")
   onboardingCompleted Boolean @default(false) @map("onboarding_completed")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -56,8 +57,29 @@ model Tenant {
   auditLogs          AuditLog[]
   invoices           Invoice[]
   automationWorkflows AutomationWorkflow[]
+  kyc                TenantKyc?
 
   @@map("tenants")
+}
+
+model TenantKyc {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @unique @map("tenant_id") @db.Uuid
+  businessName    String    @map("business_name")
+  tradeName       String?   @map("trade_name")
+  gstin           String?
+  panNumber       String?   @map("pan_number")
+  addressProofUrl String?   @map("address_proof_url")
+  idProofUrl      String?   @map("id_proof_url")
+  status          String    @default("PENDING") // PENDING, VERIFIED, REJECTED
+  rejectionReason String?   @map("rejection_reason")
+  verifiedAt      DateTime? @map("verified_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_kyc")
 }
 
 model User {

@@ -19,7 +19,11 @@ import {
   ExternalLink,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  Zap,
+  Crown,
+  FileCheck2,
+  PhoneCall
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuperAdminStore } from '@/lib/superadmin-store';
@@ -30,12 +34,19 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const { theme, toggleTheme } = useTheme();
   const { tenants, voices, llmModels, globalFailoverEnabled } = useSuperAdminStore();
 
+  const starterCount = tenants.filter((t: any) => (t.planTier || t.plan || '').toLowerCase() === 'starter').length;
+  const proCount = tenants.filter((t: any) => (t.planTier || t.plan || '').toLowerCase() !== 'starter').length;
+
   const navItems = [
     { name: 'Command Overview', href: '/super-admin', icon: LayoutDashboard, exact: true },
-    { name: 'Tenants & Clients', href: '/super-admin/tenants', icon: Building2, count: tenants.length },
+    { name: 'Starter Fleet (SMBs)', href: '/super-admin/starter-fleet', icon: Zap, count: starterCount },
+    { name: 'Pro Fleet (Enterprises)', href: '/super-admin/pro-fleet', icon: Crown, count: proCount },
+    { name: 'KYC Verification', href: '/super-admin/kyc', icon: FileCheck2 },
+    { name: 'Telephony & DIDs', href: '/super-admin/telephony', icon: PhoneCall },
+    { name: 'All Tenants', href: '/super-admin/tenants', icon: Building2, count: tenants.length },
     { name: 'Voice AI Fleet', href: '/super-admin/voice-fleet', icon: Mic2, count: voices.filter((v: any) => v.isActive).length },
     { name: 'LLM Engine Router', href: '/super-admin/llm-router', icon: Cpu, count: llmModels.filter((m: any) => m.isActive).length },
-    { name: 'Infrastructure & RAG', href: '/super-admin/infrastructure', icon: Server },
+    { name: 'Infrastructure & SRE', href: '/super-admin/infrastructure', icon: Server },
   ];
 
   return (

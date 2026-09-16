@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PlivoService } from '../voice/plivo.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private plivoService: PlivoService,
+  ) {}
 
   async getPlatformStats() {
     const [tenantCount, subscriptions, ragChunksCount] = await Promise.all([
@@ -30,6 +34,7 @@ export class AdminService {
       include: {
         subscription: true,
         voiceConfig: true,
+        kyc: true,
         assignedLlm: true,
         assignedFallbackLlm: true,
         allowedVoices: true,
@@ -42,6 +47,149 @@ export class AdminService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getPendingKyc() {
+    return this.prisma.tenantKyc.findMany({
+      where: { status: 'PENDING' },
+      include: {
+        tenant: {
+          include: {
+            subscription: true,
+            voiceConfig: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getAllKyc(status?: string) {
+    const where: any = {};
+    if (status) where.status = status;
+    return this.prisma.tenantKyc.findMany({
+      where,
+      include: {
+        tenant: {
+          include: {
+            subscription: true,
+            voiceConfig: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async searchAvailableNumbers(country = 'IN', type = 'local') {
+    return this.plivoService.searchNumbers(country, type);
+  }
+
+  async approveKyc(tenantId: string) {
+    const kyc = await this.prisma.tenantKyc.findUnique({ where: { tenantId } });
+    if (!kyc) throw new NotFoundException('KYC record not found');
+
+    return this.prisma.tenantKyc.update({
+      where: { tenantId },
+      data: {
+        status: 'VERIFIED',
+        rejectionReason: null,
+        verifiedAt: new Date(),
+      },
+    });
+  }
+
+  async rejectKyc(tenantId: string, rejectionReason: string) {
+    const kyc = await this.prisma.tenantKyc.findUnique({ where: { tenantId } });
+    if (!kyc) throw new NotFoundException('KYC record not found');
+
+    return this.prisma.tenantKyc.update({
+      where: { tenantId },
+      data: {
+        status: 'REJECTED',
+        rejectionReason: rejectionReason || 'KYC documentation could not be verified with Indian regulatory records',
+      },
+    });
+  }
+
+  async provisionTenantNumber(tenantId: string, phoneNumber?: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: { voiceConfig: true, kyc: true },
+    });
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    let assignedNumber = phoneNumber;
+    if (!assignedNumber) {
+      const available = await this.plivoService.searchNumbers('IN', 'local');
+      if (available.length === 0) {
+        throw new NotFoundException('No available Plivo numbers in stock for India');
+      }
+      assignedNumber = available[0].phoneNumber;
+    }
+
+    // Purchase via Plivo API
+    await this.plivoService.purchaseNumber(assignedNumber);
+
+    // Bind to VoiceConfig
+    const config = await this.prisma.voiceConfig.upsert({
+      where: { tenantId },
+      update: {
+        plivoPhoneNumber: assignedNumber,
+        isActive: true,
+      },
+      create: {
+        tenantId,
+        plivoPhoneNumber: assignedNumber,
+        isActive: true,
+        voicePersonality: 'professional',
+        languages: ['en', 'hi'],
+      },
+    });
+
+    return {
+      success: true,
+      phoneNumber: assignedNumber,
+      carrier: 'Plivo India',
+      mappedToTrunk: 'LiveKit Cloud SIP',
+      config,
+    };
+  }
+
+  async updateTenantPlan(tenantId: string, planTier: string) {
+    const normalizedPlan = (planTier || 'starter').toLowerCase();
+    const limits = {
+      starter: { voiceMinutesLimit: 300, whatsappMessagesLimit: 1500, llmTokensLimit: 2000000, mrr: 2999 },
+      pro: { voiceMinutesLimit: 1200, whatsappMessagesLimit: 5000, llmTokensLimit: 5000000, mrr: 9941 },
+      enterprise: { voiceMinutesLimit: 3000, whatsappMessagesLimit: 20000, llmTokensLimit: 20000000, mrr: 24999 },
+    }[normalizedPlan] || { voiceMinutesLimit: 300, whatsappMessagesLimit: 1500, llmTokensLimit: 2000000, mrr: 2999 };
+
+    await this.prisma.tenant.update({
+      where: { id: tenantId },
+      data: { planTier: normalizedPlan },
+    });
+
+    const subscription = await this.prisma.subscription.upsert({
+      where: { tenantId },
+      update: {
+        plan: normalizedPlan,
+        mrr: limits.mrr,
+        voiceMinutesLimit: limits.voiceMinutesLimit,
+        whatsappMessagesLimit: limits.whatsappMessagesLimit,
+        llmTokensLimit: limits.llmTokensLimit,
+      },
+      create: {
+        tenantId,
+        plan: normalizedPlan,
+        mrr: limits.mrr,
+        voiceMinutesLimit: limits.voiceMinutesLimit,
+        whatsappMessagesLimit: limits.whatsappMessagesLimit,
+        llmTokensLimit: limits.llmTokensLimit,
+        status: 'active',
+      },
+    });
+
+    return { success: true, planTier: normalizedPlan, limits, subscription };
   }
 
   async updateTenantLimits(

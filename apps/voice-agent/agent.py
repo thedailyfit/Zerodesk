@@ -23,6 +23,7 @@ from livekit.agents import (
     WorkerOptions,
     cli,
     function_tool,
+    stt,
 )
 from livekit.plugins import openai, sarvam, elevenlabs, silero
 
@@ -44,6 +45,40 @@ logger = logging.getLogger("voice-agent")
 ZERODESK_API = os.getenv("ZERODESK_API_URL", "http://localhost:4000")
 VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "90ipbRoKi4CpHXvKVtl0")
 INTERNAL_VOICE_SECRET = os.getenv("INTERNAL_VOICE_SECRET", "zerodesk-internal-voice-key-2026")
+
+
+# ==========================================
+# RESILIENT STT WRAPPER (INDIAN CARRIER FAILOVER)
+# ==========================================
+
+class ResilientSTT(stt.STT):
+    """
+    High-availability STT wrapper for Indian Telephony.
+    Primary: Sarvam AI Saaras (optimised for Indian accents, Hindi, Hinglish, regional code-switching).
+    Fallback: ElevenLabs Scribe, Deepgram Nova-2, or OpenAI Whisper.
+    Automatically catches connection/transcription drops and falls back without terminating the call.
+    """
+    def __init__(self, primary: stt.STT, fallback: stt.STT):
+        super().__init__(capabilities=primary.capabilities)
+        self._primary = primary
+        self._fallback = fallback
+        self._active = primary
+
+    async def _recognize_impl(self, buffer, *, language: Optional[str] = None):
+        try:
+            return await self._active._recognize_impl(buffer, language=language)
+        except Exception as e:
+            logger.warning(f"Primary STT failed in recognize ({e}), falling back to secondary STT")
+            self._active = self._fallback
+            return await self._fallback._recognize_impl(buffer, language=language)
+
+    def stream(self, *, language: Optional[str] = None):
+        try:
+            return self._active.stream(language=language)
+        except Exception as e:
+            logger.warning(f"Primary STT stream initialization failed ({e}), falling back to secondary STT")
+            self._active = self._fallback
+            return self._fallback.stream(language=language)
 
 
 # ==========================================
@@ -453,27 +488,34 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
 """
 
     # 4. Configurable STT provider with multi-tier graceful fallback cascade (Primary: Sarvam AI Indic Saaras)
-    selected_stt = None
+    primary_stt = None
+    fallback_stt = None
+
     if os.getenv("SARVAM_API_KEY"):
         try:
-            selected_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
+            primary_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
         except Exception as e:
             logger.warning(f"Sarvam STT failed ({e}), falling back...")
 
-    if not selected_stt and os.getenv("ELEVENLABS_API_KEY"):
+    if os.getenv("ELEVENLABS_API_KEY"):
         try:
-            selected_stt = elevenlabs.STT()
+            fallback_stt = elevenlabs.STT()
         except Exception as e:
             logger.warning(f"ElevenLabs STT failed ({e}), falling back...")
 
-    if not selected_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
+    if not fallback_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
         try:
-            selected_stt = deepgram.STT(model="nova-2-general")
+            fallback_stt = deepgram.STT(model="nova-2-general")
         except Exception as e:
             logger.warning(f"Deepgram STT failed ({e}), falling back...")
 
-    if not selected_stt and os.getenv("OPENAI_API_KEY"):
-        selected_stt = openai.STT()
+    if not fallback_stt and os.getenv("OPENAI_API_KEY"):
+        fallback_stt = openai.STT()
+
+    if primary_stt and fallback_stt:
+        selected_stt = ResilientSTT(primary=primary_stt, fallback=fallback_stt)
+    else:
+        selected_stt = primary_stt or fallback_stt or (openai.STT() if os.getenv("OPENAI_API_KEY") else None)
 
     # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Primary: ElevenLabs, Fallback: Sarvam Bulbul)
     selected_tts = None
@@ -501,10 +543,10 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
     if not selected_tts:
         selected_tts = openai.TTS(voice="alloy")
 
-    # 6. Tuned Silero VAD parameters for Indian PSTN telephony latency & noise suppression
+    # 6. Recalibrated Silero VAD parameters for Indian PSTN telephony latency & natural conversational cadence
     vad_instance = silero.VAD.load(
-        min_speech_duration=0.25,
-        min_silence_duration=0.65,
+        min_speech_duration=0.30,
+        min_silence_duration=0.85,
     )
 
     session = AgentSession(
