@@ -24,6 +24,7 @@ from livekit.agents import (
     cli,
     function_tool,
     stt,
+    inference,
 )
 from livekit.plugins import openai, sarvam, elevenlabs, silero
 
@@ -487,11 +488,12 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
 - ANTI-HALLUCINATION: If a price, service duration, or schedule is not known, DO NOT guess or invent numbers. Say: "I don't have the exact rate card in front of me right now, let me connect you with our clinic coordinator."
 """
 
-    # 4. Configurable STT provider with multi-tier graceful fallback cascade (Primary: Sarvam AI Indic Saaras)
+    # 4. Configurable STT provider with multi-tier graceful fallback cascade (Primary: Sarvam AI Indic Saaras, Fallback: LiveKit Deepgram)
     primary_stt = None
     fallback_stt = None
 
-    if os.getenv("SARVAM_API_KEY"):
+    sarvam_key = os.getenv("SARVAM_API_KEY", "")
+    if sarvam_key and not sarvam_key.startswith("sk_xxx"):
         try:
             primary_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
         except Exception as e:
@@ -501,49 +503,76 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
         try:
             fallback_stt = elevenlabs.STT()
         except Exception as e:
-            logger.warning(f"ElevenLabs STT failed ({e}), falling back...")
+            pass
 
     if not fallback_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
         try:
             fallback_stt = deepgram.STT(model="nova-2-general")
         except Exception as e:
-            logger.warning(f"Deepgram STT failed ({e}), falling back...")
+            pass
 
-    if not fallback_stt and os.getenv("OPENAI_API_KEY"):
-        fallback_stt = openai.STT()
+    if not fallback_stt:
+        try:
+            fallback_stt = inference.STT(model="deepgram/nova-2")
+        except Exception:
+            pass
 
     if primary_stt and fallback_stt:
         selected_stt = ResilientSTT(primary=primary_stt, fallback=fallback_stt)
     else:
-        selected_stt = primary_stt or fallback_stt or (openai.STT() if os.getenv("OPENAI_API_KEY") else None)
+        selected_stt = primary_stt or fallback_stt or inference.STT(model="deepgram/nova-2")
 
-    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Primary: ElevenLabs, Fallback: Sarvam Bulbul)
+    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Primary: ElevenLabs, Secondary: Sarvam Bulbul, Fallback: LiveKit Cloud Deepgram Aura)
     selected_tts = None
-    if os.getenv("ELEVENLABS_API_KEY"):
+    el_key = os.getenv("ELEVENLABS_API_KEY", "")
+    if el_key and not el_key.startswith("sk_xxx"):
         try:
-            selected_tts = elevenlabs.TTS(
-                model_id="eleven_multilingual_v2",
-                voice_id=VOICE_ID,
+            import urllib.request
+            req = urllib.request.Request("https://api.elevenlabs.io/v1/user", headers={"xi-api-key": el_key})
+            with urllib.request.urlopen(req, timeout=1.5) as resp:
+                if resp.status == 200:
+                    selected_tts = elevenlabs.TTS(
+                        model="eleven_multilingual_v2",
+                        voice_id=VOICE_ID,
+                        api_key=el_key,
+                    )
+        except Exception as e:
+            logger.warning(f"ElevenLabs TTS check failed ({e}), checking Sarvam...")
+
+    sarvam_key = os.getenv("SARVAM_API_KEY", "")
+    if not selected_tts and sarvam_key and not sarvam_key.startswith("sk_xxx"):
+        try:
+            selected_tts = sarvam.TTS(
+                model="bulbul:v2",
+                target_language_code="hi-IN",
+                speaker="meera",
+                api_key=sarvam_key,
             )
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS failed ({e}), falling back to Sarvam...")
-
-    if not selected_tts and os.getenv("SARVAM_API_KEY"):
-        try:
-            selected_tts = sarvam.TTS(language="hi-IN", model="bulbul:v2")
-        except Exception as e:
-            logger.warning(f"Sarvam TTS failed ({e}), falling back to OpenAI...")
-
-    if not selected_tts and os.getenv("CARTESIA_API_KEY") and cartesia:
-        try:
-            selected_tts = cartesia.TTS()
-        except Exception as e:
-            logger.warning(f"Cartesia TTS failed ({e}), falling back to OpenAI...")
+            logger.warning(f"Sarvam TTS failed ({e}), falling back to LiveKit Cloud...")
 
     if not selected_tts:
-        selected_tts = openai.TTS(voice="alloy")
+        logger.info("Using LiveKit Cloud native TTS inference (deepgram/aura-2)")
+        selected_tts = inference.TTS(model="deepgram/aura-2")
 
-    # 6. Recalibrated Silero VAD parameters for Indian PSTN telephony latency & natural conversational cadence
+    # 6. Configurable LLM provider with failover to LiveKit Cloud native inference
+    selected_llm = None
+    openai_key = os.getenv("OPENAI_API_KEY", "")
+    if openai_key and not openai_key.startswith("sk-xxx"):
+        try:
+            import urllib.request
+            req = urllib.request.Request("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {openai_key}"})
+            with urllib.request.urlopen(req, timeout=1.5) as resp:
+                if resp.status == 200:
+                    selected_llm = openai.LLM(model="gpt-4o", api_key=openai_key)
+        except Exception as e:
+            logger.warning(f"OpenAI API key validation failed ({e}), using LiveKit Cloud LLM inference...")
+
+    if not selected_llm:
+        logger.info("Using LiveKit Cloud native LLM inference (openai/gpt-4o-mini)")
+        selected_llm = inference.LLM(model="openai/gpt-4o-mini")
+
+    # 7. Recalibrated Silero VAD parameters for Indian PSTN telephony latency & natural conversational cadence
     vad_instance = silero.VAD.load(
         min_speech_duration=0.30,
         min_silence_duration=0.85,
@@ -551,15 +580,15 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
 
     session = AgentSession(
         stt=selected_stt,
-        llm=openai.LLM(model="gpt-4o"),
+        llm=selected_llm,
         tts=selected_tts,
         vad=vad_instance,
     )
 
-    # 7. Bind isolated tools for this call context
+    # 8. Bind isolated tools for this call context
     call_tools = create_call_tools(call_ctx)
 
-    # 8. Launch duration cap background task
+    # 9. Launch duration cap background task
     duration_task = asyncio.create_task(enforce_call_duration_cap(session, ctx, call_ctx))
 
     @ctx.room.on("disconnected")
