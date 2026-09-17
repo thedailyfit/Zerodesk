@@ -38,11 +38,6 @@
         "DOPPLER_PROJECT"
       ]
     },
-    "@zerodesk/shared#build": {
-      "outputs": [
-        "dist/**"
-      ]
-    },
     "@zerodesk/web#build": {
       "dependsOn": [
         "^build"

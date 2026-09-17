@@ -484,7 +484,7 @@ export default function DemoPage() {
         <div className="space-y-4">
           <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 font-mono text-xs text-slate-300 space-y-4 leading-relaxed overflow-x-auto">
             <div className="text-emerald-400 font-semibold text-sm">
-              // Live System Prompt Loaded into LiveKit Voice Worker:
+              {"// Live System Prompt Loaded into LiveKit Voice Worker:"}
             </div>
             <pre className="whitespace-pre-wrap text-slate-300 bg-slate-950/80 p-4 rounded-lg border border-slate-800">
 {`You are the warm, highly professional AI front desk receptionist for Aura Skin & Aesthetic Clinic in Indiranagar, Bengaluru.
