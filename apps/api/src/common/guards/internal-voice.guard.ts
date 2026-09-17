@@ -14,9 +14,13 @@ export class InternalVoiceGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid internal voice worker credentials');
     }
 
-    const tenantId = request.headers['x-tenant-id'] || request.body?.tenantId;
+    let tenantId = request.headers['x-tenant-id'] || request.body?.tenantId || request.query?.tenantId;
     if (!tenantId) {
-      throw new UnauthorizedException('Missing x-tenant-id header for voice operation');
+      throw new UnauthorizedException('Missing x-tenant-id header or tenantId parameter for voice operation');
+    }
+
+    if (tenantId === 'default_business' || tenantId === 'default') {
+      tenantId = '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
     }
 
     request.tenantId = tenantId;

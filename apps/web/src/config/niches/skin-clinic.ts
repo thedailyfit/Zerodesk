@@ -40,6 +40,7 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
 
   navItems: [
     { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'Voice AI Demo (Test Lab)', href: '/demo', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'The Unified Inbox', href: '/unified-inbox', icon: Inbox, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },

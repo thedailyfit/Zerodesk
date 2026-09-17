@@ -17,8 +17,8 @@ export class AiController {
   @Get('voice-prompt')
   @UseGuards(InternalVoiceGuard)
   async getVoicePrompt(@Query('tenantId') tenantId: string) {
-    if (!tenantId) {
-      throw new NotFoundException('tenantId query parameter is required');
+    if (!tenantId || tenantId === 'default_business' || tenantId === 'default') {
+      tenantId = '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
     }
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });

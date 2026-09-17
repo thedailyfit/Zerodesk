@@ -65,21 +65,21 @@ class ResilientSTT(stt.STT):
         self._fallback = fallback
         self._active = primary
 
-    async def _recognize_impl(self, buffer, *, language: Optional[str] = None):
+    async def _recognize_impl(self, buffer, *args, **kwargs):
         try:
-            return await self._active._recognize_impl(buffer, language=language)
+            return await self._active._recognize_impl(buffer, *args, **kwargs)
         except Exception as e:
             logger.warning(f"Primary STT failed in recognize ({e}), falling back to secondary STT")
             self._active = self._fallback
-            return await self._fallback._recognize_impl(buffer, language=language)
+            return await self._fallback._recognize_impl(buffer, *args, **kwargs)
 
-    def stream(self, *, language: Optional[str] = None):
+    def stream(self, *args, **kwargs):
         try:
-            return self._active.stream(language=language)
+            return self._active.stream(*args, **kwargs)
         except Exception as e:
             logger.warning(f"Primary STT stream initialization failed ({e}), falling back to secondary STT")
             self._active = self._fallback
-            return self._fallback.stream(language=language)
+            return self._fallback.stream(*args, **kwargs)
 
 
 # ==========================================
@@ -159,6 +159,8 @@ def extract_call_context(ctx: JobContext) -> CallContext:
             tenant_id = match.group(1)
 
     tenant_id = tenant_id or os.getenv("DEFAULT_TENANT_ID", "")
+    if not tenant_id or tenant_id == "default_business" or tenant_id == "default":
+        tenant_id = "08f1fadd-59eb-4d07-9ee3-65a2d9a321e3"
 
     return CallContext(
         tenant_id=tenant_id,
@@ -455,7 +457,10 @@ async def entrypoint(ctx: JobContext):
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(
                 f"{ZERODESK_API}/v1/ai/voice-prompt?tenantId={call_ctx.tenant_id}",
-                headers={"x-internal-voice-key": INTERNAL_VOICE_SECRET},
+                headers={
+                    "x-internal-voice-key": INTERNAL_VOICE_SECRET,
+                    "x-tenant-id": call_ctx.tenant_id,
+                },
                 timeout=aiohttp.ClientTimeout(total=3.0),
             ) as resp:
                 if resp.status == 200:
@@ -466,63 +471,67 @@ async def entrypoint(ctx: JobContext):
     except Exception as e:
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
 
-    if not system_prompt:
-        system_prompt = f"""You are a warm, highly professional AI front desk receptionist and concierge for {call_ctx.clinic_name}.
-Your primary duties are to welcome callers, answer questions about our services and offerings across all business categories, schedule visits or appointments, and provide directions or rate information.
+    if not system_prompt or len(system_prompt) < 100:
+        system_prompt = f"""You are the warm, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
+Your doctor is Dr. Ananya Rao, MBBS, MD (Dermatology, Venereology & Leprosy — AIIMS Gold Medalist, 11+ years experience).
 
-MULTI-LANGUAGE & REGIONAL CODE-SWITCHING:
-- You are natively multi-lingual: fluent in Indian English, Hindi, Telugu, Tamil, Kannada, and conversational Hinglish/Telugish.
-- Seamlessly adapt to the caller's language: If the caller speaks Hindi, reply in Hindi. If they speak Telugu, reply in Telugu. If they speak Tamil or Kannada, reply in that language. If they code-switch (mix English with regional words), respond naturally in the same friendly cadence.
-- Never ask the caller to switch to English; always honor their preferred mother tongue.
+LOCATION & TIMINGS:
+- Location: 2nd Floor, 100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru (Opposite Toit Brewpub, Metro Pillar 124).
+- Clinic Hours: Monday to Saturday: 10:00 AM – 7:30 PM, Sunday: 11:00 AM – 4:00 PM.
+- Doctor Consultation Fee: ₹800 (includes 7-day free prescription follow-up).
 
-STRICT GUIDELINES & SAFETY GUARDRAILS:
-- Keep answers concise and natural for voice conversation (1-2 sentences maximum).
-- Transparent AI Identity: You are the clinic's AI front desk assistant.
-- Audible Disclosure: If caller asks, confirm this call is recorded for appointment scheduling quality.
-- If the caller asks for clinic directions, prices, or booking links, offer: "I can send our Google Maps location and booking link directly to your WhatsApp right now."
-- If the patient speaks in Telugu, Hindi, or any Indian regional language, reply fluently in the SAME language.
-- Confirm patient name, date, and service clearly before booking.
-- Always maintain empathy, politeness, and high clarity.
-- CRITICAL EMERGENCY PROTOCOL: If the caller mentions severe chest pain, breathing difficulty, heavy bleeding, or acute trauma, IMMEDIATELY say: "This sounds like an emergency. Please hang up and call 108 for an ambulance or 112 immediately, or go to the nearest hospital." Then invoke transfer_to_human("Emergency medical symptoms reported").
-- NO MEDICAL ADVICE: Never diagnose symptoms, interpret test reports, or suggest medications. Remind the caller that all clinical decisions require an in-person doctor consultation.
-- ANTI-HALLUCINATION: If a price, service duration, or schedule is not known, DO NOT guess or invent numbers. Say: "I don't have the exact rate card in front of me right now, let me connect you with our clinic coordinator."
+COMPLETE TREATMENT RATE CARD:
+1. HydraFacial Deluxe: ₹4,500 / session (Package of 3: ₹11,999). 7-step Korean glass glow protocol.
+2. Full Body Laser Hair Reduction: ₹14,999 / session (Package of 6: ₹69,999). Painless Soprano Titanium triple-wavelength.
+3. Underarms Laser Hair Reduction: ₹2,499 / session.
+4. Chemical Peels (Acne & Glow): ₹2,800 / session. Medical-grade salicylic/glycolic peels.
+5. Botox Anti-Wrinkle (Allergan USA): ₹350 / unit. Forehead & crow's feet typically require 20-30 units (₹7,000 – ₹10,500).
+6. Juvederm Dermal Fillers: ₹22,000 / 1ml syringe (lips, cheeks, chin).
+7. PRP Hair Therapy (GFC Growth Factor): ₹5,000 / session (Package of 4: ₹17,500).
+8. Carbon Laser Peel (Hollywood Glow Peel): ₹3,800 / session.
+
+INDIAN PERSONA, CADENCE & MULTI-LINGUAL CODE-SWITCHING:
+- Tone: Warm, respectful, polite Indian English receptionist. Speak with an authentic Indian English cadence.
+- Use natural Indian conversational markers: "Ji bilkul", "Namaskaram", "Sir/Ma'am", "Certainly, let me help you with that".
+- If the caller speaks in Hindi or Hinglish, IMMEDIATELY switch to polite, natural Hinglish:
+  * Example: "Ji bilkul! Dr. Ananya ke saath consultation fee 800 rupees hai. Clinic Indiranagar 100 Feet Road par hai. Kya main aapke liye appointment schedule kar sakti hoon?"
+  * Example for HydraFacial: "HydraFacial Deluxe ka price 4,500 rupees per session hai, jismein 7-step Korean glass glow shamil hai."
+- If the caller speaks in Telugu, reply in Telugu:
+  * Example: "Namaskaram andi! Dr. Ananya Rao gari consultation fee 800 rupees andi. Meeku appointment eppudu schedule cheyagalanu?"
+- Never tell the caller you cannot speak their language. Seamlessly match their language.
+
+CRITICAL VOICE PHONE RULES:
+- Keep answers short and concise: 1 to 2 sentences maximum, natural for phone calls.
+- Always offer to send the Google Maps location and booking link directly to their WhatsApp.
+- If asked about painful treatments: reassure that laser treatments use cooling soprano technology and are virtually painless.
+- EMERGENCY PROTOCOL: If caller reports severe chemical burn, acute eye trauma, or severe allergy, immediately advise hospital emergency care or 108/112.
+- NO MEDICAL DIAGNOSIS OVER PHONE: Remind the caller that clinical diagnosis requires an in-person doctor consultation with Dr. Ananya Rao.
 """
 
-    # 4. Configurable STT provider with multi-tier graceful fallback cascade (Primary: Sarvam AI Indic Saaras, Fallback: LiveKit Deepgram)
-    primary_stt = None
-    fallback_stt = None
-
+    # 4. Configurable STT provider with graceful failover to LiveKit Cloud native Deepgram Nova-2
+    selected_stt = None
     sarvam_key = os.getenv("SARVAM_API_KEY", "")
     if sarvam_key and not sarvam_key.startswith("sk_xxx"):
         try:
-            primary_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
-        except Exception as e:
-            logger.warning(f"Sarvam STT failed ({e}), falling back...")
-
-    if os.getenv("ELEVENLABS_API_KEY"):
-        try:
-            fallback_stt = elevenlabs.STT()
-        except Exception as e:
-            pass
-
-    if not fallback_stt and os.getenv("DEEPGRAM_API_KEY") and deepgram:
-        try:
-            fallback_stt = deepgram.STT(model="nova-2-general")
-        except Exception as e:
-            pass
-
-    if not fallback_stt:
-        try:
-            fallback_stt = inference.STT(model="deepgram/nova-2")
+            import urllib.request
+            req = urllib.request.Request(
+                "https://api.sarvam.ai/speech-to-text",
+                headers={"api-subscription-key": sarvam_key}
+            )
+            with urllib.request.urlopen(req, timeout=1.5) as resp:
+                if resp.status == 200:
+                    selected_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
         except Exception:
-            pass
+            logger.info("Sarvam STT key check skipped/failed, using LiveKit Cloud Deepgram Nova-2 STT")
 
-    if primary_stt and fallback_stt:
-        selected_stt = ResilientSTT(primary=primary_stt, fallback=fallback_stt)
-    else:
-        selected_stt = primary_stt or fallback_stt or inference.STT(model="deepgram/nova-2")
+    if not selected_stt:
+        logger.info("Using LiveKit Cloud native Deepgram Nova-2 STT with multi-language detection")
+        selected_stt = inference.STT(
+            model="deepgram/nova-2",
+            extra_kwargs={"detect_language": True, "smart_format": True}
+        )
 
-    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Primary: ElevenLabs, Secondary: Sarvam Bulbul, Fallback: LiveKit Cloud Deepgram Aura)
+    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Cartesia Sonic / Deepgram Aura-2)
     selected_tts = None
     el_key = os.getenv("ELEVENLABS_API_KEY", "")
     if el_key and not el_key.startswith("sk_xxx"):
@@ -537,23 +546,15 @@ STRICT GUIDELINES & SAFETY GUARDRAILS:
                         api_key=el_key,
                     )
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS check failed ({e}), checking Sarvam...")
-
-    sarvam_key = os.getenv("SARVAM_API_KEY", "")
-    if not selected_tts and sarvam_key and not sarvam_key.startswith("sk_xxx"):
-        try:
-            selected_tts = sarvam.TTS(
-                model="bulbul:v2",
-                target_language_code="hi-IN",
-                speaker="meera",
-                api_key=sarvam_key,
-            )
-        except Exception as e:
-            logger.warning(f"Sarvam TTS failed ({e}), falling back to LiveKit Cloud...")
+            logger.warning(f"ElevenLabs TTS check failed ({e}), checking LiveKit Cloud...")
 
     if not selected_tts:
-        logger.info("Using LiveKit Cloud native TTS inference (deepgram/aura-2)")
-        selected_tts = inference.TTS(model="deepgram/aura-2")
+        logger.info("Using LiveKit Cloud native TTS inference (cartesia/sonic)")
+        try:
+            selected_tts = inference.TTS(model="cartesia/sonic")
+        except Exception as e:
+            logger.warning(f"Cartesia Sonic fallback to Aura-2: {e}")
+            selected_tts = inference.TTS(model="deepgram/aura-2")
 
     # 6. Configurable LLM provider with failover to LiveKit Cloud native inference
     selected_llm = None
