@@ -55,32 +55,44 @@ export class RagService implements OnModuleInit {
    */
   async search(tenantId: string, query: string, topK = 5): Promise<SearchResult[]> {
     try {
-      const embedding = await this.embeddingService.createEmbedding(query);
-      const embeddingStr = `[${embedding.join(',')}]`;
+      let vectorResults: SearchResult[] = [];
+      try {
+        const embedding = await this.embeddingService.createEmbedding(query);
+        const embeddingStr = `[${embedding.join(',')}]`;
 
-      // 1. Stage 1A: Vector cosine similarity search (Top-15 candidates)
-      const vectorResults = await this.prisma.$queryRaw<SearchResult[]>`
-        SELECT 
-          kc.id as "chunkId",
-          kc.document_id as "documentId",
-          kd.title as "documentTitle",
-          kd.category,
-          kc.chunk_text as "chunkText",
-          1 - (kc.embedding <=> ${embeddingStr}::vector) as similarity
-        FROM knowledge_chunks kc
-        JOIN knowledge_documents kd ON kd.id = kc.document_id
-        WHERE kc.tenant_id = ${tenantId}::uuid
-          AND kd.is_active = true
-          AND kc.embedding IS NOT NULL
-        ORDER BY kc.embedding <=> ${embeddingStr}::vector
-        LIMIT 15
-      `;
+        // 1. Stage 1A: Vector cosine similarity search (Top-15 candidates)
+        vectorResults = await this.prisma.$queryRaw<SearchResult[]>`
+          SELECT 
+            kc.id as "chunkId",
+            kc.document_id as "documentId",
+            kd.title as "documentTitle",
+            kd.category,
+            kc.chunk_text as "chunkText",
+            1 - (kc.embedding <=> ${embeddingStr}::vector) as similarity
+          FROM knowledge_chunks kc
+          JOIN knowledge_documents kd ON kd.id = kc.document_id
+          WHERE kc.tenant_id = ${tenantId}::uuid
+            AND kd.is_active = true
+            AND kc.embedding IS NOT NULL
+          ORDER BY kc.embedding <=> ${embeddingStr}::vector
+          LIMIT 15
+        `;
+      } catch (embErr: any) {
+        this.logger.warn(`Vector search unavailable, falling back to keyword search: ${embErr.message}`);
+      }
 
-      // 2. Stage 1B: Keyword search for exact medical, service, and pricing terms
-      const cleanKeyword = query.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+      // 2. Stage 1B: Multi-token keyword search for exact clinical, service, and pricing terms
+      const cleanKeyword = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+      const tokens = cleanKeyword
+        .split(/\s+/)
+        .filter((t) => t.length > 2 && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can', 'with', 'from', 'your', 'tell', 'about', 'much', 'does', 'please'].includes(t.toLowerCase()));
+
       let keywordResults: SearchResult[] = [];
-      if (cleanKeyword.length > 2) {
+      if (tokens.length > 0 || cleanKeyword.length > 2) {
         try {
+          const primary = tokens[0] || cleanKeyword;
+          const secondary = tokens[1] || primary;
+          const tertiary = tokens[2] || primary;
           keywordResults = await this.prisma.$queryRaw<SearchResult[]>`
             SELECT 
               kc.id as "chunkId",
@@ -93,7 +105,12 @@ export class RagService implements OnModuleInit {
             JOIN knowledge_documents kd ON kd.id = kc.document_id
             WHERE kc.tenant_id = ${tenantId}::uuid
               AND kd.is_active = true
-              AND kc.chunk_text ILIKE ${'%' + cleanKeyword + '%'}
+              AND (
+                kc.chunk_text ILIKE ${'%' + cleanKeyword + '%'}
+                OR kc.chunk_text ILIKE ${'%' + primary + '%'}
+                OR kc.chunk_text ILIKE ${'%' + secondary + '%'}
+                OR kc.chunk_text ILIKE ${'%' + tertiary + '%'}
+              )
             LIMIT 10
           `;
         } catch {
@@ -126,7 +143,7 @@ export class RagService implements OnModuleInit {
 
     const queryTokens = query
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .split(/\s+/)
       .filter((t) => t.length > 2 && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can'].includes(t));
 

@@ -29,6 +29,7 @@ model Tenant {
   onboardingCompleted Boolean @default(false) @map("onboarding_completed")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
 
   assignedLlmId      String?  @map("assigned_llm_id") @db.Uuid
   assignedLlm        GlobalLlmRegistry? @relation("TenantAssignedLlm", fields: [assignedLlmId], references: [id])
@@ -93,6 +94,7 @@ model User {
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   activities  Activity[]
@@ -123,6 +125,7 @@ model Customer {
   lastSeenAt    DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
 
   tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   conversations Conversation[]
@@ -335,6 +338,7 @@ model Service {
   isActive     Boolean  @default(true) @map("is_active")
   metadata     Json     @default("{}")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
@@ -376,6 +380,7 @@ model Appointment {
   reminderSent Boolean   @default(false) @map("reminder_sent")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
   tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer Customer     @relation(fields: [customerId], references: [id])
@@ -515,8 +520,9 @@ model AuditLog {
   details      Json     @default("{}")
   ipAddress    String?  @map("ip_address")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, createdAt])
   @@map("audit_logs")
@@ -587,8 +593,9 @@ model Invoice {
   dueDate       DateTime?     @map("due_date") @db.Timestamptz
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamptz
 
-  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   customer      Customer?     @relation(fields: [customerId], references: [id])
   items         InvoiceItem[]
 

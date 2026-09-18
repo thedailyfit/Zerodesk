@@ -5,6 +5,8 @@ import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { InternalVoiceGuard } from '../../common/guards/internal-voice.guard';
+import { AuthOrInternalVoiceGuard } from '../../common/guards/auth-or-internal-voice.guard';
+import { LiveKitSipGuard } from '../../common/guards/livekit-sip.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import * as crypto from 'crypto';
@@ -63,13 +65,24 @@ export class VoiceController {
   }
 
   @Post('livekit/token')
-  @UseGuards(AuthGuard, TenantGuard)
+  @UseGuards(AuthOrInternalVoiceGuard)
   async createLiveKitToken(
     @TenantId() tenantId: string,
     @Body() body: { roomName: string; participantName?: string; identity?: string },
   ) {
+    const effectiveTenantId = tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
     const identity = body.identity || `user_${crypto.randomUUID()}`;
-    return this.voiceService.createLiveKitToken(tenantId, body.roomName, identity, body.participantName);
+    return this.voiceService.createLiveKitToken(effectiveTenantId, body.roomName, identity, body.participantName);
+  }
+
+  @Get('clinic-overview')
+  @UseGuards(AuthOrInternalVoiceGuard)
+  async getClinicOverview(
+    @TenantId() tenantId: string,
+    @Query('tenantId') queryTenantId?: string,
+  ) {
+    const effectiveTenantId = queryTenantId || tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
+    return this.voiceService.getClinicOverview(effectiveTenantId);
   }
 
   @Post('livekit/webhook')
@@ -162,9 +175,18 @@ export class VoiceController {
   }
 
   @Post('sip-dispatch-webhook')
-  @UseGuards(InternalVoiceGuard)
+  @UseGuards(LiveKitSipGuard)
   async sipDispatchWebhook(@Body() payload: any) {
     return this.voiceService.handleSipDispatchWebhook(payload);
+  }
+
+  @Post('calls/transfer')
+  @UseGuards(InternalVoiceGuard)
+  async initiateCallTransfer(
+    @TenantId() tenantId: string,
+    @Body() body: { roomName?: string; callerPhone: string; reason?: string },
+  ) {
+    return this.voiceService.handleHumanTransfer(tenantId, body);
   }
 
   @Get('numbers/available')

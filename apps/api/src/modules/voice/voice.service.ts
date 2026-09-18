@@ -5,7 +5,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { RagService } from '../knowledge-base/rag.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { AccessToken, WebhookReceiver } from 'livekit-server-sdk';
+import { AccessToken, WebhookReceiver, AgentDispatchClient } from 'livekit-server-sdk';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { PlivoService } from './plivo.service';
@@ -435,8 +435,27 @@ export class VoiceService {
     });
 
     const token = await at.toJwt();
+    const serverUrl = this.configService.get<string>('LIVEKIT_URL', 'wss://zerodesk-rpjledlb.livekit.cloud');
+
+    // Auto-dispatch Voice AI agent worker (zerodesk-receptionist) to the room
+    if (apiKey && apiSecret) {
+      try {
+        const dispatchClient = new AgentDispatchClient(serverUrl, effectiveApiKey, effectiveApiSecret);
+        await dispatchClient.createDispatch(roomName, 'zerodesk-receptionist', {
+          metadata: JSON.stringify({
+            tenant_id: tenantId,
+            business_name: 'Aura Skin & Aesthetic Clinic',
+            caller_phone: participantIdentity.startsWith('+') ? participantIdentity : '+918919205848',
+          }),
+        });
+        this.logger.log(`LiveKit AgentDispatch created: room=${roomName} -> agent=zerodesk-receptionist`);
+      } catch (err: any) {
+        this.logger.warn(`Could not create AgentDispatch for ${roomName}: ${err.message}`);
+      }
+    }
+
     return {
-      serverUrl: this.configService.get<string>('LIVEKIT_URL', 'wss://livekit.zerodesk.in'),
+      serverUrl,
       roomName,
       token,
       participantIdentity,
@@ -755,16 +774,42 @@ RULES:
    * Dynamic LiveKit SIP Dispatch Webhook:
    * Maps incoming carrier calledNumber to tenantId and callerPhone.
    */
-  async handleSipDispatchWebhook(payload: { calledNumber?: string; callerNumber?: string; sipCallId?: string }) {
-    const called = payload.calledNumber || '';
-    const caller = payload.callerNumber || '';
+  async handleSipDispatchWebhook(payload: any) {
+    const rawCalled = payload.calledNumber || payload.called_number || payload.to || '';
+    const rawCaller = payload.callerNumber || payload.caller_number || payload.from || '';
+    const cleanCalledDigits = (rawCalled || '').replace(/[^0-9]/g, '');
+    const cleanCallerDigits = (rawCaller || '').replace(/[^0-9]/g, '');
 
-    const config = await this.prisma.voiceConfig.findFirst({
+    const callerFormatted = cleanCallerDigits.length === 10
+      ? `+91${cleanCallerDigits}`
+      : cleanCallerDigits.length === 12 && cleanCallerDigits.startsWith('91')
+        ? `+${cleanCallerDigits}`
+        : (rawCaller || '').startsWith('+') ? rawCaller : `+${cleanCallerDigits || '0000000000'}`;
+
+    const last10Called = cleanCalledDigits.slice(-10);
+
+    // Guard: refuse to query with empty or too-short called number (would wildcard-match all records)
+    if (last10Called.length < 7) {
+      this.logger.warn(`Called number too short for DID lookup: "${rawCalled}" → "${last10Called}". Aborting match.`);
+      const triageRoom = `triage_call_${cleanCallerDigits || 'caller'}_${Date.now()}`;
+      return {
+        room_name: triageRoom,
+        metadata: JSON.stringify({
+          tenant_id: 'triage',
+          caller_phone: callerFormatted,
+          clinic_name: 'Customer Support',
+          source: 'SIP_SHORT_NUMBER',
+        }),
+      };
+    }
+
+    let config = await this.prisma.voiceConfig.findFirst({
       where: {
         OR: [
-          { plivoPhoneNumber: called },
-          { retellPhoneNumber: called },
-          { settings: { path: ['inboundNumber'], equals: called } },
+          { plivoPhoneNumber: { endsWith: last10Called } },
+          { retellPhoneNumber: { endsWith: last10Called } },
+          { settings: { path: ['inboundNumber'], equals: rawCalled } },
+          { settings: { path: ['inboundNumber'], equals: last10Called } },
         ],
         isActive: true,
       },
@@ -772,13 +817,13 @@ RULES:
     });
 
     if (!config) {
-      this.logger.warn(`Unregistered inbound telephony number ${called}. Routing to triage room.`);
-      const triageRoom = `triage_call_${caller || 'caller'}_${Date.now()}`;
+      this.logger.warn(`Unregistered inbound telephony number ${rawCalled} (${last10Called}). Routing to triage room.`);
+      const triageRoom = `triage_call_${cleanCallerDigits || 'caller'}_${Date.now()}`;
       return {
         room_name: triageRoom,
         metadata: JSON.stringify({
           tenant_id: 'triage',
-          caller_phone: caller,
+          caller_phone: callerFormatted,
           clinic_name: 'Customer Support',
           source: 'SIP_UNKNOWN_NUMBER',
         }),
@@ -786,21 +831,61 @@ RULES:
     }
 
     const tenantId = config.tenantId;
-    const clinicName = config.tenant?.name || 'ZeroDesk Clinic';
+    const clinicName = config.tenant?.name || 'ZeroDesk Business';
+    const niche = (config.tenant?.settings as any)?.industry || 'clinic';
+    const forwardingNumber = config.transferNumber || (config.settings as any)?.forwardingNumber || '';
+    const voicePersona = config.voicePersonality || 'professional';
 
-    const roomName = `tenant_${tenantId}_call_${caller || 'caller'}_${Date.now()}`;
+    const roomName = `tenant_${tenantId}_call_${cleanCallerDigits || 'caller'}_${Date.now()}`;
     const metadata = JSON.stringify({
       tenant_id: tenantId,
-      caller_phone: caller,
+      caller_phone: callerFormatted,
       clinic_name: clinicName,
+      niche,
+      forwarding_number: forwardingNumber,
+      voice_persona: voicePersona,
       source: 'SIP_INBOUND',
     });
 
-    this.logger.log(`LiveKit SIP dispatch mapped called number ${called} to tenant ${tenantId} (${clinicName})`);
+    this.logger.log(`LiveKit SIP dispatch mapped called number ${rawCalled} to tenant ${tenantId} (${clinicName}, niche: ${niche})`);
 
     return {
       room_name: roomName,
       metadata,
+    };
+  }
+
+  /**
+   * Handle human handoff transfer request from Voice Agent
+   */
+  async handleHumanTransfer(tenantId: string, payload: { roomName?: string; callerPhone: string; reason?: string }) {
+    const config = await this.prisma.voiceConfig.findFirst({ where: { tenantId } });
+    const forwardingNumber = config?.transferNumber || (config?.settings as any)?.forwardingNumber || null;
+    
+    const cleanDigits = (payload.callerPhone || '').replace(/[^0-9]/g, '');
+    const last10 = cleanDigits.slice(-10);
+
+    const customer = await this.prisma.customer.findFirst({
+      where: { tenantId, phone: { contains: last10 } },
+    });
+
+    if (customer) {
+      await this.prisma.activity.create({
+        data: {
+          tenantId,
+          customerId: customer.id,
+          type: 'VOICE_CALL',
+          content: `HUMAN HANDOFF REQUESTED: ${payload.reason || 'Caller asked for human staff'}. Target forwarding: ${forwardingNumber || 'None configured'}`,
+        },
+      });
+    }
+
+    this.logger.warn(`[HUMAN_HANDOFF] Tenant: ${tenantId}, Caller: ${payload.callerPhone}, ForwardTo: ${forwardingNumber}, Reason: ${payload.reason}`);
+
+    return {
+      status: 'initiated',
+      forwardingNumber,
+      message: forwardingNumber ? `Bridging call to ${forwardingNumber}` : 'Frontdesk notified of transfer request',
     };
   }
 
@@ -816,26 +901,49 @@ RULES:
     metadata?: Record<string, any>,
   ) {
     try {
-      const cleanPhone = (callerPhone || '').replace(/[^0-9+]/g, '');
-      const normalizedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+${cleanPhone}`;
+      const rawDigits = (callerPhone || '').replace(/[^0-9]/g, '');
+      let normalizedPhone: string;
+      if (rawDigits.length === 10) {
+        normalizedPhone = `+91${rawDigits}`;
+      } else if (rawDigits.length === 12 && rawDigits.startsWith('91')) {
+        normalizedPhone = `+${rawDigits}`;
+      } else if (callerPhone?.startsWith('+')) {
+        normalizedPhone = callerPhone;
+      } else {
+        normalizedPhone = `+${rawDigits || '910000000000'}`;
+      }
 
       let customer = await this.prisma.customer.findFirst({
         where: {
           tenantId,
-          phone: { contains: cleanPhone.slice(-10) || '0000000000' },
+          phone: { contains: rawDigits.slice(-10) || '0000000000' },
         },
       });
 
       if (!customer) {
-        customer = await this.prisma.customer.create({
-          data: {
-            tenantId,
-            name: metadata?.callerName || `Caller ${cleanPhone.slice(-4) || 'Unknown'}`,
-            phone: normalizedPhone || '+910000000000',
-            tags: ['lead', 'phone_inbound'],
-            metadata: { source: 'PHONE_INBOUND' },
-          },
-        });
+        try {
+          customer = await this.prisma.customer.create({
+            data: {
+              tenantId,
+              name: metadata?.callerName || `Caller ${rawDigits.slice(-4) || 'Unknown'}`,
+              phone: normalizedPhone,
+              tags: ['lead', 'phone_inbound'],
+              metadata: { source: 'PHONE_INBOUND' },
+            },
+          });
+        } catch (createErr: any) {
+          // P2002 = unique constraint violation (concurrent call from same number)
+          if (createErr?.code === 'P2002') {
+            customer = await this.prisma.customer.findFirst({
+              where: { tenantId, phone: { contains: rawDigits.slice(-10) || '0000000000' } },
+            });
+            if (!customer) {
+              throw new Error('Customer creation race: P2002 thrown but re-query returned null');
+            }
+          } else {
+            throw createErr;
+          }
+        }
       }
 
       const conversation = await this.prisma.conversation.create({
@@ -1017,6 +1125,57 @@ RULES:
       this.logger.error(`Sarvam STT proxy error: ${err.message}`);
       throw new InternalServerErrorException(err.message);
     }
+  }
+
+  /**
+   * Returns complete clinical operations overview for Aura Skin & Aesthetic Clinic.
+   */
+  async getClinicOverview(tenantId: string) {
+    const effectiveTenantId = tenantId && tenantId !== 'default' && tenantId !== 'default_business'
+      ? tenantId
+      : '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
+
+    const [tenant, services, staff, customers, appointments, knowledgeDocs, knowledgeChunksCount] = await Promise.all([
+      this.prisma.tenant.findUnique({ where: { id: effectiveTenantId } }),
+      this.prisma.service.findMany({ where: { tenantId: effectiveTenantId, isActive: true }, orderBy: { price: 'asc' } }),
+      this.prisma.staffMember.findMany({ where: { tenantId: effectiveTenantId, isActive: true } }),
+      this.prisma.customer.findMany({ where: { tenantId: effectiveTenantId }, orderBy: { leadScore: 'desc' } }),
+      this.prisma.appointment.findMany({
+        where: { tenantId: effectiveTenantId },
+        include: { customer: true, service: true, staff: true },
+        orderBy: { scheduledAt: 'desc' },
+      }),
+      this.prisma.knowledgeDocument.findMany({ where: { tenantId: effectiveTenantId, isActive: true }, include: { chunks: true } }),
+      this.prisma.knowledgeChunk.count({ where: { tenantId: effectiveTenantId } }),
+    ]);
+
+    return {
+      tenant: {
+        id: tenant?.id,
+        name: tenant?.name || 'Aura Skin & Aesthetic Clinic',
+        slug: tenant?.slug || 'aura-skin-clinic',
+        settings: tenant?.settings,
+      },
+      services,
+      staff,
+      customers,
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        customerName: a.customer?.name || 'Valued Patient',
+        customerPhone: a.customer?.phone || '',
+        serviceName: a.service?.name || 'Clinical Procedure',
+        doctorName: a.staff?.name || 'Dr. Ananya Rao',
+        scheduledAt: a.scheduledAt,
+        durationMins: a.durationMins,
+        status: a.status,
+        source: a.source || 'VOICE_AI',
+        notes: a.notes,
+      })),
+      knowledge: {
+        documents: knowledgeDocs,
+        totalChunks: knowledgeChunksCount,
+      },
+    };
   }
 }
 

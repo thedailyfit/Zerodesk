@@ -61,10 +61,14 @@ export class AuthGuard implements CanActivate {
         if (orgRole) {
           computedRole = orgRole.replace(/^org:/i, '').toUpperCase();
           if (computedRole === 'ADMIN') computedRole = 'ORG_ADMIN';
-          if (computedRole === 'MEMBER') computedRole = 'STAFF';
+          else if (computedRole === 'MEMBER') computedRole = 'STAFF';
+          else if (computedRole === 'SUPER_ADMIN') computedRole = 'ORG_ADMIN'; // Reject privilege escalation
         } else {
           computedRole = 'STAFF';
         }
+      }
+      if (computedRole === 'SUPER_ADMIN' && !isSuperAdmin) {
+        computedRole = 'ORG_ADMIN';
       }
 
       request.user = {

@@ -33,8 +33,19 @@ export function NicheProvider({ children }: { children: ReactNode }) {
       if (saved && NICHE_REGISTRY && NICHE_REGISTRY[saved]) {
         setCurrentNicheState(saved);
       } else {
-        setCurrentNicheState('skin');
-        localStorage.setItem('zerodesk-niche', 'skin');
+        const path = window.location.pathname;
+        const isExcluded = 
+          path.startsWith('/onboarding') || 
+          path.startsWith('/sign-in') || 
+          path.startsWith('/sign-up') || 
+          path.startsWith('/super-admin') || 
+          path.startsWith('/widget') || 
+          path.startsWith('/book') ||
+          path.startsWith('/api');
+        
+        if (!isExcluded) {
+          window.location.href = '/onboarding';
+        }
       }
     }
   }, []);

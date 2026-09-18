@@ -40,14 +40,6 @@ import { useNotifications } from '@/lib/notifications-store';
 import { useSuperAdminStore } from '@/lib/superadmin-store';
 import type { NicheId, ActiveNicheId, NicheNavItem } from '@/config/niches/types';
 
-const NICHE_OPTIONS: { id: ActiveNicheId; name: string; tag: string }[] = [
-  { id: 'skin', name: 'Skin Clinic', tag: 'Dermatology' },
-  { id: 'dental', name: 'Dental Clinic', tag: 'Dental Care' },
-  { id: 'spa', name: 'Spa & Wellness', tag: 'Wellness' },
-  { id: 'realestate', name: 'Real Estate', tag: 'Property OS' },
-  { id: 'hotel', name: 'Hotel', tag: 'Hospitality' },
-];
-
 const SYSTEM_MENU_ITEMS = [
   { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions', roles: ['ADMIN'] },
   { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
@@ -215,12 +207,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { currentNiche, setNiche, nicheConfig } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const { settings, updateSetting } = useNotifications();
   const { role: globalRole, setRole: setGlobalRole } = useRole();
   const [demoRole, setDemoRole] = useState<string>(globalRole || 'ADMIN');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
-  const [nicheDropdownOpen, setNicheDropdownOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { tenants, impersonatedTenantId, impersonateTenant } = useSuperAdminStore();
@@ -304,12 +295,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        {/* Dynamic Niche / Dashboard Switcher Widget */}
-        <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/40 relative">
-          <button
-            onClick={() => setNicheDropdownOpen(!nicheDropdownOpen)}
+        {/* Active Business Workspace Header */}
+        <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/30">
+          <div
             className={cn(
-              "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] hover:border-blue-500/50 bg-[var(--color-bg)] transition-all group shadow-sm",
+              "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-sm",
               isSidebarOpen ? "px-3 py-2" : "px-2 py-2 justify-center"
             )}
           >
@@ -317,70 +307,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {isSidebarOpen ? (
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-xs font-bold text-[var(--color-text)] truncate">
-                    {NICHE_OPTIONS.find(n => n.id === currentNiche)?.name || nicheConfig.label}
+                    {nicheConfig?.label || 'ZeroDesk Workspace'}
                   </span>
-                  <span className="text-[10px] font-semibold text-blue-400 tracking-wide uppercase flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
-                    Switch Dashboard
+                  <span className="text-[10px] font-semibold text-emerald-500 tracking-wide uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Active Workspace
                   </span>
                 </div>
               ) : (
-                <span className="text-xs font-extrabold text-blue-400">
-                  {currentNiche.slice(0, 2).toUpperCase()}
+                <span className="text-xs font-extrabold text-blue-500">
+                  {currentNiche ? currentNiche.slice(0, 2).toUpperCase() : 'ZD'}
                 </span>
               )}
             </div>
-            {isSidebarOpen && (
-              <ChevronDown size={14} className={cn("text-[var(--color-text-muted)] transition-transform shrink-0", nicheDropdownOpen && "rotate-180")} />
-            )}
-          </button>
-
-          {/* Niche Selector Dropdown Popover */}
-          <AnimatePresence>
-            {nicheDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className={cn(
-                  "absolute top-full left-2 right-2 mt-1.5 bg-[var(--color-bg-elevated)] backdrop-blur-xl border border-[var(--color-border)] rounded-xl shadow-2xl overflow-hidden z-50 p-1.5 space-y-1",
-                  !isSidebarOpen && "w-60 left-12"
-                )}
-              >
-                <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-text-muted)] border-b border-[var(--color-border)] mb-1 flex items-center justify-between">
-                  <span>Select Niche OS</span>
-                  <span className="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-mono">Instant Switch</span>
-                </div>
-                {NICHE_OPTIONS.map((niche) => {
-                  const isSelected = currentNiche === niche.id;
-                  return (
-                    <button
-                      key={niche.id}
-                      onClick={() => {
-                        setNiche(niche.id);
-                        setNicheDropdownOpen(false);
-                      }}
-                      className={cn(
-                        "w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition-all text-left group",
-                        isSelected 
-                          ? "bg-blue-600 text-white shadow-md font-bold" 
-                          : "text-[var(--color-text)] hover:bg-[var(--color-surface)]"
-                      )}
-                    >
-                      <span className="truncate">{niche.name}</span>
-                      <span className={cn(
-                        "text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ml-1",
-                        isSelected ? "bg-white/20 text-white" : "bg-[var(--color-surface)] text-[var(--color-text-muted)]"
-                      )}>
-                        {niche.tag}
-                      </span>
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </div>
         </div>
 
         {/* Navigation Items */}

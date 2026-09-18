@@ -6,6 +6,7 @@ import { PlivoService } from './plivo.service';
 import { KnowledgeModule } from '../knowledge-base/knowledge.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { OutboundCallProcessor } from './outbound-call.processor';
+import { LiveKitSipGuard } from '../../common/guards/livekit-sip.guard';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { OutboundCallProcessor } from './outbound-call.processor';
     }),
   ],
   controllers: [VoiceController],
-  providers: [VoiceService, PlivoService, OutboundCallProcessor],
+  providers: [VoiceService, PlivoService, OutboundCallProcessor, LiveKitSipGuard],
   exports: [VoiceService, PlivoService, BullModule],
 })
 export class VoiceModule {}

@@ -29,6 +29,7 @@ import { useServices } from '@/lib/services-store';
 import { usePatients, PatientRecord } from '@/lib/patients-store';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import { api } from '@/lib/api-client';
 
 const TIME_SLOTS = [
   '09:30 AM', '10:15 AM', '11:00 AM', '11:45 AM',
@@ -263,6 +264,22 @@ export default function BookAppointmentPage() {
     };
 
     setConfirmedBooking(newBooking);
+
+    // Persist booking to backend API
+    api.post('/appointments', {
+      customerId: finalCustomerId,
+      customerName,
+      phone: customerPhone,
+      serviceName: selectedService?.name || 'General Consultation',
+      doctorName: selectedDoctor,
+      date: bookingDate,
+      time: finalTime,
+      totalAmount: totalPayable,
+      tokenNumber: tokenNo,
+      status: 'SCHEDULED',
+    }).catch((err) => {
+      console.error('Failed to persist booking to API:', err.message);
+    });
 
     // Add to recent walk-ins list
     setRecentBookings(prev => [

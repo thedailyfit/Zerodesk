@@ -56,14 +56,17 @@ export default function InboundCallsPage() {
     });
   }, []);
   const [search, setSearch] = useState('');
+  const [dispositionFilter, setDispositionFilter] = useState('ALL');
   const [activeCallId, setActiveCallId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const filteredCalls = calls.filter(c => 
-    c.customer.toLowerCase().includes(search.toLowerCase()) || 
-    c.phone.includes(search) ||
-    c.branch.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCalls = calls.filter(c => {
+    const matchesSearch = c.customer.toLowerCase().includes(search.toLowerCase()) || 
+      c.phone.includes(search) ||
+      c.branch.toLowerCase().includes(search.toLowerCase());
+    const matchesDisposition = dispositionFilter === 'ALL' || c.resolution === dispositionFilter;
+    return matchesSearch && matchesDisposition;
+  });
 
   const toggleAudioPlay = (id: string) => {
     if (playingId === id) {
@@ -123,14 +126,13 @@ export default function InboundCallsPage() {
           {['ALL', 'AI_RESOLVED', 'HANDED_OFF_TO_HUMAN', 'MISSED_AUTO_WHATSAPP'].map((disp) => (
             <button
               key={disp}
-              onClick={() => {
-                if (disp === 'ALL') {
-                  setCalls(INBOUND_CALL_LOGS);
-                } else {
-                  setCalls(INBOUND_CALL_LOGS.filter(c => c.resolution === disp));
-                }
-              }}
-              className="px-3 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all shrink-0 bg-slate-900 border-slate-800 text-slate-300 hover:border-blue-500/50"
+              onClick={() => setDispositionFilter(disp)}
+              className={cn(
+                "px-3 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all shrink-0",
+                dispositionFilter === disp
+                  ? "bg-blue-600/20 border-blue-500 text-blue-300"
+                  : "bg-slate-900 border-slate-800 text-slate-300 hover:border-blue-500/50"
+              )}
             >
               {disp === 'ALL' ? 'Show All' : disp.replace('_', ' ')}
             </button>

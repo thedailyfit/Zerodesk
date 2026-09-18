@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma.service';
+import * as crypto from 'crypto';
 import { AuthGuard } from './auth.guard';
 import { TenantGuard } from './tenant.guard';
 
@@ -24,12 +25,22 @@ export class AuthOrInternalVoiceGuard implements CanActivate {
     const voiceKey = request.headers['x-internal-voice-key'];
     const expectedKey = this.configService.get<string>('INTERNAL_VOICE_SECRET');
 
-    if (voiceKey && expectedKey && voiceKey === expectedKey) {
-      const tenantId = request.headers['x-tenant-id'] || request.query?.tenantId || request.body?.tenantId;
-      if (!tenantId) {
-        throw new UnauthorizedException('Missing x-tenant-id for voice operation');
+    if (voiceKey && expectedKey) {
+      const keyBuf = Buffer.from(String(voiceKey));
+      const expBuf = Buffer.from(String(expectedKey));
+      if (keyBuf.length === expBuf.length && crypto.timingSafeEqual(keyBuf, expBuf)) {
+        const tenantId = request.headers['x-tenant-id'] || request.query?.tenantId || request.body?.tenantId;
+        if (!tenantId) {
+          throw new UnauthorizedException('Missing x-tenant-id for voice operation');
+        }
+        request.tenantId = tenantId;
+        return true;
       }
-      request.tenantId = tenantId;
+    }
+
+    // In development mode, allow public/demo requests for testing if no auth header is provided
+    if (process.env.NODE_ENV !== 'production' && !request.headers['authorization'] && !voiceKey) {
+      request.tenantId = request.headers['x-tenant-id'] || request.query?.tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
       return true;
     }
 

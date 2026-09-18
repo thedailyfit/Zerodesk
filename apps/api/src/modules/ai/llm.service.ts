@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 
-export type LLMProvider = 'openai' | 'sarvam' | 'gemini';
+export type LLMProvider = 'groq' | 'openai' | 'sarvam' | 'gemini';
 
 export interface LLMMessage {
   role: 'system' | 'user' | 'assistant';
@@ -27,27 +27,34 @@ export interface LLMOptions {
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
+  private groq: OpenAI; // Groq ultra-fast LPU inference (OpenAI-compatible API)
   private openai: OpenAI;
   private gemini: OpenAI; // Google Gemini via OpenAI-compatible API
   private defaultProvider: LLMProvider;
 
   constructor(private configService: ConfigService) {
-    // OpenAI (Tier 1: ChatGPT)
+    // Groq (Primary Ultra-Fast Voice & Chat LLM)
+    this.groq = new OpenAI({
+      apiKey: this.configService.get('GROQ_API_KEY', ''),
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+
+    // OpenAI (Fallback)
     this.openai = new OpenAI({
       apiKey: this.configService.get('OPENAI_API_KEY') || 'sk-dummy',
     });
 
-    // Google Gemini (Tier 3: Gemini via OpenAI-compatible API)
+    // Google Gemini (Gemini via OpenAI-compatible API)
     this.gemini = new OpenAI({
       apiKey: this.configService.get('GEMINI_API_KEY', ''),
       baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
     });
 
-    this.defaultProvider = this.configService.get<LLMProvider>('DEFAULT_LLM_PROVIDER', 'openai');
+    this.defaultProvider = this.configService.get<LLMProvider>('DEFAULT_LLM_PROVIDER', 'groq');
   }
 
   /**
-   * Send a chat completion request with 3-tier fallback: OpenAI -> Sarvam AI -> Google Gemini.
+   * Send a chat completion request with 4-tier fallback: Groq -> Sarvam AI -> OpenAI -> Google Gemini.
    */
   async chat(messages: LLMMessage[], options: LLMOptions = {}): Promise<LLMResponse> {
     const provider = options.provider || this.defaultProvider;
@@ -61,7 +68,7 @@ export class LlmService {
       }
     }
 
-    throw new Error('All 3 LLM providers (OpenAI, Sarvam, Gemini) failed');
+    throw new Error('All LLM providers (Groq, Sarvam, OpenAI, Gemini) failed');
   }
 
   private async callProvider(
@@ -139,6 +146,7 @@ export class LlmService {
 
   private getClient(provider: LLMProvider): OpenAI {
     switch (provider) {
+      case 'groq': return this.groq;
       case 'gemini': return this.gemini;
       default: return this.openai;
     }
@@ -146,48 +154,46 @@ export class LlmService {
 
   private getDefaultModel(provider: LLMProvider): string {
     switch (provider) {
-      case 'openai': return this.configService.get('OPENAI_MODEL', 'gpt-4o-mini');
-      case 'sarvam': return this.configService.get('SARVAM_CHAT_MODEL', 'sarvam-105b-conversations');
+      case 'groq': return this.configService.get('GROQ_MODEL', 'openai/gpt-oss-120b');
+      case 'openai': return this.configService.get('OPENAI_MODEL', 'gpt-4o');
+      case 'sarvam': return this.configService.get('SARVAM_CHAT_MODEL', 'sarvam-2b-indic');
       case 'gemini': return this.configService.get('GEMINI_MODEL', 'gemini-2.0-flash');
-      default: return 'gpt-4o-mini';
+      default: return 'openai/gpt-oss-120b';
     }
   }
 
   private getFallbackOrder(primary: LLMProvider): LLMProvider[] {
-    const tierOrder: LLMProvider[] = ['openai', 'sarvam', 'gemini'];
+    const tierOrder: LLMProvider[] = ['groq', 'sarvam', 'openai', 'gemini'];
     return [primary, ...tierOrder.filter((p) => p !== primary)];
   }
 
-  private normalizeVector1536(vec: number[]): number[] {
-    if (vec.length === 1536) return vec;
-    if (vec.length < 1536) {
-      return [...vec, ...new Array(1536 - vec.length).fill(0)];
-    }
-    return vec.slice(0, 1536);
-  }
-
   /**
-   * Generate embeddings using OpenAI (primary) or Gemini as fallback.
-   * Always ensures output is exactly 1536 dimensions matching vector(1536).
+   * Generate embeddings using OpenAI text-embedding-3-small (native 1536 dims).
+   * Ensures output is always valid 1536 dimensions; never returns all-zero vectors.
    */
   async embed(text: string): Promise<number[]> {
-    try {
-      const response = await this.openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: text,
-      });
-      return this.normalizeVector1536(response.data[0].embedding);
-    } catch {
-      this.logger.warn('OpenAI embedding failed, trying Gemini fallback');
+    if (!text || !text.trim()) {
+      throw new Error('Cannot generate embedding for empty text content');
+    }
+
+    // Try OpenAI primary with 1 retry
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const response = await this.gemini.embeddings.create({
-          model: 'text-embedding-004',
-          input: text,
+        const response = await this.openai.embeddings.create({
+          model: 'text-embedding-3-small',
+          input: text.slice(0, 8000),
         });
-        return this.normalizeVector1536(response.data[0].embedding);
-      } catch {
-        return new Array(1536).fill(0);
+        const embedding = response.data[0]?.embedding;
+        if (embedding && embedding.length === 1536) {
+          return embedding;
+        }
+      } catch (err: any) {
+        this.logger.warn(`OpenAI embedding attempt ${attempt} failed: ${err.message}`);
+        if (attempt === 2) {
+          throw new Error(`Embedding generation failed after 2 attempts: ${err.message}`);
+        }
       }
     }
+    throw new Error('Unexpected embedding generation failure');
   }
 }

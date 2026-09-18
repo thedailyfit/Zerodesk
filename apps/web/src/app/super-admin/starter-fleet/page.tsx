@@ -42,29 +42,8 @@ export default function SuperAdminStarterFleetPage() {
         setTenants(starters);
       }
     } catch (err) {
-      console.warn('Could not load tenants from API, using demo starters:', err);
-      setTenants([
-        {
-          id: 'tenant_clinic_01',
-          name: 'Kavitha Aesthetics',
-          industry: 'Clinic',
-          planTier: 'starter',
-          voiceConfig: { plivoPhoneNumber: '+918047361920', isActive: true },
-          subscription: { voiceMinutesUsed: 214, voiceMinutesLimit: 300, mrr: 2999 },
-          kyc: { status: 'VERIFIED' },
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'tenant_salon_02',
-          name: 'Urban Glow Unisex Salon',
-          industry: 'Salon & Spa',
-          planTier: 'starter',
-          voiceConfig: { plivoPhoneNumber: undefined, isActive: false },
-          subscription: { voiceMinutesUsed: 289, voiceMinutesLimit: 300, mrr: 2999 },
-          kyc: { status: 'PENDING' },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      console.warn('Could not load tenants from API:', err);
+      setTenants([]);
     } finally {
       setLoading(false);
     }
@@ -325,6 +304,14 @@ export default function SuperAdminStarterFleetPage() {
           );
         })}
       </div>
+
+      {filteredTenants.length === 0 && !loading && (
+        <div className="p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center">
+          <Building2 className="w-8 h-8 text-slate-400 mb-2" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Starter Businesses Found</p>
+          <p className="text-xs text-slate-500 mt-0.5">There are currently no active starter-tier businesses matching your filter.</p>
+        </div>
+      )}
     </div>
   );
 }

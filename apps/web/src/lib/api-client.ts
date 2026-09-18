@@ -17,10 +17,7 @@ let globalTokenProvider: TokenProvider = async () => {
 
 let globalTenantIdProvider: TenantIdProvider = () => {
   if (typeof window === 'undefined') return null;
-  // Check SuperAdmin Ghost Mode impersonation first
-  const ghostTenant = localStorage.getItem('zerodesk_impersonated_tenant_id');
-  if (ghostTenant) return ghostTenant;
-  // Check active organization or persisted tenant
+  // Use Clerk organization or persisted tenant (no client-side impersonation)
   return (
     (window as any).Clerk?.organization?.id ||
     localStorage.getItem('zerodesk_tenant_id') ||
@@ -49,7 +46,7 @@ export async function apiClient<T = any>(
   const { token: manualToken, tenantId: manualTenantId, skipAuth, headers = {}, ...rest } = options;
 
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(rest.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
     ...(headers as Record<string, string>),
   };
 

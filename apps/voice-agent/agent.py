@@ -6,6 +6,7 @@ reasons with OpenAI GPT-4o, and speaks with ElevenLabs Voice Clone.
 """
 
 import os
+import sys
 import json
 import re
 import time
@@ -14,6 +15,13 @@ import logging
 import aiohttp
 from typing import Annotated, Optional
 from dotenv import load_dotenv
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from livekit.agents import (
     AgentSession,
@@ -27,6 +35,11 @@ from livekit.agents import (
     inference,
 )
 from livekit.plugins import openai, sarvam, elevenlabs, silero
+
+try:
+    from livekit.plugins import groq
+except ImportError:
+    groq = None
 
 try:
     from livekit.plugins import deepgram
@@ -45,7 +58,7 @@ logger = logging.getLogger("voice-agent")
 
 ZERODESK_API = os.getenv("ZERODESK_API_URL", "http://localhost:4000")
 VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "90ipbRoKi4CpHXvKVtl0")
-INTERNAL_VOICE_SECRET = os.getenv("INTERNAL_VOICE_SECRET", "zerodesk-internal-voice-key-2026")
+INTERNAL_VOICE_SECRET = os.getenv("INTERNAL_VOICE_SECRET", "zerodesk-internal-voice-key-2026").strip()
 
 
 # ==========================================
@@ -332,6 +345,28 @@ def create_call_tools(call_ctx: CallContext) -> list:
         reason: Annotated[str, "Reason for human transfer"] = "Customer request",
     ) -> str:
         """Transfer caller to human staff."""
+        try:
+            async with aiohttp.ClientSession() as http_session:
+                transfer_url = f"{ZERODESK_API}/v1/voice/calls/transfer"
+                payload = {
+                    "roomName": call_ctx.room_name,
+                    "callerPhone": call_ctx.caller_phone,
+                    "reason": reason,
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "x-internal-voice-key": INTERNAL_VOICE_SECRET,
+                    "x-tenant-id": call_ctx.tenant_id,
+                }
+                async with http_session.post(transfer_url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=3.0)) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        fwd = data.get("forwardingNumber")
+                        if fwd:
+                            return f"Transferring your call to our human frontdesk at {fwd}. Please stay on the line."
+                        return "I have alerted our frontdesk team to connect with you. Please stay on the line."
+        except Exception as e:
+            logger.error(f"transfer_to_human backend call error: {e}")
         return f"Transferring your call to our human frontdesk team for {reason}. Please stay on the line."
 
     return [book_appointment, get_pricing, query_knowledge_base, send_whatsapp_info, transfer_to_human]
@@ -471,8 +506,7 @@ async def entrypoint(ctx: JobContext):
     except Exception as e:
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
 
-    if not system_prompt or len(system_prompt) < 100:
-        system_prompt = f"""You are the warm, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
+    system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
 Your doctor is Dr. Ananya Rao, MBBS, MD (Dermatology, Venereology & Leprosy — AIIMS Gold Medalist, 11+ years experience).
 
 LOCATION & TIMINGS:
@@ -481,115 +515,172 @@ LOCATION & TIMINGS:
 - Doctor Consultation Fee: ₹800 (includes 7-day free prescription follow-up).
 
 COMPLETE TREATMENT RATE CARD:
-1. HydraFacial Deluxe: ₹4,500 / session (Package of 3: ₹11,999). 7-step Korean glass glow protocol.
-2. Full Body Laser Hair Reduction: ₹14,999 / session (Package of 6: ₹69,999). Painless Soprano Titanium triple-wavelength.
-3. Underarms Laser Hair Reduction: ₹2,499 / session.
-4. Chemical Peels (Acne & Glow): ₹2,800 / session. Medical-grade salicylic/glycolic peels.
-5. Botox Anti-Wrinkle (Allergan USA): ₹350 / unit. Forehead & crow's feet typically require 20-30 units (₹7,000 – ₹10,500).
-6. Juvederm Dermal Fillers: ₹22,000 / 1ml syringe (lips, cheeks, chin).
-7. PRP Hair Therapy (GFC Growth Factor): ₹5,000 / session (Package of 4: ₹17,500).
-8. Carbon Laser Peel (Hollywood Glow Peel): ₹3,800 / session.
+1. Doctor Consultation: ₹800 (Dr. Ananya Rao MD / Dr. Priya Sharma).
+2. HydraFacial Deluxe: ₹4,500 / session (Package of 3: ₹11,999). 7-step Korean glass skin glow protocol.
+3. Full Body Laser Hair Reduction: ₹14,999 / session (Package of 6: ₹69,999). Painless Soprano Titanium triple-wavelength with ICE Plus cooling.
+4. Underarms Laser Hair Reduction: ₹2,499 / session.
+5. Chemical Peels (Acne, Glow & Pigmentation): ₹2,800 / session. Medical-grade salicylic/glycolic peels.
+6. Botox Anti-Wrinkle (Allergan USA): ₹350 / unit. Forehead & crow's feet typically require 20-30 units (₹7,000 – ₹10,500).
+7. Juvederm Dermal Fillers: ₹22,000 / 1ml syringe (lips, cheeks, chin contouring).
+8. PRP Hair Therapy (GFC Growth Factor): ₹5,000 / session (Package of 4: ₹17,500).
+9. Carbon Laser Peel (Hollywood Glow Peel): ₹3,800 / session.
 
-INDIAN PERSONA, CADENCE & MULTI-LINGUAL CODE-SWITCHING:
-- Tone: Warm, respectful, polite Indian English receptionist. Speak with an authentic Indian English cadence.
-- Use natural Indian conversational markers: "Ji bilkul", "Namaskaram", "Sir/Ma'am", "Certainly, let me help you with that".
-- If the caller speaks in Hindi or Hinglish, IMMEDIATELY switch to polite, natural Hinglish:
-  * Example: "Ji bilkul! Dr. Ananya ke saath consultation fee 800 rupees hai. Clinic Indiranagar 100 Feet Road par hai. Kya main aapke liye appointment schedule kar sakti hoon?"
-  * Example for HydraFacial: "HydraFacial Deluxe ka price 4,500 rupees per session hai, jismein 7-step Korean glass glow shamil hai."
-- If the caller speaks in Telugu, reply in Telugu:
-  * Example: "Namaskaram andi! Dr. Ananya Rao gari consultation fee 800 rupees andi. Meeku appointment eppudu schedule cheyagalanu?"
-- Never tell the caller you cannot speak their language. Seamlessly match their language.
+CRITICAL SPOKEN VOICE RULES (ABSOLUTE REQUIREMENT FOR NATURAL HUMAN SPEECH):
+- This is a live voice phone call speaking directly into the caller's ear.
+- NEVER, under any circumstance, say or output words like "Response:", "Action:", "Thought:", "Observation:", "Assistant:", or "Doctor:".
+- NEVER say what internal step you are performing (e.g. do NOT say "I will look that up in the database" or "Calling function"). Speak directly to the caller.
+- NEVER output markdown formatting (**bold**, *italics*, bullet points, asterisks, hashtags, or numbered lists). Speak in smooth, natural sentences.
+- Keep every response short, conversational, and direct: 1 to 2 sentences maximum. Phone callers want quick, clear answers.
+- Always offer to send Google Maps location and booking link to their WhatsApp.
 
-CRITICAL VOICE PHONE RULES:
-- Keep answers short and concise: 1 to 2 sentences maximum, natural for phone calls.
-- Always offer to send the Google Maps location and booking link directly to their WhatsApp.
-- If asked about painful treatments: reassure that laser treatments use cooling soprano technology and are virtually painless.
-- EMERGENCY PROTOCOL: If caller reports severe chemical burn, acute eye trauma, or severe allergy, immediately advise hospital emergency care or 108/112.
-- NO MEDICAL DIAGNOSIS OVER PHONE: Remind the caller that clinical diagnosis requires an in-person doctor consultation with Dr. Ananya Rao.
+MANDATORY MULTI-LINGUAL LANGUAGE PROTOCOL (TELUGU & TELINGLISH PRIORITY):
+- If the caller speaks ANY Telugu or Telinglish (Telugu mixed with English):
+  YOU MUST IMMEDIATELY REPLY IN NATURAL TELINGLISH (Telugu mixed with conversational English words)! NEVER REPLY IN PURE ENGLISH!
+  Common Telugu words: "entha", "andi", "kavali", "undi", "cheppandi", "eppudu", "ekkada", "unnaru", "gari", "kadhara", "chudandi", "cheyandi", "ela".
+  Natural Telinglish examples:
+  * Consultation Fee: "Namaskaram andi! Dr. Ananya Rao gari consultation fee 800 rupees andi. Clinic Indiranagar 100 Feet Road lo undi. Meeku appointment eppudu schedule cheyali andi?"
+  * HydraFacial Price: "HydraFacial Deluxe session 4,500 rupees andi. Dintlo 7-step Korean glass glow protocol untundi."
+  * Timings & Location: "Aura Clinic Indiranagar 100 Feet Road lo, Toit opposite ga undi andi. Monday nunchi Saturday 10:00 AM nunchi 7:30 PM varaku open untundi andi."
+  * Laser Treatment: "Full Body Laser Hair Reduction session 14,999 rupees andi. Soprano Titanium cooling valla pain emi undadu andi."
+  * Booking Appointment: "Tappakunda andi! Mee peru cheppandi, meeku preferred time lo slot confirm chesthanu."
+  * Sending WhatsApp details: "Mee WhatsApp ki rate card and location ventane pampisthanu andi."
+- If the caller speaks Hindi / Hinglish:
+  Reply in polite Hinglish ("Ji bilkul! Dr. Ananya ke saath consultation fee 800 rupees hai. Clinic Indiranagar mein hai...").
+- If the caller speaks English:
+  Reply in warm, polite Indian English reception tone.
+
+EMERGENCY PROTOCOL:
+- If caller reports severe chemical burn, acute eye trauma, or severe acute swelling, advise immediate emergency hospital visit or calling 108/112.
 """
 
-    # 4. Configurable STT provider with graceful failover to LiveKit Cloud native Deepgram Nova-2
-    selected_stt = None
+    if customer_info and isinstance(customer_info, dict):
+        cust_name = customer_info.get("name", "")
+        cust_appts = customer_info.get("appointments", [])
+        appt_str = ""
+        if cust_appts and isinstance(cust_appts, list) and len(cust_appts) > 0:
+            first_appt = cust_appts[0]
+            appt_str = f"Upcoming/Past Appointment: {first_appt.get('scheduledAt')} - Status: {first_appt.get('status')}"
+        notes = customer_info.get("aiSummary") or ""
+        system_prompt += f"""
+RETURNING CALLER PROFILE:
+- Caller Name: {cust_name or 'Valued Patient/Client'}
+- Phone: {call_ctx.caller_phone}
+- {appt_str}
+- Notes: {notes}
+Acknowledge returning caller warmly by name and reference their appointment when helpful.
+"""
+
     sarvam_key = os.getenv("SARVAM_API_KEY", "")
-    if sarvam_key and not sarvam_key.startswith("sk_xxx"):
+
+    # 4. VAD configuration (used for both StreamAdapter and session)
+    vad_instance = silero.VAD.load(
+        min_speech_duration=0.08,
+        min_silence_duration=0.55,
+    )
+
+    # 5. STT Provider Selection (Sarvam Saaras v4 codemix via StreamAdapter for Telugu/Telinglish/Indian English)
+    selected_stt = None
+    if sarvam_key and not sarvam_key.startswith("sk_xxx") and len(sarvam_key) > 8:
         try:
-            import urllib.request
-            req = urllib.request.Request(
-                "https://api.sarvam.ai/speech-to-text",
-                headers={"api-subscription-key": sarvam_key}
+            raw_sarvam_stt = sarvam.STT(
+                language="te-IN",
+                model="saaras:v4",
+                mode="codemix",
+                sample_rate=16000,
+                api_key=sarvam_key,
             )
-            with urllib.request.urlopen(req, timeout=1.5) as resp:
-                if resp.status == 200:
-                    selected_stt = sarvam.STT(language="hi-IN", model="saaras:v2")
-        except Exception:
-            logger.info("Sarvam STT key check skipped/failed, using LiveKit Cloud Deepgram Nova-2 STT")
+            # StreamAdapter with Silero VAD provides robust <400ms Telugu/Telinglish/English transcription
+            selected_stt = stt.StreamAdapter(stt=raw_sarvam_stt, vad=vad_instance)
+            logger.info("Using Sarvam AI Saaras v4 STT (te-IN codemix + StreamAdapter VAD)")
+        except Exception as e:
+            logger.warning(f"Sarvam Saaras STT init failed: {e}")
 
     if not selected_stt:
-        logger.info("Using LiveKit Cloud native Deepgram Nova-2 STT with multi-language detection")
-        selected_stt = inference.STT(
-            model="deepgram/nova-2",
-            extra_kwargs={"detect_language": True, "smart_format": True}
-        )
-
-    # 5. Configurable TTS provider with multi-tier graceful fallback cascade (Cartesia Sonic / Deepgram Aura-2)
-    selected_tts = None
-    el_key = os.getenv("ELEVENLABS_API_KEY", "")
-    if el_key and not el_key.startswith("sk_xxx"):
         try:
-            import urllib.request
-            req = urllib.request.Request("https://api.elevenlabs.io/v1/user", headers={"xi-api-key": el_key})
-            with urllib.request.urlopen(req, timeout=1.5) as resp:
-                if resp.status == 200:
-                    selected_tts = elevenlabs.TTS(
-                        model="eleven_multilingual_v2",
-                        voice_id=VOICE_ID,
-                        api_key=el_key,
-                    )
+            selected_stt = inference.STT(model="deepgram/nova-2")
+            logger.info("Falling back to LiveKit Cloud Deepgram Nova-2 STT")
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS check failed ({e}), checking LiveKit Cloud...")
+            logger.error(f"LiveKit Cloud STT fallback failed: {e}")
+
+    # 6. TTS Provider Selection (Sarvam Bulbul te-IN with speaker kavya for authentic Indian/Telugu pronunciation)
+    selected_tts = None
+    if sarvam_key and not sarvam_key.startswith("sk_xxx") and len(sarvam_key) > 8:
+        try:
+            # te-IN with speaker="kavya" delivers natural, authentic Indian tone for Telugu, Telinglish & English
+            selected_tts = sarvam.TTS(
+                target_language_code="te-IN",
+                speaker="kavya",
+                model="bulbul:v3",
+                min_buffer_size=30,
+                max_chunk_length=80,
+                pace=1.05,
+                api_key=sarvam_key,
+            )
+            logger.info("Using Sarvam Bulbul TTS (te-IN / speaker: kavya — authentic Indian receptionist tone)")
+        except Exception as e:
+            logger.warning(f"Sarvam Bulbul TTS init failed: {e}")
+
+    el_key = os.getenv("ELEVENLABS_API_KEY", "") or os.getenv("ELEVEN_API_KEY", "")
+    if not selected_tts and el_key and not el_key.startswith("sk_xxx") and len(el_key) > 8:
+        try:
+            selected_tts = elevenlabs.TTS(
+                model="eleven_multilingual_v2",
+                voice_id=VOICE_ID,
+                api_key=el_key,
+            )
+            logger.info(f"Using ElevenLabs TTS ({VOICE_ID})")
+        except Exception as e:
+            logger.warning(f"ElevenLabs TTS check failed ({e})")
 
     if not selected_tts:
-        logger.info("Using LiveKit Cloud native TTS inference (cartesia/sonic)")
         try:
             selected_tts = inference.TTS(model="cartesia/sonic")
+            logger.info("Using LiveKit Cloud native TTS inference (cartesia/sonic)")
         except Exception as e:
-            logger.warning(f"Cartesia Sonic fallback to Aura-2: {e}")
             selected_tts = inference.TTS(model="deepgram/aura-2")
 
-    # 6. Configurable LLM provider with failover to LiveKit Cloud native inference
+    # 7. LLM Provider Selection (Groq LPU with Qwen 3.8 27B for <250ms latency and pure human dialogue)
     selected_llm = None
-    openai_key = os.getenv("OPENAI_API_KEY", "")
-    if openai_key and not openai_key.startswith("sk-xxx"):
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    groq_model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+    if groq and groq_key and not groq_key.startswith("gsk_xxx") and len(groq_key) > 8:
         try:
-            import urllib.request
-            req = urllib.request.Request("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {openai_key}"})
-            with urllib.request.urlopen(req, timeout=1.5) as resp:
-                if resp.status == 200:
-                    selected_llm = openai.LLM(model="gpt-4o", api_key=openai_key)
+            selected_llm = groq.LLM(model=groq_model, api_key=groq_key)
+            logger.info(f"Using Groq LPU LLM ({groq_model})")
         except Exception as e:
-            logger.warning(f"OpenAI API key validation failed ({e}), using LiveKit Cloud LLM inference...")
+            logger.warning(f"Groq LLM init failed ({e}), falling back...")
+
+    if not selected_llm:
+        openai_key = os.getenv("OPENAI_API_KEY", "")
+        if openai_key and not openai_key.startswith("sk-xxx") and len(openai_key) > 8:
+            try:
+                selected_llm = openai.LLM(model="gpt-4o-mini", api_key=openai_key)
+                logger.info("Using direct OpenAI LLM (gpt-4o-mini)")
+            except Exception as e:
+                logger.warning(f"Direct OpenAI LLM failed: {e}")
 
     if not selected_llm:
         logger.info("Using LiveKit Cloud native LLM inference (openai/gpt-4o-mini)")
         selected_llm = inference.LLM(model="openai/gpt-4o-mini")
 
-    # 7. Recalibrated Silero VAD parameters for Indian PSTN telephony latency & natural conversational cadence
-    vad_instance = silero.VAD.load(
-        min_speech_duration=0.30,
-        min_silence_duration=0.85,
-    )
-
+    # 8. AgentSession configured with telephony echo and background static protection
     session = AgentSession(
         stt=selected_stt,
         llm=selected_llm,
         tts=selected_tts,
         vad=vad_instance,
+        min_interruption_duration=0.6,
+        min_interruption_words=2,
+        resume_false_interruption=True,
+        false_interruption_timeout=1.5,
+        aec_warmup_duration=2.0,
     )
 
-    # 8. Bind isolated tools for this call context
+    # 9. Bind isolated tools for this call context
     call_tools = create_call_tools(call_ctx)
 
-    # 9. Launch duration cap background task
+    # 10. Launch duration cap background task
     duration_task = asyncio.create_task(enforce_call_duration_cap(session, ctx, call_ctx))
 
     @ctx.room.on("disconnected")
@@ -606,14 +697,15 @@ CRITICAL VOICE PHONE RULES:
         ),
     )
 
-    # 9. Greeting with DPDP & Telephony recording disclosure (Personalized if recognized)
-    greeting = f"Namaskaram! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance and scheduling assistance. How may I help you today?"
+    # 11. Greeting offering Telugu with DPDP recording disclosure
+    greeting = f"Namaskaram andi! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance. How can I help you today? Meeru Telugu lo kuda matladochu andi."
     if customer_info and customer_info.get("name"):
         first_name = customer_info.get("name").split()[0]
-        greeting = f"Namaskaram {first_name}! Welcome back to {call_ctx.clinic_name}. How can I assist you today?"
+        greeting = f"Namaskaram {first_name} garu! Welcome back to {call_ctx.clinic_name}. How can I assist you today? Meeru Telugu lo kuda matladochu andi."
 
     await session.say(greeting)
 
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="zerodesk-receptionist"))
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "zerodesk-receptionist")
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name=agent_name))

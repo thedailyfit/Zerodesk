@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ChatWidget } from '@/components/widget/chat-widget';
 import { useSuperAdminStore } from '@/lib/superadmin-store';
+import { api } from '@/lib/api-client';
 
 const tabs = [
   { id: 'business', label: 'Business Profile', icon: Building2 },
@@ -247,16 +248,13 @@ export default function SettingsPage() {
 
     try {
       localStorage.setItem('zerodesk_tenant_settings', JSON.stringify(settingsPayload));
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
-      fetch(`${apiBase}/tenants/me`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: businessName,
-          industry,
-          settings: settingsPayload,
-        }),
-      }).catch(() => {});
+      api.put('/tenants/me', {
+        name: businessName,
+        industry,
+        settings: settingsPayload,
+      }).catch((err) => {
+        console.error('Failed to save settings to API:', err.message);
+      });
     } catch {
       // Offline fallback
     }

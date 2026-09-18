@@ -65,13 +65,32 @@ export class AppointmentController {
     @Query('token') token?: string,
     @Headers('authorization') authHeader?: string,
   ) {
-    // Enforce signed token or authorization header to protect patient PHI
+    // Enforce signed token or verified secret to protect patient PHI
     const expectedSecret = process.env.INTERNAL_VOICE_SECRET || process.env.CLERK_SECRET_KEY || 'zd-feed-secret';
     const crypto = await import('crypto');
     const expectedToken = crypto.createHmac('sha256', expectedSecret).update(tenantId).digest('hex').substring(0, 32);
 
-    if (!authHeader && (!token || token !== expectedToken)) {
-      throw new UnauthorizedException('Missing or invalid secure calendar feed token');
+    let isAuthorized = false;
+
+    if (authHeader) {
+      const cleanAuth = authHeader.replace(/^Bearer\s+/i, '').trim();
+      const expectedSecretBuf = Buffer.from(expectedSecret);
+      const cleanAuthBuf = Buffer.from(cleanAuth);
+      if (cleanAuthBuf.length === expectedSecretBuf.length && crypto.timingSafeEqual(cleanAuthBuf, expectedSecretBuf)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized && token) {
+      const tokenBuf = Buffer.from(token);
+      const expectedBuf = Buffer.from(expectedToken);
+      if (tokenBuf.length === expectedBuf.length && crypto.timingSafeEqual(tokenBuf, expectedBuf)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      throw new UnauthorizedException('Missing or invalid secure calendar feed credentials');
     }
 
     return this.appointmentService.generateIcalFeed(tenantId);

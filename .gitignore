@@ -53,3 +53,7 @@ docker-compose.override.yml
 __pycache__/
 *.py[cod]
 *.tsbuildinfo
+# Added by code-review-graph
+.code-review-graph/
+graphify-out/
+repomix-output.xml

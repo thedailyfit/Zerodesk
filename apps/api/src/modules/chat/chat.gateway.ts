@@ -68,9 +68,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
 
-      this.logger.debug(`Client ${client.id} connected without verified tenant credentials`);
+      this.logger.warn(`Client ${client.id} connected without verified tenant credentials — disconnecting`);
+      client.disconnect(true);
+      return;
     } catch (err: any) {
       this.logger.warn(`Failed socket authentication for ${client.id}: ${err.message}`);
+      client.disconnect(true);
     }
   }
 
@@ -90,14 +93,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendMessage')
   async handleMessage(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    const tenantId = client.data.tenantId || data.tenantId;
+    const tenantId = client.data.tenantId;
     if (!tenantId) {
-      return { status: 'error', message: 'Missing tenant identifier' };
-    }
-
-    if (client.data.tenantId && data.tenantId && client.data.tenantId !== data.tenantId) {
-      this.logger.warn(`Client ${client.id} attempted to send message to mismatched tenant ${data.tenantId}`);
-      return { status: 'error', message: 'Unauthorized tenant scope' };
+      return { status: 'error', message: 'Not authenticated — missing tenant scope' };
     }
 
     const response = await this.chatService.handleMessage({ ...data, tenantId });

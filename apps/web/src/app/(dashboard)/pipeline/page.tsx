@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Avatar3D } from '@/components/ui/avatar-3d';
+import { useNiche } from '@/components/providers/niche-provider';
 
 type PipelineStage = 'NEW_LEAD' | 'VISIT_SCHEDULED' | 'VISITED' | 'NEGOTIATION' | 'LEGAL_AGREEMENT' | 'CLOSED_WON';
 
@@ -41,16 +42,17 @@ interface Deal {
 
 const STAGES: { id: PipelineStage; label: string; color: string }[] = [
   { id: 'NEW_LEAD', label: 'New Inquiries', color: 'border-blue-500/40 text-blue-600 dark:text-blue-400' },
-  { id: 'VISIT_SCHEDULED', label: 'Site Visit Booked', color: 'border-sky-500/40 text-sky-600 dark:text-sky-400' },
-  { id: 'VISITED', label: 'Visited & Interested', color: 'border-indigo-500/40 text-indigo-600 dark:text-indigo-400' },
-  { id: 'NEGOTIATION', label: 'Token / Offer Discuss', color: 'border-amber-500/40 text-amber-600 dark:text-amber-400' },
-  { id: 'LEGAL_AGREEMENT', label: 'Sale Agreement', color: 'border-blue-500/40 text-blue-600 dark:text-blue-400' },
-  { id: 'CLOSED_WON', label: 'Closed & Registered', color: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' }
+  { id: 'VISIT_SCHEDULED', label: 'Consultation / Visit', color: 'border-sky-500/40 text-sky-600 dark:text-sky-400' },
+  { id: 'VISITED', label: 'Evaluated & Qualified', color: 'border-indigo-500/40 text-indigo-600 dark:text-indigo-400' },
+  { id: 'NEGOTIATION', label: 'Proposal / Offer', color: 'border-amber-500/40 text-amber-600 dark:text-amber-400' },
+  { id: 'LEGAL_AGREEMENT', label: 'Agreement / Invoice', color: 'border-blue-500/40 text-blue-600 dark:text-blue-400' },
+  { id: 'CLOSED_WON', label: 'Closed Won', color: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' }
 ];
 
 const INITIAL_DEALS: Deal[] = [];
 
 export default function PipelinePage() {
+  const { nicheConfig } = useNiche();
   const [deals, setDeals] = useState<Deal[]>([]);
 
   useEffect(() => {
@@ -132,8 +134,13 @@ export default function PipelinePage() {
     return matchesSearch && matchesAgent;
   });
 
+  const nicheLabel = nicheConfig?.label || 'Sales';
   const totalPipelineValue = deals.reduce((acc, d) => acc + (d.stage !== 'CLOSED_WON' ? d.dealValue : 0), 0);
   const totalClosedValue = deals.reduce((acc, d) => acc + (d.stage === 'CLOSED_WON' ? d.dealValue : 0), 0);
+  const avgDealValue = deals.length > 0 ? Math.round(totalPipelineValue / (deals.filter(d => d.stage !== 'CLOSED_WON').length || 1)) : 0;
+  const winRate = (totalClosedValue + totalPipelineValue) > 0 
+    ? ((totalClosedValue / (totalClosedValue + totalPipelineValue)) * 100).toFixed(1)
+    : '0.0';
 
   return (
     <div className="p-6 space-y-6">
@@ -142,14 +149,14 @@ export default function PipelinePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-[var(--color-text)] tracking-tight">
-              Real Estate Sales Pipeline
+              {nicheLabel} Pipeline
             </h1>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-              Kanban Deal Flow
+              Active Flow
             </span>
           </div>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-            Track high-ticket property buyers from inquiry to site visits, negotiations, and closed agreements.
+            Track inquiries, appointments, proposals, and closed client packages in real time.
           </p>
         </div>
 
@@ -159,7 +166,7 @@ export default function PipelinePage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20"
           >
             <Plus className="w-4 h-4" />
-            + New Property Deal
+            + New Deal
           </button>
         </div>
       </div>
@@ -168,23 +175,29 @@ export default function PipelinePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
           <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Active Pipeline Value</span>
-          <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">₹{(totalPipelineValue / 10000000).toFixed(2)} Cr</p>
-          <span className="text-[10px] text-emerald-500 font-semibold">{deals.length} Active Opportunities</span>
+          <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+            {totalPipelineValue >= 10000000 ? `₹${(totalPipelineValue / 10000000).toFixed(2)} Cr` : formatCurrency(totalPipelineValue)}
+          </p>
+          <span className="text-[10px] text-emerald-500 font-semibold">{deals.length} Opportunities</span>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
           <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Closed Won Revenue</span>
-          <p className="text-2xl font-black text-emerald-500 mt-1">₹{(totalClosedValue / 10000000).toFixed(2)} Cr</p>
-          <span className="text-[10px] text-emerald-600 font-medium">Registered this month</span>
+          <p className="text-2xl font-black text-emerald-500 mt-1">
+            {totalClosedValue >= 10000000 ? `₹${(totalClosedValue / 10000000).toFixed(2)} Cr` : formatCurrency(totalClosedValue)}
+          </p>
+          <span className="text-[10px] text-emerald-600 font-medium">Recorded revenue</span>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
           <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Avg Deal Ticket</span>
-          <p className="text-2xl font-black text-[var(--color-text)] mt-1">₹2.18 Cr</p>
-          <span className="text-[10px] text-[var(--color-text-secondary)]">Luxury & 3BHK units</span>
+          <p className="text-2xl font-black text-[var(--color-text)] mt-1">
+            {formatCurrency(avgDealValue)}
+          </p>
+          <span className="text-[10px] text-[var(--color-text-secondary)]">Across active deals</span>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-          <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Conversion Win Rate</span>
-          <p className="text-2xl font-black text-indigo-500 mt-1">28.5%</p>
-          <span className="text-[10px] text-indigo-400">Site visit to token</span>
+          <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Conversion Rate</span>
+          <p className="text-2xl font-black text-indigo-500 mt-1">{winRate}%</p>
+          <span className="text-[10px] text-indigo-400">Closed vs Pipeline</span>
         </div>
       </div>
 
@@ -195,7 +208,7 @@ export default function PipelinePage() {
             <Search className="w-4 h-4 text-[var(--color-text-secondary)] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search client or property..."
+              placeholder="Search client or details..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -206,15 +219,15 @@ export default function PipelinePage() {
             onChange={(e) => setSelectedAgent(e.target.value)}
             className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
           >
-            <option value="ALL">All Sales Agents</option>
+            <option value="ALL">All Advisors / Staff</option>
             <option value="Specialist Advisor">Specialist Advisor</option>
-            <option value="Neha Kapoor">Neha Kapoor</option>
-            <option value="Sanjay Dutt">Sanjay Dutt</option>
+            <option value="Lead Consultant">Lead Consultant</option>
+            <option value="Front Desk Team">Front Desk Team</option>
           </select>
         </div>
 
         <div className="text-xs text-[var(--color-text-secondary)] font-medium">
-          Showing {filteredDeals.length} deals across 6 pipeline stages
+          Showing {filteredDeals.length} active records
         </div>
       </div>
 
@@ -328,7 +341,7 @@ export default function PipelinePage() {
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                     <Building2 className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-[var(--color-text)]">Create Real Estate Deal</h3>
+                  <h3 className="font-bold text-[var(--color-text)]">Create New Deal</h3>
                 </div>
                 <button onClick={() => setIsAddOpen(false)} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
                   <X className="w-5 h-5" />
@@ -337,7 +350,7 @@ export default function PipelinePage() {
 
               <form onSubmit={handleAddSubmit} className="p-6 space-y-4 text-xs">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-[var(--color-text)]">Buyer / Prospect Name</label>
+                  <label className="font-semibold text-[var(--color-text)]">Client / Prospect Name</label>
                   <input
                     type="text"
                     required
@@ -354,7 +367,7 @@ export default function PipelinePage() {
                     <input
                       type="text"
                       required
-                      placeholder="+91 98200 00000"
+                      placeholder="+91 98000 00000"
                       value={newDeal.phone}
                       onChange={(e) => setNewDeal({ ...newDeal, phone: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -365,7 +378,7 @@ export default function PipelinePage() {
                     <input
                       type="number"
                       required
-                      placeholder="e.g. 18500000"
+                      placeholder="e.g. 50000"
                       value={newDeal.dealValue}
                       onChange={(e) => setNewDeal({ ...newDeal, dealValue: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -374,11 +387,11 @@ export default function PipelinePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-[var(--color-text)]">Property Details / Unit</label>
+                  <label className="font-semibold text-[var(--color-text)]">Deal / Service Details</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Godrej Horizon 3BHK Luxury Tower A"
+                    placeholder="e.g. Premium Package / Consultation"
                     value={newDeal.property}
                     onChange={(e) => setNewDeal({ ...newDeal, property: e.target.value })}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -387,15 +400,15 @@ export default function PipelinePage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-[var(--color-text)]">Assigned Sales Agent</label>
+                    <label className="font-semibold text-[var(--color-text)]">Assigned Advisor / Staff</label>
                     <select
                       value={newDeal.agent}
                       onChange={(e) => setNewDeal({ ...newDeal, agent: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
                     >
                       <option value="Specialist Advisor">Specialist Advisor</option>
-                      <option value="Neha Kapoor">Neha Kapoor</option>
-                      <option value="Sanjay Dutt">Sanjay Dutt</option>
+                      <option value="Lead Consultant">Lead Consultant</option>
+                      <option value="Front Desk Team">Front Desk Team</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">

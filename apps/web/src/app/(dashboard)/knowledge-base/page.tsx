@@ -153,6 +153,7 @@ export default function KnowledgeBasePage() {
   const [category, setCategory] = useState<DocumentItem['category']>('SOP');
   const [content, setContent] = useState('');
   const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string; type: string } | null>(null);
+  const [rawFile, setRawFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   // Fetch live documents from backend on mount or niche change
@@ -240,6 +241,7 @@ export default function KnowledgeBasePage() {
     setCategory('SOP');
     setContent('');
     setUploadedFile(null);
+    setRawFile(null);
     setModalTab('upload');
     setIsModalOpen(true);
   };
@@ -250,6 +252,7 @@ export default function KnowledgeBasePage() {
     setCategory(doc.category);
     setContent(doc.content);
     setUploadedFile(null);
+    setRawFile(null);
     setModalTab('text');
     setIsModalOpen(true);
   };
@@ -262,14 +265,22 @@ export default function KnowledgeBasePage() {
       size: sizeStr,
       type: file.type || file.name.split('.').pop()?.toUpperCase() || 'DOCUMENT'
     });
+    setRawFile(file);
 
     if (!title) {
       const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
       setTitle(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
     }
 
-    if (!content) {
-      setContent(`[Extracted from: ${file.name}]\nOfficial business procedure and verified guidelines document (${sizeStr}). Contains complete operational specifications, customer safety guidelines, pricing schedules, and staff instructions.`);
+    if (file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        if (text) setContent(text);
+      };
+      reader.readAsText(file);
+    } else {
+      setContent(`[Ready to upload: ${file.name} (${sizeStr})]\nClick "Save & Index" to upload this document to the server for full-text extraction, chunking, and AI vector search.`);
     }
   };
 
@@ -285,9 +296,43 @@ export default function KnowledgeBasePage() {
     if (file) handleFileProcess(file);
   };
 
-  const handleSaveDocument = (e: React.FormEvent) => {
+  const handleSaveDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() && !rawFile) return;
+
+    if (rawFile && !editingDocId) {
+      const formData = new FormData();
+      formData.append('file', rawFile);
+      if (category) formData.append('category', category);
+      showToast('Uploading document and parsing text...');
+      setIsModalOpen(false);
+
+      try {
+        const res = await apiClient('/knowledge/upload-file', {
+          method: 'POST',
+          body: formData,
+        });
+        showToast(`Document "${res.title || title}" uploaded and indexed!`);
+        // Refresh live list
+        const fresh = await apiClient<any[]>('/knowledge');
+        if (Array.isArray(fresh)) {
+          setDocuments(fresh.map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            category: d.category || 'SOP',
+            content: d.content || '',
+            chunks: d.chunks?.length || Math.max(2, Math.ceil((d.content?.length || 200) / 120)),
+            isActive: d.isActive !== false,
+            updatedAt: 'Just now'
+          })));
+        }
+      } catch (err: any) {
+        showToast(`File upload failed: ${err.message || 'Error processing file'}`);
+      }
+      return;
+    }
+
+    if (!content.trim()) return;
 
     if (editingDocId) {
       const updated = documents.map(d => {
@@ -305,6 +350,10 @@ export default function KnowledgeBasePage() {
       });
       saveDocs(updated);
       showToast('Document updated & re-indexed!');
+      apiClient(`/knowledge/${editingDocId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title, content, category }),
+      }).catch((err) => console.warn('Knowledge update sync error:', err));
     } else {
       const created: DocumentItem = {
         id: Date.now().toString(),
@@ -317,16 +366,15 @@ export default function KnowledgeBasePage() {
       };
       saveDocs([created, ...documents]);
       showToast('New document created & added to Knowledge Base!');
+      apiClient('/knowledge/upload', {
+        method: 'POST',
+        body: JSON.stringify({
+          title,
+          content,
+          category,
+        }),
+      }).catch((err) => console.warn('Knowledge upload sync error:', err));
     }
-
-    apiClient('/knowledge/upload', {
-      method: 'POST',
-      body: JSON.stringify({
-        title,
-        content,
-        category,
-      }),
-    }).catch((err) => console.warn('Knowledge upload sync error:', err));
 
     setIsModalOpen(false);
   };
@@ -336,10 +384,15 @@ export default function KnowledgeBasePage() {
     saveDocs(updated);
   };
 
-  const handleDeleteDoc = (id: string) => {
+  const handleDeleteDoc = async (id: string) => {
     const updated = documents.filter(d => d.id !== id);
     saveDocs(updated);
     showToast('Document removed from Knowledge Base');
+    try {
+      await apiClient(`/knowledge/${id}`, { method: 'DELETE' });
+    } catch (err) {
+      console.warn('Backend document delete error:', err);
+    }
   };
 
   const handleTestRagQuery = async (e: React.FormEvent) => {

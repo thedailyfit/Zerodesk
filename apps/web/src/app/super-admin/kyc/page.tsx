@@ -72,56 +72,8 @@ export default function SuperAdminKycPage() {
         setKycList(data);
       }
     } catch (err) {
-      console.warn('Could not fetch KYC from API, using preview mock state:', err);
-      setKycList([
-        {
-          id: 'kyc_01',
-          tenantId: 'tenant_clinic_01',
-          businessName: 'Dr. Kavitha Skin & Laser Clinic Pvt Ltd',
-          tradeName: 'Kavitha Aesthetics',
-          gstin: '36AABCU9603R1ZM',
-          panNumber: 'AABCU9603R',
-          addressProofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600',
-          idProofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600',
-          status: 'PENDING',
-          createdAt: new Date().toISOString(),
-          tenant: {
-            id: 'tenant_clinic_01',
-            name: 'Kavitha Aesthetics',
-            planTier: 'starter',
-            industry: 'Clinic',
-            voiceConfig: {
-              plivoPhoneNumber: undefined,
-              isActive: false,
-            },
-            subscription: { plan: 'starter' },
-          },
-        },
-        {
-          id: 'kyc_02',
-          tenantId: 'tenant_re_02',
-          businessName: 'Aura Heights Developers LLP',
-          tradeName: 'Aura Real Estate',
-          gstin: '29ABCDE1234F1Z5',
-          panNumber: 'ABCDE1234F',
-          addressProofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600',
-          idProofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600',
-          status: 'VERIFIED',
-          verifiedAt: new Date().toISOString(),
-          createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-          tenant: {
-            id: 'tenant_re_02',
-            name: 'Aura Real Estate',
-            planTier: 'pro',
-            industry: 'Real Estate',
-            voiceConfig: {
-              plivoPhoneNumber: '+918047361920',
-              isActive: true,
-            },
-            subscription: { plan: 'pro' },
-          },
-        },
-      ]);
+      console.warn('Could not fetch KYC from API:', err);
+      setKycList([]);
     } finally {
       setLoading(false);
     }

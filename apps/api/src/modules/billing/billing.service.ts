@@ -74,13 +74,17 @@ export class BillingService {
     const finalCancelUrl = cancelUrl || `${appUrl}/settings/billing?status=cancelled`;
 
     if (!this.stripe) {
-      // Mock flow when running without live Stripe keys
-      this.logger.log(`Mocking Stripe checkout session for tenant ${tenantId} on plan ${normalizedPlan}`);
-      await this.activateSubscription(tenantId, normalizedPlan, 'mock_sub_' + Date.now(), 'mock_cust_' + Date.now());
+      const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+      if (isProduction) {
+        this.logger.error(`Stripe checkout attempted without STRIPE_SECRET_KEY in production for tenant ${tenantId}`);
+        throw new BadRequestException('Payment gateway is not currently configured. Please contact support.');
+      }
+      
+      this.logger.warn(`STRIPE_SECRET_KEY missing in development. Returning sandbox simulation URL for tenant ${tenantId}.`);
       return {
-        url: finalSuccessUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id'),
-        sessionId: 'mock_session_id',
-        mode: 'mock',
+        url: finalSuccessUrl.replace('{CHECKOUT_SESSION_ID}', 'sandbox_simulated_session'),
+        sessionId: 'sandbox_session',
+        mode: 'sandbox_simulation',
       };
     }
 

@@ -43,47 +43,8 @@ export default function SuperAdminProFleetPage() {
         setTenants(proTenants);
       }
     } catch (err) {
-      console.warn('Could not load tenants from API, using demo pro fleet:', err);
-      setTenants([
-        {
-          id: 'tenant_pro_01',
-          name: 'Apex Dental & Maxillofacial Hospital',
-          industry: 'Dental',
-          planTier: 'pro',
-          voiceConfig: { plivoPhoneNumber: '+918047361921', isActive: true },
-          subscription: {
-            voiceMinutesUsed: 620,
-            voiceMinutesLimit: 1200,
-            whatsappMessagesUsed: 2450,
-            whatsappMessagesLimit: 5000,
-            llmTokensUsed: 1400000,
-            llmTokensLimit: 5000000,
-            mrr: 9941,
-          },
-          assignedLlm: { name: 'GPT-4o Omnichannel' },
-          kyc: { status: 'VERIFIED' },
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'tenant_pro_02',
-          name: 'Aura Heights Developers LLP',
-          industry: 'Real Estate',
-          planTier: 'enterprise',
-          voiceConfig: { plivoPhoneNumber: '+918047361920', isActive: true },
-          subscription: {
-            voiceMinutesUsed: 1840,
-            voiceMinutesLimit: 3000,
-            whatsappMessagesUsed: 8900,
-            whatsappMessagesLimit: 20000,
-            llmTokensUsed: 6200000,
-            llmTokensLimit: 20000000,
-            mrr: 24999,
-          },
-          assignedLlm: { name: 'GPT-4o Flagship High-Throughput' },
-          kyc: { status: 'VERIFIED' },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      console.warn('Could not load tenants from API:', err);
+      setTenants([]);
     } finally {
       setLoading(false);
     }
@@ -336,6 +297,14 @@ export default function SuperAdminProFleetPage() {
           );
         })}
       </div>
+
+      {filteredTenants.length === 0 && !loading && (
+        <div className="p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center">
+          <Crown className="w-8 h-8 text-slate-400 mb-2" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Pro Fleet Businesses Found</p>
+          <p className="text-xs text-slate-500 mt-0.5">There are currently no active pro or enterprise tier businesses registered.</p>
+        </div>
+      )}
     </div>
   );
 }

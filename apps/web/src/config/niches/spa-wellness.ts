@@ -8,7 +8,7 @@ import {
 
 export const SPA_WELLNESS_CONFIG: NicheConfig = {
   id: 'spa',
-  label: 'Spa & Wellness Center',
+  label: 'Spa & Wellness',
   tagline: 'Elevating Holistic Health and Wellness',
   icon: 'Heart',
   accentColor: 'text-emerald-600',
