@@ -57,3 +57,4 @@ __pycache__/
 .code-review-graph/
 graphify-out/
 repomix-output.xml
+.codex/
