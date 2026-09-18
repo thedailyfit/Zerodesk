@@ -43,3 +43,21 @@ gives you structural context (callers, dependents, test coverage) that file sear
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
 <!-- /code-review-graph MCP tools -->
+
+<!-- Headroom Context Optimization -->
+## Context Optimization: Headroom
+
+This project integrates with **Headroom** (`headroomlabs-ai/headroom`) for token-efficient coding and context compression in Antigravity.
+
+### Coding Rules with Headroom
+1. **MCP Retrieval**: When encountering CCR (Content-Compressed Retrieval) tokens or markers, use `headroom_retrieve` to inspect exact snippets on demand.
+2. **Structural Tools Over Full Dumps**:
+   - Use `headroom sg` (`ast-grep`) for syntax-aware pattern searches instead of large grep sweeps.
+   - Use `headroom diff` (`difftastic`) for AST structural diffs.
+   - Use `headroom loc` (`scc`) for high-level repository mapping.
+3. **Terse, Action-Oriented Edits**:
+   - Avoid echoing back unchanged files or narrative preambles.
+   - Make surgical edits to preserve token budget.
+<!-- /Headroom Context Optimization -->
+
+@RTK.md
