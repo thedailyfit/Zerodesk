@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TenantPrismaService } from '../../prisma/tenant-prisma.service';
+import { normalizePhoneNumber } from '../../common/utils/phone.util';
 
 @Injectable()
 export class CustomerService {
@@ -25,13 +26,26 @@ export class CustomerService {
 
   async create(tenantId: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    return db.customers.create({ data });
+    const phone = data.phone ? normalizePhoneNumber(data.phone) : undefined;
+    return db.customers.create({
+      data: {
+        ...data,
+        ...(phone ? { phone } : {}),
+      },
+    });
   }
 
   async update(tenantId: string, id: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
+    const phone = data.phone ? normalizePhoneNumber(data.phone) : undefined;
     try {
-      return await db.customers.update({ where: { id, tenantId }, data });
+      return await db.customers.update({
+        where: { id, tenantId },
+        data: {
+          ...data,
+          ...(phone ? { phone } : {}),
+        },
+      });
     } catch (error: any) {
       if (error?.code === 'P2025' || error?.message?.includes('Record to update not found')) {
         throw new NotFoundException('Customer not found');
@@ -40,7 +54,8 @@ export class CustomerService {
     }
   }
 
-  async findOrCreateByPhone(tenantId: string, phone: string, name?: string) {
+  async findOrCreateByPhone(tenantId: string, rawPhone: string, name?: string) {
+    const phone = normalizePhoneNumber(rawPhone);
     const db = this.tenantPrisma.forTenant(tenantId);
     let customer = await db.customers.findFirst({ where: { phone } });
     if (!customer) {

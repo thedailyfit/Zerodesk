@@ -8,10 +8,13 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { OutboundCallProcessor } from './outbound-call.processor';
 import { LiveKitSipGuard } from '../../common/guards/livekit-sip.guard';
 
+import { StorageModule } from '../storage/storage.module';
+
 @Module({
   imports: [
     KnowledgeModule,
     WhatsappModule,
+    StorageModule,
     BullModule.registerQueue({
       name: 'outbound-calls',
     }),

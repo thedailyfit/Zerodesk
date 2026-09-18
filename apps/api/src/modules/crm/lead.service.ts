@@ -23,6 +23,12 @@ export class LeadService {
   }
 
   async moveStage(tenantId: string, id: string, stageId: string) {
+    const stage = await this.prisma.pipelineStage.findFirst({
+      where: { id: stageId, tenantId },
+    });
+    if (!stage) {
+      throw new NotFoundException('Pipeline stage not found or does not belong to this tenant');
+    }
     return this.prisma.lead.update({
       where: { id, tenantId },
       data: { stageId },

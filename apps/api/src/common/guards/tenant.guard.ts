@@ -15,6 +15,65 @@ export class TenantGuard implements CanActivate {
 
     if (!clerkOrgId) {
       if (request.tenantId) return true;
+
+      const clerkUserId = request.user?.clerkUserId || request.user?.id;
+      if (clerkUserId) {
+        // 1. Look up user by clerkUserId
+        let user = await this.prisma.user.findUnique({
+          where: { clerkUserId },
+          include: { tenant: true },
+        });
+
+        // 2. If user already exists, bind their tenant context
+        if (user && user.tenant) {
+          request.tenantId = user.tenant.id;
+          request.tenant = user.tenant;
+          request.user = {
+            ...request.user,
+            ...user,
+            id: user.id,
+            role: user.role || 'OWNER',
+          };
+          return true;
+        }
+
+        // 3. Auto-provision solo practice tenant for first-time solo practitioner login
+        const email = request.user?.email || `doctor_${clerkUserId.slice(-6)}@zerodesk.ai`;
+        const name = request.user?.name || request.user?.firstName || 'Practitioner';
+        const cleanSlug = `practice-${clerkUserId.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toLowerCase()}`;
+
+        const newTenant = await this.prisma.tenant.create({
+          data: {
+            clerkOrgId: `solo_${clerkUserId}`,
+            name: `${name}'s Practice`,
+            slug: cleanSlug,
+            industry: 'healthcare',
+            planTier: 'starter',
+            subscriptionTier: 'starter',
+            users: {
+              create: {
+                clerkUserId,
+                email,
+                name: typeof name === 'string' ? name : 'Clinic Owner',
+                role: 'OWNER',
+              },
+            },
+          },
+          include: { users: true },
+        });
+
+        const createdUser = newTenant.users[0];
+        request.tenantId = newTenant.id;
+        request.tenant = newTenant;
+        request.user = {
+          ...request.user,
+          ...createdUser,
+          id: createdUser?.id,
+          role: 'OWNER',
+        };
+        return true;
+      }
+
       throw new UnauthorizedException('No organization context');
     }
 

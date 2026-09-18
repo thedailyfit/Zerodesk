@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AiService } from '../ai/ai.service';
 import { WhatsappService } from './whatsapp.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
+import { AppointmentService } from '../appointment/appointment.service';
 
 @Injectable()
 export class WhatsappAiListener {
@@ -14,6 +15,8 @@ export class WhatsappAiListener {
     private readonly whatsappService: WhatsappService,
     private readonly prisma: PrismaService,
     private readonly promptGuard: PromptGuardService,
+    @Inject(forwardRef(() => AppointmentService))
+    private readonly appointmentService: AppointmentService,
   ) {}
 
   @OnEvent('whatsapp.message.received')
@@ -108,11 +111,43 @@ export class WhatsappAiListener {
         return;
       }
 
-      // 4. Send AI reply back to WhatsApp user
-      await this.whatsappService.sendMessage(tenantId, from, aiResult.response);
+      let replyText = aiResult.response;
+
+      // 4. Real execution of AI booking action
+      const bookAction = aiResult.actions?.find((a) => a.type === 'BOOK_APPOINTMENT');
+      if (bookAction && bookAction.params) {
+        try {
+          const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
+          const bookingResult = await this.appointmentService.bookFromVoice(tenantId, {
+            customerName: customer?.name || 'WhatsApp Patient',
+            customerPhone: from,
+            serviceName: bookAction.params.serviceName || bookAction.params.service,
+            doctorName: bookAction.params.doctorName || bookAction.params.doctor,
+            date: bookAction.params.date,
+            time: bookAction.params.time,
+            dateTime: bookAction.params.dateTime,
+            source: 'WHATSAPP',
+            notes: `Booked autonomously via WhatsApp AI: "${effectiveMessage}"`,
+          });
+
+          if (bookingResult && bookingResult.id) {
+            this.logger.log(`Successfully executed appointment ${bookingResult.id} from WhatsApp for customer ${customerId}`);
+            if (!replyText.toLowerCase().includes('booking ref') && !replyText.toLowerCase().includes('reference')) {
+              replyText += `\n\n✅ *Appointment Confirmed!*` +
+                `\n📅 *Slot:* ${bookingResult.date || 'Scheduled Date'} at ${bookingResult.time || 'Scheduled Time'}` +
+                `\n🆔 *Booking Ref:* ${bookingResult.id.slice(0, 8).toUpperCase()}`;
+            }
+          }
+        } catch (bookingError) {
+          this.logger.error(`Failed to execute appointment booking from WhatsApp AI: ${bookingError}`, (bookingError as Error).stack);
+        }
+      }
+
+      // 5. Send AI reply back to WhatsApp user
+      await this.whatsappService.sendMessage(tenantId, from, replyText);
       this.logger.log(`Auto-replied to WhatsApp user ${from} for tenant ${tenantId}`);
 
-      // 5. Handle human escalation if requested or low confidence
+      // 6. Handle human escalation if requested or low confidence
       if (aiResult.shouldTransfer || aiResult.confidence < 0.6) {
         await this.prisma.conversation.update({
           where: { id: conversationId },

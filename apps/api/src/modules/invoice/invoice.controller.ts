@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { InvoiceService } from './invoice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -27,5 +27,10 @@ export class InvoiceController {
   @Put(':id')
   async update(@TenantId() tenantId: string, @Param('id') id: string, @Body() data: any) {
     return this.invoiceService.update(tenantId, id, data);
+  }
+
+  @Delete(':id')
+  async delete(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.invoiceService.softDelete(tenantId, id);
   }
 }

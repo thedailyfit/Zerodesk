@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req, Param } from '@nestjs/common';
 import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -79,10 +79,11 @@ export class VoiceController {
   @UseGuards(AuthOrInternalVoiceGuard)
   async getClinicOverview(
     @TenantId() tenantId: string,
-    @Query('tenantId') queryTenantId?: string,
   ) {
-    const effectiveTenantId = queryTenantId || tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
-    return this.voiceService.getClinicOverview(effectiveTenantId);
+    if (!tenantId) {
+      throw new UnauthorizedException('Tenant context required');
+    }
+    return this.voiceService.getClinicOverview(tenantId);
   }
 
   @Post('livekit/webhook')
@@ -132,6 +133,15 @@ export class VoiceController {
     return this.voiceService.getCallHistory(tenantId, page || 1, limit || 20);
   }
 
+  @Get('calls/:id/audio')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getCallAudioUrl(
+    @TenantId() tenantId: string,
+    @Param('id') callId: string,
+  ) {
+    return this.voiceService.getCallAudioPresignedUrl(tenantId, callId);
+  }
+
   @Post('send-during-call-info')
   @UseGuards(InternalVoiceGuard)
   async sendDuringCallInfo(
@@ -156,6 +166,8 @@ export class VoiceController {
       summary?: string;
       recordingUrl?: string;
       sentiment?: string;
+      tokensUsed?: number;
+      ttsCharacters?: number;
     },
   ) {
     const tenantId = body.tenantId || tenantIdHeader;
@@ -170,6 +182,8 @@ export class VoiceController {
         summary: body.summary,
         recordingUrl: body.recordingUrl,
         sentiment: body.sentiment,
+        tokensUsed: body.tokensUsed,
+        ttsCharacters: body.ttsCharacters,
       },
     );
   }

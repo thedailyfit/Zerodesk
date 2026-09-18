@@ -7,7 +7,7 @@ export class InvoiceService {
 
   async findAll(tenantId: string) {
     return this.prisma.invoice.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       include: {
         customer: true,
         items: true,
@@ -18,7 +18,7 @@ export class InvoiceService {
 
   async findById(tenantId: string, id: string) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: { customer: true, items: true },
     });
     if (!invoice) {
@@ -85,6 +85,14 @@ export class InvoiceService {
         notes: data.notes,
       },
       include: { customer: true, items: true },
+    });
+  }
+
+  async softDelete(tenantId: string, id: string) {
+    const invoice = await this.findById(tenantId, id);
+    return this.prisma.invoice.update({
+      where: { id: invoice.id },
+      data: { deletedAt: new Date() },
     });
   }
 }

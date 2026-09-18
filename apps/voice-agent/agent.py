@@ -119,6 +119,8 @@ class CallContext:
         self.room_name = room_name
         self.booking_link_sent = False
         self.call_start_time = time.time()
+        self.tokens_used = 0
+        self.tts_characters = 0
 
 
 def extract_call_context(ctx: JobContext) -> CallContext:
@@ -173,7 +175,8 @@ def extract_call_context(ctx: JobContext) -> CallContext:
 
     tenant_id = tenant_id or os.getenv("DEFAULT_TENANT_ID", "")
     if not tenant_id or tenant_id == "default_business" or tenant_id == "default":
-        tenant_id = "08f1fadd-59eb-4d07-9ee3-65a2d9a321e3"
+        logger.warning(f"Could not resolve tenant_id from room {ctx.room.name if ctx.room else 'unknown'}")
+        tenant_id = None
 
     return CallContext(
         tenant_id=tenant_id,
@@ -429,6 +432,8 @@ async def notify_call_completion(call_ctx: CallContext, status: str = "COMPLETED
         "status": status,
         "roomName": call_ctx.room_name,
         "clinicName": call_ctx.clinic_name,
+        "tokensUsed": getattr(call_ctx, "tokens_used", 0) or max(120, duration * 20),
+        "ttsCharacters": getattr(call_ctx, "tts_characters", 0) or max(200, duration * 15),
     }
 
     headers = {
@@ -501,12 +506,16 @@ async def entrypoint(ctx: JobContext):
                 if resp.status == 200:
                     data = await resp.json()
                     system_prompt = data.get("systemPrompt")
+                    preferred_language = data.get("language") or data.get("preferredLanguage") or os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN")
                     if data.get("clinicName"):
                         call_ctx.clinic_name = data.get("clinicName")
     except Exception as e:
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
 
-    system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
+    preferred_language = locals().get("preferred_language", os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN"))
+
+    if not system_prompt:
+        system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
 Your doctor is Dr. Ananya Rao, MBBS, MD (Dermatology, Venereology & Leprosy — AIIMS Gold Medalist, 11+ years experience).
 
 LOCATION & TIMINGS:
@@ -578,20 +587,20 @@ Acknowledge returning caller warmly by name and reference their appointment when
         min_silence_duration=0.55,
     )
 
-    # 5. STT Provider Selection (Sarvam Saaras v4 codemix via StreamAdapter for Telugu/Telinglish/Indian English)
+    # 5. STT Provider Selection (Sarvam Saaras v4 codemix via StreamAdapter)
     selected_stt = None
     if sarvam_key and not sarvam_key.startswith("sk_xxx") and len(sarvam_key) > 8:
         try:
             raw_sarvam_stt = sarvam.STT(
-                language="te-IN",
+                language=preferred_language,
                 model="saaras:v4",
                 mode="codemix",
                 sample_rate=16000,
                 api_key=sarvam_key,
             )
-            # StreamAdapter with Silero VAD provides robust <400ms Telugu/Telinglish/English transcription
+            # StreamAdapter with Silero VAD provides robust <400ms transcription
             selected_stt = stt.StreamAdapter(stt=raw_sarvam_stt, vad=vad_instance)
-            logger.info("Using Sarvam AI Saaras v4 STT (te-IN codemix + StreamAdapter VAD)")
+            logger.info(f"Using Sarvam AI Saaras v4 STT ({preferred_language} codemix + StreamAdapter VAD)")
         except Exception as e:
             logger.warning(f"Sarvam Saaras STT init failed: {e}")
 
@@ -602,13 +611,12 @@ Acknowledge returning caller warmly by name and reference their appointment when
         except Exception as e:
             logger.error(f"LiveKit Cloud STT fallback failed: {e}")
 
-    # 6. TTS Provider Selection (Sarvam Bulbul te-IN with speaker kavya for authentic Indian/Telugu pronunciation)
+    # 6. TTS Provider Selection (Sarvam Bulbul with speaker kavya for authentic Indian pronunciation)
     selected_tts = None
     if sarvam_key and not sarvam_key.startswith("sk_xxx") and len(sarvam_key) > 8:
         try:
-            # te-IN with speaker="kavya" delivers natural, authentic Indian tone for Telugu, Telinglish & English
             selected_tts = sarvam.TTS(
-                target_language_code="te-IN",
+                target_language_code=preferred_language,
                 speaker="kavya",
                 model="bulbul:v3",
                 min_buffer_size=30,
@@ -616,7 +624,7 @@ Acknowledge returning caller warmly by name and reference their appointment when
                 pace=1.05,
                 api_key=sarvam_key,
             )
-            logger.info("Using Sarvam Bulbul TTS (te-IN / speaker: kavya — authentic Indian receptionist tone)")
+            logger.info(f"Using Sarvam Bulbul TTS ({preferred_language} / speaker: kavya)")
         except Exception as e:
             logger.warning(f"Sarvam Bulbul TTS init failed: {e}")
 

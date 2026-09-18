@@ -83,12 +83,13 @@ export class RagService implements OnModuleInit {
 
       // 2. Stage 1B: Multi-token keyword search for exact clinical, service, and pricing terms
       const cleanKeyword = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+      const isIndic = /[\u0900-\u097F\u0C00-\u0C7F]/.test(cleanKeyword);
       const tokens = cleanKeyword
         .split(/\s+/)
-        .filter((t) => t.length > 2 && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can', 'with', 'from', 'your', 'tell', 'about', 'much', 'does', 'please'].includes(t.toLowerCase()));
+        .filter((t) => (isIndic ? t.length >= 2 : t.length > 2) && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can', 'with', 'from', 'your', 'tell', 'about', 'much', 'does', 'please'].includes(t.toLowerCase()));
 
       let keywordResults: SearchResult[] = [];
-      if (tokens.length > 0 || cleanKeyword.length > 2) {
+      if (tokens.length > 0 || cleanKeyword.length >= 2) {
         try {
           const primary = tokens[0] || cleanKeyword;
           const secondary = tokens[1] || primary;
@@ -141,11 +142,12 @@ export class RagService implements OnModuleInit {
   rerank(query: string, candidates: SearchResult[], topK = 5): SearchResult[] {
     if (candidates.length === 0) return [];
 
+    const isIndic = /[\u0900-\u097F\u0C00-\u0C7F]/.test(query);
     const queryTokens = query
       .toLowerCase()
       .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .split(/\s+/)
-      .filter((t) => t.length > 2 && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can'].includes(t));
+      .filter((t) => (isIndic ? t.length >= 2 : t.length > 2) && !['what', 'when', 'where', 'how', 'the', 'and', 'for', 'are', 'can'].includes(t));
 
     const scored = candidates.map((candidate, rank) => {
       const text = candidate.chunkText.toLowerCase();
@@ -172,8 +174,9 @@ export class RagService implements OnModuleInit {
       };
     });
 
+    const cutoff = isIndic ? 0.32 : 0.38;
     return scored
-      .filter((c) => c.similarity >= 0.38)
+      .filter((c) => c.similarity >= cutoff)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, topK);
   }

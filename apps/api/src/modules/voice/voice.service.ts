@@ -9,6 +9,7 @@ import { AccessToken, WebhookReceiver, AgentDispatchClient } from 'livekit-serve
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { PlivoService } from './plivo.service';
+import { StorageService } from '../storage/storage.service';
 
 export type VoiceProvider = 'vapi' | 'retell' | 'livekit';
 
@@ -37,6 +38,7 @@ export class VoiceService {
     private promptGuard: PromptGuardService,
     private whatsappService: WhatsappService,
     private plivoService: PlivoService,
+    private storageService: StorageService,
     @InjectQueue('outbound-calls') private outboundQueue: Queue,
   ) {
     const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
@@ -631,6 +633,50 @@ export class VoiceService {
     return { calls, total, page, totalPages: Math.ceil(total / limit) };
   }
 
+  /**
+   * Secure presigned audio download URL for call recordings, ensuring tenant isolation.
+   */
+  async getCallAudioPresignedUrl(tenantId: string, callId: string): Promise<{ audioUrl: string | null; message?: string }> {
+    const call = await this.prisma.conversation.findFirst({
+      where: {
+        id: callId,
+        tenantId,
+        channel: 'VOICE',
+      },
+    });
+
+    if (!call) {
+      throw new NotFoundException(`Call record ${callId} not found for this organization.`);
+    }
+
+    const metadata = (call.metadata as Record<string, any>) || {};
+    const recordingUrl = metadata.recordingUrl || metadata.recording_url;
+    const recordingKey = metadata.recordingKey || metadata.recording_key;
+
+    if (recordingKey) {
+      try {
+        const presigned = await this.storageService.getPresignedDownloadUrl(tenantId, recordingKey);
+        return { audioUrl: presigned };
+      } catch (err: any) {
+        this.logger.warn(`Failed to sign URL for recording key ${recordingKey}: ${err.message}`);
+      }
+    }
+
+    if (recordingUrl) {
+      if (recordingUrl.startsWith('http://') || recordingUrl.startsWith('https://')) {
+        return { audioUrl: recordingUrl };
+      }
+      try {
+        const presigned = await this.storageService.getPresignedDownloadUrl(tenantId, recordingUrl);
+        return { audioUrl: presigned };
+      } catch (err: any) {
+        this.logger.warn(`Failed to sign URL for recordingUrl path ${recordingUrl}: ${err.message}`);
+      }
+    }
+
+    return { audioUrl: null, message: 'No audio recording found or ready for this call.' };
+  }
+
   // ========================================
   // PRIVATE HELPERS
   // ========================================
@@ -980,12 +1026,47 @@ RULES:
       });
 
       const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-      await this.prisma.subscription.updateMany({
+      const tokensUsed = Number(metadata?.tokensUsed) || Math.max(150, Math.ceil(durationSeconds * 25));
+
+      const existingSub = await this.prisma.subscription.findUnique({
         where: { tenantId },
-        data: {
-          voiceMinutesUsed: { increment: billedMinutes },
-        },
       });
+
+      if (existingSub) {
+        await this.prisma.subscription.update({
+          where: { tenantId },
+          data: {
+            voiceMinutesUsed: { increment: billedMinutes },
+            llmTokensUsed: { increment: tokensUsed },
+          },
+        });
+
+        if (existingSub.voiceMinutesUsed + billedMinutes >= existingSub.voiceMinutesLimit) {
+          this.logger.warn(`Tenant ${tenantId} reached or exceeded monthly voice minutes quota (${existingSub.voiceMinutesUsed + billedMinutes}/${existingSub.voiceMinutesLimit})`);
+          this.eventEmitter.emit('subscription.quota_exceeded', {
+            tenantId,
+            resource: 'voiceMinutes',
+            limit: existingSub.voiceMinutesLimit,
+            used: existingSub.voiceMinutesUsed + billedMinutes,
+          });
+        }
+      } else {
+        await this.prisma.subscription.create({
+          data: {
+            tenantId,
+            plan: 'starter',
+            voiceMinutesLimit: 100,
+            voiceMinutesUsed: billedMinutes,
+            llmTokensLimit: 1000000,
+            llmTokensUsed: tokensUsed,
+            whatsappMessagesLimit: 500,
+            whatsappMessagesUsed: 0,
+            status: 'active',
+          },
+        }).catch((e) => {
+          this.logger.warn(`Could not initialize subscription on call completion: ${e.message}`);
+        });
+      }
 
       this.eventEmitter.emit('inbox.update', {
         tenantId,
