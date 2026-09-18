@@ -59,3 +59,5 @@ This project integrates with **Headroom** (`headroomlabs-ai/headroom`) for token
    - Avoid echoing back unchanged files or narrative preambles.
    - Make surgical edits to preserve token budget.
 <!-- /Headroom Context Optimization -->
+
+@RTK.md
