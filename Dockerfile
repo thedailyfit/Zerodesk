@@ -12,6 +12,8 @@ COPY packages ./packages
 COPY apps/api ./apps/api
 
 RUN pnpm install --frozen-lockfile
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ENV DIRECT_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN pnpm --filter @zerodesk/api db:generate
 RUN pnpm --filter @zerodesk/api build
 

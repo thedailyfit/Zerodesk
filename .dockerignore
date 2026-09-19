@@ -1,0 +1,15 @@
+**/node_modules
+**/.next
+**/.git
+**/.turbo
+**/dist
+**/*.log
+**/.env
+**/.env.*
+**/coverage
+apps/web
+apps/voice-agent
+0desk-starter
+.code-review-graph
+graphify-out
+**/*.tsbuildinfo
