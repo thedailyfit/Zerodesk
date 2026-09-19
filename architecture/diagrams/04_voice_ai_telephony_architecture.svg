@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080C14" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="voiceCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-amber4" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#F59E0B" />
+    </marker>
+    <marker id="arrow-cyan4" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bgGrad4)" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Voice AI Telephony &amp; Real-Time SIP Audio Pipeline</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">LiveKit SIP Trunking, Fly.io Indic Worker (Sarvam Saaras), Groq LPU LLM &amp; Sub-800ms Mouth-to-Ear Latency</text>
+
+  <!-- Flow Block 1: PSTN Ingress & Plivo Trunk -->
+  <g transform="translate(60, 120)">
+    <rect width="270" height="420" rx="12" fill="url(#voiceCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#78350F" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#FDE68A">TELECOM INGRESS</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#F59E0B">Plivo PSTN Network</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Indian Carrier Termination (+91)</text>
+
+    <g transform="translate(18, 105)">
+      <rect width="234" height="60" rx="6" fill="#1E293B" stroke="#334155" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Airtel / Jio Mobile Caller</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Dials clinic DID: +91 80 4736 XXXX</text>
+      <text x="12" y="52" font-family="system-ui, sans-serif" font-size="9" fill="#F59E0B">ISUP / E.164 Routing</text>
+
+      <rect y="75" width="234" height="85" rx="6" fill="#1E293B" stroke="#F59E0B" stroke-width="1" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Plivo SIP Outbound Trunk</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• SIP INVITE (RFC 3261)</text>
+      <text x="12" y="52" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Codec Negotiation: Opus / PCMU</text>
+      <text x="12" y="66" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• DLT Registration: PE ID &amp; Header</text>
+      <text x="12" y="80" font-family="system-ui, sans-serif" font-size="9" fill="#38BDF8">Latency: ~120ms carrier transit</text>
+
+      <rect y="175" width="234" height="120" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">SIP Dispatch Webhook</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">POST /v1/voice/sip-dispatch</text>
+      <text x="12" y="54" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">To: ZEROdesk Core API</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">• LiveKit WebhookReceiver HMAC</text>
+      <text x="12" y="86" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">• Resolves Tenant by DID number</text>
+      <text x="12" y="102" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">• Validates Voice Quota Balance</text>
+    </g>
+  </g>
+
+  <!-- Arrow Plivo -> LiveKit -->
+  <path d="M 330 250 L 390 250" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-amber4)" />
+
+  <!-- Flow Block 2: LiveKit Cloud Ingress -->
+  <g transform="translate(400, 120)">
+    <rect width="280" height="420" rx="12" fill="url(#voiceCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="20" y="20" width="120" height="24" rx="6" fill="#0369A1" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">WEBRTC EDGE</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">LiveKit Cloud (India)</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">wss://zerodesk-rpjledlb.livekit.cloud</text>
+
+    <g transform="translate(18, 105)">
+      <rect width="244" height="85" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">SIP-to-WebRTC Gateway</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Transcodes RTP PCMU to Opus 48kHz</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Dynamic Jitter Buffer (20-60ms)</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Creates Room: call-{caller}_{agent}</text>
+
+      <rect y="100" width="244" height="95" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Worker Job Dispatch</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Dispatches job to registered worker</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Passes room token &amp; metadata</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Injects clinic doctor context</text>
+      <text x="12" y="85" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">• Direct WebSocket connection</text>
+
+      <rect y="210" width="244" height="85" rx="6" fill="#0F172A" stroke="#F59E0B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F59E0B">SIP REFER Human Transfer</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• transferToHuman() tool hook</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Warm transfer to clinic doctor mobile</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="9" fill="#FDE68A">• Zero call drop bridging</text>
+    </g>
+  </g>
+
+  <!-- Arrow LiveKit -> Fly Worker -->
+  <path d="M 680 250 L 740 250" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan4)" />
+
+  <!-- Flow Block 3: Fly.io Voice AI Worker -->
+  <g transform="translate(750, 120)">
+    <rect width="320" height="420" rx="12" fill="url(#voiceCard)" stroke="#A855F7" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#581C87" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#F3E8FF">AI VOICE WORKER</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#C084FC">Fly.io Python 3.11</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">zerodesk-voice-agent • livekit-agents 0.12</text>
+
+    <g transform="translate(18, 105)">
+      <rect width="284" height="85" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">1. Indic STT: Sarvam Saaras</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Real-time audio chunk streaming</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Code-switching: Hindi, Telugu, English</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">STT Latency: ~180ms</text>
+
+      <rect y="100" width="284" height="85" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">2. Fast LLM: Groq LPU Engine</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Meta Llama 3.3 70B Versatile</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Function tools: bookSlot(), checkDoctor()</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">LLM TTFT: ~110ms</text>
+
+      <rect y="200" width="284" height="85" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">3. Indic Voice TTS: Cartesia / Sarvam</text>
+      <text x="12" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Sonic multilingual Indian voices</text>
+      <text x="12" y="55" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Chunk-by-chunk audio streaming</text>
+      <text x="12" y="70" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">TTS First Chunk: ~120ms</text>
+    </g>
+  </g>
+
+  <!-- Flow Block 4: Telemetry, Storage & Quota (Bottom Row) -->
+  <g transform="translate(60, 570)">
+    <rect width="1010" height="280" rx="12" fill="url(#voiceCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="25" y="20" width="170" height="24" rx="6" fill="#064E3B" />
+    <text x="35" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0">POST-CALL TELEMETRY &amp; SYNC</text>
+    <text x="220" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#10B981">POST /v1/voice/call-completed (HMAC Guarded Pipeline)</text>
+
+    <!-- Sub Box 1: Dual Metering -->
+    <g transform="translate(25, 60)">
+      <rect width="300" height="190" rx="8" fill="#0F172A" stroke="#047857" />
+      <text x="15" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#34D399">Dual-Resource Quota Metering</text>
+      <text x="15" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Atomic Redis HINCRBY counter</text>
+      <text x="15" y="70" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• voiceMinutesUsed: ceil(duration / 60)</text>
+      <text x="15" y="90" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• llmTokensUsed: prompt + completion tokens</text>
+      <text x="15" y="110" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• 80% soft cap: WhatsApp alert to doctor</text>
+      <text x="15" y="130" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• 100% hard cap: Graceful IVR message</text>
+      <rect x="15" y="145" width="270" height="28" rx="4" fill="#065F46" />
+      <text x="25" y="163" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#A7F3D0">Zero Over-Billing Leakage</text>
+    </g>
+
+    <!-- Sub Box 2: R2 Audio Vault -->
+    <g transform="translate(350, 60)">
+      <rect width="300" height="190" rx="8" fill="#0F172A" stroke="#F59E0B" />
+      <text x="15" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#FDE68A">Cloudflare R2 Audio Vault</text>
+      <text x="15" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• AES-256 Server-Side Encryption</text>
+      <text x="15" y="70" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Call recording: /calls/{id}.mp3</text>
+      <text x="15" y="90" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Zero egress fee cloud storage</text>
+      <text x="15" y="110" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Presigned URL endpoint (15-min expiry):</text>
+      <text x="15" y="130" font-family="system-ui, sans-serif" font-size="10" fill="#38BDF8">GET /v1/voice/calls/:id/audio</text>
+      <rect x="15" y="145" width="270" height="28" rx="4" fill="#78350F" />
+      <text x="25" y="163" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#FDE68A">HIPAA &amp; DPDP Audio Privacy Compliance</text>
+    </g>
+
+    <!-- Sub Box 3: EMR & Lead Creation -->
+    <g transform="translate(675, 60)">
+      <rect width="310" height="190" rx="8" fill="#0F172A" stroke="#6366F1" />
+      <text x="15" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC">EMR CallLog &amp; Lead Auto-Sync</text>
+      <text x="15" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• CallLog record created with transcript</text>
+      <text x="15" y="70" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Customer profile auto-created if new</text>
+      <text x="15" y="90" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Lead captured with sentiment score</text>
+      <text x="15" y="110" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• WebSocket broadcast to Pro/Starter Inbox</text>
+      <text x="15" y="130" font-family="system-ui, sans-serif" font-size="10" fill="#A5B4FC">Socket event: call.completed</text>
+      <rect x="15" y="145" width="280" height="28" rx="4" fill="#312E81" />
+      <text x="25" y="163" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#E0E7FF">Real-Time Doctor Dashboard Sync (&lt;50ms)</text>
+    </g>
+  </g>
+
+  <!-- Right Block: Latency Gauge -->
+  <g transform="translate(1090, 120)">
+    <rect width="250" height="730" rx="12" fill="url(#voiceCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="25" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Latency Budget</text>
+    <text x="25" y="56" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Mouth-to-Ear: &lt;800ms Target</text>
+
+    <!-- Latency Bars -->
+    <g transform="translate(20, 80)">
+      <text x="5" y="15" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">1. PSTN Transit: 120ms</text>
+      <rect y="25" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="25" width="40" height="12" rx="6" fill="#F59E0B" />
+
+      <text x="5" y="60" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">2. LiveKit SIP/WebRTC: 45ms</text>
+      <rect y="70" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="70" width="20" height="12" rx="6" fill="#38BDF8" />
+
+      <text x="5" y="105" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">3. Sarvam Saaras STT: 180ms</text>
+      <rect y="115" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="115" width="60" height="12" rx="6" fill="#A855F7" />
+
+      <text x="5" y="150" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">4. Groq LPU LLM: 110ms</text>
+      <rect y="160" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="160" width="38" height="12" rx="6" fill="#10B981" />
+
+      <text x="5" y="195" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">5. Indic Voice TTS: 120ms</text>
+      <rect y="205" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="205" width="42" height="12" rx="6" fill="#C084FC" />
+
+      <text x="5" y="240" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">6. Jitter Buffer / Audio: 85ms</text>
+      <rect y="250" width="210" height="12" rx="6" fill="#334155" />
+      <rect y="250" width="30" height="12" rx="6" fill="#38BDF8" />
+
+      <!-- Total Gauge -->
+      <line x1="0" y1="280" x2="210" y2="280" stroke="#475569" stroke-width="1" />
+      <text x="5" y="310" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#34D399">Total RTT: ~660ms</text>
+      <text x="5" y="330" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Well under 800ms threshold</text>
+      
+      <rect y="350" width="210" height="180" rx="8" fill="#0F172A" stroke="#10B981" />
+      <text x="12" y="375" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#6EE7B7">Barge-in Performance</text>
+      <text x="12" y="395" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Hardware VAD sensitivity</text>
+      <text x="12" y="415" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Instant TTS interruption</text>
+      <text x="12" y="435" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Audio packet flush (&lt;40ms)</text>
+      <text x="12" y="455" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Zero conversational collision</text>
+      <text x="12" y="475" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Code-switches mid-sentence</text>
+    </g>
+  </g>
+</svg>

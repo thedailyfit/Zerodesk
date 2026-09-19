@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad12" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080D1A" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="meterCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-m" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="700" fill="url(#bgGrad12)" />
+
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Dual-Resource Quota Metering Architecture</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Independent Tracking for Voice Minutes &amp; LLM Tokens: Atomic Redis Counters, 80% Soft Alerts &amp; Hard Stop Interceptors</text>
+
+  <!-- Left: Real-Time Request Stream -->
+  <g transform="translate(60, 130)">
+    <rect width="280" height="510" rx="12" fill="url(#meterCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="20" y="20" width="120" height="24" rx="6" fill="#0369A1" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">RESOURCE INGRESS</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Two Distinct Resources</text>
+
+    <g transform="translate(18, 100)">
+      <rect width="244" height="150" rx="8" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#38BDF8">1. Voice Minutes Usage</text>
+      <text x="12" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Triggered by Inbound/Outbound PSTN</text>
+      <text x="12" y="66" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Duration calculated: Math.ceil(sec / 60)</text>
+      <text x="12" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Metered upon call completion</text>
+      <text x="12" y="106" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Starter: 300 mins | Pro: 1,500 mins</text>
+      <text x="12" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Zero mid-call drop policy</text>
+
+      <rect y="170" width="244" height="150" rx="8" fill="#0F172A" stroke="#A855F7" />
+      <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#C084FC">2. LLM Tokens Usage</text>
+      <text x="12" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Triggered by WhatsApp &amp; Widget Chat</text>
+      <text x="12" y="66" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Total = prompt_tokens + completion_tokens</text>
+      <text x="12" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Tracked per individual message</text>
+      <text x="12" y="106" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Starter: 500k | Pro: 5,000,000 tokens</text>
+      <text x="12" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Independent from voice quota</text>
+    </g>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 340 380 L 400 380" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-m)" />
+
+  <!-- Center: Atomic Redis Layer -->
+  <g transform="translate(410, 130)">
+    <rect width="320" height="510" rx="12" fill="url(#meterCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#064E3B" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0">ATOMIC IN-MEMORY</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#10B981">Redis Rate Counter</text>
+
+    <g transform="translate(18, 100)">
+      <rect width="284" height="120" rx="8" fill="#0F172A" stroke="#059669" />
+      <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#34D399">Redis Hash Key</text>
+      <text x="12" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">quota:{tenantId}:{year}:{month}</text>
+      <text x="12" y="66" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• HINCRBY voice_minutes {val}</text>
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• HINCRBY llm_tokens {val}</text>
+      <text x="12" y="104" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Sub-microsecond atomic increment</text>
+
+      <rect y="140" width="284" height="180" rx="8" fill="#0F172A" stroke="#059669" />
+      <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#34D399">Pre-Flight Check Interceptor</text>
+      <text x="12" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">NestJS QuotaGuard &amp; LiveKit Hook</text>
+      <text x="12" y="66" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 1. Inbound call received</text>
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 2. Queries Redis in &lt;1ms</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 3. If used &gt;= limit: Block dispatch</text>
+      <text x="12" y="114" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 4. Plays "Quota Exceeded" IVR prompt</text>
+      <text x="12" y="130" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 5. Zero unbilled carrier minutes</text>
+      <text x="12" y="156" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">100% financial protection</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 730 380 L 790 380" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-m)" />
+
+  <!-- Right: Threshold Actions & PostgreSQL Sync -->
+  <g transform="translate(800, 130)">
+    <rect width="540" height="510" rx="12" fill="url(#meterCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#78350F" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#FDE68A">ACTION &amp; AUDIT</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#F59E0B">Threshold Interventions</text>
+
+    <g transform="translate(18, 100)">
+      <!-- 80% Soft Cap -->
+      <rect width="504" height="95" rx="8" fill="#0F172A" stroke="#F59E0B" />
+      <text x="15" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#FDE68A">⚠️ 80% Soft Cap Alert (Non-Blocking)</text>
+      <text x="15" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Triggers once when usage crosses 80% threshold</text>
+      <text x="15" y="64" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• WhatsApp notification sent to clinic doctor: "80% of voice minutes used..."</text>
+      <text x="15" y="82" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• One-click link to buy 500-minute booster pack (₹999)</text>
+
+      <!-- 100% Hard Cap -->
+      <rect y="115" width="504" height="95" rx="8" fill="#0F172A" stroke="#EF4444" />
+      <text x="15" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#FCA5A5">🛑 100% Hard Cap Interceptor (Blocking)</text>
+      <text x="15" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• SIP calls gracefully divert to clinic owner's physical mobile (Zero dropped patient)</text>
+      <text x="15" y="64" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Website widget falls back to static contact form</text>
+      <text x="15" y="82" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Admin dashboard shows high-priority renewal banner</text>
+
+      <!-- Async DB Sync -->
+      <rect y="230" width="504" height="110" rx="8" fill="#0F172A" stroke="#10B981" />
+      <text x="15" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#34D399">🔄 Asynchronous PostgreSQL Sync (Every 5 Minutes)</text>
+      <text x="15" y="46" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• BullMQ worker flushes Redis tallies into PostgreSQL Tenant &amp; Subscription models</text>
+      <text x="15" y="64" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Zero PostgreSQL database lock contention during high call volume bursts</text>
+      <text x="15" y="82" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Preserves durable audit history for GST tax invoices and accounting rollups</text>
+      <text x="15" y="100" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Zero data loss on server reboot</text>
+    </g>
+  </g>
+</svg>

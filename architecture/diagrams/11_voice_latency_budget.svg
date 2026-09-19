@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad11" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080C14" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="latCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1400" height="700" fill="url(#bgGrad11)" />
+
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Voice AI Sub-800ms Mouth-to-Ear Latency Budget</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Millisecond Breakdown of Inbound PSTN Audio through Indic STT, Groq LPU LLM, Voice Synthesis &amp; WebRTC Audio Return</text>
+
+  <!-- Horizontal Timeline Stages -->
+  <g transform="translate(60, 130)">
+    <!-- Stage 1 -->
+    <rect x="0" y="0" width="190" height="340" rx="10" fill="url(#latCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="15" y="15" width="80" height="22" rx="4" fill="#78350F" />
+    <text x="25" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#FDE68A">STAGE 1</text>
+    <text x="15" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F59E0B">PSTN Transit</text>
+    <text x="15" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">120 ms</text>
+    <text x="15" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Cellular Tower (Airtel/Jio)</text>
+    <text x="15" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Carrier PSTN routing</text>
+    <text x="15" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Plivo SIP DID handoff</text>
+    <text x="15" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• RTP audio packetization</text>
+    <rect x="15" y="290" width="160" height="26" rx="4" fill="#1E293B" />
+    <text x="25" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#FDE68A">Fixed Physical Carrier</text>
+
+    <!-- Stage 2 -->
+    <rect x="210" y="0" width="190" height="340" rx="10" fill="url(#latCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="225" y="15" width="80" height="22" rx="4" fill="#0369A1" />
+    <text x="235" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">STAGE 2</text>
+    <text x="225" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">LiveKit SIP Edge</text>
+    <text x="225" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">45 ms</text>
+    <text x="225" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• LiveKit Cloud India South</text>
+    <text x="225" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• SIP to WebRTC bridge</text>
+    <text x="225" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Opus 48kHz transcoding</text>
+    <text x="225" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Room track subscription</text>
+    <rect x="225" y="290" width="160" height="26" rx="4" fill="#1E293B" />
+    <text x="235" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#38BDF8">Co-located Edge</text>
+
+    <!-- Stage 3 -->
+    <rect x="420" y="0" width="200" height="340" rx="10" fill="url(#latCard)" stroke="#A855F7" stroke-width="1.5" />
+    <rect x="435" y="15" width="80" height="22" rx="4" fill="#581C87" />
+    <text x="445" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#F3E8FF">STAGE 3</text>
+    <text x="435" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#C084FC">Sarvam Indic STT</text>
+    <text x="435" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">180 ms</text>
+    <text x="435" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Streaming chunk acoustic model</text>
+    <text x="435" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Hindi/Telugu/English mix</text>
+    <text x="435" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Voice Activity Detection (VAD)</text>
+    <text x="435" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• End-of-speech punctuation</text>
+    <rect x="435" y="290" width="170" height="26" rx="4" fill="#1E293B" />
+    <text x="445" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#C084FC">Sarvam Saaras Engine</text>
+
+    <!-- Stage 4 -->
+    <rect x="640" y="0" width="200" height="340" rx="10" fill="url(#latCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="655" y="15" width="80" height="22" rx="4" fill="#064E3B" />
+    <text x="665" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0">STAGE 4</text>
+    <text x="655" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#10B981">Groq LPU LLM</text>
+    <text x="655" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">110 ms</text>
+    <text x="655" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Time-to-First-Token (TTFT)</text>
+    <text x="655" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Llama 3.3 70B Versatile</text>
+    <text x="655" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Context &amp; tool call evaluation</text>
+    <text x="655" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• First sentence streamed out</text>
+    <rect x="655" y="290" width="170" height="26" rx="4" fill="#1E293B" />
+    <text x="665" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#10B981">Language Processing Unit</text>
+
+    <!-- Stage 5 -->
+    <rect x="860" y="0" width="200" height="340" rx="10" fill="url(#latCard)" stroke="#C084FC" stroke-width="1.5" />
+    <rect x="875" y="15" width="80" height="22" rx="4" fill="#581C87" />
+    <text x="885" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#F3E8FF">STAGE 5</text>
+    <text x="875" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#C084FC">Indic Voice TTS</text>
+    <text x="875" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">120 ms</text>
+    <text x="875" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Cartesia / Sarvam Bulbul</text>
+    <text x="875" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• First audio chunk generation</text>
+    <text x="875" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Natural prosody &amp; intonation</text>
+    <text x="875" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Streaming byte chunks</text>
+    <rect x="875" y="290" width="170" height="26" rx="4" fill="#1E293B" />
+    <text x="885" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#C084FC">Zero Wait Full Audio</text>
+
+    <!-- Stage 6 -->
+    <rect x="1080" y="0" width="200" height="340" rx="10" fill="url(#latCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="1095" y="15" width="80" height="22" rx="4" fill="#0369A1" />
+    <text x="1105" y="30" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">STAGE 6</text>
+    <text x="1095" y="65" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">Audio Return</text>
+    <text x="1095" y="90" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC">85 ms</text>
+    <text x="1095" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Fly.io to LiveKit WebRTC (15ms)</text>
+    <text x="1095" y="140" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• LiveKit to Plivo SIP (20ms)</text>
+    <text x="1095" y="160" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Plivo to Caller Ear (50ms)</text>
+    <text x="1095" y="180" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">• Jitter buffer smoothing</text>
+    <rect x="1095" y="290" width="170" height="26" rx="4" fill="#1E293B" />
+    <text x="1105" y="307" font-family="system-ui, sans-serif" font-size="10" fill="#38BDF8">Mouth-to-Ear Return</text>
+  </g>
+
+  <!-- Total Summary Bar -->
+  <g transform="translate(60, 500)">
+    <rect width="1280" height="140" rx="12" fill="#0F172A" stroke="#10B981" stroke-width="2" />
+    <text x="30" y="45" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#34D399">TOTAL SYSTEM LATENCY: 660 ms (Target: &lt;800 ms)</text>
+    <text x="30" y="75" font-family="system-ui, sans-serif" font-size="13" fill="#E2E8F0">120ms (PSTN) + 45ms (SIP Edge) + 180ms (STT) + 110ms (LLM TTFT) + 120ms (TTS Chunk) + 85ms (Return) = 660ms</text>
+    <text x="30" y="105" font-family="system-ui, sans-serif" font-size="12" fill="#94A3B8">Result: Human-like conversational fluidity with zero awkward pauses, natural barge-in interruptions, and zero dropped speech packets.</text>
+  </g>
+</svg>

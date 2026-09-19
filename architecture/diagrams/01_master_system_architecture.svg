@@ -1,0 +1,250 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="cyanCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="emeraldCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#064E3B" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="purpleCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4C1D95" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#78350F" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10B981" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#A855F7" />
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#F59E0B" />
+    </marker>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="900" fill="url(#bgGrad)" />
+  <circle cx="200" cy="150" r="300" fill="#38BDF8" opacity="0.04" />
+  <circle cx="1150" cy="450" r="350" fill="#10B981" opacity="0.04" />
+  <circle cx="650" cy="700" r="300" fill="#A855F7" opacity="0.04" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Master System Architecture &amp; Multi-Cloud Topology</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Production Monorepo &amp; Distributed Edge Network for Indian Healthcare Clinics &amp; Hospitals</text>
+
+  <!-- Group: Indian PSTN & Carrier Ingress -->
+  <g transform="translate(60, 120)">
+    <rect width="260" height="230" rx="12" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <text x="20" y="32" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#FDE68A">INDIAN TELECOM &amp; SIP</text>
+    <text x="20" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#D97706">Carrier Layer (PSTN / E.164)</text>
+
+    <!-- Node Airtel/Jio -->
+    <rect x="20" y="70" width="220" height="60" rx="8" fill="#1E293B" stroke="#334155" />
+    <text x="35" y="93" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">Airtel / Jio / Vi Callers</text>
+    <text x="35" y="112" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Inbound PSTN Calls (+91)</text>
+
+    <!-- Node Plivo Carrier -->
+    <rect x="20" y="145" width="220" height="65" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1" />
+    <text x="35" y="168" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#FDE68A">Plivo Telecom Trunk</text>
+    <text x="35" y="186" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Virtual DIDs • SIP RFC 3261</text>
+    <text x="35" y="200" font-family="system-ui, sans-serif" font-size="10" fill="#F59E0B">TRAI DLT Approved Headers</text>
+  </g>
+
+  <!-- Group: LiveKit Cloud Edge -->
+  <g transform="translate(380, 120)">
+    <rect width="280" height="230" rx="12" fill="url(#cyanCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="20" y="32" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#7DD3FC">LIVEKIT CLOUD WEBRTC</text>
+    <text x="20" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#0284C7">Region: India South (Chennai/Mumbai)</text>
+
+    <rect x="20" y="70" width="240" height="60" rx="8" fill="#0F172A" stroke="#0284C7" />
+    <text x="35" y="93" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#38BDF8">SIP Trunk Inbound Dispatch</text>
+    <text x="35" y="112" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">SIP Ingress • Audio Codec Opus/PCMU</text>
+
+    <rect x="20" y="145" width="240" height="65" rx="8" fill="#0F172A" stroke="#0284C7" />
+    <text x="35" y="168" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#38BDF8">WebRTC Audio Edge Relay</text>
+    <text x="35" y="186" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Room: call-{caller}_{agent}_{timestamp}</text>
+    <text x="35" y="200" font-family="system-ui, sans-serif" font-size="10" fill="#38BDF8">Sub-50ms Edge Media Routing</text>
+  </g>
+
+  <!-- Group: Fly.io Voice AI Compute -->
+  <g transform="translate(720, 120)">
+    <rect width="300" height="230" rx="12" fill="url(#purpleCard)" stroke="#A855F7" stroke-width="1.5" />
+    <text x="20" y="32" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#D8B4FE">FLY.IO VOICE AGENT (sin)</text>
+    <text x="20" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#9333EA">zerodesk-voice-agent • Python 3.11</text>
+
+    <rect x="20" y="70" width="260" height="65" rx="8" fill="#0F172A" stroke="#9333EA" />
+    <text x="35" y="92" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#C084FC">Speech-to-Text &amp; Fast LLM</text>
+    <text x="35" y="108" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Sarvam AI Saaras (Indic STT)</text>
+    <text x="35" y="122" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Groq LPU (Llama 3.3 / Qwen)</text>
+
+    <rect x="20" y="145" width="260" height="65" rx="8" fill="#0F172A" stroke="#9333EA" />
+    <text x="35" y="167" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#C084FC">Voice Synthesis &amp; WebRTC Worker</text>
+    <text x="35" y="183" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• ElevenLabs + Sarvam Indic TTS</text>
+    <text x="35" y="198" font-family="system-ui, sans-serif" font-size="10" fill="#C084FC">Total Mouth-to-Ear: &lt;800ms</text>
+  </g>
+
+  <!-- Group: Railway Cluster (Core API + Redis) -->
+  <g transform="translate(60, 410)">
+    <rect width="470" height="440" rx="12" fill="url(#emeraldCard)" stroke="#10B981" stroke-width="1.5" />
+    <text x="25" y="35" font-family="system-ui, sans-serif" font-size="16" font-weight="bold" fill="#6EE7B7">RAILWAY PRODUCTION CLUSTER (VPC)</text>
+    <text x="25" y="55" font-family="system-ui, sans-serif" font-size="12" fill="#059669">Private VPC • Co-located Sub-Millisecond Communication</text>
+
+    <!-- Core API Box -->
+    <rect x="25" y="75" width="420" height="190" rx="8" fill="#0F172A" stroke="#10B981" stroke-width="1" />
+    <text x="45" y="102" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#10B981">ZEROdesk Core REST &amp; WebSocket API</text>
+    <text x="45" y="122" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Host: zerodesk-api-production.up.railway.app • Port: 4000</text>
+    
+    <g transform="translate(45, 135)">
+      <rect x="0" y="0" width="185" height="40" rx="6" fill="#1E293B" />
+      <text x="10" y="24" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">NestJS 11 + Fastify Engine</text>
+      
+      <rect x="195" y="0" width="185" height="40" rx="6" fill="#1E293B" />
+      <text x="10" y="24" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">Prisma ORM Client v6</text>
+
+      <rect x="0" y="48" width="185" height="40" rx="6" fill="#1E293B" />
+      <text x="10" y="24" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">LiveKit WebhookReceiver</text>
+
+      <rect x="195" y="48" width="185" height="40" rx="6" fill="#1E293B" />
+      <text x="10" y="24" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">Meta WhatsApp HMAC Auth</text>
+
+      <rect x="0" y="96" width="380" height="28" rx="6" fill="#064E3B" />
+      <text x="10" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#A7F3D0">CryptoService: AES-256-GCM Hardware Encrypted Credentials</text>
+    </g>
+
+    <!-- Railway Redis Box -->
+    <rect x="25" y="280" width="420" height="135" rx="8" fill="#0F172A" stroke="#10B981" stroke-width="1" />
+    <text x="45" y="307" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#6EE7B7">Co-located Railway Redis</text>
+    <text x="45" y="325" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Private Network VPC (redis://default:***@redis.railway.internal:6379)</text>
+
+    <g transform="translate(45, 335)">
+      <rect x="0" y="0" width="185" height="65" rx="6" fill="#1E293B" />
+      <text x="10" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">BullMQ Task Queues</text>
+      <text x="10" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Outbound Call Batch</text>
+      <text x="10" y="52" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 6-Month Patient Recall</text>
+
+      <rect x="195" y="0" width="185" height="65" rx="6" fill="#1E293B" />
+      <text x="10" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F59E0B">Sliding Window Limiter</text>
+      <text x="10" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 60 req/min Webhook Rate</text>
+      <text x="10" y="52" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Atomic Quota Counters</text>
+    </g>
+  </g>
+
+  <!-- Group: Supabase Managed DB (Mumbai) -->
+  <g transform="translate(570, 410)">
+    <rect width="360" height="210" rx="12" fill="url(#cyanCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="25" y="35" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#7DD3FC">SUPABASE POSTGRESQL (MUMBAI)</text>
+    <text x="25" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#0284C7">Region: aws-0-ap-south-1 • Low Latency</text>
+
+    <rect x="25" y="70" width="310" height="120" rx="8" fill="#0F172A" stroke="#0284C7" />
+    <text x="40" y="95" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#38BDF8">PostgreSQL 15 + pgvector</text>
+    <text x="40" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Port 6543: pgBouncer Runtime Pooler</text>
+    <text x="40" y="132" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Port 5432: Direct Migration Port</text>
+    <text x="40" y="150" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• HNSW Index: 1536-dim Cosine Vector Search</text>
+    <text x="40" y="168" font-family="system-ui, sans-serif" font-size="10" fill="#F43F5E">• Soft-Delete Retention: 6 Years Statutory GST</text>
+  </g>
+
+  <!-- Group: Cloudflare R2 Vault -->
+  <g transform="translate(570, 640)">
+    <rect width="360" height="210" rx="12" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <text x="25" y="35" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#FDE68A">CLOUDFLARE R2 ENCRYPTED VAULT</text>
+    <text x="25" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#D97706">Bucket: zerodesk-uploads • Zero Egress Fees</text>
+
+    <rect x="25" y="70" width="310" height="120" rx="8" fill="#0F172A" stroke="#D97706" />
+    <text x="40" y="95" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#F59E0B">HIPAA &amp; Indian DPDP Vault</text>
+    <text x="40" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• AES-256 Server-Side Encryption</text>
+    <text x="40" y="132" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Clinical Call Recordings (WAV/MP3)</text>
+    <text x="40" y="150" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Doctor KYC Verification Documents</text>
+    <text x="40" y="168" font-family="system-ui, sans-serif" font-size="10" fill="#FDE68A">• GET /v1/voice/calls/:id/audio (15m Presigned)</text>
+  </g>
+
+  <!-- Group: Frontend Client Ecosystem (Vercel) -->
+  <g transform="translate(970, 410)">
+    <rect width="370" height="440" rx="12" fill="url(#cyanCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="25" y="35" font-family="system-ui, sans-serif" font-size="16" font-weight="bold" fill="#7DD3FC">FRONTEND CLIENT ECOSYSTEM</text>
+    <text x="25" y="55" font-family="system-ui, sans-serif" font-size="12" fill="#0284C7">Vercel Global Edge Deployment</text>
+
+    <!-- ZEROdesk Pro -->
+    <rect x="25" y="75" width="320" height="110" rx="8" fill="#0F172A" stroke="#38BDF8" stroke-width="1" />
+    <text x="40" y="100" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">ZEROdesk Pro Web App (55 Pages)</text>
+    <text x="40" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Enterprise Clinical EMR &amp; Multi-Doctor</text>
+    <text x="40" y="137" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Outbound Voice Campaign Orchestrator</text>
+    <text x="40" y="154" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Dual-Resource Quota Metering UI</text>
+    <text x="40" y="171" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Domain: app.zerodesk.in (Next.js 15 App Router)</text>
+
+    <!-- ZEROdesk Starter -->
+    <rect x="25" y="195" width="320" height="110" rx="8" fill="#0F172A" stroke="#10B981" stroke-width="1" />
+    <text x="40" y="220" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#10B981">ZEROdesk Starter Web App (37 Pages)</text>
+    <text x="40" y="240" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• 7 Specialized Indian Vertical Niches</text>
+    <text x="40" y="257" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Dental, Physio, Ayurveda, Legal, Salon, etc.</text>
+    <text x="40" y="274" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Solo Clerk Auto-Tenant Provisioning</text>
+    <text x="40" y="291" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Domain: starter.zerodesk.in (Next.js 15)</text>
+
+    <!-- Website Chatbot Widget -->
+    <rect x="25" y="315" width="320" height="100" rx="8" fill="#0F172A" stroke="#A855F7" stroke-width="1" />
+    <text x="40" y="340" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#C084FC">Embeddable Website Widget</text>
+    <text x="40" y="360" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Isolated Shadow DOM (widget.js)</text>
+    <text x="40" y="377" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• Server-Sent Events (SSE) Token Stream</text>
+    <text x="40" y="394" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Zero CSS Contamination on Client Websites</text>
+  </g>
+
+  <!-- External Connectors & Meta -->
+  <g transform="translate(1060, 120)">
+    <rect width="280" height="105" rx="10" fill="#1E293B" stroke="#22C55E" stroke-width="1" />
+    <text x="20" y="30" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#4ADE80">Meta WhatsApp Cloud API</text>
+    <text x="20" y="50" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Graph API v21.0 • Webhook Ingress</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">SHA-256 HMAC Signature Verification</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="10" fill="#4ADE80">Two-Way Interactive Template Messages</text>
+  </g>
+  <g transform="translate(1060, 245)">
+    <rect width="280" height="105" rx="10" fill="#1E293B" stroke="#818CF8" stroke-width="1" />
+    <text x="20" y="30" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC">Clerk Identity Provider</text>
+    <text x="20" y="50" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Multi-Tenant JWT • RBAC Role Sync</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Instant Solo Practitioner Onboarding</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="10" fill="#A5B4FC">JWKS Public Key Verification on API</text>
+  </g>
+
+  <!-- Connecting Arrows -->
+  <!-- PSTN to LiveKit -->
+  <path d="M 320 235 L 380 235" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-amber)" />
+  <text x="325" y="225" font-family="system-ui, sans-serif" font-size="9" fill="#FDE68A">SIP INVITE</text>
+
+  <!-- LiveKit to Fly.io -->
+  <path d="M 660 235 L 720 235" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <text x="668" y="225" font-family="system-ui, sans-serif" font-size="9" fill="#7DD3FC">WebRTC</text>
+
+  <!-- Fly.io to Railway API -->
+  <path d="M 870 350 L 870 380 L 400 380 L 400 485" stroke="#A855F7" stroke-width="2" stroke-dasharray="4,4" fill="none" marker-end="url(#arrow-purple)" />
+  <text x="590" y="375" font-family="system-ui, sans-serif" font-size="10" fill="#C084FC">POST /v1/voice/call-completed (HMAC Guarded)</text>
+
+  <!-- Railway API to Supabase -->
+  <path d="M 530 515 L 570 515" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <text x="532" y="505" font-family="system-ui, sans-serif" font-size="9" fill="#7DD3FC">TLS :6543</text>
+
+  <!-- Railway API to R2 -->
+  <path d="M 450 670 L 450 745 L 570 745" stroke="#F59E0B" stroke-width="2" fill="none" marker-end="url(#arrow-amber)" />
+  <text x="465" y="735" font-family="system-ui, sans-serif" font-size="9" fill="#FDE68A">S3 API (AES-256)</text>
+
+  <!-- Frontends to API -->
+  <path d="M 970 530 L 530 530" stroke="#10B981" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow-emerald)" />
+  <text x="700" y="522" font-family="system-ui, sans-serif" font-size="10" fill="#6EE7B7">HTTPS REST / WSS Events / SSE Streaming</text>
+
+  <!-- Meta to API -->
+  <path d="M 1060 170 L 490 170 L 490 410" stroke="#22C55E" stroke-width="2" fill="none" marker-end="url(#arrow-emerald)" />
+  <text x="680" y="162" font-family="system-ui, sans-serif" font-size="10" fill="#4ADE80">POST /v1/whatsapp/webhook (HMAC SHA-256)</text>
+</svg>

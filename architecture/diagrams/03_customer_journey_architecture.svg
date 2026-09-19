@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="stepGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bgGrad3)" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Customer &amp; Patient Lifecycle Architecture</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">End-to-End Client Journey: From Discovery &amp; AI Receptionist to GST Invoicing &amp; Automated Recall</text>
+
+  <!-- Flow Row 1: Stages 1 to 4 -->
+  <!-- Stage 1 -->
+  <g transform="translate(60, 120)">
+    <rect width="280" height="300" rx="12" fill="url(#stepGrad)" stroke="#38BDF8" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#0284C7" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">1</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Patient Discovery</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Inbound Lead Generation</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Inbound Voice Call (+91)</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">PSTN carrier routing to Plivo DID</text>
+
+      <rect y="60" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">WhatsApp Message Lead</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Meta Graph API Click-to-WhatsApp ad</text>
+
+      <rect y="120" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Website Chatbot Widget</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Embeddable widget.js on clinic site</text>
+
+      <rect y="180" width="240" height="28" rx="6" fill="#0369A1" />
+      <text x="12" y="198" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#E0F2FE">Unified Ingress • Tenant ID Lookup</text>
+    </g>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 340 270 L 380 270" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-flow)" />
+
+  <!-- Stage 2 -->
+  <g transform="translate(390, 120)">
+    <rect width="280" height="300" rx="12" fill="url(#stepGrad)" stroke="#A855F7" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#7C3AED" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">2</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#C084FC">AI Receptionist</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Indic Speech &amp; NLP Intake</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Indic Multilingual STT</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Sarvam Saaras (Hindi/Telugu/English)</text>
+
+      <rect y="60" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Groq LPU Reasoning</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Extracts symptoms, doctor, slot preference</text>
+
+      <rect y="120" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Grounding &amp; RAG Guard</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Clinic pricing &amp; doctor availability check</text>
+
+      <rect y="180" width="240" height="28" rx="6" fill="#581C87" />
+      <text x="12" y="198" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#F3E8FF">Sub-800ms Real-Time Voice Synthesis</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 670 270 L 710 270" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-flow)" />
+
+  <!-- Stage 3 -->
+  <g transform="translate(720, 120)">
+    <rect width="280" height="300" rx="12" fill="url(#stepGrad)" stroke="#10B981" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#059669" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">3</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#34D399">Slot Locking</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Transactional DB Reservation</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">ACID Conflict Check</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Serializable PostgreSQL transaction</text>
+
+      <rect y="60" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Doctor Schedule Lock</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Appointment status = CONFIRMED</text>
+
+      <rect y="120" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Calendar Synchronization</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Syncs with Google Calendar / Pro Dashboard</text>
+
+      <rect y="180" width="240" height="28" rx="6" fill="#064E3B" />
+      <text x="12" y="198" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#A7F3D0">Zero Double-Booking Guarantee</text>
+    </g>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <path d="M 1000 270 L 1040 270" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-flow)" />
+
+  <!-- Stage 4 -->
+  <g transform="translate(1050, 120)">
+    <rect width="280" height="300" rx="12" fill="url(#stepGrad)" stroke="#22C55E" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#15803D" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">4</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#4ADE80">WhatsApp Confirmation</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Instant Interactive Dispatch</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Approved Template Msg</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Date, time, doctor name, clinic address</text>
+
+      <rect y="60" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Google Maps Location</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">One-tap navigation link for patient</text>
+
+      <rect y="120" width="240" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">UPI Payment QR Code</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Instant advance consultation fee lock</text>
+
+      <rect y="180" width="240" height="28" rx="6" fill="#14532D" />
+      <text x="12" y="198" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#BBF7D0">Delivered within &lt;2 Seconds</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Down from Stage 4 to Stage 5 -->
+  <path d="M 1190 420 L 1190 470 L 200 470 L 200 500" stroke="#38BDF8" stroke-width="2" fill="none" marker-end="url(#arrow-flow)" />
+
+  <!-- Flow Row 2: Stages 5 to 7 -->
+  <!-- Stage 5 -->
+  <g transform="translate(60, 520)">
+    <rect width="380" height="320" rx="12" fill="url(#stepGrad)" stroke="#38BDF8" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#0284C7" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">5</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">In-Clinic Consultation &amp; EMR</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Doctor Examination &amp; Clinical Records</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Doctor Patient Timeline</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Doctor views previous call transcript, WhatsApp chat &amp; history</text>
+
+      <rect y="60" width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">EMR Clinical Notes &amp; Rx</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Prescription generated, diagnostic tests ordered, vitals logged</text>
+
+      <rect y="120" width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Appointment Status Update</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Status transitioned to COMPLETED with doctor timestamp</text>
+
+      <rect y="180" width="340" height="35" rx="6" fill="#0C4A6E" />
+      <text x="12" y="202" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#BAE6FD">HIPAA &amp; Indian DPDP Act Compliant Storage</text>
+    </g>
+  </g>
+
+  <!-- Arrow 5 -> 6 -->
+  <path d="M 440 680 L 510 680" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-flow)" />
+
+  <!-- Stage 6 -->
+  <g transform="translate(520, 520)">
+    <rect width="380" height="320" rx="12" fill="url(#stepGrad)" stroke="#F59E0B" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#D97706" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">6</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#F59E0B">GST Invoicing &amp; Payment</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Statutory Tax Compliance &amp; Receipt</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">GSTIN &amp; HSN/SAC Billing</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Automated CGST/SGST/IGST tax calculation (HSN 9993)</text>
+
+      <rect y="60" width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">WhatsApp PDF Invoice Dispatch</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Direct PDF invoice link dispatched to patient WhatsApp</text>
+
+      <rect y="120" width="340" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">6-Year Soft Delete Retention</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">deletedAt timestamp enforced (Section 36 GST Act audit trail)</text>
+
+      <rect y="180" width="340" height="35" rx="6" fill="#78350F" />
+      <text x="12" y="202" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Instant UPI &amp; Razorpay Reconciliation</text>
+    </g>
+  </g>
+
+  <!-- Arrow 6 -> 7 -->
+  <path d="M 900 680 L 970 680" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-flow)" />
+
+  <!-- Stage 7 -->
+  <g transform="translate(980, 520)">
+    <rect width="360" height="320" rx="12" fill="url(#stepGrad)" stroke="#6366F1" stroke-width="1.5" />
+    <circle cx="40" cy="40" r="18" fill="#4338CA" />
+    <text x="35" y="46" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#F8FAFC">7</text>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#818CF8">Automated Recall Engine</text>
+    <text x="70" y="54" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Retention &amp; Preventive Follow-up</text>
+
+    <g transform="translate(20, 80)">
+      <rect width="320" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">BullMQ Delayed Redis Queue</text>
+      <text x="12" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Enqueues recall job at T + 180 days (6 months)</text>
+
+      <rect y="60" width="320" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="82" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">TRAI 9am-9pm Window Check</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">Ensures message is delivered during legal Indian hours</text>
+
+      <rect y="120" width="320" height="50" rx="6" fill="#1E293B" />
+      <text x="12" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">Personalized WhatsApp Reminder</text>
+      <text x="12" y="158" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">"Hi Rahul, your 6-month dental cleaning is due..."</text>
+
+      <rect y="180" width="320" height="35" rx="6" fill="#312E81" />
+      <text x="12" y="202" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C7D2FE">Loops Back to Stage 1: Continuous Patient Retention</text>
+    </g>
+  </g>
+</svg>

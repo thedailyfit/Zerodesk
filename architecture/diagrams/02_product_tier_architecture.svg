@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090D16" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="starterCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#064E3B" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#022C22" stop-opacity="0.8" />
+    </linearGradient>
+    <linearGradient id="proCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#312E81" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0.8" />
+    </linearGradient>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10B981" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#6366F1" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bgGrad2)" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Product Tier Architecture &amp; The 92-Screen Invariant</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Comparison of ZEROdesk Starter (37 Pages / 7 Indian Niches) vs ZEROdesk Pro (55 Pages Enterprise Clinical Suite)</text>
+
+  <!-- Left: Starter Plan (37 Pages) -->
+  <g transform="translate(60, 115)">
+    <rect width="610" height="740" rx="14" fill="url(#starterCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="25" y="25" width="130" height="26" rx="6" fill="#065F46" />
+    <text x="35" y="42" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#A7F3D0">STARTER TIER</text>
+    <text x="170" y="43" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#F8FAFC">37 Distinct Screens</text>
+    <text x="25" y="75" font-family="system-ui, sans-serif" font-size="12" fill="#94A3B8">Optimized for Solo Practitioners &amp; Small Clinics across 7 Indian Vertical Niches</text>
+
+    <!-- Niche Grid -->
+    <g transform="translate(25, 95)">
+      <rect width="560" height="150" rx="10" fill="#0F172A" stroke="#047857" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#34D399">7 Niche-Specific Specialized Modules (Zero Code Merging)</text>
+      
+      <!-- Niches -->
+      <g transform="translate(20, 45)">
+        <rect x="0" y="0" width="165" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🦷 Dental Practice</text>
+
+        <rect x="175" y="0" width="165" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🏃 Physiotherapy</text>
+
+        <rect x="350" y="0" width="170" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🌿 Ayurveda &amp; Wellness</text>
+
+        <rect x="0" y="48" width="165" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">⚖️ Legal Consultation</text>
+
+        <rect x="175" y="48" width="165" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🔬 Diagnostic Labs</text>
+
+        <rect x="350" y="48" width="80" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="8" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">✂️ Salon</text>
+
+        <rect x="440" y="48" width="80" height="38" rx="6" fill="#1E293B" stroke="#334155" />
+        <text x="8" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🏢 Realty</text>
+      </g>
+    </g>
+
+    <!-- Technical Architecture details -->
+    <g transform="translate(25, 265)">
+      <rect width="560" height="155" rx="10" fill="#0F172A" stroke="#047857" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#34D399">Solo Practitioner Architecture</text>
+      
+      <text x="20" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#A7F3D0">Zero-Config Auto-Tenant:</tspan> Clerk signup auto-provisions Tenant + Admin Role</text>
+      <text x="20" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#A7F3D0">6 Synced REST Stores:</tspan> Zustand stores with localStorage fallback</text>
+      <text x="20" y="95" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#A7F3D0">Optimistic UI:</tspan> Appointments &amp; invoices render in &lt;16ms before server ack</text>
+      <text x="20" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#A7F3D0">Self-Contained Navigation:</tspan> Standalone sidebar routes preserving all 37 screens</text>
+      <text x="20" y="135" font-family="system-ui, sans-serif" font-size="11" fill="#A7F3D0">Stack: Next.js 15 Standalone (starter.zerodesk.in) • Port 3001</text>
+    </g>
+
+    <!-- Core Screens summary -->
+    <g transform="translate(25, 440)">
+      <rect width="560" height="270" rx="10" fill="#0F172A" stroke="#047857" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#34D399">Screen Breakdown (37 Routes)</text>
+      <g transform="translate(20, 42)">
+        <text x="0" y="15" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Overview &amp; Dashboard: <tspan fill="#F8FAFC">/dashboard, /calendar, /appointments</tspan></text>
+        <text x="0" y="35" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Customer Management: <tspan fill="#F8FAFC">/customers, /customers/new, /customers/:id</tspan></text>
+        <text x="0" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Billing &amp; Invoicing: <tspan fill="#F8FAFC">/invoices, /invoices/new, /invoices/:id, /pricing</tspan></text>
+        <text x="0" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Services Catalog: <tspan fill="#F8FAFC">/services, /services/new, /services/:id</tspan></text>
+        <text x="0" y="95" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Telephony &amp; Voice: <tspan fill="#F8FAFC">/telephony, /telephony/calls, /telephony/dids</tspan></text>
+        <text x="0" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Staff &amp; Team: <tspan fill="#F8FAFC">/team, /team/roles, /team/schedule</tspan></text>
+        <text x="0" y="135" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Knowledge Base: <tspan fill="#F8FAFC">/knowledge, /knowledge/faq, /knowledge/upload</tspan></text>
+        <text x="0" y="155" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Vertical Niches (7x): <tspan fill="#F8FAFC">/niche/dental, /niche/physio, /niche/ayurveda, ...</tspan></text>
+        <text x="0" y="175" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Settings &amp; Profile: <tspan fill="#F8FAFC">/settings, /settings/billing, /settings/integrations</tspan></text>
+        <text x="0" y="205" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#10B981">INVARIANT: Zero pages merged, consolidated, or eliminated.</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Right: Pro Plan (55 Pages) -->
+  <g transform="translate(730, 115)">
+    <rect width="610" height="740" rx="14" fill="url(#proCard)" stroke="#6366F1" stroke-width="1.5" />
+    <rect x="25" y="25" width="110" height="26" rx="6" fill="#4338CA" />
+    <text x="35" y="42" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#E0E7FF">PRO TIER</text>
+    <text x="150" y="43" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#F8FAFC">55 Advanced Screens</text>
+    <text x="25" y="75" font-family="system-ui, sans-serif" font-size="12" fill="#94A3B8">Enterprise Multi-Doctor Clinical EMR, Outbound Campaigns &amp; High-Volume Queues</text>
+
+    <!-- Enterprise Capabilities Grid -->
+    <g transform="translate(25, 95)">
+      <rect width="560" height="150" rx="10" fill="#0F172A" stroke="#4338CA" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">Enterprise Clinical Infrastructure</text>
+
+      <g transform="translate(20, 45)">
+        <rect x="0" y="0" width="255" height="38" rx="6" fill="#1E293B" stroke="#3730A3" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">🏥 Multi-Doctor Clinical EMR</text>
+
+        <rect x="270" y="0" width="255" height="38" rx="6" fill="#1E293B" stroke="#3730A3" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">📢 Outbound Voice Campaigns</text>
+
+        <rect x="0" y="48" width="255" height="38" rx="6" fill="#1E293B" stroke="#3730A3" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">⚡ BullMQ Distributed Redis Queues</text>
+
+        <rect x="270" y="48" width="255" height="38" rx="6" fill="#1E293B" stroke="#3730A3" />
+        <text x="12" y="24" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#F8FAFC">⚖️ Dual-Resource Quota Metering</text>
+      </g>
+    </g>
+
+    <!-- Pro Architecture Details -->
+    <g transform="translate(25, 265)">
+      <rect width="560" height="155" rx="10" fill="#0F172A" stroke="#4338CA" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">Multi-Doctor &amp; Hospital Scale Architecture</text>
+      
+      <text x="20" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#C7D2FE">RBAC Hierarchy:</tspan> Superadmin, Clinic Owner, Senior Doctor, Nurse, Frontdesk</text>
+      <text x="20" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#C7D2FE">Dual-Resource Metering:</tspan> Separate limits for Voice Minutes &amp; LLM Tokens</text>
+      <text x="20" y="95" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#C7D2FE">TRAI DLT Engine:</tspan> Automated DND scrub &amp; 9am-9pm IST calling window</text>
+      <text x="20" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#E2E8F0">• <tspan font-weight="bold" fill="#C7D2FE">R2 Presigned Audio Vault:</tspan> Secure playback links for clinical consultations</text>
+      <text x="20" y="135" font-family="system-ui, sans-serif" font-size="11" fill="#C7D2FE">Stack: Next.js 15 App Router (app.zerodesk.in) • Port 3000</text>
+    </g>
+
+    <!-- Pro Screens summary -->
+    <g transform="translate(25, 440)">
+      <rect width="560" height="270" rx="10" fill="#0F172A" stroke="#4338CA" stroke-width="1" />
+      <text x="20" y="28" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">Screen Breakdown (55 Routes)</text>
+      <g transform="translate(20, 42)">
+        <text x="0" y="15" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Executive Suite: <tspan fill="#F8FAFC">/dashboard, /analytics/realtime, /analytics/finances</tspan></text>
+        <text x="0" y="35" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Clinical EMR &amp; Patients: <tspan fill="#F8FAFC">/patients, /patients/:id/emr, /prescriptions, /vitals</tspan></text>
+        <text x="0" y="55" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Multi-Doctor Schedules: <tspan fill="#F8FAFC">/doctors, /doctors/:id/calendar, /departments</tspan></text>
+        <text x="0" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Outbound Campaigns: <tspan fill="#F8FAFC">/campaigns, /campaigns/create, /campaigns/:id/stats</tspan></text>
+        <text x="0" y="95" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Omnichannel Inbox: <tspan fill="#F8FAFC">/inbox (WhatsApp + Voice + Web Live Sync)</tspan></text>
+        <text x="0" y="115" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Telephony &amp; SIP Trunk: <tspan fill="#F8FAFC">/telephony/dids, /telephony/call-recordings, /ivr</tspan></text>
+        <text x="0" y="135" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Automations &amp; Workflows: <tspan fill="#F8FAFC">/automations, /automations/builder, /queues</tspan></text>
+        <text x="0" y="155" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Super Admin Console: <tspan fill="#F8FAFC">/superadmin/tenants, /superadmin/llm-registry, /mrr</tspan></text>
+        <text x="0" y="175" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Compliance &amp; Audit: <tspan fill="#F8FAFC">/compliance/kyc, /compliance/dlt, /audit-logs</tspan></text>
+        <text x="0" y="205" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#6366F1">INVARIANT: Full enterprise isolation without reducing Starter routes.</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Middle Migration Arrow -->
+  <g transform="translate(650, 450)">
+    <path d="M 0 0 L 40 0" stroke="#38BDF8" stroke-width="3" marker-end="url(#arrow-green)" />
+    <text x="-15" y="-12" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#38BDF8">Seamless</text>
+    <text x="-15" y="22" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#38BDF8">Upgrade</text>
+  </g>
+</svg>

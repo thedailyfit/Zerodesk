@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="widgetCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-cyan6" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bgGrad6)" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Website Widget Chatbot &amp; Indic RAG Architecture</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Isolated Shadow DOM (widget.js), Server-Sent Events (SSE) Streaming &amp; Supabase pgvector Retrieval</text>
+
+  <!-- Block 1: Client Website Integration -->
+  <g transform="translate(60, 120)">
+    <rect width="300" height="720" rx="12" fill="url(#widgetCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#0369A1" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">CLIENT RUNTIME</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Clinic Website Host</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">WordPress, Wix, Webflow, Custom React</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="264" height="90" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Single Script Tag Injection</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">&lt;script src=".../widget.js"</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">  data-tenant="clinic_123"</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">  defer&gt;&lt;/script&gt;</text>
+
+      <rect y="105" width="264" height="150" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Isolated Shadow DOM</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">element.attachShadow({mode:'closed'})</text>
+      <text x="12" y="62" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Zero style leakage from host CSS</text>
+      <text x="12" y="80" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Bootstrap / Tailwind host immunity</text>
+      <text x="12" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Sub-50KB bundle size (uncompressed)</text>
+      <text x="12" y="116" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Auto-detects device viewport &amp; dark mode</text>
+      <text x="12" y="136" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">100% style encapsulation</text>
+
+      <rect y="270" width="264" height="130" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Interactive Chat UI</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Markdown &amp; bold typography</text>
+      <text x="12" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Interactive doctor slot picker</text>
+      <text x="12" y="78" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• One-click phone call button</text>
+      <text x="12" y="96" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Direct WhatsApp handoff trigger</text>
+      <text x="12" y="116" font-family="system-ui, sans-serif" font-size="9" fill="#38BDF8">Instant rendering</text>
+    </g>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 360 350 L 420 350" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan6)" />
+
+  <!-- Block 2: NestJS SSE Gateway -->
+  <g transform="translate(430, 120)">
+    <rect width="280" height="720" rx="12" fill="url(#widgetCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#064E3B" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0">API GATEWAY</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#10B981">NestJS SSE Gateway</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Server-Sent Events Controller</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="244" height="110" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#10B981">1. Session Initialization</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">POST /v1/widget/session</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Validates tenant API key</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Issues ephemeral JWT token</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Rate-limits IP: 30 msgs/hr</text>
+      <text x="12" y="104" font-family="system-ui, sans-serif" font-size="9" fill="#34D399">Prevents quota draining</text>
+
+      <rect y="125" width="244" height="120" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#10B981">2. SSE Token Streaming</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">GET /v1/widget/stream</text>
+      <text x="12" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Header: text/event-stream</text>
+      <text x="12" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Chunk-by-chunk delta delivery</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• data: {"delta": "Dr. Sharma"}</text>
+      <text x="12" y="108" font-family="system-ui, sans-serif" font-size="9" fill="#34D399">First token in &lt;180ms</text>
+
+      <rect y="260" width="244" height="130" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#10B981">3. Indic Unicode Normalizer</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Handles Devanagari &amp; Indic text</text>
+      <text x="12" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• NFKC Unicode normalization</text>
+      <text x="12" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Preserves matras &amp; conjuncts</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Cleans mixed Hindi-English (Hinglish)</text>
+      <text x="12" y="112" font-family="system-ui, sans-serif" font-size="9" fill="#34D399">Precise vector matching</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 710 350 L 770 350" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan6)" />
+
+  <!-- Block 3: Supabase pgvector RAG Engine -->
+  <g transform="translate(780, 120)">
+    <rect width="280" height="720" rx="12" fill="url(#widgetCard)" stroke="#A855F7" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#581C87" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#F3E8FF">KNOWLEDGE RAG</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#C084FC">Supabase pgvector</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">HNSW Index &amp; Semantic Retrieval</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="244" height="110" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">1. Embedding Generation</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">OpenAI text-embedding-3-small</text>
+      <text x="12" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• 1536-dimensional dense vector</text>
+      <text x="12" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Embeds user query + history</text>
+      <text x="12" y="94" font-family="system-ui, sans-serif" font-size="9" fill="#A7F3D0">Cost: $0.02 / 1M tokens</text>
+
+      <rect y="125" width="244" height="130" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">2. pgvector Cosine Search</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">SELECT chunk, 1 - (embedding &lt;=&gt; $q)</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">FROM knowledge_chunks</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#38BDF8">WHERE tenant_id = $tenantId</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">ORDER BY embedding &lt;=&gt; $q LIMIT 4;</text>
+      <text x="12" y="110" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Query latency: &lt;18ms with HNSW</text>
+
+      <rect y="270" width="244" height="120" rx="6" fill="#0F172A" stroke="#7C3AED" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#C084FC">3. Clinical Guardrails</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Anti-Hallucination Prompt</text>
+      <text x="12" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Strict grounding on clinic context</text>
+      <text x="12" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Refuses out-of-scope medical diagnoses</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Recommends doctor consultation</text>
+      <text x="12" y="108" font-family="system-ui, sans-serif" font-size="9" fill="#C084FC">Safe, ethical clinical advice</text>
+    </g>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <path d="M 1060 350 L 1120 350" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan6)" />
+
+  <!-- Block 4: Output & Booking Trigger -->
+  <g transform="translate(1130, 120)">
+    <rect width="210" height="720" rx="12" fill="url(#widgetCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="20" y="20" width="110" height="24" rx="6" fill="#0369A1" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">CONVERSION</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Slot Booking</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">In-Widget Checkout</text>
+
+    <g transform="translate(15, 110)">
+      <rect width="180" height="130" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="10" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Inline Slot Picker</text>
+      <text x="10" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">1. Select Doctor</text>
+      <text x="10" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">2. Pick Day &amp; Time</text>
+      <text x="10" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">3. Enter Name &amp; Phone</text>
+      <text x="10" y="94" font-family="system-ui, sans-serif" font-size="10" fill="#10B981">4. Instant OTP / Direct Lock</text>
+      <text x="10" y="114" font-family="system-ui, sans-serif" font-size="9" fill="#94A3B8">Zero page reload</text>
+
+      <rect y="150" width="180" height="120" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="10" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Instant Sync</text>
+      <text x="10" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Creates Customer record</text>
+      <text x="10" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Fires appointment.created</text>
+      <text x="10" y="76" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Triggers WhatsApp alert</text>
+      <text x="10" y="94" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Updates Pro Dashboard</text>
+      <text x="10" y="110" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">End-to-end synced</text>
+    </g>
+  </g>
+</svg>

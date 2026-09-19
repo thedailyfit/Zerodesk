@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A0C16" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="cCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+    <marker id="arrow-c" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#F59E0B" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bgGrad8)" />
+
+  <!-- Header -->
+  <text x="60" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">ZEROdesk | Outbound Campaign Engine &amp; TRAI Compliance Architecture</text>
+  <text x="60" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#94A3B8">Targeted Voice Broadcasts, TRAI 9am-9pm IST Gate, Dynamic Concurrency &amp; Live Staff SIP REFER Transfers</text>
+
+  <!-- Step 1: Campaign Configuration -->
+  <g transform="translate(60, 120)">
+    <rect width="280" height="720" rx="12" fill="url(#cCard)" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#78350F" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#FDE68A">STEP 1: CONFIG</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#F59E0B">Campaign Creator</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Doctor / Admin Launch UI</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="244" height="90" rx="6" fill="#0F172A" stroke="#D97706" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Target Segmentation</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Inactive Patients (&gt;6 months)</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Chronic Care / Diabetic Checkup</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Vaccine / Dental Cleaning Recall</text>
+
+      <rect y="105" width="244" height="110" rx="6" fill="#0F172A" stroke="#D97706" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Voice Prompt &amp; Script</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">AI Personality &amp; Language</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Voice: Priya (Sarvam Indic Hindi/Eng)</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Goal: Book consultation with Dr. Roy</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Fallback: Send WhatsApp summary</text>
+
+      <rect y="230" width="244" height="110" rx="6" fill="#0F172A" stroke="#D97706" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Budget &amp; Concurrency</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Max calls: 500 patients</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Concurrency limit: 20 lines</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Estimated minutes: 750 mins</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Pre-flight quota balance verified</text>
+    </g>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 340 350 L 400 350" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-c)" />
+
+  <!-- Step 2: TRAI Regulatory Gate -->
+  <g transform="translate(410, 120)">
+    <rect width="280" height="720" rx="12" fill="url(#cCard)" stroke="#EF4444" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#7F1D1D" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#FCA5A5">STEP 2: LEGAL GATE</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#F87171">TRAI Compliance</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Telecom Regulatory Authority of India</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="244" height="120" rx="6" fill="#0F172A" stroke="#DC2626" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FCA5A5">Calling Time Window Gate</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Strict 9:00 AM - 9:00 PM IST</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Calls paused automatically at 8:59 PM</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Resume next morning at 9:01 AM IST</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Prevents clinic telecom penalties</text>
+      <text x="12" y="106" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">100% automated enforcement</text>
+
+      <rect y="135" width="244" height="120" rx="6" fill="#0F172A" stroke="#DC2626" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FCA5A5">National DND Registry Scrub</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Do-Not-Disturb Check</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Scrubs against clinic opted-out list</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Service implicit vs promotional mode</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Existing patients: Service category</text>
+      <text x="12" y="106" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Zero spam complaints</text>
+
+      <rect y="270" width="244" height="110" rx="6" fill="#0F172A" stroke="#DC2626" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FCA5A5">TRAI DLT Header Approval</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Principal Entity ID Verified</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Header: ZERODK / CLNCSM</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Carrier: Plivo approved trunk</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Legal telecom compliance</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 690 350 L 750 350" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-c)" />
+
+  <!-- Step 3: Dial-Out & Conversation -->
+  <g transform="translate(760, 120)">
+    <rect width="280" height="720" rx="12" fill="url(#cCard)" stroke="#38BDF8" stroke-width="1.5" />
+    <rect x="20" y="20" width="130" height="24" rx="6" fill="#0369A1" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#BAE6FD">STEP 3: EXECUTION</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#38BDF8">Voice AI Dial-Out</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">LiveKit SIP &amp; Fly.io Worker</text>
+
+    <g transform="translate(18, 110)">
+      <rect width="244" height="120" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">SIP Outbound Dialing</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Plivo API: Call Creation</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Connects patient phone to LiveKit room</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Answers in &lt;1.8s</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Voice Worker joins room immediately</text>
+      <text x="12" y="106" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Zero dead air greeting</text>
+
+      <rect y="135" width="244" height="130" rx="6" fill="#0F172A" stroke="#0284C7" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#38BDF8">Indic Dialogue &amp; Booking</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">Natural Conversational Flow</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• "Namaste Rahul ji, Dr. Roy recommended..."</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Patient answers in Hindi / English</text>
+      <text x="12" y="90" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• AI books slot directly via function call</text>
+      <text x="12" y="110" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Conversion rate: ~28%</text>
+
+      <rect y="280" width="244" height="110" rx="6" fill="#0F172A" stroke="#F59E0B" />
+      <text x="12" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#FDE68A">Live Staff Warm Transfer</text>
+      <text x="12" y="42" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">SIP REFER (RFC 5589)</text>
+      <text x="12" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• If patient asks for human doctor</text>
+      <text x="12" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">• Bridges call to doctor mobile</text>
+      <text x="12" y="92" font-family="system-ui, sans-serif" font-size="9" fill="#F59E0B">Warm handoff with context whisper</text>
+    </g>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <path d="M 1040 350 L 1100 350" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-c)" />
+
+  <!-- Step 4: Analytics & Reporting -->
+  <g transform="translate(1110, 120)">
+    <rect width="230" height="720" rx="12" fill="url(#cCard)" stroke="#10B981" stroke-width="1.5" />
+    <rect x="20" y="20" width="120" height="24" rx="6" fill="#064E3B" />
+    <text x="30" y="36" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0">STEP 4: INSIGHTS</text>
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#10B981">Live Analytics</text>
+    <text x="20" y="86" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">Conversion Dashboard</text>
+
+    <g transform="translate(15, 110)">
+      <rect width="200" height="110" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="10" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#34D399">Real-Time Metrics</text>
+      <text x="10" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Calls Placed: 500</text>
+      <text x="10" y="56" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Connected: 412 (82.4%)</text>
+      <text x="10" y="72" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Booked Slots: 142 (34.4%)</text>
+      <text x="10" y="88" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Transferred: 18</text>
+
+      <rect y="125" width="200" height="110" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="10" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#34D399">Sentiment Scoring</text>
+      <text x="10" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Positive: 68%</text>
+      <text x="10" y="56" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Neutral: 24%</text>
+      <text x="10" y="72" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Negative / DND: 8%</text>
+      <text x="10" y="90" font-family="system-ui, sans-serif" font-size="9" fill="#10B981">Auto-adds to DND if negative</text>
+
+      <rect y="250" width="200" height="110" rx="6" fill="#0F172A" stroke="#059669" />
+      <text x="10" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#34D399">ROI &amp; Revenue</text>
+      <text x="10" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Campaign Cost: ₹1,850</text>
+      <text x="10" y="56" font-family="system-ui, sans-serif" font-size="10" fill="#E2E8F0">• Pipeline Value: ₹71,000</text>
+      <text x="10" y="72" font-family="system-ui, sans-serif" font-size="10" fill="#10B981">• ROI: 38.3x</text>
+      <text x="10" y="90" font-family="system-ui, sans-serif" font-size="9" fill="#38BDF8">Direct clinic revenue impact</text>
+    </g>
+  </g>
+</svg>
