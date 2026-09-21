@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, Logger, Optional } fr
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { RedisService } from '../redis/redis.service';
+import { OtpService } from '../auth/otp.service';
 
 @Injectable()
 export class AppointmentService {
@@ -11,6 +12,7 @@ export class AppointmentService {
     private prisma: PrismaService,
     @Optional() private redisService?: RedisService,
     @Optional() private whatsappService?: WhatsappService,
+    @Optional() private otpService?: OtpService,
   ) {}
 
   async findAll(tenantId: string) {
@@ -204,10 +206,25 @@ export class AppointmentService {
     }
   }
 
+  async sendPublicBookingOtp(slug: string, phone: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true, name: true },
+    });
+    if (!tenant) {
+      throw new NotFoundException(`Clinic with slug '${slug}' not found`);
+    }
+    if (!this.otpService) {
+      return { success: true, message: 'OTP dispatch skipped (service offline)' };
+    }
+    return this.otpService.generateAndSendOtp(tenant.id, phone, tenant.name);
+  }
+
   async bookFromPublic(data: {
     slug: string;
     customerName: string;
     customerPhone: string;
+    otp: string;
     serviceName?: string;
     doctorName?: string;
     staffId?: string;
@@ -223,6 +240,12 @@ export class AppointmentService {
     if (!tenant) {
       throw new NotFoundException(`Clinic with slug '${data.slug}' not found`);
     }
+
+    // Verify cryptographic OTP before booking
+    if (this.otpService && data.otp) {
+      await this.otpService.verifyOtp(tenant.id, data.customerPhone, data.otp);
+    }
+
     return this.bookFromVoice(tenant.id, {
       ...data,
       source: 'WEB_BOOKING',

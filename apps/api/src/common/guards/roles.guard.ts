@@ -4,6 +4,7 @@ import { ROLES_KEY, RoleType } from '../decorators/roles.decorator';
 
 const ROLE_HIERARCHY: Record<string, number> = {
   SUPER_ADMIN: 100,
+  OWNER: 90,
   ORG_ADMIN: 80,
   ADMIN: 80,
   MANAGER: 60,
@@ -39,6 +40,7 @@ export class RolesGuard implements CanActivate {
 
     if (typeof userRole === 'string' && userRole.startsWith('org:')) {
       userRole = userRole.replace(/^org:/i, '').toUpperCase();
+      if (userRole === 'OWNER') userRole = 'OWNER';
       if (userRole === 'ADMIN') userRole = 'ORG_ADMIN';
       if (userRole === 'MEMBER') userRole = 'STAFF';
     }

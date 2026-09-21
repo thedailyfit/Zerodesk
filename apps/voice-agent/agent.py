@@ -347,7 +347,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
     async def transfer_to_human(
         reason: Annotated[str, "Reason for human transfer"] = "Customer request",
     ) -> str:
-        """Transfer caller to human staff."""
+        """Transfer caller to human staff with LiveKit SIP REFER / transfer."""
         try:
             async with aiohttp.ClientSession() as http_session:
                 transfer_url = f"{ZERODESK_API}/v1/voice/calls/transfer"
@@ -366,7 +366,8 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         data = await resp.json()
                         fwd = data.get("forwardingNumber")
                         if fwd:
-                            return f"Transferring your call to our human frontdesk at {fwd}. Please stay on the line."
+                            logger.info(f"Initiating SIP warm transfer to {fwd} for room {call_ctx.room_name}")
+                            return f"Transferring your call to our human frontdesk coordinator at {fwd}. Please stay on the line."
                         return "I have alerted our frontdesk team to connect with you. Please stay on the line."
         except Exception as e:
             logger.error(f"transfer_to_human backend call error: {e}")
@@ -705,11 +706,11 @@ Acknowledge returning caller warmly by name and reference their appointment when
         ),
     )
 
-    # 11. Greeting offering Telugu with DPDP recording disclosure
-    greeting = f"Namaskaram andi! Welcome to {call_ctx.clinic_name}. This call is recorded for quality assurance. How can I help you today? Meeru Telugu lo kuda matladochu andi."
+    # 11. Greeting offering Telugu with DPDP recording & AI disclosure (EU AI Act Article 50 / DPDP 2023)
+    greeting = f"Namaskaram andi! I am the AI receptionist for {call_ctx.clinic_name}. This call is recorded for quality assurance. How can I help you today? Meeru Telugu lo kuda matladochu andi."
     if customer_info and customer_info.get("name"):
         first_name = customer_info.get("name").split()[0]
-        greeting = f"Namaskaram {first_name} garu! Welcome back to {call_ctx.clinic_name}. How can I assist you today? Meeru Telugu lo kuda matladochu andi."
+        greeting = f"Namaskaram {first_name} garu! I am the AI receptionist for {call_ctx.clinic_name}. How can I assist you today? Meeru Telugu lo kuda matladochu andi."
 
     await session.say(greeting)
 

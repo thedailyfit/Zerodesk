@@ -5,7 +5,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { InternalVoiceGuard } from '../../common/guards/internal-voice.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
-import { PublicBookDto } from './dto/public-book.dto';
+import { PublicBookDto, SendOtpDto } from './dto/public-book.dto';
 import { CalendarSyncService } from './calendar-sync.service';
 
 @Controller('appointments')
@@ -41,6 +41,12 @@ export class AppointmentController {
   ) {
     const tenantId = headerTenantId || data.tenantId;
     return this.appointmentService.bookFromVoice(tenantId, data);
+  }
+
+  @Post('public/send-otp')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async sendOtp(@Body() dto: SendOtpDto) {
+    return this.appointmentService.sendPublicBookingOtp(dto.slug, dto.phone);
   }
 
   @Post('public-book')

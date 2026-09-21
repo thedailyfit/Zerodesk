@@ -41,6 +41,8 @@ import { useSuperAdminStore } from '@/lib/superadmin-store';
 import type { NicheId, ActiveNicheId, NicheNavItem } from '@/config/niches/types';
 
 const SYSTEM_MENU_ITEMS = [
+  { name: 'AI Governance', href: '/agent-governance', icon: Shield, badge: 'Gov', desc: 'Estate Board & Action Ledger', roles: ['ADMIN', 'MANAGER'] },
+  { name: 'Bad Answers & Evals', href: '/bad-answers', icon: Sparkles, badge: 'Evals', desc: 'RAG Triad & Drift Cockpit', roles: ['ADMIN', 'MANAGER'] },
   { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions', roles: ['ADMIN'] },
   { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
   { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client', roles: ['ADMIN'] },

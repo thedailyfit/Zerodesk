@@ -63,6 +63,7 @@ describe('Telephony Ingress & Webhook Automation E2E Suite (Plivo + LiveKit Clou
       {} as any, // promptGuard
       {} as any, // whatsappService
       plivoService,
+      {} as any, // storageService
       {} as any, // outboundQueue
     );
   });

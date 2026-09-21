@@ -6,9 +6,11 @@ import { WhatsappStatusListener } from './whatsapp-status.listener';
 import { RedisModule } from '../redis/redis.module';
 import { AiModule } from '../ai/ai.module';
 import { AppointmentModule } from '../appointment/appointment.module';
+import { ObservabilityModule } from '../observability/observability.module';
+import { GovernanceModule } from '../governance/governance.module';
 
 @Module({
-  imports: [RedisModule, AiModule, forwardRef(() => AppointmentModule)],
+  imports: [RedisModule, AiModule, forwardRef(() => AppointmentModule), ObservabilityModule, GovernanceModule],
   controllers: [WhatsappController],
   providers: [WhatsappService, WhatsappAiListener, WhatsappStatusListener],
   exports: [WhatsappService],

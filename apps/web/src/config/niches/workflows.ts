@@ -248,7 +248,7 @@ export const NICHE_WORKFLOWS: Record<ActiveNicheId, WorkflowItem[]> = {
       steps: [
         { id: 's1', type: 'trigger', label: '72h Post-Treatment', details: 'Recovery check' },
         { id: 's2', type: 'survey', label: '1-Tap CSAT Rating', details: '1 to 5 Stars' },
-        { id: 's3', type: 'whatsapp', label: 'Google Review Link', details: 'Sent only if 5 Stars' },
+        { id: 's3', type: 'whatsapp', label: 'Google Review Link', details: 'Sent to all consenting patients' },
         { id: 's4', type: 'task', label: 'Manager Alert if < 4★', details: 'Immediate service recovery' }
       ]
     },
@@ -569,7 +569,7 @@ export const NICHE_WORKFLOWS: Record<ActiveNicheId, WorkflowItem[]> = {
       steps: [
         { id: 's1', type: 'trigger', label: '48h Post-Dental Sitting', details: 'Pain resolved' },
         { id: 's2', type: 'survey', label: '1-Tap Gentle CSAT Rating', details: 'Rate gentle touch 1-5' },
-        { id: 's3', type: 'whatsapp', label: 'Google Review Link', details: 'Sent only if 5 Stars' },
+        { id: 's3', type: 'whatsapp', label: 'Google Review Link', details: 'Sent to all consenting patients' },
         { id: 's4', type: 'task', label: 'Manager Service Recovery', details: 'Call if rating < 4 Stars' }
       ]
     }
@@ -740,7 +740,7 @@ export const NICHE_WORKFLOWS: Record<ActiveNicheId, WorkflowItem[]> = {
       steps: [
         { id: 's1', type: 'trigger', label: '4 Hours Post-Therapy', details: 'Relaxation period over' },
         { id: 's2', type: 'survey', label: 'Ambiance & Pressure Rating', details: 'Quick 1-tap WhatsApp poll' },
-        { id: 's3', type: 'whatsapp', label: 'TripAdvisor & Google Link', details: 'Sent if rated 5 stars' },
+        { id: 's3', type: 'whatsapp', label: 'TripAdvisor & Google Link', details: 'Sent to all consenting guests' },
         { id: 's4', type: 'task', label: 'Alert Director if < 4★', details: 'Service recovery protocol' }
       ]
     },
@@ -1187,7 +1187,7 @@ export const NICHE_WORKFLOWS: Record<ActiveNicheId, WorkflowItem[]> = {
       steps: [
         { id: 's1', type: 'trigger', label: '2 Hours Post Check-out', details: 'Guest on journey home' },
         { id: 's2', type: 'survey', label: '1-Tap Stay Rating', details: 'Rate experience 1-5' },
-        { id: 's3', type: 'whatsapp', label: 'Direct TripAdvisor Link', details: 'Sent only if 5/5 Stars' },
+        { id: 's3', type: 'whatsapp', label: 'Direct TripAdvisor Link', details: 'Sent to all consenting guests' },
         { id: 's4', type: 'task', label: 'GM Alert if < 4 Stars', details: 'Personal apology & recovery' }
       ]
     },

@@ -73,6 +73,8 @@ export class RagService implements OnModuleInit {
           JOIN knowledge_documents kd ON kd.id = kc.document_id
           WHERE kc.tenant_id = ${tenantId}::uuid
             AND kd.is_active = true
+            AND kd.status = 'ACTIVE'
+            AND kc.version = kd.version
             AND kc.embedding IS NOT NULL
           ORDER BY kc.embedding <=> ${embeddingStr}::vector
           LIMIT 15
@@ -106,6 +108,8 @@ export class RagService implements OnModuleInit {
             JOIN knowledge_documents kd ON kd.id = kc.document_id
             WHERE kc.tenant_id = ${tenantId}::uuid
               AND kd.is_active = true
+              AND kd.status = 'ACTIVE'
+              AND kc.version = kd.version
               AND (
                 kc.chunk_text ILIKE ${'%' + cleanKeyword + '%'}
                 OR kc.chunk_text ILIKE ${'%' + primary + '%'}
@@ -205,41 +209,79 @@ export class RagService implements OnModuleInit {
 
     if (!doc) throw new Error('Document not found');
 
-    // Split content into chunks (~500 chars each with overlap)
-    const chunks = this.splitIntoChunks(doc.content, 500, 50);
+    const currentVersion = doc.version || 1;
+    const targetVersion = currentVersion + 1;
 
-    // Delete existing chunks for re-indexing
-    await this.prisma.knowledgeChunk.deleteMany({
-      where: { documentId, tenantId },
+    // 1. Mark document as INDEXING while keeping currentVersion chunks active
+    await this.prisma.knowledgeDocument.update({
+      where: { id: documentId },
+      data: { status: 'INDEXING' },
     });
 
-    // Generate embeddings and store chunks in parallel batches of 5
+    // 2. Split content into table-aware semantic chunks (~500 chars with overlap)
+    const chunks = this.splitIntoChunks(doc.content, 500, 50);
+
+    // 3. Generate embeddings and insert new chunks with targetVersion
     let indexed = 0;
     const batchSize = 5;
 
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batch = chunks.slice(i, i + batchSize);
-      await Promise.all(
-        batch.map(async (chunkText, batchIdx) => {
-          const chunkIdx = i + batchIdx;
-          try {
-            const embedding = await this.embeddingService.createEmbedding(chunkText);
-            const embeddingStr = `[${embedding.join(',')}]`;
+    try {
+      for (let i = 0; i < chunks.length; i += batchSize) {
+        const batch = chunks.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (chunkText, batchIdx) => {
+            const chunkIdx = i + batchIdx;
+            try {
+              const embedding = await this.embeddingService.createEmbedding(chunkText);
+              const embeddingStr = `[${embedding.join(',')}]`;
 
-            await this.prisma.$executeRaw`
-              INSERT INTO knowledge_chunks (id, tenant_id, document_id, chunk_text, chunk_index, embedding, created_at)
-              VALUES (gen_random_uuid(), ${tenantId}::uuid, ${documentId}::uuid, ${chunkText}, ${chunkIdx}, ${embeddingStr}::vector, NOW())
-            `;
-            indexed++;
-          } catch (error) {
-            this.logger.warn(`Failed to index chunk ${chunkIdx} of document ${documentId}: ${error}`);
-          }
+              await this.prisma.$executeRaw`
+                INSERT INTO knowledge_chunks (id, tenant_id, document_id, version, chunk_text, chunk_index, embedding, created_at)
+                VALUES (gen_random_uuid(), ${tenantId}::uuid, ${documentId}::uuid, ${targetVersion}, ${chunkText}, ${chunkIdx}, ${embeddingStr}::vector, NOW())
+              `;
+              indexed++;
+            } catch (error: any) {
+              this.logger.warn(`Failed to index chunk ${chunkIdx} of document ${documentId}: ${error?.message || error}`);
+            }
+          }),
+        );
+      }
+
+      // 4. Atomic pointer switch: Activate targetVersion and purge stale chunks
+      await this.prisma.$transaction([
+        this.prisma.knowledgeDocument.update({
+          where: { id: documentId },
+          data: {
+            version: targetVersion,
+            status: 'ACTIVE',
+            errorMessage: null,
+          },
         }),
-      );
-    }
+        this.prisma.knowledgeChunk.deleteMany({
+          where: {
+            documentId,
+            version: { lt: targetVersion },
+          },
+        }),
+      ]);
 
-    this.logger.log(`Indexed ${indexed}/${chunks.length} chunks for document ${documentId}`);
-    return indexed;
+      this.logger.log(`Atomically activated version ${targetVersion} (${indexed}/${chunks.length} chunks) for document ${documentId}`);
+      return indexed;
+    } catch (err: any) {
+      this.logger.error(`Indexing failed for document ${documentId}: ${err.message}`, err.stack);
+      await this.prisma.knowledgeDocument.update({
+        where: { id: documentId },
+        data: {
+          status: 'FAILED',
+          errorMessage: err.message,
+        },
+      });
+      // Purge incomplete targetVersion chunks so no partial state remains
+      await this.prisma.knowledgeChunk.deleteMany({
+        where: { documentId, version: targetVersion },
+      });
+      throw err;
+    }
   }
 
   /**

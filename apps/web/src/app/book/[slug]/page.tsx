@@ -59,68 +59,97 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
   const [otpValue, setOtpValue] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !phone) return;
-    setStep('otp');
+    setIsSendingOtp(true);
+    setErrorMessage('');
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+    try {
+      const resp = await fetch(`${apiBase}/appointments/public/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, phone: phone.trim() }),
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        setErrorMessage(data.message || 'Failed to send verification code. Please try again.');
+      } else {
+        setStep('otp');
+      }
+    } catch {
+      // Fallback advance if network error
+      setStep('otp');
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      // Accept demo OTP 123456 or any 6 digits
-      if (otpValue === '123456' || otpValue.length === 6) {
-        // Save to local state fallback
-        const cleanPhone = phone.replace(/\D/g, '');
-        const existing = patients.find(p => p.phone.replace(/\D/g, '') === cleanPhone || p.phone === phone);
-        if (!existing && fullName.trim() && phone.trim()) {
-          try {
-            addPatient({
-              name: fullName.trim(),
-              phone: phone.trim(),
-              email: email.trim() || undefined,
-              priority: 'Standard',
-              tags: ['Web Booking', selectedService || 'Consultation'],
-            });
-          } catch {
-            // Ignore patient registration error if offline
-          }
-        }
+    setOtpError(false);
+    setErrorMessage('');
 
-        // Dispatch booking to backend API
-        try {
-          const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
-          fetch(`${apiBase}/appointments/public-book`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-tenant-id': slug,
-            },
-            body: JSON.stringify({
-              customerName: fullName.trim(),
-              customerPhone: phone.trim(),
-              serviceName: selectedService || 'Consultation',
-              date: `2026-09-${selectedDay.toString().padStart(2, '0')}`,
-              time: selectedTime,
-              source: 'WEB_BOOKING',
-              slug,
-              notes: `Public Web Booking by ${fullName.trim()} for ${selectedService || 'Consultation'}`,
-            }),
-          }).catch((err) => {
-            console.warn('Backend appointment dispatch error:', err);
-          });
-        } catch {
-          // Keep user flow unbroken
-        }
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const bookingDate = `${currentYear}-${currentMonth}-${selectedDay.toString().padStart(2, '0')}`;
 
-        setStep('confirmed');
-      } else {
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+      const resp = await fetch(`${apiBase}/appointments/public-book`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': slug,
+        },
+        body: JSON.stringify({
+          customerName: fullName.trim(),
+          customerPhone: phone.trim(),
+          serviceName: selectedService || 'Consultation',
+          date: bookingDate,
+          time: selectedTime,
+          source: 'WEB_BOOKING',
+          slug,
+          otp: otpValue.trim(),
+          notes: `Public Web Booking by ${fullName.trim()} for ${selectedService || 'Consultation'}`,
+        }),
+      });
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
         setOtpError(true);
+        setErrorMessage(errData.message || 'Invalid verification code. Please try again.');
+        setIsVerifying(false);
+        return;
       }
-    }, 1000);
+
+      // Save to local patient store
+      const cleanPhone = phone.replace(/\D/g, '');
+      const existing = patients.find(p => p.phone.replace(/\D/g, '') === cleanPhone || p.phone === phone);
+      if (!existing && fullName.trim() && phone.trim()) {
+        try {
+          addPatient({
+            name: fullName.trim(),
+            phone: phone.trim(),
+            email: email.trim() || undefined,
+            priority: 'Standard',
+            tags: ['Web Booking', selectedService || 'Consultation'],
+          });
+        } catch {}
+      }
+
+      setStep('confirmed');
+    } catch {
+      setOtpError(true);
+      setErrorMessage('Could not connect to booking server. Please verify your connection.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -406,9 +435,9 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                     </p>
                   </div>
 
-                  {/* Demo Helper Banner */}
+                  {/* Verification Notice */}
                   <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-medium">
-                    ?? Test Demo OTP: Enter <strong className="font-mono font-bold">123456</strong> to verify instantly.
+                    🔐 Verification code dispatched via WhatsApp. Enter the 6-digit code to confirm your booking.
                   </div>
 
                   <div>
@@ -420,11 +449,11 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                         setOtpValue(e.target.value.replace(/[^0-9]/g, ''));
                         setOtpError(false);
                       }}
-                      placeholder="123456"
+                      placeholder="• • • • • •"
                       className="w-48 mx-auto text-center font-mono font-extrabold text-2xl tracking-widest bg-slate-50 border border-slate-300 text-slate-900 rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                     />
                     {otpError && (
-                      <p className="text-xs text-rose-600 font-semibold mt-2">Invalid OTP. Please enter 123456</p>
+                      <p className="text-xs text-rose-600 font-semibold mt-2">{errorMessage || 'Invalid verification code. Please check your phone.'}</p>
                     )}
                   </div>
 

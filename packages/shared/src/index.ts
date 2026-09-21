@@ -25,3 +25,6 @@ export {
 } from './constants/pipeline';
 
 export type { Tenant, Customer, Conversation, Message, Lead, Appointment, KnowledgeDocument } from './types/index';
+
+export { PLANS_REGISTRY, getPlanConfig, isFeatureAllowed } from './constants/plans';
+export type { PlanDefinition, PlanTierType, PlanFeatures } from './constants/plans';

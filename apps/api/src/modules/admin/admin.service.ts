@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PlivoService } from '../voice/plivo.service';
+import { PLANS_REGISTRY } from '@zerodesk/shared';
 
 @Injectable()
 export class AdminService {
@@ -10,22 +11,52 @@ export class AdminService {
   ) {}
 
   async getPlatformStats() {
-    const [tenantCount, subscriptions, ragChunksCount] = await Promise.all([
+    const [
+      tenantCount,
+      activeTenantsCount,
+      subAggregates,
+      ragChunksCount,
+      appointmentCount,
+      customerCount,
+      traceCount,
+      badAnswersCount,
+      usageAggregates,
+    ] = await Promise.all([
       this.prisma.tenant.count(),
-      this.prisma.subscription.findMany(),
+      this.prisma.tenant.count({ where: { deletedAt: null } }),
+      this.prisma.subscription.aggregate({
+        _sum: {
+          mrr: true,
+          voiceMinutesUsed: true,
+          llmTokensUsed: true,
+        },
+      }),
       this.prisma.knowledgeChunk.count(),
+      this.prisma.appointment.count(),
+      this.prisma.customer.count(),
+      this.prisma.llmTrace.count(),
+      this.prisma.badAnswerFlag.count(),
+      this.prisma.usageLedger.aggregate({
+        _sum: { amount: true },
+      }),
     ]);
 
-    const totalMrr = subscriptions.reduce((acc, sub) => acc + Number(sub.mrr || 0), 0);
-    const totalVoiceMinutesUsed = subscriptions.reduce((acc, sub) => acc + (sub.voiceMinutesUsed || 0), 0);
-    const totalLlmTokensUsed = subscriptions.reduce((acc, sub) => acc + (sub.llmTokensUsed || 0), 0);
+    const totalMrr = Number(subAggregates._sum.mrr || 0);
+    const totalVoiceMinutesUsed = Number(subAggregates._sum.voiceMinutesUsed || 0);
+    const totalLlmTokensUsed = Number(subAggregates._sum.llmTokensUsed || 0);
 
     return {
       totalTenants: tenantCount,
+      activeTenants: activeTenantsCount,
       totalMrr,
       totalVoiceMinutesUsed,
       totalLlmTokensUsed,
       totalRagChunks: ragChunksCount,
+      totalAppointments: appointmentCount,
+      totalCustomers: customerCount,
+      totalTraces: traceCount,
+      totalBadAnswers: badAnswersCount,
+      totalUnitsDeducted: Number(usageAggregates._sum?.amount || 0),
     };
   }
 
@@ -157,12 +188,16 @@ export class AdminService {
   }
 
   async updateTenantPlan(tenantId: string, planTier: string) {
-    const normalizedPlan = (planTier || 'starter').toLowerCase();
+    const upperTier = (planTier || 'STARTER').toUpperCase() as 'STARTER' | 'PRO';
+    const planDef = PLANS_REGISTRY[upperTier] || PLANS_REGISTRY.STARTER;
+    const normalizedPlan = planDef.tier;
+
     const limits = {
-      starter: { voiceMinutesLimit: 300, whatsappMessagesLimit: 1500, llmTokensLimit: 2000000, mrr: 2999 },
-      pro: { voiceMinutesLimit: 1200, whatsappMessagesLimit: 5000, llmTokensLimit: 5000000, mrr: 9941 },
-      enterprise: { voiceMinutesLimit: 3000, whatsappMessagesLimit: 20000, llmTokensLimit: 20000000, mrr: 24999 },
-    }[normalizedPlan] || { voiceMinutesLimit: 300, whatsappMessagesLimit: 1500, llmTokensLimit: 2000000, mrr: 2999 };
+      voiceMinutesLimit: planDef.voiceMinutesIncluded,
+      whatsappMessagesLimit: planDef.whatsappMessagesIncluded,
+      llmTokensLimit: planDef.llmTokensIncluded,
+      mrr: planDef.monthlyPriceINR,
+    };
 
     await this.prisma.tenant.update({
       where: { id: tenantId },

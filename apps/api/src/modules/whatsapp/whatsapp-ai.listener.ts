@@ -1,10 +1,14 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AiService } from '../ai/ai.service';
 import { WhatsappService } from './whatsapp.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { AppointmentService } from '../appointment/appointment.service';
+import { ObservabilityService } from '../observability/observability.service';
+import { GovernanceService } from '../governance/governance.service';
+import { ActionPolicyGuard } from '../../common/guards/action-policy.guard';
+import { MemoryQuarantineService } from '../../common/security/memory-quarantine.service';
 
 @Injectable()
 export class WhatsappAiListener {
@@ -17,6 +21,14 @@ export class WhatsappAiListener {
     private readonly promptGuard: PromptGuardService,
     @Inject(forwardRef(() => AppointmentService))
     private readonly appointmentService: AppointmentService,
+    @Optional()
+    private readonly observability?: ObservabilityService,
+    @Optional()
+    private readonly governance?: GovernanceService,
+    @Optional()
+    private readonly actionPolicy?: ActionPolicyGuard,
+    @Optional()
+    private readonly memoryQuarantine?: MemoryQuarantineService,
   ) {}
 
   @OnEvent('whatsapp.message.received')
@@ -88,6 +100,22 @@ export class WhatsappAiListener {
         return;
       }
 
+      // 1b. Check for DND / Opt-Out keywords
+      const normalizedMsg = (effectiveMessage || '').trim().toUpperCase();
+      if (['STOP', 'OPT OUT', 'UNSUBSCRIBE', 'STOP PROMO', 'DND'].includes(normalizedMsg)) {
+        await this.prisma.customer.update({
+          where: { id: customerId },
+          data: { dndStatus: true, optedOutAt: new Date() },
+        });
+        await this.whatsappService.sendMessage(
+          tenantId,
+          from,
+          'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
+        );
+        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (DND enabled).`);
+        return;
+      }
+
       // 2. Check quota availability
       const subscription = await this.prisma.subscription.findUnique({
         where: { tenantId },
@@ -99,6 +127,7 @@ export class WhatsappAiListener {
       }
 
       // 3. Generate AI response with RAG context
+      const startTime = Date.now();
       const aiResult = await this.aiService.generateResponse(
         tenantId,
         customerId,
@@ -106,46 +135,155 @@ export class WhatsappAiListener {
         'WHATSAPP',
         conversationId,
       );
+      const latencyMs = Date.now() - startTime;
 
       if (!aiResult?.response) {
         return;
       }
 
       let replyText = aiResult.response;
+      let bookingResult: any = null;
 
-      // 4. Real execution of AI booking action
+      // 4. Real execution of AI booking action ("AI Never Claims Success Until Action Succeeds")
       const bookAction = aiResult.actions?.find((a) => a.type === 'BOOK_APPOINTMENT');
       if (bookAction && bookAction.params) {
-        try {
-          const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
-          const bookingResult = await this.appointmentService.bookFromVoice(tenantId, {
-            customerName: customer?.name || 'WhatsApp Patient',
-            customerPhone: from,
-            serviceName: bookAction.params.serviceName || bookAction.params.service,
-            doctorName: bookAction.params.doctorName || bookAction.params.doctor,
-            date: bookAction.params.date,
-            time: bookAction.params.time,
-            dateTime: bookAction.params.dateTime,
-            source: 'WHATSAPP',
-            notes: `Booked autonomously via WhatsApp AI: "${effectiveMessage}"`,
+        let policyPermitted = true;
+
+        // 4a. Cedar Default-Deny Policy Evaluation
+        if (this.actionPolicy) {
+          const policyCheck = await this.actionPolicy.evaluate({
+            tenantId,
+            agentKey: 'WHATSAPP_AI',
+            actionName: 'book_appointment',
+            targetResource: 'AppointmentSlot',
+            parameters: bookAction.params,
           });
 
-          if (bookingResult && bookingResult.id) {
-            this.logger.log(`Successfully executed appointment ${bookingResult.id} from WhatsApp for customer ${customerId}`);
-            if (!replyText.toLowerCase().includes('booking ref') && !replyText.toLowerCase().includes('reference')) {
-              replyText += `\n\n✅ *Appointment Confirmed!*` +
-                `\n📅 *Slot:* ${bookingResult.date || 'Scheduled Date'} at ${bookingResult.time || 'Scheduled Time'}` +
-                `\n🆔 *Booking Ref:* ${bookingResult.id.slice(0, 8).toUpperCase()}`;
+          if (!policyCheck.allowed) {
+            policyPermitted = false;
+            this.logger.warn(`ActionPolicyGuard blocked WhatsApp booking for tenant ${tenantId}: ${policyCheck.reason}`);
+            replyText = `I apologize, but that appointment request cannot be scheduled: ${policyCheck.reason} Would you like to select an alternative date or time?`;
+
+            if (this.governance) {
+              this.governance.recordActionTrace({
+                tenantId,
+                agentKey: 'WHATSAPP_AI',
+                channel: 'WHATSAPP',
+                actionName: 'BOOK_APPOINTMENT',
+                targetResource: 'AppointmentSlot',
+                parameters: bookAction.params,
+                policyDecision: 'DENIED',
+                policyRuleId: policyCheck.ruleId,
+                executionStatus: 'REJECTED',
+                errorMessage: policyCheck.reason,
+                latencyMs: Date.now() - startTime,
+              }).catch(() => {});
             }
           }
-        } catch (bookingError) {
-          this.logger.error(`Failed to execute appointment booking from WhatsApp AI: ${bookingError}`, (bookingError as Error).stack);
+        }
+
+        if (policyPermitted) {
+          try {
+            const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
+            const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } });
+            const clinicName = tenant?.name || 'ZeroDesk Clinic';
+
+            const rawNotes = `Booked autonomously via WhatsApp AI: "${effectiveMessage}"`;
+            const sanitizedNotes = this.memoryQuarantine
+              ? this.memoryQuarantine.sanitizeCustomerMemory(rawNotes).sanitized
+              : rawNotes;
+
+            bookingResult = await this.appointmentService.bookFromVoice(tenantId, {
+              customerName: customer?.name || 'WhatsApp Patient',
+              customerPhone: from,
+              serviceName: bookAction.params.serviceName || bookAction.params.service,
+              doctorName: bookAction.params.doctorName || bookAction.params.doctor,
+              date: bookAction.params.date,
+              time: bookAction.params.time,
+              dateTime: bookAction.params.dateTime,
+              source: 'WHATSAPP',
+              notes: sanitizedNotes,
+            });
+
+            if (bookingResult && bookingResult.id) {
+              this.logger.log(`Successfully executed appointment ${bookingResult.id} from WhatsApp for customer ${customerId}`);
+              const doctorName = bookingResult.staff?.name ? `Dr. ${bookingResult.staff.name}` : 'Assigned Specialist';
+              const serviceName = bookingResult.service?.name || bookAction.params.serviceName || 'Consultation';
+              const scheduledDate = bookingResult.date || 'Scheduled Date';
+              const scheduledTime = bookingResult.time || 'Scheduled Time';
+
+              replyText = `✅ *Appointment Confirmed!*\n\n` +
+                `🏥 *Clinic:* ${clinicName}\n` +
+                `🩺 *Service:* ${serviceName}\n` +
+                `👤 *Doctor:* ${doctorName}\n` +
+                `📅 *Date:* ${scheduledDate}\n` +
+                `⏰ *Time:* ${scheduledTime}\n` +
+                `🆔 *Booking Ref:* #${bookingResult.id.slice(0, 8).toUpperCase()}\n\n` +
+                `Please arrive 10 minutes prior to your slot. Reply *1* to cancel or *2* to reschedule.`;
+
+              if (this.governance) {
+                this.governance.recordActionTrace({
+                  tenantId,
+                  agentKey: 'WHATSAPP_AI',
+                  channel: 'WHATSAPP',
+                  actionName: 'BOOK_APPOINTMENT',
+                  targetResource: 'AppointmentSlot',
+                  parameters: bookAction.params,
+                  policyDecision: 'ALLOWED',
+                  policyRuleId: 'PERMIT_CLINIC_STANDARD_POLICY',
+                  executionStatus: 'COMMITTED',
+                  entityId: bookingResult.id,
+                  latencyMs: Date.now() - startTime,
+                }).catch(() => {});
+              }
+            }
+          } catch (bookingError: any) {
+            this.logger.error(`Failed to execute appointment booking from WhatsApp AI: ${bookingError.message}`, bookingError.stack);
+            // AI explicitly admits failure to book slot and suggests alternatives
+            replyText = `I apologize, but that specific slot is no longer available or couldn't be reserved. ` +
+              `Would you like to book for an alternative time today or tomorrow? Please let me know your preferred time.`;
+
+            if (this.governance) {
+              this.governance.recordActionTrace({
+                tenantId,
+                agentKey: 'WHATSAPP_AI',
+                channel: 'WHATSAPP',
+                actionName: 'BOOK_APPOINTMENT',
+                targetResource: 'AppointmentSlot',
+                parameters: bookAction.params,
+                policyDecision: 'ALLOWED',
+                policyRuleId: 'PERMIT_CLINIC_STANDARD_POLICY',
+                executionStatus: 'FAILED',
+                errorMessage: bookingError.message,
+                latencyMs: Date.now() - startTime,
+              }).catch(() => {});
+            }
+          }
         }
       }
 
       // 5. Send AI reply back to WhatsApp user
       await this.whatsappService.sendMessage(tenantId, from, replyText);
       this.logger.log(`Auto-replied to WhatsApp user ${from} for tenant ${tenantId}`);
+
+      // 5b. Ingest trace into BullMQ 3-tier evaluation engine
+      if (this.observability) {
+        this.observability.recordTraceAndEnqueue({
+          tenantId,
+          conversationId,
+          channel: 'WHATSAPP',
+          userQuery: effectiveMessage,
+          rawResponse: replyText,
+          latencyMs,
+          retrievedChunkIds: (aiResult as any)?.retrievedChunkIds || [],
+          frozenContext: (aiResult as any)?.contextChunks || [],
+          toolCalls: aiResult.actions || [],
+          sessionGoal: bookAction ? 'BOOK_APPOINTMENT' : 'GENERAL_QUERY',
+          goalAchieved: bookAction ? (bookingResult && !!bookingResult.id) : true,
+        }).catch((traceErr: any) => {
+          this.logger.warn(`Failed to record WhatsApp AI trace: ${traceErr.message}`);
+        });
+      }
 
       // 6. Handle human escalation if requested or low confidence
       if (aiResult.shouldTransfer || aiResult.confidence < 0.6) {

@@ -2,6 +2,7 @@ import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AutomationSequenceService {
@@ -9,15 +10,26 @@ export class AutomationSequenceService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     @Optional() private readonly whatsappService?: WhatsappService,
   ) {}
 
   /**
    * Automated cron executing every 15 minutes across all active tenants.
+   * Uses Redis distributed lock to ensure only one instance executes in multi-container setups.
    */
   @Cron('*/15 * * * *')
   async runAutomatedSequences() {
-    this.logger.log('Starting automated WhatsApp sequence runner...');
+    const lockKey = 'lock:cron:automated-sequences';
+    const lockTtlSeconds = 840; // 14 minutes
+    const acquired = await this.redis.setNx(lockKey, 'locked', lockTtlSeconds);
+
+    if (!acquired) {
+      this.logger.log('Another cluster instance is executing the automated sequence cron. Skipping.');
+      return;
+    }
+
+    this.logger.log('Acquired distributed lock. Starting automated WhatsApp sequence runner...');
     try {
       await Promise.allSettled([
         this.runAppointmentReminders(),
@@ -27,6 +39,9 @@ export class AutomationSequenceService {
       ]);
     } catch (err: any) {
       this.logger.error(`Automated sequences runner encountered an error: ${err.message}`);
+    } finally {
+      await this.redis.del(lockKey);
+      this.logger.log('Automated WhatsApp sequence runner finished. Released distributed lock.');
     }
   }
 

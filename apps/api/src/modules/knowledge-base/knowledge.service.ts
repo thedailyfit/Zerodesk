@@ -56,10 +56,7 @@ export class KnowledgeService {
     });
 
     if (data.content && data.content !== doc.content) {
-      this.logger.log(`Document ${id} content updated. Re-indexing vector chunks...`);
-      await this.prisma.knowledgeChunk.deleteMany({
-        where: { documentId: id, tenantId },
-      });
+      this.logger.log(`Document ${id} content updated. Triggering versioned atomic re-indexing...`);
       this.ragService.indexDocument(tenantId, id).catch((err) => {
         this.logger.error(`Failed to re-index document ${id}: ${err.message}`);
       });
@@ -74,16 +71,17 @@ export class KnowledgeService {
     });
     if (!doc) throw new NotFoundException(`Knowledge document ${id} not found`);
 
-    // Explicitly delete chunks first to ensure no zombie chunks remain in pgvector
-    const deletedChunks = await this.prisma.knowledgeChunk.deleteMany({
-      where: { documentId: id, tenantId },
-    });
+    // Atomically purge all associated vector chunks and the document record in one transaction
+    const [deletedChunks] = await this.prisma.$transaction([
+      this.prisma.knowledgeChunk.deleteMany({
+        where: { documentId: id, tenantId },
+      }),
+      this.prisma.knowledgeDocument.delete({
+        where: { id },
+      }),
+    ]);
 
-    await this.prisma.knowledgeDocument.delete({
-      where: { id },
-    });
-
-    this.logger.log(`Deleted knowledge document ${id} and ${deletedChunks.count} vector chunks for tenant ${tenantId}`);
+    this.logger.log(`Atomically deleted knowledge document ${id} and ${deletedChunks.count} vector chunks for tenant ${tenantId}`);
     return { success: true, message: `Document and ${deletedChunks.count} vector chunks permanently deleted` };
   }
 
