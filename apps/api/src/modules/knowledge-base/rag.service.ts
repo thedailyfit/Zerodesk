@@ -1,9 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmbeddingService } from './embedding.service';
 
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { TypeSafeService } from '../typesafe/typesafe.service';
+import { ActiveNiche } from '../typesafe/typesafe.constants';
 
 export interface SearchResult {
   chunkId: string;
@@ -22,6 +24,7 @@ export class RagService implements OnModuleInit {
     private prisma: PrismaService,
     private embeddingService: EmbeddingService,
     @InjectQueue('rag-embedding') private ragQueue: Queue,
+    @Optional() private typeSafeService?: TypeSafeService,
   ) {}
 
   async onModuleInit() {
@@ -52,8 +55,9 @@ export class RagService implements OnModuleInit {
    * Two-stage hybrid search across a tenant's knowledge base.
    * Stage 1: Broad candidate retrieval (Dense Vector + Full-text keyword search).
    * Stage 2: Reciprocal Rank Fusion (RRF) and Semantic Cross-Reranking.
+   * Stage 3: TypeSafe Jev Passage Shield (Anti-Injection & Policy Filter).
    */
-  async search(tenantId: string, query: string, topK = 5): Promise<SearchResult[]> {
+  async search(tenantId: string, query: string, topK = 5, niche: ActiveNiche = 'skin'): Promise<SearchResult[]> {
     try {
       let vectorResults: SearchResult[] = [];
       try {
@@ -132,7 +136,29 @@ export class RagService implements OnModuleInit {
       }
 
       const candidateList = Array.from(candidatesMap.values());
-      return this.rerank(query, candidateList, topK);
+      const reranked = this.rerank(query, candidateList, 12);
+
+      // Stage 3: TypeSafe Jev Passage Shield (Parallel 70ms screening)
+      if (this.typeSafeService) {
+        try {
+          const screened = await this.typeSafeService.screenRagChunksParallel(
+            query,
+            reranked.map((c) => ({ chunkId: c.chunkId, chunkText: c.chunkText })),
+            niche,
+            150, // 150ms timeout
+          );
+
+          const safeChunkIds = new Set(screened.filter((s) => s.passed).map((s) => s.chunkId));
+          const filtered = reranked.filter((c) => safeChunkIds.has(c.chunkId));
+
+          return (filtered.length > 0 ? filtered : reranked).slice(0, topK);
+        } catch (shieldErr: any) {
+          this.logger.warn(`TypeSafe Jev passage shield bypassed: ${shieldErr?.message}`);
+          return reranked.slice(0, topK);
+        }
+      }
+
+      return reranked.slice(0, topK);
     } catch (error) {
       this.logger.error(`RAG search failed: ${error}`, (error as Error).stack);
       return [];

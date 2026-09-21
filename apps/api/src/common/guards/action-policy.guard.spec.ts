@@ -96,4 +96,36 @@ describe('ActionPolicyGuard (Cedar Default-Deny Policy Engine Suite)', () => {
     expect(decision.allowed).toBe(true);
     expect(decision.ruleId).toBe('PERMIT_CLINIC_STANDARD_POLICY');
   });
+
+  it('should deny execution when TypeSafe semantic policy guard detects a safety violation', async () => {
+    const mockTypeSafe: any = {
+      validateToolCallPolicy: jest.fn().mockResolvedValue({
+        allowed: false,
+        reason: 'Action parameters violate tenant safety rules.',
+      }),
+    };
+    const guardWithTypeSafe = new ActionPolicyGuard(mockPrisma, mockTypeSafe);
+
+    mockPrisma.agentEstate.findUnique.mockResolvedValue({
+      isActive: true,
+      allowedTools: ['book_appointment'],
+      hardLimits: { maxBookingDaysAhead: 30, maxDiscountAllowedPct: 0 },
+    });
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const decision = await guardWithTypeSafe.evaluate({
+      tenantId: 'tenant-1',
+      agentKey: 'VOICE_RECEPTIONIST',
+      actionName: 'book_appointment',
+      targetResource: 'AppointmentSlot',
+      parameters: { date: tomorrow.toISOString() },
+    });
+
+    expect(decision.allowed).toBe(false);
+    expect(decision.ruleId).toBe('DENY_TYPESAFE_POLICY_VIOLATION');
+    expect(decision.reason).toContain('Action parameters violate tenant safety rules.');
+  });
 });
+

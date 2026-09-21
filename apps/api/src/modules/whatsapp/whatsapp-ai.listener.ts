@@ -9,6 +9,7 @@ import { ObservabilityService } from '../observability/observability.service';
 import { GovernanceService } from '../governance/governance.service';
 import { ActionPolicyGuard } from '../../common/guards/action-policy.guard';
 import { MemoryQuarantineService } from '../../common/security/memory-quarantine.service';
+import { TypeSafeService } from '../typesafe/typesafe.service';
 
 @Injectable()
 export class WhatsappAiListener {
@@ -29,6 +30,8 @@ export class WhatsappAiListener {
     private readonly actionPolicy?: ActionPolicyGuard,
     @Optional()
     private readonly memoryQuarantine?: MemoryQuarantineService,
+    @Optional()
+    private readonly typeSafeService?: TypeSafeService,
   ) {}
 
   @OnEvent('whatsapp.message.received')
@@ -100,9 +103,35 @@ export class WhatsappAiListener {
         return;
       }
 
-      // 1b. Check for DND / Opt-Out keywords
+      // 1b. Fast-Pass Front-Door Screening via TypeSafe Jev (70ms)
+      let dndTriggered = false;
+      let fastTrackHandoff = false;
+      let handoffReason = '';
+
+      if (this.typeSafeService) {
+        try {
+          const triage = await this.typeSafeService.triageWhatsAppMessage(effectiveMessage, '', 150);
+          if (triage) {
+            if (triage.isDndOptOut) {
+              dndTriggered = true;
+            }
+            if (triage.requiresHuman || triage.urgencyScore >= 1.8 || triage.sentimentScore >= 1.8) {
+              fastTrackHandoff = true;
+              handoffReason = `TypeSafe Jev: high urgency (${triage.urgencyScore}) or angry sentiment (${triage.sentimentScore}) detected.`;
+            }
+          }
+        } catch (triageErr: any) {
+          this.logger.warn(`TypeSafe front-door triage bypassed: ${triageErr?.message}`);
+        }
+      }
+
+      // Fallback regex for DND
       const normalizedMsg = (effectiveMessage || '').trim().toUpperCase();
-      if (['STOP', 'OPT OUT', 'UNSUBSCRIBE', 'STOP PROMO', 'DND'].includes(normalizedMsg)) {
+      if (!dndTriggered && ['STOP', 'OPT OUT', 'UNSUBSCRIBE', 'STOP PROMO', 'DND'].includes(normalizedMsg)) {
+        dndTriggered = true;
+      }
+
+      if (dndTriggered) {
         await this.prisma.customer.update({
           where: { id: customerId },
           data: { dndStatus: true, optedOutAt: new Date() },
@@ -113,6 +142,28 @@ export class WhatsappAiListener {
           'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
         );
         this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (DND enabled).`);
+        return;
+      }
+
+      // Fast-Track Human Handoff (skips generative LLM call)
+      if (fastTrackHandoff) {
+        await this.prisma.conversation.update({
+          where: { id: conversationId },
+          data: {
+            status: 'WAITING',
+            metadata: {
+              ...(meta || {}),
+              triageReason: handoffReason,
+              handoffTriggeredAt: new Date().toISOString(),
+            },
+          },
+        });
+        await this.whatsappService.sendMessage(
+          tenantId,
+          from,
+          'I am escalating your request directly to our clinical staff. A team member will assist you shortly.',
+        );
+        this.logger.log(`Conversation ${conversationId} fast-tracked to human staff: ${handoffReason}`);
         return;
       }
 

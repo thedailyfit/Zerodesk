@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TypeSafeService } from '../../modules/typesafe/typesafe.service';
 
 export interface ActionPolicyEvaluationRequest {
   tenantId: string;
@@ -26,7 +27,10 @@ export interface ActionPolicyDecision {
 export class ActionPolicyGuard {
   private readonly logger = new Logger(ActionPolicyGuard.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly typeSafeService?: TypeSafeService,
+  ) {}
 
   async evaluate(request: ActionPolicyEvaluationRequest): Promise<ActionPolicyDecision> {
     const { tenantId, agentKey, actionName, targetResource, parameters } = request;
@@ -120,6 +124,27 @@ export class ActionPolicyGuard {
           ruleId: 'DENY_UNAUTHORIZED_DISCOUNT',
           reason: `AI is strictly forbidden from offering discounts greater than ${maxDiscount}% without manager approval.`,
         };
+      }
+    }
+
+    // Rule 5: Semantic Invariant Guard via TypeSafe AI (Jev System One)
+    if (this.typeSafeService) {
+      try {
+        const typeSafeCheck = await this.typeSafeService.validateToolCallPolicy(
+          actionName,
+          parameters,
+          hardLimits,
+          120,
+        );
+        if (!typeSafeCheck.allowed) {
+          return {
+            allowed: false,
+            ruleId: 'DENY_TYPESAFE_POLICY_VIOLATION',
+            reason: typeSafeCheck.reason || 'Semantic invariant violated under TypeSafe safety rules.',
+          };
+        }
+      } catch (err: any) {
+        this.logger.warn(`TypeSafe tool policy guard check skipped due to error: ${err.message}`);
       }
     }
 
