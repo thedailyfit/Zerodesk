@@ -85,108 +85,10 @@ export default function AgentGovernancePage() {
       setActionTraces(tracesRes?.data || []);
       setFrontierHealth(healthRes || null);
     } catch {
-      // Fallback display state
-      setEstates([
-        {
-          id: 'estate-1',
-          agentKey: 'VOICE_RECEPTIONIST',
-          name: 'Kavya - Voice AI Receptionist',
-          humanOwnerName: 'Dr. Ananya Rao',
-          humanOwnerRole: 'HEAD_DOCTOR',
-          allowedTools: ['book_appointment', 'get_pricing', 'transfer_to_human', 'send_whatsapp_info'],
-          touchedSystems: ['PostgreSQL_Appointments', 'LiveKit_SIP', 'Sarvam_Bulbul_TTS'],
-          hardLimits: { maxBookingDaysAhead: 30, maxDiscountAllowedPct: 0, maxCallsPerHour: 50 },
-          goalIntegrityOwner: 'Dr. Ananya Rao',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Clinic Operations Lead',
-          isActive: true,
-        },
-        {
-          id: 'estate-2',
-          agentKey: 'WHATSAPP_AI',
-          name: 'WhatsApp Practice Concierge',
-          humanOwnerName: 'Priya Sharma',
-          humanOwnerRole: 'CLINIC_COORDINATOR',
-          allowedTools: ['book_appointment', 'get_pricing', 'lookup_faq', 'cancel_reschedule'],
-          touchedSystems: ['PostgreSQL_Appointments', 'Meta_WhatsApp_Cloud'],
-          hardLimits: { maxBookingDaysAhead: 30, maxDiscountAllowedPct: 0, maxMessagesPerHour: 100 },
-          goalIntegrityOwner: 'Priya Sharma',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Priya Sharma',
-          isActive: true,
-        },
-        {
-          id: 'estate-3',
-          agentKey: 'OUTBOUND_CAMPAIGNER',
-          name: 'Autonomous Recall & Follow-up Agent',
-          humanOwnerName: 'Rahul Verma',
-          humanOwnerRole: 'PRACTICE_MANAGER',
-          allowedTools: ['dispatch_reminder', 'send_feedback_link'],
-          touchedSystems: ['PostgreSQL_Customers', 'Meta_WhatsApp_Cloud', 'Plivo_SMS'],
-          hardLimits: { maxMessagesPerDay: 200, enforceTraiDnd: true },
-          goalIntegrityOwner: 'Rahul Verma',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Rahul Verma',
-          isActive: true,
-        },
-        {
-          id: 'estate-4',
-          agentKey: 'TRIAGE_AGENT',
-          name: 'Receptionist Handoff & Triage Agent',
-          humanOwnerName: 'Frontdesk Team',
-          humanOwnerRole: 'LEAD_RECEPTIONIST',
-          allowedTools: ['escalate_to_human', 'flag_bad_answer'],
-          touchedSystems: ['Unified_Inbox', 'PostgreSQL_AuditLog'],
-          hardLimits: { maxHandoffsPerHour: 20 },
-          goalIntegrityOwner: 'Frontdesk Team',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Frontdesk Team',
-          isActive: true,
-        },
-      ]);
-
-      setActionTraces([
-        {
-          id: 'trace-demo-1',
-          channel: 'WHATSAPP',
-          actionName: 'BOOK_APPOINTMENT',
-          targetResource: 'AppointmentSlot',
-          parameters: { doctor: 'Dr. Ananya Rao', service: 'HydraFacial Deluxe', slot: '2:30 PM' },
-          policyDecision: 'ALLOWED',
-          policyRuleId: 'PERMIT_CLINIC_STANDARD_POLICY',
-          executionStatus: 'COMMITTED',
-          entityId: 'a7b8c9d0-1234',
-          latencyMs: 145,
-          createdAt: new Date().toISOString(),
-          agentEstate: { name: 'WhatsApp Practice Concierge', humanOwnerName: 'Priya Sharma' },
-        },
-        {
-          id: 'trace-demo-2',
-          channel: 'VOICE',
-          actionName: 'GET_PRICING',
-          targetResource: 'RateCard',
-          parameters: { serviceName: 'Laser Hair Reduction' },
-          policyDecision: 'ALLOWED',
-          policyRuleId: 'PERMIT_CLINIC_STANDARD_POLICY',
-          executionStatus: 'COMMITTED',
-          latencyMs: 38,
-          createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
-          agentEstate: { name: 'Kavya - Spoken Voice AI Receptionist', humanOwnerName: 'Dr. Ananya Rao' },
-        },
-      ]);
-
-      setFrontierHealth({
-        trilogy: {
-          devops: { status: 'HEALTHY', telephonyCarrier: 'Plivo India SIP (Operational)', queueLagMs: 42 },
-          finops: { status: 'HEALTHY', voiceMinutesPercent: 14.0, whatsappMessagesPercent: 16.4 },
-          appsec: { status: 'ENFORCED', piiRedactionActive: true, dpdpConsentEnforced: true },
-        },
-        metrics24h: { totalActions: 48, failedActions: 0, successRate: 100, activeAgents: 4 },
-      });
+      // Fallback state if server unavailable
+      setEstates([]);
+      setActionTraces([]);
+      setFrontierHealth(null);
     } finally {
       setLoading(false);
     }
@@ -270,7 +172,7 @@ export default function AgentGovernancePage() {
             {frontierHealth?.metrics24h?.successRate ?? 99.4}%
           </div>
           <p className="text-[11px] text-amber-600 font-medium mt-0.5">
-            {frontierHealth?.metrics24h?.totalActions ?? 48} Actions Executed on Ledger
+            {frontierHealth?.metrics24h?.totalActions ?? 0} Actions Executed on Ledger
           </p>
         </div>
       </div>
@@ -313,12 +215,17 @@ export default function AgentGovernancePage() {
                 </p>
               </div>
               <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800">
-                4 Agents Authorized
+                {estates.length} Agents Authorized
               </span>
             </div>
 
             <div className="divide-y divide-slate-100">
-              {estates.map((agent) => (
+              {estates.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  No autonomous practice agents configured yet. Authorized agents will appear here.
+                </div>
+              ) : (
+                estates.map((agent) => (
                 <div key={agent.id} className="p-5 hover:bg-slate-50/50 transition-all space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -387,7 +294,7 @@ export default function AgentGovernancePage() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </div>

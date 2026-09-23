@@ -5,7 +5,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { RagService } from '../knowledge-base/rag.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { AccessToken, WebhookReceiver, AgentDispatchClient } from 'livekit-server-sdk';
+import { AccessToken, WebhookReceiver, AgentDispatchClient, SipClient, RoomServiceClient } from 'livekit-server-sdk';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { PlivoService } from './plivo.service';
@@ -29,6 +29,8 @@ export interface VoiceCallEvent {
 export class VoiceService {
   private readonly logger = new Logger(VoiceService.name);
   private livekitReceiver: WebhookReceiver | null = null;
+  private sipClient: SipClient | null = null;
+  private roomService: RoomServiceClient | null = null;
 
   constructor(
     private prisma: PrismaService,
@@ -41,10 +43,13 @@ export class VoiceService {
     private storageService: StorageService,
     @InjectQueue('outbound-calls') private outboundQueue: Queue,
   ) {
+    const lkUrl = this.configService.get<string>('LIVEKIT_URL', 'wss://zerodesk-rpjledlb.livekit.cloud');
     const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
     const lkSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
     if (lkKey && lkSecret) {
       this.livekitReceiver = new WebhookReceiver(lkKey, lkSecret);
+      this.sipClient = new SipClient(lkUrl, lkKey, lkSecret);
+      this.roomService = new RoomServiceClient(lkUrl, lkKey, lkSecret);
     }
   }
 
@@ -958,7 +963,10 @@ RULES:
   /**
    * Handle human handoff transfer request from Voice Agent
    */
-  async handleHumanTransfer(tenantId: string, payload: { roomName?: string; callerPhone: string; reason?: string }) {
+  async handleHumanTransfer(
+    tenantId: string,
+    payload: { roomName?: string; callerPhone: string; participantIdentity?: string; reason?: string },
+  ) {
     const config = await this.prisma.voiceConfig.findFirst({ where: { tenantId } });
     const forwardingNumber = config?.transferNumber || (config?.settings as any)?.forwardingNumber || null;
     
@@ -982,10 +990,46 @@ RULES:
 
     this.logger.warn(`[HUMAN_HANDOFF] Tenant: ${tenantId}, Caller: ${payload.callerPhone}, ForwardTo: ${forwardingNumber}, Reason: ${payload.reason}`);
 
+    let transferInitiated = false;
+    let participantId = payload.participantIdentity;
+
+    // If participantIdentity was not provided, look up participants in the LiveKit room
+    if (!participantId && payload.roomName && this.roomService) {
+      try {
+        const participants = await this.roomService.listParticipants(payload.roomName);
+        const sipP = participants.find((p) => p.identity.startsWith('sip_') || p.attributes?.['sip.phoneNumber'] || p.identity !== 'agent');
+        if (sipP) {
+          participantId = sipP.identity;
+        }
+      } catch (err: any) {
+        this.logger.error(`Failed to list room participants for SIP transfer: ${err.message}`);
+      }
+    }
+
+    if (forwardingNumber && this.sipClient && payload.roomName && participantId) {
+      try {
+        const destination = forwardingNumber.startsWith('+') ? forwardingNumber : `+91${forwardingNumber}`;
+        this.logger.log(`Executing LiveKit transferSipParticipant: room=${payload.roomName}, identity=${participantId}, dest=${destination}`);
+        await this.sipClient.transferSipParticipant(
+          payload.roomName,
+          participantId,
+          `tel:${destination}`,
+          { playDialtone: true },
+        );
+        transferInitiated = true;
+      } catch (sipErr: any) {
+        this.logger.error(`LiveKit SIP REFER failed: ${sipErr.message}`, sipErr.stack);
+      }
+    }
+
     return {
-      status: 'initiated',
+      status: transferInitiated ? 'transferred' : 'initiated',
       forwardingNumber,
-      message: forwardingNumber ? `Bridging call to ${forwardingNumber}` : 'Frontdesk notified of transfer request',
+      message: transferInitiated
+        ? `LiveKit SIP REFER dispatched to ${forwardingNumber}`
+        : forwardingNumber
+        ? `Bridging call to ${forwardingNumber}`
+        : 'Frontdesk notified of transfer request',
     };
   }
 

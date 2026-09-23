@@ -87,23 +87,20 @@ export default function PrescriptionsPage() {
   const [activeTab, setActiveTab] = useState<'write' | 'settings' | 'history'>('write');
 
   // Letterhead Template Settings
-  const [letterhead, setLetterhead] = useState<LetterheadConfig>(() => {
-    const isSkin = currentNiche === 'skin';
-    return {
-      clinicName: isSkin ? 'Aura Aesthetic Dermatology & Laser Clinic' : 'Apex Multispeciality Dental Care & Implant Center',
-      doctorName: isSkin ? 'Dr. Ananya Rao' : 'Dr. Vikram Seth',
-      qualifications: isSkin ? 'MBBS, MD (Dermatology, Venereology & Leprosy)' : 'BDS, MDS (Conservative Dentistry & Endodontics)',
-      registrationNumber: isSkin ? 'KMC Reg. No: 58291 / 2017' : 'DCI Reg. No: 41820 / 2016',
-      phone: '+91 98765 43210',
-      email: isSkin ? 'care@auraskinclinic.in' : 'contact@apexdental.in',
-      address: 'Suite 204, Metro Plaza, Indiranagar 100ft Road, Bengaluru, Karnataka 560038',
-      headerImage: null,
-      logoImage: null,
-      signatureImage: null,
-      disclaimer: 'Prescription generated via ZeroDesk Verified Clinical Suite. Valid for 30 days. Generic drug substitution permitted as per NMC/DCI regulations.',
-      useHeaderPadOnly: false
-    };
-  });
+  const [letterhead, setLetterhead] = useState<LetterheadConfig>(() => ({
+    clinicName: nicheConfig?.label || 'Clinical Care Suite',
+    doctorName: '',
+    qualifications: '',
+    registrationNumber: '',
+    phone: '',
+    email: '',
+    address: '',
+    headerImage: null,
+    logoImage: null,
+    signatureImage: null,
+    disclaimer: 'Prescription generated via ZeroDesk Verified Clinical Suite. Valid for 30 days. Generic drug substitution permitted as per statutory regulations.',
+    useHeaderPadOnly: false
+  }));
 
   // Current Prescription Form
   const [rxNumber] = useState<string>(() => `RX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -119,24 +116,7 @@ export default function PrescriptionsPage() {
   );
   const [followUp, setFollowUp] = useState('Review after 7 days');
 
-  const [medicines, setMedicines] = useState<MedicineRow[]>([
-    {
-      id: 'm1',
-      name: currentNiche === 'dental' ? 'Tab. Amoxicillin 500mg + Clavulanate 125mg' : 'Cap. Doxycycline 100mg',
-      dosage: currentNiche === 'dental' ? '625mg' : '100mg',
-      frequency: '1-0-1 (Twice daily)',
-      duration: '5 Days',
-      instruction: 'After Food'
-    },
-    {
-      id: 'm2',
-      name: currentNiche === 'dental' ? 'Tab. Zerodol-SP' : 'Gel Adapalene 0.1% + Benzoyl Peroxide 2.5%',
-      dosage: currentNiche === 'dental' ? '1 Tab' : 'Topical Gel',
-      frequency: currentNiche === 'dental' ? '1-0-1 (Twice daily)' : '0-0-1 (Night only)',
-      duration: currentNiche === 'dental' ? '3 Days' : '30 Days',
-      instruction: currentNiche === 'dental' ? 'After Food' : 'Apply thin layer on lesions only'
-    }
-  ]);
+  const [medicines, setMedicines] = useState<MedicineRow[]>([]);
 
   const [pastPrescriptions, setPastPrescriptions] = useState<PrescriptionRecord[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -147,7 +127,12 @@ export default function PrescriptionsPage() {
     const savedTemplate = localStorage.getItem(`zd_rx_template_${currentNiche}`);
     if (savedTemplate) {
       try {
-        setLetterhead(JSON.parse(savedTemplate));
+        const parsed = JSON.parse(savedTemplate);
+        if (parsed?.phone === '+91 98765 43210' || (parsed?.address || '').includes('Indiranagar 100ft Road')) {
+          localStorage.removeItem(`zd_rx_template_${currentNiche}`);
+        } else {
+          setLetterhead(parsed);
+        }
       } catch (e) {
         console.error('Failed to parse rx template', e);
       }
@@ -456,7 +441,12 @@ export default function PrescriptionsPage() {
 
               {/* Drug Rows */}
               <div className="space-y-3">
-                {medicines.map((med, idx) => (
+                {medicines.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-[var(--color-text-muted)] border border-dashed border-[var(--color-border)] rounded-xl">
+                    No medications added yet. Click &quot;Add Medicine&quot; or select from quick suggestions above.
+                  </div>
+                ) : (
+                  medicines.map((med, idx) => (
                   <div key={med.id} className="p-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl space-y-2.5 relative group">
                     <div className="flex items-center justify-between gap-2">
                       <span className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold flex items-center justify-center shrink-0">
@@ -523,7 +513,7 @@ export default function PrescriptionsPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
 

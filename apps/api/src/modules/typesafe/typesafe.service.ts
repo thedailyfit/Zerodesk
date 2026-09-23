@@ -31,6 +31,9 @@ export interface WhatsAppTriageResult {
 }
 
 export interface ObservabilityEvalResult {
+  isEvaluated: boolean;
+  status: 'EVALUATED' | 'UNAVAILABLE' | 'TIMEOUT';
+  judgeModel: string;
   faithfulnessScore: number; // Normalized 0 to 1
   answerRelevanceScore: number; // Normalized 0 to 1
   hallucinationScore: number; // 1 - faithfulness
@@ -253,12 +256,13 @@ export class TypeSafeService {
     const latencyMs = Date.now() - startTime;
 
     if (!answers) {
-      // Calibrated baseline fallback (if no context provided, grounding is intrinsically low)
-      const hasContext = Boolean(traceState.contextCombined && traceState.contextCombined.trim().length > 0);
       return {
-        faithfulnessScore: hasContext ? 0.90 : 0.50,
-        answerRelevanceScore: 0.92,
-        hallucinationScore: hasContext ? 0.10 : 0.50,
+        isEvaluated: false,
+        status: 'UNAVAILABLE',
+        judgeModel: 'unjudged:system-fallback',
+        faithfulnessScore: 0.0,
+        answerRelevanceScore: 0.0,
+        hallucinationScore: 0.0,
         rateCardCompliant: true,
         nicheClinicalSafe: true,
         patientSentimentScore: 1,
@@ -277,6 +281,9 @@ export class TypeSafeService {
     const hallucinationScore = Number((1.0 - faithfulnessScore).toFixed(3));
 
     return {
+      isEvaluated: true,
+      status: 'EVALUATED',
+      judgeModel: 'jev-system-one',
       faithfulnessScore,
       answerRelevanceScore,
       hallucinationScore,

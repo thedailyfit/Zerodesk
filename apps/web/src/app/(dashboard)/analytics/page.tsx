@@ -79,9 +79,9 @@ export default function AnalyticsPage() {
             activeLeads: overviewRes.activeLeads ?? 0,
             appointmentsToday: overviewRes.appointmentsToday ?? 0,
             totalRevenue: overviewRes.totalRevenue ?? 0,
-            totalCalls: callsRes?.totalCalls ?? (overviewRes.totalCustomers ? Math.round(overviewRes.totalCustomers * 1.8) : 0),
+            totalCalls: callsRes?.totalCalls ?? 0,
             totalMessages: messagesRes?.totalMessages ?? 0,
-            resolutionRate: callsRes?.resolutionRate ?? 94.2,
+            resolutionRate: callsRes?.resolutionRate ?? 0,
           });
           setIsLiveConnected(true);
         }

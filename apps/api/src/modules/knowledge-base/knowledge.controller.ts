@@ -83,7 +83,16 @@ export class KnowledgeController {
 
   @Post('search')
   @UseGuards(AuthOrInternalVoiceGuard)
-  async search(@TenantId() tenantId: string, @Body() data: { query: string }) {
-    return this.ragService.search(tenantId, data.query);
+  async search(
+    @TenantId() tenantId: string,
+    @Body() data: { query: string; topK?: number; niche?: any; bypassShield?: boolean },
+  ) {
+    return this.ragService.search(
+      tenantId,
+      data.query,
+      data.topK || 5,
+      data.niche || 'skin',
+      { bypassShield: Boolean(data.bypassShield) },
+    );
   }
 }

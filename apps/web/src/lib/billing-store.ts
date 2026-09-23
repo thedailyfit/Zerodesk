@@ -14,42 +14,22 @@ export interface ParkedBill {
   quantities: Record<string, number>;
 }
 
-const DEFAULT_PARKED_BILLS: ParkedBill[] = [
-  {
-    id: 'park-1',
-    patientId: 'PID-001',
-    patientName: 'Priya Sharma',
-    phone: '+91 98765 43210',
-    items: 'Doctor Consultation + Skin Glow',
-    totalAmount: 3500,
-    time: '10 min ago',
-    tag: 'Consultation Fee',
-    quantities: { '1': 1 }
-  },
-  {
-    id: 'park-2',
-    patientId: 'PID-002',
-    patientName: 'Rajesh Kumar',
-    phone: '+91 98123 45678',
-    items: 'HydraFacial Deep Clean',
-    totalAmount: 4500,
-    time: '25 min ago',
-    tag: 'Service Session',
-    quantities: { '2': 1 }
-  }
-];
+const DEFAULT_PARKED_BILLS: ParkedBill[] = [];
 
 export function useParkedBills() {
-  const [parkedBills, setParkedBillsState] = useState<ParkedBill[]>(DEFAULT_PARKED_BILLS);
+  const [parkedBills, setParkedBillsState] = useState<ParkedBill[]>([]);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('zerodesk_parked_bills');
       if (saved) {
         const parsed = JSON.parse(saved);
-        setParkedBillsState(Array.isArray(parsed) ? parsed : []);
+        const filtered = Array.isArray(parsed) 
+          ? parsed.filter((b: ParkedBill) => b.id !== 'park-1' && b.id !== 'park-2')
+          : [];
+        setParkedBillsState(filtered);
       } else {
-        localStorage.setItem('zerodesk_parked_bills', JSON.stringify(DEFAULT_PARKED_BILLS));
+        localStorage.setItem('zerodesk_parked_bills', JSON.stringify([]));
       }
     } catch (e) {
       console.error('Failed to load parked bills', e);

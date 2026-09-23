@@ -114,9 +114,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @OnEvent('whatsapp.message.received')
   handleWhatsAppMessageEvent(payload: any) {
     if (payload.tenantId) {
+      // SECURITY FIX: Strip decrypted tokens and sensitive credentials before broadcasting to frontend WebSocket clients
+      const { accessToken, systemUserToken, ...safeData } = payload;
       this.server.to(`tenant:${payload.tenantId}`).emit('inboxUpdate', {
         channel: 'WHATSAPP',
-        data: payload,
+        data: safeData,
       });
     }
   }

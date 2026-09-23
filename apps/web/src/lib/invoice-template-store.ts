@@ -15,13 +15,13 @@ export interface InvoiceTemplate {
 
 const DEFAULT_TEMPLATE: InvoiceTemplate = {
   logoDataUrl: null,
-  clinicName: 'ZeroDesk Clinic & Aesthetics',
-  clinicAddress: '402, Elite Medical Hub, Indiranagar, Bengaluru, KA 560038',
-  clinicPhone: '+91 98765 43210',
-  clinicGST: '29ABCDE1234F1Z5',
+  clinicName: 'ZeroDesk Clinic',
+  clinicAddress: '',
+  clinicPhone: '',
+  clinicGST: '',
   brandColor: '#2563eb',
   templateStyle: 'modern',
-  footerNote: 'Thank you for choosing ZeroDesk. Please retain this invoice for your medical insurance and follow-up consultation.',
+  footerNote: 'Thank you for choosing ZeroDesk.',
 };
 
 export function useInvoiceTemplate() {
@@ -33,8 +33,11 @@ export function useInvoiceTemplate() {
       const saved = localStorage.getItem('zerodesk_invoice_template');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-            setTemplate({ ...DEFAULT_TEMPLATE, ...parsed });
+        if (parsed.clinicPhone === '+91 98765 43210' || parsed.clinicGST === '29ABCDE1234F1Z5') {
+          localStorage.removeItem('zerodesk_invoice_template');
+          setTemplate(DEFAULT_TEMPLATE);
+        } else if (parsed && typeof parsed === 'object') {
+          setTemplate({ ...DEFAULT_TEMPLATE, ...parsed });
         }
       }
     } catch (e) {

@@ -57,7 +57,13 @@ export class RagService implements OnModuleInit {
    * Stage 2: Reciprocal Rank Fusion (RRF) and Semantic Cross-Reranking.
    * Stage 3: TypeSafe Jev Passage Shield (Anti-Injection & Policy Filter).
    */
-  async search(tenantId: string, query: string, topK = 5, niche: ActiveNiche = 'skin'): Promise<SearchResult[]> {
+  async search(
+    tenantId: string,
+    query: string,
+    topK = 5,
+    niche: ActiveNiche = 'skin',
+    options?: { bypassShield?: boolean },
+  ): Promise<SearchResult[]> {
     try {
       let vectorResults: SearchResult[] = [];
       try {
@@ -139,7 +145,7 @@ export class RagService implements OnModuleInit {
       const reranked = this.rerank(query, candidateList, 12);
 
       // Stage 3: TypeSafe Jev Passage Shield (Parallel 70ms screening)
-      if (this.typeSafeService) {
+      if (this.typeSafeService && !options?.bypassShield) {
         try {
           const screened = await this.typeSafeService.screenRagChunksParallel(
             query,
@@ -151,7 +157,9 @@ export class RagService implements OnModuleInit {
           const safeChunkIds = new Set(screened.filter((s) => s.passed).map((s) => s.chunkId));
           const filtered = reranked.filter((c) => safeChunkIds.has(c.chunkId));
 
-          return (filtered.length > 0 ? filtered : reranked).slice(0, topK);
+          // SECURITY FIX: Never restore rejected candidates if screening successfully executed.
+          // If all chunks failed screening, return empty array to prevent prompt injection / harmful leakage.
+          return filtered.slice(0, topK);
         } catch (shieldErr: any) {
           this.logger.warn(`TypeSafe Jev passage shield bypassed: ${shieldErr?.message}`);
           return reranked.slice(0, topK);

@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { RagService } from './rag.service';
 
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const mammoth = require('mammoth');
 
 @Injectable()
@@ -100,8 +100,15 @@ export class KnowledgeService {
 
     try {
       if (filename.toLowerCase().endsWith('.pdf') || file.mimetype === 'application/pdf') {
-        const parsed = await pdfParse(file.buffer);
-        extractedText = parsed.text || '';
+        const parser = new PDFParse({ data: file.buffer });
+        try {
+          const parsed = await parser.getText();
+          extractedText = parsed.text || '';
+        } finally {
+          if (typeof parser.destroy === 'function') {
+            await parser.destroy();
+          }
+        }
       } else if (
         filename.toLowerCase().endsWith('.docx') ||
         file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

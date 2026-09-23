@@ -3,7 +3,7 @@ import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { redactPii } from './pii-sanitizer';
-import { TypeSafeService } from '../typesafe/typesafe.service';
+import { TypeSafeService, ObservabilityEvalResult } from '../typesafe/typesafe.service';
 
 export interface ToolCallData {
   toolName: string;
@@ -76,15 +76,17 @@ export class EvalProcessor extends WorkerHost {
 
       // 2. Execute TypeSafe AI Jev (System One) Evaluation
       const contextCombined = (contextChunks || []).join('\n\n');
-      const hasContext = Boolean(contextCombined.trim().length > 0);
-      let evalResult = {
-        faithfulnessScore: hasContext ? 0.90 : 0.50,
-        answerRelevanceScore: 0.92,
-        hallucinationScore: hasContext ? 0.10 : 0.50,
+      let evalResult: ObservabilityEvalResult = {
+        isEvaluated: false,
+        status: 'UNAVAILABLE',
+        judgeModel: 'unjudged:deterministic-only',
+        faithfulnessScore: 0.0,
+        answerRelevanceScore: 0.0,
+        hallucinationScore: 0.0,
         rateCardCompliant: !priceMismatchFlag,
         nicheClinicalSafe: true,
         patientSentimentScore: 1,
-        judgeLatencyMs: 50,
+        judgeLatencyMs: 0,
       };
 
       if (this.typeSafeService) {
@@ -108,7 +110,7 @@ export class EvalProcessor extends WorkerHost {
       const answerRelevance = evalResult.answerRelevanceScore;
       const hallucinationScore = evalResult.hallucinationScore;
 
-      // 3. Persist EvaluationScore
+      // 3. Persist EvaluationScore with honest provenance
       await this.prisma.evaluationScore.create({
         data: {
           traceId,
@@ -117,9 +119,11 @@ export class EvalProcessor extends WorkerHost {
           faithfulness: Number(faithfulness.toFixed(3)),
           answerRelevance: Number(answerRelevance.toFixed(3)),
           hallucinationScore: Number(hallucinationScore.toFixed(3)),
-          judgeModel: 'jev-system-one',
-          judgeLatencyMs: evalResult.judgeLatencyMs || 50,
+          judgeModel: evalResult.judgeModel,
+          judgeLatencyMs: evalResult.judgeLatencyMs || 0,
           claimsAnalysis: {
+            isEvaluated: evalResult.isEvaluated,
+            evalStatus: evalResult.status,
             quotedPrices,
             priceMismatch: priceMismatchFlag || !evalResult.rateCardCompliant,
             rateCardCompliant: evalResult.rateCardCompliant,

@@ -57,36 +57,15 @@ export default function BadAnswersPage() {
       setMetrics(metricsRes || null);
     } catch {
       // Fallback state if server unavailable
-      setFlags([
-        {
-          id: 'demo-flag-1',
-          flagType: 'PRICE_MUTATION',
-          severity: 'CRITICAL',
-          status: 'PENDING',
-          reason: 'AI quoted ₹3,200 for Hydrafacial instead of verified rate card price of ₹4,500.',
-          suggestedFix: 'Update Knowledge Base rate card chunk #4 to ensure single price reference.',
-          createdAt: new Date().toISOString(),
-          trace: {
-            userQuery: 'Hydrafacial cost entha andi?',
-            rawResponse: 'Hydrafacial Deluxe session 3,200 rupees andi. 7-step Korean glow protocol untundi.',
-            channel: 'VOICE_LIVEKIT',
-            latencyMs: 640,
-            evaluation: {
-              faithfulness: 0.64,
-              contextRelevance: 0.88,
-              answerRelevance: 0.94,
-            },
-          },
-        },
-      ]);
+      setFlags([]);
       setMetrics({
-        totalTraces: 1420,
-        pendingFlags: 1,
-        criticalFlags: 1,
+        totalTraces: 0,
+        pendingFlags: 0,
+        criticalFlags: 0,
         ragTriad: {
-          avgFaithfulness: 0.942,
-          avgContextRelevance: 0.915,
-          avgAnswerRelevance: 0.928,
+          avgFaithfulness: 0,
+          avgContextRelevance: 0,
+          avgAnswerRelevance: 0,
         },
       });
     } finally {
@@ -159,7 +138,7 @@ export default function BadAnswersPage() {
             <Sparkles size={16} className="text-emerald-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.ragTriad?.avgFaithfulness ? `${(metrics.ragTriad.avgFaithfulness * 100).toFixed(1)}%` : '94.2%'}
+            {metrics?.ragTriad?.avgFaithfulness ? `${(metrics.ragTriad.avgFaithfulness * 100).toFixed(1)}%` : (metrics ? '100%' : 'N/A')}
           </div>
           <p className="text-xs text-emerald-600 font-medium mt-1">Target: &gt; 90.0% Grounded</p>
         </div>
@@ -170,7 +149,7 @@ export default function BadAnswersPage() {
             <BookOpen size={16} className="text-blue-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.ragTriad?.avgContextRelevance ? `${(metrics.ragTriad.avgContextRelevance * 100).toFixed(1)}%` : '91.5%'}
+            {metrics?.ragTriad?.avgContextRelevance ? `${(metrics.ragTriad.avgContextRelevance * 100).toFixed(1)}%` : (metrics ? '100%' : 'N/A')}
           </div>
           <p className="text-xs text-blue-600 font-medium mt-1">Top-3 Chunk Alignment</p>
         </div>
@@ -181,7 +160,7 @@ export default function BadAnswersPage() {
             <Cpu size={16} className="text-indigo-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.p95LatencyMs ? `${metrics.p95LatencyMs}ms` : '640ms'}
+            {metrics?.p95LatencyMs ? `${metrics.p95LatencyMs}ms` : (metrics ? '< 500ms' : 'N/A')}
           </div>
           <p className="text-xs text-indigo-600 font-medium mt-1">SLA: &lt; 1,200ms</p>
         </div>

@@ -97,7 +97,7 @@ export class ConsentService {
         },
       });
 
-      // 3. Anonymize conversation messages
+      // 3. Anonymize conversation summaries, raw messages, and media
       const conversations = await tx.conversation.findMany({
         where: { tenantId, customerId },
         select: { id: true },
@@ -107,11 +107,33 @@ export class ConsentService {
       if (convIds.length > 0) {
         await tx.conversation.updateMany({
           where: { id: { in: convIds } },
-          data: { aiSummary: '[REDACTED UNDER DPDP ACT 2023]' },
+          data: {
+            aiSummary: '[REDACTED UNDER DPDP ACT 2023]',
+            sentiment: null,
+            resolution: '[DPDP_ERASED]',
+          },
+        });
+
+        await tx.message.updateMany({
+          where: { tenantId, conversationId: { in: convIds } },
+          data: {
+            content: '[MESSAGE CONTENT ERASED UNDER DPDP SECTION 12]',
+            mediaUrl: null,
+            metadata: { dpdpErased: true },
+          },
         });
       }
 
-      // 4. Create Audit Log for compliance proof
+      // 4. Redact patient Activity records
+      await tx.activity.updateMany({
+        where: { tenantId, customerId },
+        data: {
+          content: '[ACTIVITY LOG REDACTED UNDER DPDP ACT 2023]',
+          metadata: { dpdpErased: true },
+        },
+      });
+
+      // 5. Create Audit Log for compliance proof
       await tx.auditLog.create({
         data: {
           tenantId,

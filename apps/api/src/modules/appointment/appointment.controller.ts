@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards, Headers, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards, Headers, Query, UnauthorizedException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AppointmentService } from './appointment.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -31,6 +31,35 @@ export class AppointmentController {
   @UseGuards(AuthGuard, TenantGuard)
   async create(@TenantId() tenantId: string, @Body() data: any) {
     return this.appointmentService.book(tenantId, data);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard, TenantGuard)
+  async update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() data: any,
+  ) {
+    return this.appointmentService.update(tenantId, id, data);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(AuthGuard, TenantGuard)
+  async updateStatus(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: { status?: string },
+  ) {
+    return this.appointmentService.updateStatus(tenantId, id, body?.status || 'SCHEDULED');
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard, TenantGuard)
+  async delete(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.appointmentService.delete(tenantId, id);
   }
 
   @Post('voice-book')

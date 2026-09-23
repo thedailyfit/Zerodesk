@@ -109,6 +109,7 @@ class CallContext:
         booking_url: str = "",
         maps_url: str = "",
         room_name: str = "",
+        participant_identity: str = "",
     ):
         self.tenant_id = tenant_id
         self.caller_phone = caller_phone
@@ -117,6 +118,7 @@ class CallContext:
         self.booking_url = booking_url
         self.maps_url = maps_url
         self.room_name = room_name
+        self.participant_identity = participant_identity
         self.booking_link_sent = False
         self.call_start_time = time.time()
         self.tokens_used = 0
@@ -131,6 +133,7 @@ def extract_call_context(ctx: JobContext) -> CallContext:
     clinic_address = ""
     booking_url = ""
     maps_url = ""
+    participant_identity = ""
 
     # 1. Parse Room Metadata
     if ctx.room and ctx.room.metadata:
@@ -158,6 +161,8 @@ def extract_call_context(ctx: JobContext) -> CallContext:
     # 3. Extract SIP Attributes from Participant
     if ctx.room:
         for p in ctx.room.remote_participants.values():
+            if p.identity and p.identity != "agent":
+                participant_identity = p.identity
             if p.attributes:
                 sip_phone = p.attributes.get("sip.phoneNumber")
                 if sip_phone:
@@ -186,6 +191,7 @@ def extract_call_context(ctx: JobContext) -> CallContext:
         booking_url=booking_url,
         maps_url=maps_url,
         room_name=ctx.room.name if ctx.room else "",
+        participant_identity=participant_identity,
     )
 
 
@@ -331,7 +337,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                 async with session.post(
                     f"{ZERODESK_API}/v1/knowledge/search",
                     headers=headers,
-                    json={"query": query, "topK": 3},
+                    json={"query": query, "topK": 3, "bypassShield": True},
                     timeout=aiohttp.ClientTimeout(total=4),
                 ) as resp:
                     if resp.status == 200:
@@ -354,6 +360,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                 payload = {
                     "roomName": call_ctx.room_name,
                     "callerPhone": call_ctx.caller_phone,
+                    "participantIdentity": getattr(call_ctx, "participant_identity", ""),
                     "reason": reason,
                 }
                 headers = {

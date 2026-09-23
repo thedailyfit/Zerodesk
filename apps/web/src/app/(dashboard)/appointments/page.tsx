@@ -188,18 +188,23 @@ export default function AppointmentsPage() {
     }));
 
     // Background sync to backend
-    api.post('/appointments', {
+    api.patch(`/appointments/${editingAppt.id}`, {
       scheduledAt: new Date(scheduledAt).toISOString(),
       durationMins: editDuration,
       status: editStatus,
       notes: editNotes,
-    }).catch(() => {});
-
-    setSaveSuccessMsg(true);
-    setTimeout(() => {
-      setSaveSuccessMsg(false);
-      setEditingAppt(null);
-    }, 900);
+    })
+      .then(() => {
+        setSaveSuccessMsg(true);
+        setTimeout(() => {
+          setSaveSuccessMsg(false);
+          setEditingAppt(null);
+        }, 900);
+      })
+      .catch((err) => {
+        console.error('Failed to update appointment:', err);
+        alert('Could not update appointment on server: ' + (err?.message || 'Server error'));
+      });
   };
 
   const handleCancelAppointmentFromDrawer = (apptId: string) => {

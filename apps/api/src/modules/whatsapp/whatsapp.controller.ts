@@ -22,15 +22,16 @@ export class WhatsappController {
     if (process.env.NODE_ENV === "production") {
        if (!signature) throw new UnauthorizedException("Missing WhatsApp Signature");
        const secret = process.env.WHATSAPP_APP_SECRET;
-       if (secret) {
-           const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
-           const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
-           const expected = `sha256=${hash}`;
-           const sigBuf = Buffer.from(signature, 'utf8');
-           const expBuf = Buffer.from(expected, 'utf8');
-           if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-             throw new UnauthorizedException("Invalid WhatsApp Signature");
-           }
+       if (!secret) {
+         throw new UnauthorizedException("Server configuration error: WHATSAPP_APP_SECRET missing in production");
+       }
+       const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+       const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+       const expected = `sha256=${hash}`;
+       const sigBuf = Buffer.from(signature, 'utf8');
+       const expBuf = Buffer.from(expected, 'utf8');
+       if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+         throw new UnauthorizedException("Invalid WhatsApp Signature");
        }
     }
     return this.whatsappService.handleIncomingMessage(payload);

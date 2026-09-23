@@ -70,9 +70,16 @@ export class VoiceController {
     @TenantId() tenantId: string,
     @Body() body: { roomName: string; participantName?: string; identity?: string },
   ) {
-    const effectiveTenantId = tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
+    if (!tenantId) {
+      throw new UnauthorizedException('Tenant context required to create voice session');
+    }
+    // Enforce tenant scoping on LiveKit room name to prevent BOLA cross-tenant room eavesdropping
+    let scopedRoomName = body.roomName || `session_${crypto.randomUUID()}`;
+    if (!scopedRoomName.startsWith(`tenant_${tenantId}`) && !scopedRoomName.startsWith(tenantId)) {
+      scopedRoomName = `tenant_${tenantId}_${scopedRoomName}`;
+    }
     const identity = body.identity || `user_${crypto.randomUUID()}`;
-    return this.voiceService.createLiveKitToken(effectiveTenantId, body.roomName, identity, body.participantName);
+    return this.voiceService.createLiveKitToken(tenantId, scopedRoomName, identity, body.participantName);
   }
 
   @Get('clinic-overview')
@@ -198,7 +205,7 @@ export class VoiceController {
   @UseGuards(InternalVoiceGuard)
   async initiateCallTransfer(
     @TenantId() tenantId: string,
-    @Body() body: { roomName?: string; callerPhone: string; reason?: string },
+    @Body() body: { roomName?: string; callerPhone: string; participantIdentity?: string; reason?: string },
   ) {
     return this.voiceService.handleHumanTransfer(tenantId, body);
   }

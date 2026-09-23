@@ -306,15 +306,20 @@ export default function OutboundCampaignsPage() {
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
-        setCampaigns(JSON.parse(saved));
-        return;
+        const parsed = JSON.parse(saved);
+        const isLegacyMock = Array.isArray(parsed) && parsed.some((c: any) => 
+          c.id?.startsWith('skin_camp_') || c.id?.startsWith('dental_camp_') || c.id?.startsWith('spa_camp_') || c.id?.startsWith('re_camp_') || c.id?.startsWith('hotel_camp_')
+        );
+        if (!isLegacyMock) {
+          setCampaigns(parsed);
+          return;
+        }
       } catch (e) {
         console.error('Failed to parse campaigns', e);
       }
     }
-    const defaults = PREINSTALLED_CAMPAIGNS_BY_NICHE[currentNiche] || PREINSTALLED_CAMPAIGNS_BY_NICHE.skin;
-    setCampaigns(defaults);
-    localStorage.setItem(key, JSON.stringify(defaults));
+    setCampaigns([]);
+    localStorage.setItem(key, JSON.stringify([]));
   }, [currentNiche]);
 
   const updateCampaigns = (newCampaigns: CampaignItem[]) => {
@@ -833,7 +838,16 @@ export default function OutboundCampaignsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {filteredCampaigns.map((camp) => (
+            {filteredCampaigns.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)]/50 space-y-3">
+                <Megaphone className="w-10 h-10 mx-auto text-blue-400 opacity-60" />
+                <h3 className="text-sm font-bold text-[var(--color-text)]">No Outbound Campaigns Active</h3>
+                <p className="text-xs text-[var(--color-text-muted)] max-w-sm mx-auto">
+                  Click &quot;Create Campaign&quot; above to configure an automated voice calling or WhatsApp broadcast campaign.
+                </p>
+              </div>
+            ) : (
+              filteredCampaigns.map((camp) => (
               <div
                 key={camp.id}
                 className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-blue-500/40 transition-colors shadow-sm"
@@ -876,7 +890,7 @@ export default function OutboundCampaignsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </>
       ) : (

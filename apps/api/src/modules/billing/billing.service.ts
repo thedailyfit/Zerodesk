@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PLANS_REGISTRY, getPlanConfig } from '@zerodesk/shared';
 import Stripe from 'stripe';
 
 export interface PlanLimits {
@@ -10,26 +11,15 @@ export interface PlanLimits {
   mrr: number;
 }
 
-export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  starter: {
-    llmTokensLimit: 2_000_000,
-    voiceMinutesLimit: 300,
-    whatsappMessagesLimit: 1_500,
-    mrr: 14999,
-  },
-  pro: {
-    llmTokensLimit: 5_000_000,
-    voiceMinutesLimit: 1_000,
-    whatsappMessagesLimit: 5_000,
-    mrr: 24999,
-  },
-  enterprise: {
-    llmTokensLimit: 20_000_000,
-    voiceMinutesLimit: 3_000,
-    whatsappMessagesLimit: 20_000,
-    mrr: 49999,
-  },
-};
+export function getBillingPlanLimits(planKey: string): PlanLimits {
+  const cfg = getPlanConfig(planKey);
+  return {
+    llmTokensLimit: cfg.llmTokensIncluded,
+    voiceMinutesLimit: cfg.voiceMinutesIncluded,
+    whatsappMessagesLimit: cfg.whatsappMessagesIncluded,
+    mrr: cfg.monthlyPriceINR,
+  };
+}
 
 @Injectable()
 export class BillingService {
@@ -58,7 +48,8 @@ export class BillingService {
     cancelUrl?: string,
   ) {
     const normalizedPlan = plan.toLowerCase();
-    const planConfig = PLAN_LIMITS[normalizedPlan] || PLAN_LIMITS['starter'];
+    const planDef = getPlanConfig(plan);
+    const planConfig = getBillingPlanLimits(plan);
 
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -207,7 +198,7 @@ export class BillingService {
     stripeSubId: string | null,
     stripeCustId: string | null,
   ) {
-    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS['starter'];
+    const limits = getBillingPlanLimits(plan);
 
     await this.prisma.subscription.upsert({
       where: { tenantId },
