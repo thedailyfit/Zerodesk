@@ -196,59 +196,30 @@ export class WhatsappService {
     );
 
     const result = await response.json();
-    if (result.error && (result.error.code === 131047 || result.error.code === 131026)) {
-      this.logger.warn(`[META 24H WINDOW] Outside 24h session window for ${to}. Falling back to pre-approved utility template.`);
-      try {
-        return await this.sendTemplate(tenantId, to, 'appointment_reminder', 'en', []);
-      } catch (tmplErr: any) {
-        this.logger.error(`Utility template fallback failed: ${tmplErr.message}`);
-      }
-    }
-    this.logger.log(`WhatsApp message sent to ${to}: ${result.messages?.[0]?.id}`);
-
-    // Persist outbound message and meter quota
-    try {
-      const cleanPhone = to.replace(/[^0-9+]/g, '');
-      const customer = await this.prisma.customer.findFirst({
-        where: { tenantId, phone: { contains: cleanPhone.slice(-10) } },
-      });
-
-      if (customer) {
-        let conversation = await this.prisma.conversation.findFirst({
-          where: { tenantId, customerId: customer.id, channel: 'WHATSAPP' },
-          orderBy: { createdAt: 'desc' },
-        });
-
-        if (!conversation) {
-          conversation = await this.prisma.conversation.create({
-            data: {
-              tenantId,
-              customerId: customer.id,
-              channel: 'WHATSAPP',
-              status: 'ACTIVE',
-            },
-          });
+    if (!response.ok || result.error) {
+      if (result.error && (result.error.code === 131047 || result.error.code === 131026)) {
+        this.logger.warn(`[META 24H WINDOW] Outside 24h session window for ${to}. Falling back to pre-approved utility template.`);
+        try {
+          return await this.sendTemplate(tenantId, to, 'appointment_reminder', 'en', []);
+        } catch (tmplErr: any) {
+          this.logger.error(`Utility template fallback failed: ${tmplErr.message}`);
+          throw tmplErr;
         }
-
-        await this.prisma.message.create({
-          data: {
-            tenantId,
-            conversationId: conversation.id,
-            role: 'ASSISTANT',
-            content: message,
-            metadata: { waMessageId: result.messages?.[0]?.id },
-          },
-        });
       }
-
-      await this.prisma.subscription.updateMany({
-        where: { tenantId },
-        data: { whatsappMessagesUsed: { increment: 1 } },
-      });
-    } catch (err: any) {
-      this.logger.warn(`Failed to meter/store outbound message: ${err.message}`);
+      this.logger.error(`Meta Graph API error for ${to}: ${JSON.stringify(result.error || result)}`);
+      throw new Error(`WhatsApp send failed: ${result.error?.message || 'Meta API HTTP error'}`);
     }
 
+    const waMessageId = result.messages?.[0]?.id;
+    if (!waMessageId) {
+      this.logger.error(`Meta Graph API returned success but missing message ID for ${to}: ${JSON.stringify(result)}`);
+      throw new Error('WhatsApp send failed: Missing message ID from Meta');
+    }
+
+    this.logger.log(`WhatsApp message sent to ${to}: ${waMessageId}`);
+
+    // Persist outbound message and meter quota ONLY on verified send
+    await this.persistAndMeterOutboundMessage(tenantId, to, message, waMessageId);
     return result;
   }
 
@@ -291,6 +262,10 @@ export class WhatsappService {
     );
 
     const result = await response.json();
+    if (!response.ok || result.error || !result.messages?.[0]?.id) {
+      this.logger.error(`Meta Graph API template error for ${to}: ${JSON.stringify(result.error || result)}`);
+      throw new Error(`WhatsApp template send failed: ${result.error?.message || 'Meta API HTTP error'}`);
+    }
     await this.persistAndMeterOutboundMessage(tenantId, to, `[Template: ${templateName}]`, result.messages?.[0]?.id);
     return result;
   }
@@ -338,6 +313,10 @@ export class WhatsappService {
     );
 
     const result = await response.json();
+    if (!response.ok || result.error || !result.messages?.[0]?.id) {
+      this.logger.error(`Meta Graph API interactive buttons error for ${to}: ${JSON.stringify(result.error || result)}`);
+      throw new Error(`WhatsApp interactive buttons send failed: ${result.error?.message || 'Meta API HTTP error'}`);
+    }
     await this.persistAndMeterOutboundMessage(tenantId, to, bodyText, result.messages?.[0]?.id);
     return result;
   }
@@ -443,14 +422,30 @@ export class WhatsappService {
   async getConfig(tenantId: string) {
     const config = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
     if (!config) return null;
+
+    const decryptedToken = this.getDecryptedToken(config.accessToken);
+
     return {
-      ...config,
-      accessToken: this.getDecryptedToken(config.accessToken),
+      id: config.id,
+      tenantId: config.tenantId,
+      wabaId: config.wabaId,
+      phoneNumberId: config.phoneNumberId,
+      displayPhone: config.displayPhone,
+      greeting: config.greeting,
+      isActive: config.isActive,
+      hasAccessToken: Boolean(decryptedToken),
+      maskedAccessToken: decryptedToken
+        ? `${'•'.repeat(8)}${decryptedToken.slice(-4)}`
+        : null,
+      settings: config.settings,
+      createdAt: config.createdAt,
+      updatedAt: config.updatedAt,
     };
   }
 
   async updateConfig(tenantId: string, data: any) {
-    const updateData = { ...data };
+    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data;
+    const updateData = { ...safeData };
     if (updateData.accessToken) {
       updateData.accessToken = this.cryptoService.encrypt(updateData.accessToken);
     }

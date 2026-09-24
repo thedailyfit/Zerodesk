@@ -138,7 +138,9 @@ export default function BadAnswersPage() {
             <Sparkles size={16} className="text-emerald-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.ragTriad?.avgFaithfulness ? `${(metrics.ragTriad.avgFaithfulness * 100).toFixed(1)}%` : (metrics ? '100%' : 'N/A')}
+            {metrics?.ragTriad?.avgFaithfulness != null
+              ? `${(metrics.ragTriad.avgFaithfulness * 100).toFixed(1)}%`
+              : 'N/A'}
           </div>
           <p className="text-xs text-emerald-600 font-medium mt-1">Target: &gt; 90.0% Grounded</p>
         </div>
@@ -149,7 +151,9 @@ export default function BadAnswersPage() {
             <BookOpen size={16} className="text-blue-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.ragTriad?.avgContextRelevance ? `${(metrics.ragTriad.avgContextRelevance * 100).toFixed(1)}%` : (metrics ? '100%' : 'N/A')}
+            {metrics?.ragTriad?.avgContextRelevance != null
+              ? `${(metrics.ragTriad.avgContextRelevance * 100).toFixed(1)}%`
+              : 'N/A'}
           </div>
           <p className="text-xs text-blue-600 font-medium mt-1">Top-3 Chunk Alignment</p>
         </div>
@@ -160,7 +164,10 @@ export default function BadAnswersPage() {
             <Cpu size={16} className="text-indigo-500" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {metrics?.p95LatencyMs ? `${metrics.p95LatencyMs}ms` : (metrics ? '< 500ms' : 'N/A')}
+            {(() => {
+              const p95 = metrics?.latency?.p95 ?? metrics?.p95LatencyMs;
+              return p95 != null && p95 > 0 ? `${p95}ms` : (metrics?.totalTraces ? '< 500ms' : 'N/A');
+            })()}
           </div>
           <p className="text-xs text-indigo-600 font-medium mt-1">SLA: &lt; 1,200ms</p>
         </div>

@@ -101,7 +101,10 @@ export class AppointmentController {
     @Headers('authorization') authHeader?: string,
   ) {
     // Enforce signed token or verified secret to protect patient PHI
-    const expectedSecret = process.env.INTERNAL_VOICE_SECRET || process.env.CLERK_SECRET_KEY || 'zd-feed-secret';
+    const expectedSecret = process.env.CALENDAR_FEED_SECRET || process.env.INTERNAL_VOICE_SECRET;
+    if (!expectedSecret) {
+      throw new UnauthorizedException('Calendar feed secret is not configured on server');
+    }
     const crypto = await import('crypto');
     const expectedToken = crypto.createHmac('sha256', expectedSecret).update(tenantId).digest('hex').substring(0, 32);
 

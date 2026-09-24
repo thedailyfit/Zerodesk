@@ -155,7 +155,7 @@ export class EvalProcessor extends WorkerHost {
       }
 
       // B. Clinical Safety Violation Flag
-      if (!evalResult.nicheClinicalSafe) {
+      if (evalResult.isEvaluated && evalResult.status === 'EVALUATED' && !evalResult.nicheClinicalSafe) {
         await this.prisma.badAnswerFlag.create({
           data: {
             traceId,
@@ -171,7 +171,7 @@ export class EvalProcessor extends WorkerHost {
       }
 
       // C. Ungrounded Hallucination Audit
-      if (faithfulness < 0.75) {
+      if (evalResult.isEvaluated && evalResult.status === 'EVALUATED' && faithfulness < 0.75) {
         await this.prisma.badAnswerFlag.create({
           data: {
             traceId,

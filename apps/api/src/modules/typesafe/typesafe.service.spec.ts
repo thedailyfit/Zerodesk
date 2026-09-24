@@ -52,7 +52,7 @@ describe('TypeSafeService (Jev System One Integration)', () => {
   });
 
   describe('Observability Trace Evaluation (evaluateObservabilityTrace)', () => {
-    it('should return high faithfulness when knowledge context is provided in fallback mode', async () => {
+    it('should return honest UNAVAILABLE status in fallback mode when API key is unconfigured', async () => {
       const result = await service.evaluateObservabilityTrace({
         query: 'What is the consultation fee?',
         response: 'The consultation fee is ₹500.',
@@ -61,23 +61,34 @@ describe('TypeSafeService (Jev System One Integration)', () => {
         niche: 'skin',
       });
 
-      expect(result.faithfulnessScore).toBeGreaterThanOrEqual(0.85);
-      expect(result.hallucinationScore).toBeLessThanOrEqual(0.15);
+      expect(result.isEvaluated).toBe(false);
+      expect(result.status).toBe('UNAVAILABLE');
+      expect(result.judgeModel).toBe('unjudged:system-fallback');
       expect(result.rateCardCompliant).toBe(true);
       expect(result.nicheClinicalSafe).toBe(true);
     });
 
-    it('should return lower faithfulness when knowledge context is absent in fallback mode', async () => {
-      const result = await service.evaluateObservabilityTrace({
-        query: 'Can you cure baldness in 24 hours?',
-        response: 'Yes, absolutely 100% guaranteed.',
-        contextCombined: '',
-        rateCardContext: '',
-        niche: 'skin',
+    it('should parse evaluated metrics when TypeSafe returns evaluation answers', async () => {
+      jest.spyOn(service as any, 'evaluate').mockResolvedValueOnce({
+        faithfulness: { score: 1.8 },
+        answer_relevance: { score: 1.9 },
+        rate_card_compliance: { noul: 0.9 },
+        niche_clinical_safety: { noul: 0.95 },
+        patient_sentiment_impact: { score: 1.0 },
       });
 
-      expect(result.faithfulnessScore).toBeLessThan(0.75);
-      expect(result.hallucinationScore).toBeGreaterThan(0.25);
+      const result = await service.evaluateObservabilityTrace({
+        query: 'What is the fee?',
+        response: 'Fee is ₹500',
+        contextCombined: 'Fee is ₹500',
+        rateCardContext: '₹500',
+      });
+
+      expect(result.isEvaluated).toBe(true);
+      expect(result.status).toBe('EVALUATED');
+      expect(result.judgeModel).toBe('jev-system-one');
+      expect(result.faithfulnessScore).toBeGreaterThanOrEqual(0.85);
+      expect(result.hallucinationScore).toBeLessThanOrEqual(0.15);
     });
   });
 

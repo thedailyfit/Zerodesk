@@ -404,7 +404,7 @@ model Appointment {
   staff    StaffMember? @relation(fields: [staffId], references: [id])
 
   @@unique([id, tenantId])
-  @@unique([tenantId, scheduledAt, staffId], map: "unique_tenant_slot_staff")
+  @@index([tenantId, scheduledAt, staffId], map: "idx_tenant_slot_staff")
   @@index([tenantId, scheduledAt, status])
   @@index([tenantId, customerId])
   @@index([tenantId, serviceId])

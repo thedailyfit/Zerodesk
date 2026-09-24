@@ -514,14 +514,16 @@ export class VoiceService {
       const tenantId = tenantMatch ? tenantMatch[1] : null;
 
       if (durationSec > 0 && tenantId) {
-        const billedMinutes = Math.max(1, Math.ceil(durationSec / 60));
-        await this.prisma.subscription.updateMany({
-          where: { tenantId },
-          data: {
-            voiceMinutesUsed: { increment: billedMinutes },
-          },
+        // Metering is handled idempotently via recordCallCompletion and UsageLedger to prevent double-billing
+        await this.recordCallCompletion(
+          tenantId,
+          '',
+          durationSec,
+          roomName,
+          { provider: 'livekit', roomSid: event.room?.sid },
+        ).catch((err) => {
+          this.logger.warn(`LiveKit webhook recordCallCompletion non-fatal error: ${err.message}`);
         });
-        this.logger.log(`[LIVEKIT METERING] Billed ${billedMinutes} minute(s) to tenant ${tenantId}`);
       }
 
       this.eventEmitter.emit('voice.call.ended', {

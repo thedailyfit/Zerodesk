@@ -224,7 +224,7 @@ export default function BookAppointmentPage() {
     return `${hour12.toString().padStart(2, '0')}:${m} ${ampm}`;
   };
 
-  const handleConfirmBooking = (e: React.FormEvent) => {
+  const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let customerName = selectedCustomer?.name || 'Walk-in Guest';
@@ -263,36 +263,39 @@ export default function BookAppointmentPage() {
       totalAmount: totalPayable,
     };
 
-    setConfirmedBooking(newBooking);
-
-    // Persist booking to backend API
-    api.post('/appointments', {
-      customerId: finalCustomerId,
-      customerName,
-      phone: customerPhone,
-      serviceName: selectedService?.name || 'General Consultation',
-      doctorName: selectedDoctor,
-      date: bookingDate,
-      time: finalTime,
-      totalAmount: totalPayable,
-      tokenNumber: tokenNo,
-      status: 'SCHEDULED',
-    }).catch((err) => {
-      console.error('Failed to persist booking to API:', err.message);
-    });
-
-    // Add to recent walk-ins list
-    setRecentBookings(prev => [
-      {
-        token: `T-${tokenNo}`,
-        name: customerName,
-        service: selectedService?.name || 'Consultation',
-        doctor: selectedDoctor,
+    try {
+      await api.post('/appointments', {
+        customerId: finalCustomerId,
+        customerName,
+        phone: customerPhone,
+        serviceId: selectedService?.id,
+        serviceName: selectedService?.name || 'General Consultation',
+        doctorName: selectedDoctor,
+        date: bookingDate,
         time: finalTime,
-        status: 'In Waiting Room',
-      },
-      ...prev
-    ]);
+        totalAmount: totalPayable,
+        tokenNumber: tokenNo,
+        status: 'SCHEDULED',
+      });
+
+      setConfirmedBooking(newBooking);
+
+      // Add to recent walk-ins list
+      setRecentBookings(prev => [
+        {
+          token: `T-${tokenNo}`,
+          name: customerName,
+          service: selectedService?.name || 'Consultation',
+          doctor: selectedDoctor,
+          time: finalTime,
+          status: 'In Waiting Room',
+        },
+        ...prev
+      ]);
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || err.message || 'Time slot collides with an existing appointment. Please choose another time.';
+      alert(errMsg);
+    }
   };
 
   return (

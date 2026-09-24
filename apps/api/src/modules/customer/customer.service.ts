@@ -26,10 +26,11 @@ export class CustomerService {
 
   async create(tenantId: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    const phone = data.phone ? normalizePhoneNumber(data.phone) : undefined;
+    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data || {};
+    const phone = safeData.phone ? normalizePhoneNumber(safeData.phone) : undefined;
     return db.customers.create({
       data: {
-        ...data,
+        ...safeData,
         ...(phone ? { phone } : {}),
       },
     });
@@ -37,12 +38,13 @@ export class CustomerService {
 
   async update(tenantId: string, id: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    const phone = data.phone ? normalizePhoneNumber(data.phone) : undefined;
+    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data || {};
+    const phone = safeData.phone ? normalizePhoneNumber(safeData.phone) : undefined;
     try {
       return await db.customers.update({
         where: { id, tenantId },
         data: {
-          ...data,
+          ...safeData,
           ...(phone ? { phone } : {}),
         },
       });

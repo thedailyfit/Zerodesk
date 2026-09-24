@@ -29,14 +29,14 @@ export class PlanTierGuard implements CanActivate {
     }
 
     let tenant = request.tenant;
-    if (!tenant || !tenant.planTier) {
+    if (!tenant || (!tenant.subscriptionTier && !tenant.planTier)) {
       tenant = await this.prisma.tenant.findUnique({
         where: { id: tenantId },
         select: { planTier: true, subscriptionTier: true },
       });
     }
 
-    const activeTier = (tenant?.planTier || tenant?.subscriptionTier || 'starter').toUpperCase();
+    const activeTier = (tenant?.subscriptionTier || tenant?.planTier || 'starter').toUpperCase();
 
     if (requiredTier === 'PRO' && activeTier !== 'PRO') {
       throw new ForbiddenException({

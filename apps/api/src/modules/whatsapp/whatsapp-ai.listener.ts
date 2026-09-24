@@ -88,6 +88,26 @@ export class WhatsappAiListener {
         return;
       }
 
+      // TRAI DND Compliance: Immediate statutory opt-out check BEFORE any conversation or handoff gating
+      const normalizedMsg = (effectiveMessage || '').trim().toUpperCase();
+      const isExplicitDnd = ['STOP', 'OPT OUT', 'UNSUBSCRIBE', 'STOP PROMO', 'DND'].includes(normalizedMsg);
+
+      if (isExplicitDnd) {
+        if (customerId) {
+          await this.prisma.customer.update({
+            where: { id: customerId },
+            data: { dndStatus: true, optedOutAt: new Date() },
+          });
+        }
+        await this.whatsappService.sendMessage(
+          tenantId,
+          from,
+          'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
+        );
+        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (TRAI statutory DND enabled).`);
+        return;
+      }
+
       // 1. Check conversation state (skip auto-reply if human agent has taken over)
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: conversationId },
@@ -125,23 +145,19 @@ export class WhatsappAiListener {
         }
       }
 
-      // Fallback regex for DND
-      const normalizedMsg = (effectiveMessage || '').trim().toUpperCase();
-      if (!dndTriggered && ['STOP', 'OPT OUT', 'UNSUBSCRIBE', 'STOP PROMO', 'DND'].includes(normalizedMsg)) {
-        dndTriggered = true;
-      }
-
       if (dndTriggered) {
-        await this.prisma.customer.update({
-          where: { id: customerId },
-          data: { dndStatus: true, optedOutAt: new Date() },
-        });
+        if (customerId) {
+          await this.prisma.customer.update({
+            where: { id: customerId },
+            data: { dndStatus: true, optedOutAt: new Date() },
+          });
+        }
         await this.whatsappService.sendMessage(
           tenantId,
           from,
           'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
         );
-        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (DND enabled).`);
+        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (DND enabled via AI triage).`);
         return;
       }
 

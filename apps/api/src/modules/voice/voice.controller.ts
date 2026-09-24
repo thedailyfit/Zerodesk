@@ -49,16 +49,19 @@ export class VoiceController {
   @UseGuards(IdempotencyGuard)
   async handleRetellWebhook(@Req() req: any, @Body() payload: any, @Headers('x-retell-signature') signature: string) {
     const secret = process.env.RETELL_WEBHOOK_SECRET;
-    if (process.env.NODE_ENV === 'production' || secret) {
+    if (process.env.NODE_ENV === 'production') {
+      if (!secret) {
+        throw new UnauthorizedException('Retell webhook secret not configured in production');
+      }
+    }
+    if (secret) {
       if (!signature) throw new UnauthorizedException('Missing Retell Signature');
-      if (secret) {
-        const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
-        const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
-        const signatureBuf = Buffer.from(signature, 'utf8');
-        const hashBuf = Buffer.from(hash, 'utf8');
-        if (signatureBuf.length !== hashBuf.length || !crypto.timingSafeEqual(signatureBuf, hashBuf)) {
-          throw new UnauthorizedException('Invalid Retell Signature');
-        }
+      const bodyStr = req.rawBody?.toString() || JSON.stringify(payload);
+      const hash = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
+      const signatureBuf = Buffer.from(signature, 'utf8');
+      const hashBuf = Buffer.from(hash, 'utf8');
+      if (signatureBuf.length !== hashBuf.length || !crypto.timingSafeEqual(signatureBuf, hashBuf)) {
+        throw new UnauthorizedException('Invalid Retell Signature');
       }
     }
     return this.voiceService.handleRetellWebhook(payload);

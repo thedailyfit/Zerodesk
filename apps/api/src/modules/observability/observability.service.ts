@@ -84,15 +84,16 @@ export class ObservabilityService {
       }),
     ]);
 
-    let avgFaithfulness = 0.94;
-    let avgContextRelevance = 0.91;
-    let avgAnswerRelevance = 0.92;
-
-    if (evals.length > 0) {
-      avgFaithfulness = evals.reduce((sum, e) => sum + e.faithfulness, 0) / evals.length;
-      avgContextRelevance = evals.reduce((sum, e) => sum + e.contextRelevance, 0) / evals.length;
-      avgAnswerRelevance = evals.reduce((sum, e) => sum + e.answerRelevance, 0) / evals.length;
-    }
+    const hasEvals = evals.length > 0;
+    const avgFaithfulness = hasEvals
+      ? Number((evals.reduce((sum, e) => sum + e.faithfulness, 0) / evals.length).toFixed(3))
+      : null;
+    const avgContextRelevance = hasEvals
+      ? Number((evals.reduce((sum, e) => sum + e.contextRelevance, 0) / evals.length).toFixed(3))
+      : null;
+    const avgAnswerRelevance = hasEvals
+      ? Number((evals.reduce((sum, e) => sum + e.answerRelevance, 0) / evals.length).toFixed(3))
+      : null;
 
     const latencies = traces.map((t) => t.latencyMs);
     const p50LatencyMs = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.5)] : 0;
@@ -104,6 +105,7 @@ export class ObservabilityService {
       totalTraces,
       pendingFlags,
       criticalFlags,
+      p95LatencyMs,
       latency: {
         p50: p50LatencyMs,
         p95: p95LatencyMs,
@@ -113,9 +115,9 @@ export class ObservabilityService {
         totalUsed: totalTokensUsed,
       },
       ragTriad: {
-        avgFaithfulness: Number(avgFaithfulness.toFixed(3)),
-        avgContextRelevance: Number(avgContextRelevance.toFixed(3)),
-        avgAnswerRelevance: Number(avgAnswerRelevance.toFixed(3)),
+        avgFaithfulness,
+        avgContextRelevance,
+        avgAnswerRelevance,
       },
     };
   }

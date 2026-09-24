@@ -155,7 +155,8 @@ export class BillingService {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as any;
         const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
-        if (subId) {
+        // Only reset usage on recurring billing cycle renewal, avoiding mid-cycle resets on one-off adjustments
+        if (subId && invoice.billing_reason === 'subscription_cycle') {
           // Reset usage counters for new billing period
           await this.prisma.subscription.updateMany({
             where: { stripeSubId: subId },
@@ -167,7 +168,7 @@ export class BillingService {
               updatedAt: new Date(),
             },
           });
-          this.logger.log(`Reset usage metrics for renewed subscription ${subId}`);
+          this.logger.log(`Reset usage metrics for renewed subscription cycle ${subId}`);
         }
         break;
       }
@@ -230,6 +231,7 @@ export class BillingService {
       where: { id: tenantId },
       data: {
         subscriptionTier: plan,
+        planTier: plan,
         subscriptionStatus: 'active',
       },
     });

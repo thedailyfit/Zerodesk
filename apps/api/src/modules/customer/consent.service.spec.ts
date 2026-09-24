@@ -24,6 +24,9 @@ describe('ConsentService', () => {
         findMany: jest.fn().mockResolvedValue([{ id: 'conv-1' }]),
         updateMany: jest.fn(),
       },
+      activity: {
+        updateMany: jest.fn(),
+      },
       auditLog: {
         create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
       },

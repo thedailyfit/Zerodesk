@@ -278,7 +278,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         if isinstance(services, list) and len(services) > 0:
                             lines = [f"{s.get('name')}: ₹{s.get('price')} ({s.get('duration', 30)} mins)" for s in services[:3]]
                             return "\n".join(lines)
-                        return f"Our {service_name} starts with a consultation fee of ₹800. For exact treatment options, I can connect you with our specialist."
+                        return f"I do not have specific pricing for '{service_name}' on file. Would you like me to check with our team or send you our service menu via WhatsApp?"
                     return f"I do not have specific pricing for '{service_name}'. I can have our staff WhatsApp the full brochure to you."
         except Exception as e:
             logger.error(f"get_pricing error: {e}")
@@ -376,9 +376,12 @@ def create_call_tools(call_ctx: CallContext) -> list:
                             logger.info(f"Initiating SIP warm transfer to {fwd} for room {call_ctx.room_name}")
                             return f"Transferring your call to our human frontdesk coordinator at {fwd}. Please stay on the line."
                         return "I have alerted our frontdesk team to connect with you. Please stay on the line."
+                    else:
+                        logger.warning(f"transfer_to_human backend returned status {resp.status}")
+                        return "I apologize, but I am unable to connect you with our front desk right now. I have alerted our team to call you back immediately."
         except Exception as e:
             logger.error(f"transfer_to_human backend call error: {e}")
-        return f"Transferring your call to our human frontdesk team for {reason}. Please stay on the line."
+        return "I apologize, but I am unable to connect you with our front desk right now. I have alerted our team to call you back immediately."
 
     return [book_appointment, get_pricing, query_knowledge_base, send_whatsapp_info, transfer_to_human]
 
@@ -523,24 +526,12 @@ async def entrypoint(ctx: JobContext):
     preferred_language = locals().get("preferred_language", os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN"))
 
     if not system_prompt:
-        system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name} in Indiranagar, Bengaluru.
-Your doctor is Dr. Ananya Rao, MBBS, MD (Dermatology, Venereology & Leprosy — AIIMS Gold Medalist, 11+ years experience).
+        system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name}.
+You assist callers with scheduling appointments, providing clinic/business information, and answering service queries using the tools available to you.
 
-LOCATION & TIMINGS:
-- Location: 2nd Floor, 100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru (Opposite Toit Brewpub, Metro Pillar 124).
-- Clinic Hours: Monday to Saturday: 10:00 AM – 7:30 PM, Sunday: 11:00 AM – 4:00 PM.
-- Doctor Consultation Fee: ₹800 (includes 7-day free prescription follow-up).
-
-COMPLETE TREATMENT RATE CARD:
-1. Doctor Consultation: ₹800 (Dr. Ananya Rao MD / Dr. Priya Sharma).
-2. HydraFacial Deluxe: ₹4,500 / session (Package of 3: ₹11,999). 7-step Korean glass skin glow protocol.
-3. Full Body Laser Hair Reduction: ₹14,999 / session (Package of 6: ₹69,999). Painless Soprano Titanium triple-wavelength with ICE Plus cooling.
-4. Underarms Laser Hair Reduction: ₹2,499 / session.
-5. Chemical Peels (Acne, Glow & Pigmentation): ₹2,800 / session. Medical-grade salicylic/glycolic peels.
-6. Botox Anti-Wrinkle (Allergan USA): ₹350 / unit. Forehead & crow's feet typically require 20-30 units (₹7,000 – ₹10,500).
-7. Juvederm Dermal Fillers: ₹22,000 / 1ml syringe (lips, cheeks, chin contouring).
-8. PRP Hair Therapy (GFC Growth Factor): ₹5,000 / session (Package of 4: ₹17,500).
-9. Carbon Laser Peel (Hollywood Glow Peel): ₹3,800 / session.
+GENERAL GUIDELINES:
+- When asked about prices, treatments, or doctor schedules, use your available tools (get_pricing, query_knowledge_base) or offer to connect with our staff. Never invent fees, practitioner names, or treatments.
+- Offer to send booking links or details to the caller's WhatsApp when helpful.
 
 CRITICAL SPOKEN VOICE RULES (ABSOLUTE REQUIREMENT FOR NATURAL HUMAN SPEECH):
 - This is a live voice phone call speaking directly into the caller's ear.
@@ -548,26 +539,14 @@ CRITICAL SPOKEN VOICE RULES (ABSOLUTE REQUIREMENT FOR NATURAL HUMAN SPEECH):
 - NEVER say what internal step you are performing (e.g. do NOT say "I will look that up in the database" or "Calling function"). Speak directly to the caller.
 - NEVER output markdown formatting (**bold**, *italics*, bullet points, asterisks, hashtags, or numbered lists). Speak in smooth, natural sentences.
 - Keep every response short, conversational, and direct: 1 to 2 sentences maximum. Phone callers want quick, clear answers.
-- Always offer to send Google Maps location and booking link to their WhatsApp.
 
-MANDATORY MULTI-LINGUAL LANGUAGE PROTOCOL (TELUGU & TELINGLISH PRIORITY):
-- If the caller speaks ANY Telugu or Telinglish (Telugu mixed with English):
-  YOU MUST IMMEDIATELY REPLY IN NATURAL TELINGLISH (Telugu mixed with conversational English words)! NEVER REPLY IN PURE ENGLISH!
-  Common Telugu words: "entha", "andi", "kavali", "undi", "cheppandi", "eppudu", "ekkada", "unnaru", "gari", "kadhara", "chudandi", "cheyandi", "ela".
-  Natural Telinglish examples:
-  * Consultation Fee: "Namaskaram andi! Dr. Ananya Rao gari consultation fee 800 rupees andi. Clinic Indiranagar 100 Feet Road lo undi. Meeku appointment eppudu schedule cheyali andi?"
-  * HydraFacial Price: "HydraFacial Deluxe session 4,500 rupees andi. Dintlo 7-step Korean glass glow protocol untundi."
-  * Timings & Location: "Aura Clinic Indiranagar 100 Feet Road lo, Toit opposite ga undi andi. Monday nunchi Saturday 10:00 AM nunchi 7:30 PM varaku open untundi andi."
-  * Laser Treatment: "Full Body Laser Hair Reduction session 14,999 rupees andi. Soprano Titanium cooling valla pain emi undadu andi."
-  * Booking Appointment: "Tappakunda andi! Mee peru cheppandi, meeku preferred time lo slot confirm chesthanu."
-  * Sending WhatsApp details: "Mee WhatsApp ki rate card and location ventane pampisthanu andi."
-- If the caller speaks Hindi / Hinglish:
-  Reply in polite Hinglish ("Ji bilkul! Dr. Ananya ke saath consultation fee 800 rupees hai. Clinic Indiranagar mein hai...").
-- If the caller speaks English:
-  Reply in warm, polite Indian English reception tone.
+MANDATORY MULTI-LINGUAL LANGUAGE PROTOCOL:
+- If the caller speaks Telugu or Telinglish, reply in polite conversational Telinglish.
+- If the caller speaks Hindi or Hinglish, reply in polite conversational Hinglish.
+- If the caller speaks English, reply in a warm, polite professional tone.
 
 EMERGENCY PROTOCOL:
-- If caller reports severe chemical burn, acute eye trauma, or severe acute swelling, advise immediate emergency hospital visit or calling 108/112.
+- If caller reports acute pain, severe trauma, bleeding, or life-threatening distress, advise immediate emergency hospital visit or calling 108/112, and offer to notify human staff immediately.
 """
 
     if customer_info and isinstance(customer_info, dict):

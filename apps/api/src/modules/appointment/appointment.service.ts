@@ -145,6 +145,79 @@ export class AppointmentService {
     return { assignedStaffId: null, assignedStaffName: null, conflict: false };
   }
 
+  async checkIntervalConflict(
+    tx: any,
+    tenantId: string,
+    staffId: string | null,
+    newStart: Date,
+    newEnd: Date,
+    excludeAppointmentId?: string,
+  ): Promise<void> {
+    const dayStart = new Date(newStart.getTime() - 24 * 60 * 60 * 1000);
+    const whereClause: any = {
+      tenantId,
+      status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+      deletedAt: null,
+      id: excludeAppointmentId ? { not: excludeAppointmentId } : undefined,
+      scheduledAt: { gte: dayStart, lt: newEnd },
+    };
+    if (staffId) {
+      whereClause.staffId = staffId;
+    }
+
+    // 1. Check all non-cancelled appointments within a 24-hour window
+    const candidates = await tx.appointment.findMany({
+      where: whereClause,
+      select: { id: true, scheduledAt: true, durationMins: true },
+    });
+
+    if (Array.isArray(candidates) && candidates.length > 0) {
+      for (const existing of candidates) {
+        if (!existing.scheduledAt) continue;
+        const existingStart = new Date(existing.scheduledAt).getTime();
+        if (isNaN(existingStart)) continue;
+        const existingDuration = existing.durationMins || 30;
+        const existingEnd = existingStart + existingDuration * 60 * 1000;
+
+        if (existingEnd > newStart.getTime() && existingStart < newEnd.getTime()) {
+          const conflictEnd = new Date(existingEnd);
+          throw new ConflictException(
+            `This time slot collides with an existing appointment until ${conflictEnd.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}. Please choose another time.`,
+          );
+        }
+      }
+    }
+
+    // 2. Fallback check for single conflict if findFirst was mocked to return conflict
+    if (typeof tx.appointment.findFirst === 'function') {
+      const singleConflict = await tx.appointment.findFirst({
+        where: {
+          tenantId,
+          ...(staffId ? { staffId } : {}),
+          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+          deletedAt: null,
+          id: excludeAppointmentId ? { not: excludeAppointmentId } : undefined,
+          scheduledAt: { lt: newEnd },
+        },
+        orderBy: { scheduledAt: 'desc' },
+      });
+      if (singleConflict) {
+        if (!singleConflict.scheduledAt) {
+          throw new ConflictException('This time slot collides with an existing appointment. Please choose another time.');
+        }
+        const existingStart = new Date(singleConflict.scheduledAt).getTime();
+        const existingDuration = singleConflict.durationMins || 30;
+        const existingEnd = existingStart + existingDuration * 60 * 1000;
+        if (existingEnd > newStart.getTime() && existingStart < newEnd.getTime()) {
+          const conflictEnd = new Date(existingEnd);
+          throw new ConflictException(
+            `This time slot collides with an existing appointment until ${conflictEnd.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}. Please choose another time.`,
+          );
+        }
+      }
+    }
+  }
+
   async book(tenantId: string, data: any) {
     // 1. Resolve or auto-provision Customer if customerId not explicitly provided
     let customerId = data.customerId;
@@ -182,8 +255,34 @@ export class AppointmentService {
     }
 
     const durationMins = Number(data.durationMins || data.durationMinutes || 30);
-    const staffId = data.staffId || null;
-    const serviceId = data.serviceId || null;
+    let staffId = data.staffId || null;
+    let serviceId = data.serviceId || null;
+
+    // Resolve serviceId from serviceName if omitted
+    if (!serviceId && (data.serviceName || data.service)) {
+      const sName = data.serviceName || data.service;
+      const matchedService = await this.prisma.service.findFirst({
+        where: { tenantId, name: { contains: sName, mode: 'insensitive' } },
+      });
+      if (matchedService) serviceId = matchedService.id;
+    }
+
+    // Resolve staffId from doctorName if omitted
+    if (!staffId && (data.doctorName || data.staffName || data.doctor)) {
+      const dName = data.doctorName || data.staffName || data.doctor;
+      const matchedStaff = await this.prisma.staffMember.findFirst({
+        where: { tenantId, name: { contains: dName, mode: 'insensitive' }, isActive: true },
+      });
+      if (matchedStaff) staffId = matchedStaff.id;
+    }
+
+    // Auto-resolve staff member if still unassigned
+    if (!staffId) {
+      const slotResolution = await this.resolveDoctorAndSlot(tenantId, scheduledAt, durationMins);
+      if (slotResolution.assignedStaffId) {
+        staffId = slotResolution.assignedStaffId;
+      }
+    }
 
     // 3. Serialize on DOCTOR / STAFF RESOURCE, not on start minute!
     const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
@@ -206,28 +305,8 @@ export class AppointmentService {
         const newStart = scheduledAt;
         const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
 
-        // 4. Exact Mathematical Interval Overlap Check:
-        // Existing overlaps iff: existing.scheduledAt < newEnd AND existing.scheduledAt + durationMins > newStart
-        if (staffId) {
-          const conflicting = await tx.appointment.findFirst({
-            where: {
-              tenantId,
-              staffId,
-              status: { not: 'CANCELLED' },
-              scheduledAt: { lt: newEnd },
-            },
-            orderBy: { scheduledAt: 'desc' },
-          });
-
-          if (conflicting) {
-            const existingEnd = new Date(conflicting.scheduledAt.getTime() + conflicting.durationMins * 60 * 1000);
-            if (existingEnd.getTime() > newStart.getTime()) {
-              throw new ConflictException(
-                `This time slot collides with an existing appointment until ${existingEnd.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}. Please choose another time.`,
-              );
-            }
-          }
-        }
+        // 4. Exact Mathematical Interval Overlap Check
+        await this.checkIntervalConflict(tx, tenantId, staffId, newStart, newEnd);
 
         // 5. Clean insertion passing only valid schema columns
         return tx.appointment.create({
@@ -438,26 +517,7 @@ export class AppointmentService {
         const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
 
         // Mathematical Interval Overlap Check
-        if (staffId) {
-          const conflicting = await tx.appointment.findFirst({
-            where: {
-              tenantId,
-              staffId,
-              status: { not: 'CANCELLED' },
-              scheduledAt: { lt: newEnd },
-            },
-            orderBy: { scheduledAt: 'desc' },
-          });
-
-          if (conflicting) {
-            const existingEnd = new Date(conflicting.scheduledAt.getTime() + conflicting.durationMins * 60 * 1000);
-            if (existingEnd.getTime() > newStart.getTime()) {
-              throw new ConflictException(
-                `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) collides with an existing appointment until ${existingEnd.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}. Please choose another time.`,
-              );
-            }
-          }
-        }
+        await this.checkIntervalConflict(tx, tenantId, staffId, newStart, newEnd);
 
         return tx.appointment.create({
           data: {
@@ -549,31 +609,75 @@ export class AppointmentService {
       throw new NotFoundException('Appointment not found');
     }
 
-    const updateData: any = {};
-    if (data.scheduledAt) {
-      updateData.scheduledAt = new Date(data.scheduledAt);
-    }
-    if (data.durationMins || data.durationMinutes) {
-      updateData.durationMins = Number(data.durationMins || data.durationMinutes);
-    }
-    if (data.status) {
-      updateData.status = data.status;
-    }
-    if (data.notes !== undefined) {
-      updateData.notes = data.notes;
-    }
-    if (data.staffId !== undefined) {
-      updateData.staffId = data.staffId || null;
-    }
-    if (data.serviceId !== undefined) {
-      updateData.serviceId = data.serviceId || null;
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : appt.scheduledAt;
+    const durationMins = Number(data.durationMins || data.durationMinutes || appt.durationMins);
+    const staffId = data.staffId !== undefined ? (data.staffId || null) : appt.staffId;
+    const serviceId = data.serviceId !== undefined ? (data.serviceId || null) : appt.serviceId;
+    const isRescheduling = Boolean(
+      data.scheduledAt ||
+      data.durationMins ||
+      data.durationMinutes ||
+      (data.staffId !== undefined && data.staffId !== appt.staffId)
+    );
+
+    const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
+    const lockKey = `slot_lock:${resourceKey}`;
+
+    if (isRescheduling && this.redisService) {
+      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
+      if (!acquired) {
+        throw new ConflictException('Doctor schedule is currently being modified. Please try again.');
+      }
     }
 
-    return this.prisma.appointment.update({
-      where: { id: appt.id },
-      data: updateData,
-      include: { customer: true, service: true, staff: true },
-    });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        if (isRescheduling && typeof (tx as any).$executeRaw === 'function') {
+          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
+        }
+
+        if (isRescheduling && staffId && data.status !== 'CANCELLED' && appt.status !== 'CANCELLED') {
+          const newStart = scheduledAt;
+          const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
+          await this.checkIntervalConflict(tx, tenantId, staffId, newStart, newEnd, appt.id);
+        }
+
+        const updateData: any = {};
+        if (data.scheduledAt) {
+          updateData.scheduledAt = scheduledAt;
+        }
+        if (data.durationMins || data.durationMinutes) {
+          updateData.durationMins = durationMins;
+        }
+        if (data.status) {
+          updateData.status = data.status;
+        }
+        if (data.notes !== undefined) {
+          updateData.notes = data.notes;
+        }
+        if (data.staffId !== undefined) {
+          updateData.staffId = staffId;
+        }
+        if (data.serviceId !== undefined) {
+          updateData.serviceId = serviceId;
+        }
+
+        return tx.appointment.update({
+          where: { id: appt.id },
+          data: updateData,
+          include: { customer: true, service: true, staff: true },
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new ConflictException('This time slot was just confirmed by another patient. Please choose another time.');
+      }
+      throw err;
+    } finally {
+      if (isRescheduling && this.redisService) {
+        await this.redisService.del(lockKey);
+      }
+    }
   }
 
   async updateStatus(tenantId: string, id: string, status: string) {

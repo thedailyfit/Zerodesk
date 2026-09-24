@@ -3,6 +3,7 @@ import { EvalProcessor } from './eval.processor';
 describe('EvalProcessor', () => {
   let processor: EvalProcessor;
   let mockPrisma: any;
+  let mockTypeSafe: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -16,7 +17,21 @@ describe('EvalProcessor', () => {
         create: jest.fn().mockResolvedValue({ id: 'flag-1' }),
       },
     };
-    processor = new EvalProcessor(mockPrisma);
+    mockTypeSafe = {
+      evaluateObservabilityTrace: jest.fn().mockResolvedValue({
+        isEvaluated: true,
+        status: 'EVALUATED',
+        judgeModel: 'jev-system-one',
+        faithfulnessScore: 0.95,
+        answerRelevanceScore: 0.90,
+        hallucinationScore: 0.05,
+        rateCardCompliant: true,
+        nicheClinicalSafe: true,
+        patientSentimentScore: 1,
+        judgeLatencyMs: 50,
+      }),
+    };
+    processor = new EvalProcessor(mockPrisma, mockTypeSafe);
   });
 
   it('should raise PRICE_MUTATION flag if AI quotes price not in tenant service catalog', async () => {
@@ -80,6 +95,18 @@ describe('EvalProcessor', () => {
 
   it('should raise UNGROUNDED_FABRICATION if context is empty and faithfulness is low', async () => {
     mockPrisma.service.findMany.mockResolvedValue([]);
+    mockTypeSafe.evaluateObservabilityTrace.mockResolvedValueOnce({
+      isEvaluated: true,
+      status: 'EVALUATED',
+      judgeModel: 'jev-system-one',
+      faithfulnessScore: 0.40,
+      answerRelevanceScore: 0.50,
+      hallucinationScore: 0.60,
+      rateCardCompliant: true,
+      nicheClinicalSafe: true,
+      patientSentimentScore: 1,
+      judgeLatencyMs: 40,
+    });
 
     const job: any = {
       data: {
@@ -99,6 +126,42 @@ describe('EvalProcessor', () => {
         data: expect.objectContaining({
           flagType: 'UNGROUNDED_FABRICATION',
           severity: 'HIGH',
+        }),
+      })
+    );
+  });
+
+  it('should not raise UNGROUNDED_FABRICATION when evaluation is UNAVAILABLE in fallback mode', async () => {
+    mockPrisma.service.findMany.mockResolvedValue([]);
+    mockTypeSafe.evaluateObservabilityTrace.mockResolvedValueOnce({
+      isEvaluated: false,
+      status: 'UNAVAILABLE',
+      judgeModel: 'unjudged:deterministic-only',
+      faithfulnessScore: 0.0,
+      answerRelevanceScore: 0.0,
+      hallucinationScore: 0.0,
+      rateCardCompliant: true,
+      nicheClinicalSafe: true,
+      patientSentimentScore: 1,
+      judgeLatencyMs: 0,
+    });
+
+    const job: any = {
+      data: {
+        traceId: 'trace-fallback-1',
+        tenantId: 'tenant-1',
+        query: 'What are your hours?',
+        response: 'We are open 9am to 6pm.',
+        contextChunks: [],
+      },
+    };
+
+    await processor.process(job);
+
+    expect(mockPrisma.badAnswerFlag.create).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          flagType: 'UNGROUNDED_FABRICATION',
         }),
       })
     );

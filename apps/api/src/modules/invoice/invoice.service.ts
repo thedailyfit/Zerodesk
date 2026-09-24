@@ -28,6 +28,15 @@ export class InvoiceService {
   }
 
   async create(tenantId: string, data: any) {
+    if (data.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: data.customerId, tenantId, deletedAt: null },
+      });
+      if (!customer) {
+        throw new NotFoundException('Customer does not belong to this tenant');
+      }
+    }
+
     const timestamp = Date.now().toString().slice(-6);
     const randomSuffix = Math.floor(100 + Math.random() * 900);
     const count = await this.prisma.invoice.count({ where: { tenantId } });
