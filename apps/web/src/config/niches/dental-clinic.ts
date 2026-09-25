@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone,
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, CreditCard,
   CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming,
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch, Inbox
 } from 'lucide-react';
 import type { NicheConfig } from './types';
 
@@ -46,14 +46,14 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'dentist', label: 'Chief Dentist', description: 'Full access to practice analytics, revenue, settings, and team.', icon: 'Shield' },
-    { id: 'associate', label: 'Associate Dentist', description: 'Access to operations, chair scheduling, and patient retention.', icon: 'Users' },
-    { id: 'hygienist', label: 'Dental Hygienist', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
-    { id: 'frontdesk', label: 'Front Desk Host', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
+    { id: 'ADMIN', label: 'Admin', description: 'Full access to analytics, settings, and team management.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Manager', description: 'Access to operations, schedules, and reports.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk', description: 'Access to appointments, frontdesk billing, and patient chats.', icon: 'User' },
   ],
 
   navItems: [
     { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'The Unified Inbox', href: '/unified-inbox', icon: Inbox, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
@@ -64,7 +64,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Patient LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Clinical', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Clinical', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Waiting Room', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Chair Scheduler', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Doctor\'s Calendar', href: '/doctor-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
@@ -72,7 +72,7 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
     { name: 'Digital Prescriptions', href: '/prescriptions', icon: FileText, roles: ['ADMIN', 'STAFF', 'MANAGER'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Book Appointment', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },

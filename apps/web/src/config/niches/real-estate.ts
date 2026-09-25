@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, 
   CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch, Inbox
 } from 'lucide-react';
 
 export const REAL_ESTATE_CONFIG: NicheConfig = {
@@ -46,13 +46,14 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to property sales, revenue, settings, and staff.', icon: 'Shield' },
-    { id: 'MANAGER', label: 'Sales Manager', description: 'Access to site visit calendar, lead pipeline, and team sales.', icon: 'Users' },
-    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to site visit bookings, lead inquiries, and chats.', icon: 'User' },
+    { id: 'ADMIN', label: 'Admin', description: 'Full access to analytics, settings, and team management.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Manager', description: 'Access to operations, schedules, and reports.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk', description: 'Access to appointments, frontdesk billing, and client chats.', icon: 'User' },
   ],
 
   navItems: [
     { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'The Unified Inbox', href: '/unified-inbox', icon: Inbox, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
@@ -63,14 +64,14 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Pipeline Value (LTV)', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Properties', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Properties', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Sales Pipeline (Kanban)', href: '/pipeline', icon: Target, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Property Matrix', href: '/waiting-room', icon: Target, roles: ['ADMIN', 'STAFF'] },
     { name: 'Site Visit Calendar', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Lead Profiles', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Schedule Visit', href: '/book-appointment', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Token / Booking Bill', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },

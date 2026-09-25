@@ -53,7 +53,7 @@ const SYSTEM_MENU_ITEMS = [
   { name: 'Bad Answers & Evals', href: '/bad-answers', icon: Sparkles, badge: 'Evals', desc: 'RAG Triad & Drift Cockpit', roles: ['ADMIN', 'MANAGER'] },
   { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions', roles: ['ADMIN'] },
   { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
-  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client', roles: ['ADMIN'] },
+  { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
   { name: 'LLM Settings', href: '/llm-settings', icon: Sliders, badge: 'Routing', desc: 'Primary & Fallback Model Orchestration', roles: ['ADMIN', 'MANAGER'] },
   { name: 'Settings', href: '/settings', icon: Settings, badge: null, desc: 'Preferences & System', roles: ['ADMIN'] },
   { name: 'Ready to Scale', href: '/scale', icon: Rocket, badge: 'Pro', desc: 'Multi-location Growth', roles: ['ADMIN'] },
@@ -221,7 +221,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { currentNiche, nicheConfig } = useNiche();
   const { settings, updateSetting } = useNotifications();
   const { role: globalRole, setRole: setGlobalRole } = useRole();
-  const [demoRole, setDemoRole] = useState<string>(globalRole || 'ADMIN');
+  const normalizedInitialRole = ['ADMIN', 'MANAGER', 'STAFF'].includes(globalRole as string) ? globalRole : 'ADMIN';
+  const [demoRole, setDemoRole] = useState<string>(normalizedInitialRole || 'ADMIN');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
@@ -727,7 +728,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="flex items-center gap-2 px-3 py-1.5 border border-[var(--color-border)] hover:bg-[var(--color-surface)] rounded-xl transition-colors text-xs font-semibold text-[var(--color-text)]"
               >
                 <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[demoRole] || 'bg-blue-600')} />
-                {nicheConfig.roles.find(r => r.id === demoRole)?.label || demoRole}
+                {demoRole === 'ADMIN' ? 'Admin' : demoRole === 'MANAGER' ? 'Manager' : demoRole === 'STAFF' ? 'Frontdesk' : (nicheConfig.roles.find(r => r.id === demoRole)?.label || demoRole)}
                 <ChevronDown size={12} className="text-[var(--color-text-muted)]" />
               </button>
               
@@ -739,7 +740,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     exit={{ opacity: 0, y: 5 }}
                     className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-bg-elevated)] backdrop-blur-md border border-[var(--color-border)] rounded-xl shadow-lg overflow-hidden z-50 p-1 space-y-1"
                   >
-                    {nicheConfig.roles.map(role => (
+                    {[
+                      { id: 'ADMIN', label: 'Admin' },
+                      { id: 'MANAGER', label: 'Manager' },
+                      { id: 'STAFF', label: 'Frontdesk' },
+                    ].map(role => (
                       <button
                         key={role.id}
                         onClick={() => {
@@ -747,10 +752,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           setGlobalRole(role.id as any);
                           setRoleDropdownOpen(false);
                         }}
-                        className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
+                        className="w-full text-left flex items-center justify-between px-3 py-2 text-xs rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-text)] transition-colors"
                       >
-                        <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[role.id] || 'bg-blue-600')} />
-                        {role.label}
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2 h-2 rounded-full", ROLE_COLORS[role.id] || 'bg-blue-600')} />
+                          <span className={cn(demoRole === role.id ? "font-bold text-blue-500" : "font-medium")}>
+                            {role.label}
+                          </span>
+                        </div>
+                        {demoRole === role.id && (
+                          <span className="text-[10px] text-blue-500 font-semibold">Active</span>
+                        )}
                       </button>
                     ))}
                   </motion.div>

@@ -94,7 +94,7 @@ export default function BookAppointmentPage() {
 
   // Appointment Details State
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-  const [selectedStaff, setSelectedStaff] = useState(nicheConfig.roles[0]?.label || (nicheConfig.terminology?.staff || 'Specialist'));
+  const [selectedStaff, setSelectedStaff] = useState(nicheConfig.terminology?.staff || 'Specialist');
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[1]);
   

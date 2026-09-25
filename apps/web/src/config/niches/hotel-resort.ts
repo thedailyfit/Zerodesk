@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, Users, Target, Calendar, BookOpen, BarChart3, Phone, 
   MessageCircle, Workflow, Settings, FileText, Rocket, Receipt, TrendingUp, 
   CalendarDays, Clock, IndianRupee, Heart, Cpu, PhoneIncoming, 
-  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch
+  Megaphone, Activity, Laptop, AlertTriangle, Sparkles, Bot, Link2, Headphones, UserCheck, GitBranch, Inbox
 } from 'lucide-react';
 
 export const HOTEL_RESORT_CONFIG: NicheConfig = {
@@ -46,13 +46,14 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
   },
 
   roles: [
-    { id: 'ADMIN', label: 'Owner (Admin)', description: 'Full access to property operations, revenue, settings, and staff.', icon: 'Shield' },
-    { id: 'MANAGER', label: 'General Manager', description: 'Access to bookings, room occupancy, guest management, and analytics.', icon: 'Users' },
-    { id: 'STAFF', label: 'Frontdesk Staff', description: 'Access to check-ins, room bookings, folios, and guest chats.', icon: 'User' },
+    { id: 'ADMIN', label: 'Admin', description: 'Full access to analytics, settings, and team management.', icon: 'Shield' },
+    { id: 'MANAGER', label: 'Manager', description: 'Access to operations, schedules, and reports.', icon: 'Users' },
+    { id: 'STAFF', label: 'Frontdesk', description: 'Access to appointments, frontdesk billing, and guest chats.', icon: 'User' },
   ],
 
   navItems: [
     { name: 'Ask AI Frontdesk', href: '/ask-ai', icon: Bot, roles: ['ADMIN'] },
+    { name: 'The Unified Inbox', href: '/unified-inbox', icon: Inbox, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { name: 'Business Health', href: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Teams', href: '/teams', icon: Users, roles: ['ADMIN', 'MANAGER'] },
@@ -63,13 +64,13 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     { name: 'Today\'s Revenue', href: '/todays-revenue', icon: IndianRupee, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Monthly Sales', href: '/monthly-sales', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Hospitality', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Hospitality', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Check-in Lobby', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
     { name: 'Room Occupancy Chart', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guest Profiles', href: '/profiles', icon: FileText, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
+    { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN', 'MANAGER'] },
     
-    { name: 'Frontdesk', roles: ['ADMIN', 'STAFF'], divider: true },
+    { name: 'Frontdesk', roles: ['ADMIN', 'MANAGER', 'STAFF'], divider: true },
     { name: 'Book Room', href: '/book-appointment', icon: BookOpen, roles: ['ADMIN', 'STAFF'] },
     { name: 'Booking Link', href: '/booking-link', icon: Link2, roles: ['ADMIN'] },
     { name: 'Quick Bill / Folio', href: '/billing', icon: Receipt, roles: ['ADMIN', 'STAFF'] },
