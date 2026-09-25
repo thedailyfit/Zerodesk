@@ -22,9 +22,9 @@ export interface BookingLinkConfig {
 }
 
 const DEFAULT_CONFIG: BookingLinkConfig = {
-  slug: '',
-  businessName: '',
-  doctorEmail: '',
+  slug: 'sanctuary-booking',
+  businessName: 'Sanctuary Clinic',
+  doctorEmail: 'dr.sanctuary@zerodesk.pro',
   enabledServiceIds: [],
   slotDuration: 30,
   workingHoursStart: 9,
@@ -49,7 +49,12 @@ export function useBookingLink() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-            setConfig({ ...DEFAULT_CONFIG, ...parsed });
+          const effectiveSlug = (parsed.slug && typeof parsed.slug === 'string' && parsed.slug.trim())
+            ? parsed.slug.trim()
+            : 'sanctuary-booking';
+          setConfig({ ...DEFAULT_CONFIG, ...parsed, slug: effectiveSlug });
+          setIsLoaded(true);
+          return;
         }
       }
     } catch (e) {
@@ -60,7 +65,10 @@ export function useBookingLink() {
 
   const updateConfig = (updates: Partial<BookingLinkConfig>) => {
     setConfig((prev) => {
-      const next = { ...prev, ...updates };
+      const effectiveSlug = updates.slug !== undefined
+        ? (updates.slug.trim() ? updates.slug.trim() : 'sanctuary-booking')
+        : (prev.slug?.trim() || 'sanctuary-booking');
+      const next = { ...prev, ...updates, slug: effectiveSlug };
       try {
         localStorage.setItem('zerodesk_booking_link_config', JSON.stringify(next));
       } catch (e) {

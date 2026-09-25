@@ -15,9 +15,11 @@ import {
 import { cn } from '@/lib/utils';
 import { useBookingLink } from '@/lib/booking-link-store';
 import { useServices } from '@/lib/services-store';
+import { useNiche } from '@/components/providers/niche-provider';
 import Link from 'next/link';
 
 export default function BookingLinkAdminPage() {
+  const { nicheConfig } = useNiche();
   const { config, updateConfig } = useBookingLink();
   const { activeServices } = useServices();
   const [copied, setCopied] = useState(false);
@@ -25,9 +27,11 @@ export default function BookingLinkAdminPage() {
   const [previewDay, setPreviewDay] = useState(24);
   const [previewSlot, setPreviewSlot] = useState('09:30 AM');
 
+  const effectiveSlug = config.slug?.trim() || 'sanctuary-booking';
+
   const fullUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/book/${config.slug}`
-    : `https://zerodesk.app/book/${config.slug}`;
+    ? `${window.location.origin}/book/${effectiveSlug}`
+    : `https://zerodesk.app/book/${effectiveSlug}`;
 
   const handleCopyLink = async () => {
     try {
@@ -56,7 +60,7 @@ export default function BookingLinkAdminPage() {
             </div>
             <span>Public Booking Link</span>
             <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">
-              Live Patient Scheduler
+              {nicheConfig.id === 'spa' ? 'Live Guest Scheduler' : 'Live Booking Scheduler'}
             </span>
           </h1>
           <p className="text-[var(--color-text-muted)] text-xs mt-1">
@@ -74,7 +78,7 @@ export default function BookingLinkAdminPage() {
           </button>
 
           <Link
-            href={`/book/${config.slug}`}
+            href={`/book/${effectiveSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20"
@@ -141,7 +145,7 @@ export default function BookingLinkAdminPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Doctor / Host Email Notification</label>
+              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">{nicheConfig.terminology?.staff || 'Host'} / Email Notification</label>
               <input
                 type="email"
                 value={config.doctorEmail}
@@ -151,12 +155,12 @@ export default function BookingLinkAdminPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Clinic Cover Image URL (Optional)</label>
+              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Business Cover Image URL (Optional)</label>
               <input
                 type="url"
                 value={config.coverImage || ''}
                 onChange={(e) => updateConfig({ coverImage: e.target.value })}
-                placeholder="https://example.com/clinic-cover.jpg"
+                placeholder="https://example.com/cover.jpg"
                 className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
@@ -381,7 +385,7 @@ export default function BookingLinkAdminPage() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles size={14} className="text-blue-400" />
-                Live Patient View Preview
+                Live Booking View Preview
               </span>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
                 Online
@@ -397,7 +401,7 @@ export default function BookingLinkAdminPage() {
 
               <div className="p-3 bg-blue-50/80 rounded-2xl border border-blue-100">
                 <p className="text-xs font-bold text-slate-800">Meeting with {config.doctorEmail}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">{config.slotDuration} minutes • Phone / Clinic Visit</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{config.slotDuration} minutes • Phone / On-site Visit</p>
               </div>
 
               <div className="space-y-2">
@@ -457,7 +461,7 @@ export default function BookingLinkAdminPage() {
                   rel="noopener noreferrer"
                   className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs text-center block transition-all shadow-md shadow-blue-600/20"
                 >
-                  Continue to Patient Verification →
+                  Continue to Verification →
                 </Link>
               </div>
 

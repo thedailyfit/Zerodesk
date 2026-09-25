@@ -706,25 +706,28 @@ export default function SettingsPage() {
                   </select>
                 </div>
 
-                {/* Dynamic Voice AI Personas from Super Admin Registry */}
+                {/* Voice AI Persona Library Sync */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="block text-xs font-semibold text-[var(--color-text)] flex items-center gap-2">
                         <Volume2 size={16} className="text-blue-400" />
-                        <span>Voice AI Persona (Centrally Curated by Admin)</span>
+                        <span>Voice AI Persona Library</span>
                       </label>
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                        High-definition text-to-speech voice models synced from ZeroDesk Super Admin Fleet.
+                        High-definition neural voice models synced with your dedicated Voice AI Library.
                       </p>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">
-                      LiveFleet Synced
-                    </span>
+                    <a
+                      href="/voice"
+                      className="text-[11px] font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 hover:underline"
+                    >
+                      <span>Open Voice AI Library →</span>
+                    </a>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                    {availableVoices.map((voice: any) => {
+                    {availableVoices.slice(0, 3).map((voice: any) => {
                       const isSelected = voiceGender === voice.id || (voice.isDefault && !voiceGender);
                       return (
                         <div
@@ -743,7 +746,7 @@ export default function SettingsPage() {
                               {isSelected && <Check size={14} className="text-blue-500" />}
                             </div>
                             <div className="text-[10px] text-[var(--color-text-muted)] font-mono mb-2">
-                              {voice.provider.toUpperCase()} • {voice.language} • {voice.gender}
+                              {voice.language} • {voice.gender}
                             </div>
                             <p className="text-[11px] text-[var(--color-text-secondary)] italic line-clamp-2">
                               "{voice.sampleText}"
@@ -796,6 +799,16 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Link to LLM Settings subpage */}
+                  <div className="pt-3 border-t border-[var(--color-border)] flex justify-end">
+                    <a
+                      href="/llm-settings"
+                      className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 hover:underline"
+                    >
+                      <span>Configure Primary & Fallback LLMs in LLM Settings →</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

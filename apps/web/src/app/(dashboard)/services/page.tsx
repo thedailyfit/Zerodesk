@@ -66,7 +66,19 @@ export default function ServicesPage() {
 
   const handleSaveConsultationFee = (e: React.FormEvent) => {
     e.preventDefault();
-    const existingConsult = services.find(s => s.name.toLowerCase().includes('consultation') && !s.isPackage);
+    const isSpa = nicheConfig.id === 'spa';
+    const consultName = isSpa
+      ? (nicheConfig.terminology?.consultation || 'Therapy Session')
+      : `${nicheConfig.terminology?.staff || 'Doctor'} ${nicheConfig.terminology?.consultation || 'Consultation'}`;
+    const consultCategory = isSpa
+      ? 'Therapy'
+      : (nicheConfig.terminology?.consultation || 'Consultation');
+    const consultDesc = isSpa
+      ? `Standard individual therapy session (Free follow-up within ${followUpDays} days).`
+      : `Standard in-clinic ${nicheConfig.terminology?.staff?.toLowerCase() || 'doctor'} ${nicheConfig.terminology?.consultation?.toLowerCase() || 'consultation'} session (Free follow-up within ${followUpDays} days).`;
+
+    const consultTerms = ['consultation', 'therapy session', (nicheConfig.terminology?.consultation || '').toLowerCase()].filter(Boolean);
+    const existingConsult = services.find(s => consultTerms.some(term => s.name.toLowerCase().includes(term)) && !s.isPackage);
     if (existingConsult) {
       updateService(existingConsult.id, {
         price: Number(consultFee) || 800,
@@ -76,19 +88,19 @@ export default function ServicesPage() {
       });
     } else {
       addService({
-        name: `Doctor Consultation`,
-        category: 'Consultation',
+        name: consultName,
+        category: consultCategory,
         duration: Number(consultDuration) || 30,
         price: Number(consultFee) || 800,
-        staffRole: nicheConfig.terminology?.staff || 'Doctor / Specialist',
-        description: `Standard in-clinic doctor consultation session (Free follow-up within ${followUpDays} days).`,
+        staffRole: nicheConfig.terminology?.staff || 'Specialist',
+        description: consultDesc,
         isActive: true,
         gstEnabled: Number(consultGstRate) > 0,
         gstRate: Number(consultGstRate) || 0,
         isPackage: false,
       });
     }
-    setSuccessToast('Consultation fee configuration saved and synced across frontdesk & booking channels!');
+    setSuccessToast(`${nicheConfig.terminology?.consultationFee || 'Session fee'} configuration saved and synced across frontdesk & booking channels!`);
     setTimeout(() => setSuccessToast(null), 3500);
   };
 
@@ -455,10 +467,10 @@ export default function ServicesPage() {
               </span>
               <div>
                 <h3 className="font-bold text-sm text-[var(--color-text)]">
-                  {nicheConfig.terminology?.staff || 'Doctor'} Consultation Fee
+                  {nicheConfig.terminology?.consultationFee || 'Session Fee'}
                 </h3>
                 <p className="text-[11px] text-[var(--color-text-muted)]">
-                  Configure default consultation pricing & duration
+                  Configure default {nicheConfig.terminology?.consultation?.toLowerCase() || 'consultation'} pricing & duration
                 </p>
               </div>
             </div>
@@ -466,7 +478,7 @@ export default function ServicesPage() {
             <form onSubmit={handleSaveConsultationFee} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-semibold text-[var(--color-text)] mb-1">
-                  First-Time Consultation Price (₹) *
+                  First-Time {nicheConfig.terminology?.consultation || 'Consultation'} Price (₹) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] font-mono">₹</span>
@@ -534,7 +546,7 @@ export default function ServicesPage() {
 
               <div>
                 <label className="block font-semibold text-[var(--color-text)] mb-1">
-                  GST Applicable on Consultation
+                  GST Applicable on {nicheConfig.terminology?.consultation || 'Consultation'}
                 </label>
                 <select
                   value={consultGstRate}
@@ -564,7 +576,7 @@ export default function ServicesPage() {
                 className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <CheckCircle2 size={14} />
-                <span>Save Consultation Fee & Sync</span>
+                <span>Save {nicheConfig.terminology?.consultationFee || 'Session Fee'} & Sync</span>
               </button>
             </form>
           </div>
@@ -718,7 +730,7 @@ export default function ServicesPage() {
                       onChange={(e) => setIsPackage(e.target.checked)}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Is Treatment Package</span>
+                    <span>{nicheConfig.terminology?.treatmentPackage ? `Is ${nicheConfig.terminology.treatmentPackage}` : 'Is Package'}</span>
                   </label>
 
                   {isPackage && (

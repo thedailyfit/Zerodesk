@@ -25,11 +25,25 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
     service: 'Treatment',
     services: 'Treatments',
     staff: 'Dermatologist',
+    staffPlural: 'Doctors',
     waitingRoom: 'Treatment Room',
     patientFiles: 'EMR/Case Sheet',
     calendar: 'Staff Calendar',
     billing: 'Invoices',
-    overview: 'Business Health'
+    overview: 'Business Health',
+    consultation: 'Consultation',
+    consultationFee: 'Consultation Fee',
+    treatmentPackage: 'Treatment Package',
+    treatmentPackages: 'Treatment Packages',
+    individualService: 'Individual Service',
+    individualServices: 'Individual Services',
+    patientDetails: 'Patient Details',
+    clinicTeam: 'Clinic Team',
+    prescriptions: 'Prescriptions',
+    clinicalNotes: 'Clinical Notes',
+    shiftSlot: 'Shift Doctor Slot',
+    slotAllocation: 'Dynamic Slot Allocation',
+    businessEntity: 'Skin Clinic',
   },
 
   roles: [
@@ -78,7 +92,6 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
-    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
 
     { name: 'Backend AI', roles: ['ADMIN'], divider: true },

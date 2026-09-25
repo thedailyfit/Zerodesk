@@ -115,6 +115,41 @@ export default function PhoneNumbersPage() {
         </button>
       </div>
 
+      {/* Dedicated Number Notice Banner */}
+      <div className="p-4 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-transparent border border-blue-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+            <Phone size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-[var(--color-text)] flex items-center gap-2">
+              Dedicated Number in Top-Left Workspace Badge
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                +91 80 4736 1000
+              </span>
+            </h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              Phone number management is now seamlessly unified into the sidebar top-left corner below Active Workspace, including 1-click copy and Business KYC verification.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => handleCopy('banner_copy', '+91 80 4736 1000')}
+            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-blue-500/40 text-xs font-semibold text-[var(--color-text)] rounded-xl flex items-center gap-1.5 transition-all"
+          >
+            {copiedId === 'banner_copy' ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            <span>{copiedId === 'banner_copy' ? 'Copied!' : 'Copy Number'}</span>
+          </button>
+          <a
+            href="/"
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white rounded-xl transition-all shadow-md shadow-blue-500/20"
+          >
+            Dashboard →
+          </a>
+        </div>
+      </div>
+
       {/* Stats Header */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-4 bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl flex items-center gap-4">

@@ -98,8 +98,9 @@ export default function InvoicesPage() {
   const filtered = invoices.filter(inv => {
     if (statusFilter !== 'ALL' && inv.paymentStatus !== statusFilter) return false;
     if (search && !inv.customerName.toLowerCase().includes(search.toLowerCase()) && !inv.invoiceNo.toLowerCase().includes(search.toLowerCase())) return false;
-    if (startDate && inv.createdDate < startDate) return false;
-    if (endDate && inv.createdDate > endDate) return false;
+    const invDate = inv.createdDate ? (inv.createdDate.includes('T') ? inv.createdDate.split('T')[0] : inv.createdDate) : '';
+    if (startDate && invDate && invDate < startDate) return false;
+    if (endDate && invDate && invDate > endDate) return false;
     return true;
   });
 

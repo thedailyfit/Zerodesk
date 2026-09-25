@@ -52,7 +52,7 @@ type FileCategory = typeof FILE_CATEGORIES[number];
 export default function ProfilesPage() {
   const { isManager, isAdmin, isSuperAdmin } = useRole();
   const { nicheConfig } = useNiche();
-  const { patients, updatePatient } = usePatients();
+  const { patients, updatePatient, addPatient } = usePatients();
   const { getInvoicesByPatientId } = useInvoices();
   
   const [search, setSearch] = useState('');
@@ -63,6 +63,27 @@ export default function ProfilesPage() {
   const customerSingular = nicheConfig?.terminology.customer || 'Customer';
   const customerPlural = nicheConfig?.terminology.customers || 'Customers';
   const pageTitle = nicheConfig?.terminology.patientFiles || 'Customer Profiles & Records';
+
+  // Add Guest Modal State
+  const [isAddGuestOpen, setIsAddGuestOpen] = useState(false);
+  const [guestForm, setGuestForm] = useState<{
+    name: string;
+    phone: string;
+    email: string;
+    gender: 'Male' | 'Female' | 'Other';
+    age: string;
+    priority: 'VIP' | 'High' | 'Standard';
+    notes: string;
+  }>({
+    name: '',
+    phone: '',
+    email: '',
+    gender: 'Other',
+    age: '',
+    priority: 'Standard',
+    notes: '',
+  });
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Upload Modal State
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -84,6 +105,35 @@ export default function ProfilesPage() {
   const [dragActive, setDragActive] = useState(false);
 
   const canUpload = isManager || isAdmin || isSuperAdmin;
+
+  const handleAddGuestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestForm.name.trim() || !guestForm.phone.trim()) return;
+
+    const newGuest = addPatient({
+      name: guestForm.name.trim(),
+      phone: guestForm.phone.trim(),
+      email: guestForm.email.trim() || undefined,
+      gender: guestForm.gender,
+      age: guestForm.age ? parseInt(guestForm.age, 10) : undefined,
+      priority: guestForm.priority,
+      tags: guestForm.notes ? [guestForm.notes.trim()] : [],
+    });
+
+    setSelected(newGuest);
+    setIsAddGuestOpen(false);
+    setGuestForm({
+      name: '',
+      phone: '',
+      email: '',
+      gender: 'Other',
+      age: '',
+      priority: 'Standard',
+      notes: '',
+    });
+    setToastMessage(`${customerSingular} profile "${newGuest.name}" added successfully!`);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   const filtered = patients.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -168,8 +218,15 @@ export default function ProfilesPage() {
           </p>
         </div>
 
-        {canUpload && (
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAddGuestOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            Add {customerSingular}
+          </button>
+          {canUpload && (
             <button
               onClick={() => setIsUploadOpen(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20"
@@ -177,8 +234,8 @@ export default function ProfilesPage() {
               <Upload className="w-4 h-4" />
               Upload Document
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Grid */}
@@ -276,7 +333,7 @@ export default function ProfilesPage() {
                         className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        Add Note / Rx
+                        {nicheConfig.id === 'spa' ? 'Add Wellness Note' : 'Add Note / Rx'}
                       </button>
                     )}
                   </div>
@@ -296,9 +353,9 @@ export default function ProfilesPage() {
                       )}
                     >
                       {tab === 'files' ? `Documents (${selected.uploadedFiles?.length || 0})` : 
-                       tab === 'prescriptions' ? 'Notes / Rx' : 
+                       tab === 'prescriptions' ? (nicheConfig.id === 'spa' ? 'Wellness Notes' : (nicheConfig.terminology?.clinicalNotes ? 'Clinical Notes' : 'Notes / Rx')) : 
                        tab === 'billing' ? 'Invoices & Folio' : 
-                       tab === 'treatment' ? 'Treatment Plans' : 'Overview'}
+                       tab === 'treatment' ? (nicheConfig.id === 'spa' ? 'Session Packages' : (nicheConfig.terminology?.treatmentPackages || 'Treatment Plans')) : 'Overview'}
                     </button>
                   ))}
                 </div>
@@ -462,7 +519,9 @@ export default function ProfilesPage() {
                 {activeTab === 'prescriptions' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-[var(--color-text)]">Clinical Notes & Prescriptions</h4>
+                      <h4 className="text-sm font-bold text-[var(--color-text)]">
+                        {nicheConfig.id === 'spa' ? 'Wellness Notes & Care Plans' : (nicheConfig.terminology?.clinicalNotes || 'Session Notes & Records')}
+                      </h4>
                       <button
                         onClick={() => setIsPrescriptionOpen(true)}
                         className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -478,13 +537,13 @@ export default function ProfilesPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Pill className="w-4 h-4 text-blue-500" />
-                              <span className="font-semibold text-sm text-[var(--color-text)]">{rx.diagnosis || 'Clinical Consultation'}</span>
+                              <span className="font-semibold text-sm text-[var(--color-text)]">{rx.diagnosis || (nicheConfig.id === 'spa' ? 'Wellness Consultation' : 'Clinical Consultation')}</span>
                             </div>
                             <span className="text-xs text-[var(--color-text-secondary)]">{rx.date} • {rx.doctorName}</span>
                           </div>
                           {rx.medications && (
                             <div className="p-2.5 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-xs space-y-1">
-                              <span className="font-semibold text-[var(--color-text)]">Prescription / Protocol:</span>
+                              <span className="font-semibold text-[var(--color-text)]">{nicheConfig.id === 'spa' ? 'Recommended Therapies & Oils:' : 'Prescription / Protocol:'}</span>
                               <p className="text-[var(--color-text-secondary)] font-mono whitespace-pre-wrap">{rx.medications}</p>
                             </div>
                           )}
@@ -496,7 +555,9 @@ export default function ProfilesPage() {
 
                       {(!selected.prescriptions || selected.prescriptions.length === 0) && (
                         <div className="p-12 text-center border-2 border-dashed border-[var(--color-border)] rounded-2xl">
-                          <p className="text-sm text-[var(--color-text-secondary)]">No clinical notes or prescriptions logged yet.</p>
+                          <p className="text-sm text-[var(--color-text-secondary)]">
+                            {nicheConfig.id === 'spa' ? 'No wellness notes or care plans logged yet.' : 'No clinical notes or prescriptions logged yet.'}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -698,7 +759,9 @@ export default function ProfilesPage() {
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                     <Pill className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-[var(--color-text)]">New Clinical Entry / Note</h3>
+                  <h3 className="font-bold text-[var(--color-text)]">
+                    New {nicheConfig.id === 'spa' ? 'Wellness Session Entry' : 'Session Entry'} / Note
+                  </h3>
                 </div>
                 <button onClick={() => setIsPrescriptionOpen(false)} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
                   <X className="w-5 h-5" />
@@ -708,10 +771,10 @@ export default function ProfilesPage() {
               <form onSubmit={handlePrescriptionSubmit} className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[var(--color-text)]">Practitioner / Specialist</label>
+                    <label className="text-xs font-semibold text-[var(--color-text)]">{nicheConfig.terminology?.staff || 'Specialist'} Name</label>
                     <input
                       type="text"
-                      placeholder="e.g. Dr. Rajesh"
+                      placeholder={`e.g. ${nicheConfig.id === 'spa' ? 'Therapist Sarah' : 'Dr. Rajesh'}`}
                       value={prescriptionForm.doctorName}
                       onChange={(e) => setPrescriptionForm({ ...prescriptionForm, doctorName: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -729,10 +792,12 @@ export default function ProfilesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[var(--color-text)]">Diagnosis / Observation</label>
+                  <label className="text-xs font-semibold text-[var(--color-text)]">
+                    {nicheConfig.id === 'spa' ? 'Session Focus / Assessment' : 'Diagnosis / Observation'}
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Consultation & Assessment"
+                    placeholder={nicheConfig.id === 'spa' ? 'e.g. Stress relief, Aromatherapy intake' : 'e.g. Consultation & Assessment'}
                     value={prescriptionForm.diagnosis}
                     onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"
@@ -740,10 +805,12 @@ export default function ProfilesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[var(--color-text)]">Prescription / Recommended Plan</label>
+                  <label className="text-xs font-semibold text-[var(--color-text)]">
+                    {nicheConfig.id === 'spa' ? 'Recommended Therapies & Oils' : 'Services / Products'}
+                  </label>
                   <textarea
                     rows={3}
-                    placeholder="Recommendations & Action Items&#10;Follow up schedule"
+                    placeholder={nicheConfig.id === 'spa' ? 'Recommended oils, therapies, follow-up sittings' : 'Recommendations & Action Items\nFollow up schedule'}
                     value={prescriptionForm.medications}
                     onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medications: e.target.value })}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500 resize-none font-mono"
@@ -779,6 +846,179 @@ export default function ProfilesPage() {
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Guest Modal */}
+      <AnimatePresence>
+        {isAddGuestOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+            >
+              <div className="p-5 border-b border-[var(--color-border)] flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[var(--color-text)]">Add {customerSingular}</h3>
+                    <p className="text-[11px] text-[var(--color-text-secondary)]">
+                      Create a profile to start tracking visits, billing & documents
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddGuestOpen(false)}
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddGuestSubmit} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-1">
+                      <span>Full Name</span>
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. John Doe"
+                      value={guestForm.name}
+                      onChange={(e) => setGuestForm({ ...guestForm, name: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-1">
+                      <span>Phone Number</span>
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={guestForm.phone}
+                      onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label className="text-xs font-semibold text-[var(--color-text)]">Gender</label>
+                    <select
+                      value={guestForm.gender}
+                      onChange={(e) => setGuestForm({ ...guestForm, gender: e.target.value as any })}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Female">Female</option>
+                      <option value="Male">Male</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label className="text-xs font-semibold text-[var(--color-text)]">Age</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      placeholder="e.g. 28"
+                      value={guestForm.age}
+                      onChange={(e) => setGuestForm({ ...guestForm, age: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label className="text-xs font-semibold text-[var(--color-text)]">Priority</label>
+                    <select
+                      value={guestForm.priority}
+                      onChange={(e) => setGuestForm({ ...guestForm, priority: e.target.value as any })}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Standard">Standard</option>
+                      <option value="High">High</option>
+                      <option value="VIP">VIP</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--color-text)]">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="client@email.com"
+                    value={guestForm.email}
+                    onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--color-text)]">Notes & Preferences</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Allergies, preferences, referral source, medical notes..."
+                    value={guestForm.notes}
+                    onChange={(e) => setGuestForm({ ...guestForm, notes: e.target.value })}
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 text-xs text-[var(--color-text)] focus:outline-none focus:border-emerald-500 resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddGuestOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-emerald-500/20"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Save & Open Profile
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Success Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900 border border-emerald-500/40 text-emerald-200 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md"
+          >
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="text-xs">
+              <p className="font-semibold text-white">Profile Created</p>
+              <p className="text-emerald-300/80 mt-0.5">{toastMessage}</p>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-slate-400 hover:text-white p-1 ml-1"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

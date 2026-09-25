@@ -24,11 +24,25 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
     service: 'Property Offering',
     services: 'Properties & Services',
     staff: 'Sales Team',
+    staffPlural: 'Agents',
     waitingRoom: 'Property Matrix',
     patientFiles: 'Lead Profiles',
     calendar: 'Site Visit Calendar',
     billing: 'Token/Booking',
     overview: 'Business Health',
+    consultation: 'Site Visit',
+    consultationFee: 'Consultation Fee',
+    treatmentPackage: 'Property Bundle',
+    treatmentPackages: 'Property Bundles',
+    individualService: 'Property Viewing',
+    individualServices: 'Property Viewings',
+    patientDetails: 'Client Details',
+    clinicTeam: 'Agency Team',
+    prescriptions: 'Deed Documents',
+    clinicalNotes: 'Client Inquiries',
+    shiftSlot: 'Shift Agent Slot',
+    slotAllocation: 'Viewing Allocation',
+    businessEntity: 'Real Estate Agency',
   },
 
   roles: [
@@ -74,7 +88,6 @@ export const REAL_ESTATE_CONFIG: NicheConfig = {
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
-    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
 

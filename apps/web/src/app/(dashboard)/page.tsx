@@ -205,7 +205,7 @@ export default function BusinessHealthPage() {
             icon: IndianRupee,
           },
           {
-            label: "Active Clinic Team",
+            label: nicheConfig.terminology?.clinicTeam ? `Active ${nicheConfig.terminology.clinicTeam}` : "Active Team",
             value: `${stats.activeStaff} / ${stats.totalStaff}`,
             numericValue: stats.activeStaff,
             trend: 0,

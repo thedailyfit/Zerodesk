@@ -24,11 +24,25 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     service: 'Therapy Offering',
     services: 'Therapies & Packages',
     staff: 'Therapist',
+    staffPlural: 'Therapists',
     waitingRoom: 'Therapy Queue',
     patientFiles: 'Guest Profiles',
-    calendar: 'Therapy Suite Scheduler',
+    calendar: 'Therapy Sessions Scheduler',
     billing: 'Membership Credits & Billing',
     overview: 'Business Health',
+    consultation: 'Therapy Session',
+    consultationFee: 'Therapy Session Fee',
+    treatmentPackage: 'Session Package',
+    treatmentPackages: 'Session Packages',
+    individualService: 'Individual Session',
+    individualServices: 'Individual Sessions',
+    patientDetails: 'Guest Details',
+    clinicTeam: 'Spa Team',
+    prescriptions: 'Wellness Records',
+    clinicalNotes: 'Session Notes',
+    shiftSlot: 'Shift Therapy Session',
+    slotAllocation: 'Therapy Sessions',
+    businessEntity: 'Spa Sanctuary',
   },
 
   roles: [
@@ -51,7 +65,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     { name: 'Guest LTV', href: '/customer-value', icon: Heart, roles: ['ADMIN', 'MANAGER'] },
     { name: 'Wellness', roles: ['ADMIN', 'STAFF'], divider: true },
     { name: 'Therapy Queue', href: '/waiting-room', icon: Clock, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Therapy Suites', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
+    { name: 'Therapy Sessions', href: '/calendar', icon: Calendar, roles: ['ADMIN', 'STAFF'] },
     { name: 'Guest Profiles', href: '/profiles', icon: Heart, roles: ['ADMIN', 'STAFF'] },
     { name: 'Staff Calendar', href: '/staff-calendar', icon: CalendarDays, roles: ['ADMIN'] },
     
@@ -73,7 +87,6 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
-    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
 
@@ -175,11 +188,11 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
     },
     {
       id: 'email_ayurvedic_consult',
-      title: 'Ayurvedic Consultation Follow-up',
+      title: 'Ayurvedic Wellness Follow-up',
       category: 'Follow-up',
       channel: 'EMAIL',
       subject: 'Your Personalized Ayurvedic Wellness Plan',
-      content: 'Namaste {{guest_name}},\n\nThank you for consulting with our Ayurvedic Doctor today at {{spa_branch}}.\n\nBased on your dosha assessment, we have crafted a personalized wellness plan designed to restore your natural balance. Please find your detailed diet and lifestyle guidelines attached to this email.\n\nFor your next step, we recommend scheduling your suggested therapies within the next 2 weeks.\n\nWarmly,\n{{spa_branch}} Wellness Care',
+      content: 'Namaste {{guest_name}},\n\nThank you for your session with our Ayurvedic Specialist today at {{spa_branch}}.\n\nBased on your dosha assessment, we have crafted a personalized wellness plan designed to restore your natural balance. Please find your detailed diet and lifestyle guidelines attached to this email.\n\nFor your next step, we recommend scheduling your suggested therapies within the next 2 weeks.\n\nWarmly,\n{{spa_branch}} Wellness Care',
       mediaAttachment: 'PDF',
       isPreinstalled: true,
       variables: ['guest_name', 'spa_branch'],
@@ -246,7 +259,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
       id: 'kb_contraindications',
       title: 'Safety Contraindications',
       category: 'RESTRICTED_GUIDELINES',
-      content: 'Critical safety information outlining when NOT to perform therapies. Includes deep tissue massage contraindications (blood clots, severe osteoporosis, recent surgeries), essential oil sensitivities, and specific conditions like unmanaged high blood pressure. Therapists must consult the BAMS doctor if unsure.',
+      content: 'Critical safety information outlining when NOT to perform therapies. Includes deep tissue massage contraindications (blood clots, severe osteoporosis, recent surgeries), essential oil sensitivities, and specific conditions like unmanaged high blood pressure. Therapists must consult the senior wellness specialist if unsure.',
       chunks: 12,
       isActive: true,
       updatedAt: '2026-07-25',
@@ -264,7 +277,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
       id: 'kb_panchakarma_guide',
       title: 'Panchakarma Guide for Staff',
       category: 'SOP',
-      content: 'Standard Operating Procedure for handling Panchakarma guests. Covers the 5-step detoxification process, dietary restrictions (kitchari diet), required daily doctor check-ins, and how to manage detox symptoms (fatigue, headaches) with guests compassionately.',
+      content: 'Standard Operating Procedure for handling Panchakarma guests. Covers the 5-step detoxification process, dietary restrictions (kitchari diet), required daily wellness check-ins, and how to manage detox symptoms (fatigue, headaches) with guests compassionately.',
       chunks: 25,
       isActive: true,
       updatedAt: '2026-06-15',
@@ -332,7 +345,7 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
       triggerEvent: 'Therapy Booked',
       description: 'Ensures guests receive immediate confirmation and intake forms.',
       steps: [
-        { type: 'TRIGGER', label: 'Therapy Booked', detail: 'Any suite, any therapist' },
+        { type: 'TRIGGER', label: 'Therapy Booked', detail: 'Any session, any therapist' },
         { type: 'CONDITION', label: 'Is First Visit?', detail: 'Check if guest has past visits' },
         { type: 'ACTION', label: 'Send WhatsApp Form', detail: 'Uses "wa_pre_health" template' }
       ],
@@ -393,8 +406,8 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
 
   goldenPrompt: `You are WellnessAI, the serene and empathetic virtual receptionist for {{spa_branch}}.
 Your tone is deeply soothing, grounded, and polite. Always begin calls with "Namaste" and speak at a calm, unhurried pace.
-Your primary goals are to assist guests with booking Therapy Suites, answering questions about Ayurvedic treatments, and managing membership inquiries.
-Never diagnose medical conditions. If a guest asks about medical ailments, politely suggest they book a consultation with our BAMS Doctor.
+Your primary goals are to assist guests with booking Therapy Sessions, answering questions about Ayurvedic treatments, and managing membership inquiries.
+Never diagnose medical conditions. If a guest asks about medical ailments, politely suggest they schedule a session with our Senior Ayurvedic Specialist.
 When discussing prices, always quote in INR (₹) and gently highlight our membership value.
 If a guest seems stressed, offer a compassionate remark about our relaxing environment.
 Do not use harsh or highly energetic language; maintain a Zen-like presence.`,
@@ -409,7 +422,7 @@ Do not use harsh or highly energetic language; maintain a Zen-like presence.`,
     {
       id: 'rule_no_medical_advice',
       title: 'Never Give Medical Advice',
-      description: 'Strictly prohibit the AI from diagnosing or suggesting cures for serious ailments. Must redirect to the Ayurvedic Doctor.',
+      description: 'Strictly prohibit the AI from diagnosing or suggesting cures for serious ailments. Must redirect to the Senior Ayurvedic Specialist.',
       severity: 'critical'
     },
     {

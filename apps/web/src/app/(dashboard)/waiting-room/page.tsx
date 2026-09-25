@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, Clock, Star, Search, ArrowRightLeft, UserCheck, Check, RefreshCw, Calendar, UserPlus } from 'lucide-react';
 import Link from 'next/link';
@@ -9,15 +9,7 @@ import { Avatar3D } from '@/components/ui/avatar-3d';
 import { useNiche } from '@/components/providers/niche-provider';
 import { apiClient } from '@/lib/api-client';
 
-const COLUMNS = [
-  { id: 'checked-in', title: 'Checked In', color: 'blue', dbStatus: 'PENDING' },
-  { id: 'waiting', title: 'Waiting', color: 'amber', dbStatus: 'CONFIRMED' },
-  { id: 'with-doctor', title: 'In Service', color: 'green', dbStatus: 'IN_PROGRESS' },
-  { id: 'treatment', title: 'In Progress', color: 'indigo', dbStatus: 'IN_PROGRESS' },
-  { id: 'checkout', title: 'Checkout', color: 'emerald', dbStatus: 'COMPLETED' },
-] as const;
-
-type ColumnId = typeof COLUMNS[number]['id'];
+type ColumnId = 'checked-in' | 'waiting' | 'with-doctor' | 'treatment' | 'checkout';
 
 interface PatientItem {
   id: string;
@@ -50,6 +42,15 @@ const BORDER_MAP: Record<string, string> = {
 
 export default function WaitingRoomPage() {
   const { currentNiche, nicheConfig } = useNiche();
+
+  const columns = useMemo(() => [
+    { id: 'checked-in' as const, title: 'Checked In', color: 'blue', dbStatus: 'PENDING' },
+    { id: 'waiting' as const, title: nicheConfig.id === 'spa' ? 'Therapy Lounge' : (nicheConfig.terminology?.waitingRoom || 'Waiting Room'), color: 'amber', dbStatus: 'CONFIRMED' },
+    { id: 'with-doctor' as const, title: `With ${nicheConfig.terminology?.staff || (nicheConfig.id === 'spa' ? 'Therapist' : 'Specialist')}`, color: 'green', dbStatus: 'IN_PROGRESS' },
+    { id: 'treatment' as const, title: nicheConfig.id === 'spa' ? 'Therapy Suite' : 'Service Room', color: 'indigo', dbStatus: 'IN_PROGRESS' },
+    { id: 'checkout' as const, title: 'Checkout', color: 'emerald', dbStatus: 'COMPLETED' },
+  ], [nicheConfig]);
+
   const [patients, setPatients] = useState<PatientItem[]>([]);
   const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,9 +86,9 @@ export default function WaitingRoomPage() {
             return {
               id: appt.id,
               pid: appt.id.slice(0, 8).toUpperCase(),
-              name: appt.customer?.name || 'Walk-in Client',
+              name: appt.customer?.name || (nicheConfig.id === 'spa' ? 'Walk-in Guest' : `Walk-in ${nicheConfig.terminology?.customer || 'Client'}`),
               time: timeStr,
-              service: appt.service?.name || 'General Consultation',
+              service: appt.service?.name || (nicheConfig.id === 'spa' ? 'Therapy Session' : (nicheConfig.terminology?.consultation || 'Session')),
               elapsed,
               col,
               vip: (appt.customer?.lifetimeValue || 0) > 15000,
@@ -106,7 +107,7 @@ export default function WaitingRoomPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [nicheConfig]);
 
   useEffect(() => {
     fetchAppointments();
@@ -125,7 +126,7 @@ export default function WaitingRoomPage() {
 
   const handleMovePatient = async (patientId: string, newCol: ColumnId) => {
     setActiveMoveMenu(null);
-    const colDef = COLUMNS.find((c) => c.id === newCol);
+    const colDef = columns.find((c) => c.id === newCol);
     const nextStatus = colDef?.dbStatus || 'CONFIRMED';
 
     // Optimistic UI update
@@ -168,7 +169,7 @@ export default function WaitingRoomPage() {
             <Radio className="text-green-500 animate-pulse" /> Live {nicheConfig?.terminology?.waitingRoom || 'Waiting Room'}
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Real-time {nicheConfig?.terminology?.customer?.toLowerCase() || 'patient'} status & queue tracking
+            Real-time {nicheConfig?.terminology?.customer?.toLowerCase() || (nicheConfig.id === 'spa' ? 'guest' : 'client')} status & queue tracking
           </p>
         </div>
 
@@ -188,7 +189,7 @@ export default function WaitingRoomPage() {
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder={`Search ${nicheConfig?.terminology?.customer || 'Patient'}...`}
+                placeholder={`Search ${nicheConfig?.terminology?.customer || (nicheConfig.id === 'spa' ? 'Guest' : 'Client')}...`}
                 value={searchQuery}
                 onFocus={() => setIsDropdownOpen(true)}
                 onChange={(e) => {
@@ -227,7 +228,7 @@ export default function WaitingRoomPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-slate-200 group-hover:text-blue-400 transition">
-                              {b.customer?.name || 'Guest'}
+                              {b.customer?.name || (nicheConfig.id === 'spa' ? 'Guest' : 'Client')}
                             </span>
                           </div>
                           <div className="text-[11px] text-slate-400 mt-0.5">
@@ -249,14 +250,14 @@ export default function WaitingRoomPage() {
             href="/appointments"
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition shrink-0"
           >
-            <UserPlus size={14} /> Book Patient
+            <UserPlus size={14} /> Book {nicheConfig?.terminology?.customer || (nicheConfig.id === 'spa' ? 'Guest' : 'Client')}
           </Link>
         </div>
       </div>
 
       {/* Kanban Board Columns */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 min-h-0 overflow-x-auto pb-2">
-        {COLUMNS.map((col) => {
+        {columns.map((col) => {
           const colPatients = patients.filter((p) => p.col === col.id);
 
           return (
@@ -286,7 +287,7 @@ export default function WaitingRoomPage() {
                 {colPatients.length === 0 ? (
                   <div className="h-32 border border-dashed border-[var(--color-border)] rounded-xl flex flex-col items-center justify-center text-center p-3 text-[var(--color-text-muted)] text-xs">
                     <Clock size={18} className="mb-1 opacity-40" />
-                    <span>No {nicheConfig?.terminology?.customer?.toLowerCase() || 'patients'}</span>
+                    <span>No {nicheConfig?.terminology?.customer?.toLowerCase() || (nicheConfig.id === 'spa' ? 'guests' : 'clients')}</span>
                   </div>
                 ) : (
                   colPatients.map((patient) => (
@@ -325,7 +326,7 @@ export default function WaitingRoomPage() {
                           {activeMoveMenu === patient.id && (
                             <div className="absolute right-0 top-full mt-1 bg-slate-900 border border-slate-800 rounded-xl shadow-xl z-30 py-1 w-36 text-xs divide-y divide-slate-800/60">
                               <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase">Move To:</div>
-                              {COLUMNS.filter((c) => c.id !== col.id).map((targetCol) => (
+                              {columns.filter((c) => c.id !== col.id).map((targetCol) => (
                                 <button
                                   key={targetCol.id}
                                   onClick={() => handleMovePatient(patient.id, targetCol.id)}

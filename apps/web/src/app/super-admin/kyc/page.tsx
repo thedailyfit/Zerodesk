@@ -68,12 +68,31 @@ export default function SuperAdminKycPage() {
     setLoading(true);
     try {
       const data = await apiClient<KycRecord[]>('/admin/kyc');
-      if (Array.isArray(data)) {
-        setKycList(data);
+      let combined = Array.isArray(data) ? [...data] : [];
+      if (typeof window !== 'undefined') {
+        const localKyc = localStorage.getItem('zerodesk_kyc_record');
+        if (localKyc) {
+          try {
+            const parsed = JSON.parse(localKyc);
+            if (!combined.some(k => k.id === parsed.id || (k.gstin && k.gstin === parsed.gstin))) {
+              combined.unshift(parsed);
+            }
+          } catch {}
+        }
       }
+      setKycList(combined);
     } catch (err) {
       console.warn('Could not fetch KYC from API:', err);
-      setKycList([]);
+      let fallbackList: KycRecord[] = [];
+      if (typeof window !== 'undefined') {
+        const localKyc = localStorage.getItem('zerodesk_kyc_record');
+        if (localKyc) {
+          try {
+            fallbackList.push(JSON.parse(localKyc));
+          } catch {}
+        }
+      }
+      setKycList(fallbackList);
     } finally {
       setLoading(false);
     }

@@ -92,7 +92,7 @@ function formatTime(decimalHour: number): string {
 }
 
 export default function DoctorSlotsPage() {
-  const { currentNiche } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const [viewMode, setViewMode] = useState<ViewMode>('weekly');
   const [selectedStaff, setSelectedStaff] = useState<string>('All Staff');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -206,10 +206,10 @@ export default function DoctorSlotsPage() {
             <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-2xl text-blue-400">
               <CalIcon className="w-7 h-7" />
             </div>
-            Shift Doctor Slot
+            {nicheConfig.terminology?.shiftSlot || (nicheConfig.id === 'spa' ? 'Therapy Sessions' : (nicheConfig.terminology?.calendar || 'Shift Slot'))}
           </h1>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Dynamic doctor slot allocation, running late status tracking, and frontdesk quick shifting
+            {nicheConfig.terminology?.slotAllocation || 'Slot Allocation'}, running late status tracking, and frontdesk quick shifting
           </p>
         </div>
 
@@ -291,7 +291,7 @@ export default function DoctorSlotsPage() {
               : "bg-[var(--color-glass)] border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-white"
           )}
         >
-          All Doctors & Staff
+          All {nicheConfig.terminology?.staffPlural || nicheConfig.terminology?.staff || 'Staff'}
         </button>
         {staffList.map(st => (
           <button
@@ -611,7 +611,7 @@ function FullDayView({
   onShift: (id: string, deltaMins: number) => void;
   setIsModalOpen: (open: boolean) => void;
 }) {
-  const { currentNiche } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const staffList = DEFAULT_STAFF;
   const startHour = mode === '12h' ? 8 : 0;
   const hoursCount = mode === '12h' ? 12 : 24;
@@ -628,7 +628,7 @@ function FullDayView({
         {/* Header timeline */}
         <div className="grid grid-cols-13 border-b border-[var(--color-glass-border)] pb-3">
           <div className="w-40 font-bold text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
-            Doctor / Staff
+            {nicheConfig.terminology?.staff || 'Staff'}
           </div>
           <div className="col-span-12 grid grid-cols-12 gap-1 text-center">
             {hours.slice(0, 12).map(h => (
@@ -639,7 +639,7 @@ function FullDayView({
           </div>
         </div>
 
-        {/* Rows per doctor */}
+        {/* Rows per staff */}
         <div className="divide-y divide-[var(--color-glass-border)]">
           {staffList.map(staff => {
             const staffAppts = appointments.filter(a => a.staff === staff);
@@ -854,6 +854,7 @@ function FifteenDaysMatrixMode({
   onEdit: (a: Appointment) => void;
   setIsModalOpen: (open: boolean) => void;
 }) {
+  const { nicheConfig } = useNiche();
   const days = Array.from({ length: 15 }, (_, i) => ({
     dayIndex: i,
     dateNum: i + 1,
@@ -870,10 +871,10 @@ function FifteenDaysMatrixMode({
       <div>
         <h3 className="font-bold text-lg text-[var(--color-text)] flex items-center gap-2">
           <CalIcon className="text-blue-400" size={18} />
-          15-Day Strategic Doctor Schedule Overview
+          15-Day Strategic {nicheConfig.terminology?.staff || 'Staff'} Schedule Overview
         </h3>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Comprehensive 15-day view of booked surgery & consultation density
+          Comprehensive 15-day view of booked {nicheConfig.terminology?.appointments?.toLowerCase() || 'appointments'} density
         </p>
       </div>
 
@@ -960,7 +961,7 @@ function QuickEditModal({
   onSave: (updated: Appointment) => void;
   onShift: (id: string, deltaMins: number) => void;
 }) {
-  const { currentNiche } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const staffList = DEFAULT_STAFF;
   const [formData, setFormData] = useState<Appointment>({ ...appointment });
 
@@ -980,7 +981,7 @@ function QuickEditModal({
             </div>
             <div>
               <h3 className="font-bold text-lg text-[var(--color-text)]">Quick Edit Slot</h3>
-              <p className="text-xs text-[var(--color-text-muted)]">Modify doctor, shift time, status, or move slot</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Modify {nicheConfig.terminology?.staff?.toLowerCase() || 'staff'}, shift time, status, or move slot</p>
             </div>
           </div>
           <button 
@@ -1046,7 +1047,7 @@ function QuickEditModal({
         <div className="space-y-4 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-semibold text-[var(--color-text-muted)] block mb-1">Doctor / Staff</label>
+              <label className="font-semibold text-[var(--color-text-muted)] block mb-1">{nicheConfig.terminology?.staff || 'Staff'}</label>
               <select
                 value={formData.staff}
                 onChange={e => setFormData(prev => ({ ...prev, staff: e.target.value }))}

@@ -23,7 +23,8 @@ import {
   Zap,
   Crown,
   FileCheck2,
-  PhoneCall
+  PhoneCall,
+  LifeBuoy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuperAdminStore } from '@/lib/superadmin-store';
@@ -42,6 +43,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     { name: 'Starter Fleet (SMBs)', href: '/super-admin/starter-fleet', icon: Zap, count: starterCount },
     { name: 'Pro Fleet (Enterprises)', href: '/super-admin/pro-fleet', icon: Crown, count: proCount },
     { name: 'KYC Verification', href: '/super-admin/kyc', icon: FileCheck2 },
+    { name: 'Support Tickets', href: '/super-admin/tickets', icon: LifeBuoy },
     { name: 'Telephony & DIDs', href: '/super-admin/telephony', icon: PhoneCall },
     { name: 'All Tenants', href: '/super-admin/tenants', icon: Building2, count: tenants.length },
     { name: 'Voice AI Fleet', href: '/super-admin/voice-fleet', icon: Mic2, count: voices.filter((v: any) => v.isActive).length },

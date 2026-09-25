@@ -50,7 +50,7 @@ export default function CustomersPage() {
   const { addParkedBill } = useParkedBills();
   const { activeServices } = useServices();
   const [sendToBilling, setSendToBilling] = useState(true);
-  const [billingReasonId, setBillingReasonId] = useState('Consultation Fee');
+  const [billingReasonId, setBillingReasonId] = useState('DEFAULT_FEE');
 
 
   const filteredPatients = useMemo(() => {
@@ -79,16 +79,16 @@ export default function CustomersPage() {
     });
     
     if (sendToBilling) {
-      let items = 'Consultation Fee';
-      let tag = 'Consultation Fee';
-      let totalAmount = 1500; // Default consultation fee
+      let items = nicheConfig.terminology?.consultationFee || 'Session Fee';
+      let tag = nicheConfig.terminology?.consultationFee || 'Session Fee';
+      let totalAmount = 1500; // Default fee
       let quantities: Record<string, number> = { 'consult': 1 };
 
-      if (billingReasonId !== 'Consultation Fee') {
+      if (billingReasonId !== 'DEFAULT_FEE' && billingReasonId !== 'Consultation Fee') {
         const service = activeServices.find(s => s.id.toString() === billingReasonId);
         if (service) {
           items = service.name;
-          tag = 'Service Session';
+          tag = nicheConfig.terminology?.individualServices || 'Service Session';
           totalAmount = service.price;
           quantities = { [service.id]: 1 };
         }
@@ -110,7 +110,7 @@ export default function CustomersPage() {
       name: '', phone: '', email: '', gender: 'Other', age: '', priority: 'Standard', tags: ''
     });
     setSendToBilling(true);
-    setBillingReasonId('Consultation Fee');
+    setBillingReasonId('DEFAULT_FEE');
   };
 
   return (
@@ -438,11 +438,11 @@ export default function CustomersPage() {
 
                 {drawerTab === 'files' && (
                   <div className="space-y-6">
-                    {/* Prescriptions */}
+                    {/* Prescriptions / Care Plans */}
                     <div>
                       <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3 flex items-center gap-2">
                         <Pill className="w-4 h-4 text-blue-600" />
-                        Prescriptions ({selectedPatient.prescriptions.length})
+                        {nicheConfig.id === 'spa' ? 'Wellness Care Plans' : (nicheConfig.terminology?.clinicalNotes || 'Prescriptions')} ({selectedPatient.prescriptions.length})
                       </h4>
                       {selectedPatient.prescriptions.length > 0 ? (
                         <div className="space-y-3">
@@ -456,7 +456,7 @@ export default function CustomersPage() {
                             </div>
                           ))}
                         </div>
-                      ) : <p className="text-xs text-[var(--color-text-muted)]">No prescriptions found.</p>}
+                      ) : <p className="text-xs text-[var(--color-text-muted)]">No {nicheConfig.id === 'spa' ? 'wellness care plans' : 'prescriptions'} found.</p>}
                     </div>
 
                     {/* Files */}
@@ -581,7 +581,7 @@ export default function CustomersPage() {
                         onChange={(e) => setBillingReasonId(e.target.value)}
                         className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-blue-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/50"
                       >
-                        <option value="Consultation Fee">Consultation Fee</option>
+                        <option value="DEFAULT_FEE">{nicheConfig.terminology?.consultationFee || 'Session Fee'}</option>
                         {activeServices.map(s => (
                           <option key={s.id} value={s.id.toString()}>{s.name} ({formatCurrency(s.price)})</option>
                         ))}

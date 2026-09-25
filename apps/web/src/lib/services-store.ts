@@ -360,7 +360,7 @@ export const DEFAULT_SERVICES_BY_NICHE: Record<NicheId, ServiceOffering[]> = {
       duration: 90,
       price: 5500,
       description: 'Authentic 5-fold metabolic detoxification with herbal steam bath.',
-      staffRole: 'Ayurvedic Doctor (BAMS)',
+      staffRole: 'Senior Ayurvedic Specialist',
       isActive: true,
       gstEnabled: true,
       gstRate: 18,

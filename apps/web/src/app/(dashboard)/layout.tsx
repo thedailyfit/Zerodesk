@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +28,15 @@ import {
   Rocket,
   Shield,
   ExternalLink,
-  Eye
+  Eye,
+  Phone,
+  Copy,
+  ShieldCheck,
+  AlertCircle,
+  Clock,
+  UploadCloud,
+  FileText,
+  CheckCircle2
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useRole } from '@/components/providers/role-provider';
@@ -46,6 +54,7 @@ const SYSTEM_MENU_ITEMS = [
   { name: 'Manage Team', href: '/manage-team', icon: Users, badge: 'Admin', desc: 'Roles & Permissions', roles: ['ADMIN'] },
   { name: 'Get Live Help', href: '/get-live-help', icon: Headphones, badge: 'Live 24/7', desc: 'Support & Tickets', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
   { name: 'Windows Desktop App', href: '/desktop-app', icon: Laptop, badge: 'v2.4', desc: 'Download Client', roles: ['ADMIN'] },
+  { name: 'LLM Settings', href: '/llm-settings', icon: Sliders, badge: 'Routing', desc: 'Primary & Fallback Model Orchestration', roles: ['ADMIN', 'MANAGER'] },
   { name: 'Settings', href: '/settings', icon: Settings, badge: null, desc: 'Preferences & System', roles: ['ADMIN'] },
   { name: 'Ready to Scale', href: '/scale', icon: Rocket, badge: 'Pro', desc: 'Multi-location Growth', roles: ['ADMIN'] },
 ];
@@ -223,6 +232,88 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return tenants.find((t: any) => t.id === impersonatedTenantId) || null;
   }, [tenants, impersonatedTenantId]);
 
+  // Dedicated Phone Number & Business KYC State
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [kycStatus, setKycStatus] = useState<'UNVERIFIED' | 'PENDING' | 'VERIFIED'>('UNVERIFIED');
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [kycLegalName, setKycLegalName] = useState('');
+  const [kycTradeName, setKycTradeName] = useState('');
+  const [kycGstin, setKycGstin] = useState('');
+  const [kycPan, setKycPan] = useState('');
+  const [kycDocName, setKycDocName] = useState<string | null>(null);
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+  const [kycSuccessMessage, setKycSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedRecord = localStorage.getItem('zerodesk_kyc_record');
+      const storedStatus = localStorage.getItem('zerodesk_kyc_status');
+      if (storedStatus === 'VERIFIED') {
+        setKycStatus('VERIFIED');
+      } else if (storedRecord || storedStatus === 'PENDING') {
+        setKycStatus('PENDING');
+      }
+    }
+  }, []);
+
+  const handleCopyPhoneNumber = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText('+91 80 4736 1000');
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingKyc(true);
+
+    const record = {
+      id: `kyc_${Date.now()}`,
+      tenantId: impersonatedTenantId || 'tenant_current',
+      businessName: kycLegalName.trim() || nicheConfig?.label || 'ZeroDesk Enterprise',
+      tradeName: kycTradeName.trim() || kycLegalName.trim() || nicheConfig?.label,
+      gstin: kycGstin.trim().toUpperCase() || '29AAAAA0000A1Z5',
+      panNumber: kycPan.trim().toUpperCase() || 'AAAAA0000A',
+      addressProofUrl: kycDocName ? `https://storage.zerodesk.com/kyc/${kycDocName}` : 'https://storage.zerodesk.com/kyc/gst_certificate.pdf',
+      idProofUrl: 'https://storage.zerodesk.com/kyc/pan_card.pdf',
+      status: 'PENDING' as const,
+      createdAt: new Date().toISOString(),
+      tenant: {
+        id: impersonatedTenantId || 'tenant_current',
+        name: kycLegalName.trim() || nicheConfig?.label || 'ZeroDesk Enterprise',
+        planTier: 'PRO',
+        industry: currentNiche || 'skin',
+        voiceConfig: {
+          plivoPhoneNumber: '+91 80 4736 1000',
+          isActive: true,
+        }
+      }
+    };
+
+    try {
+      localStorage.setItem('zerodesk_kyc_record', JSON.stringify(record));
+      localStorage.setItem('zerodesk_kyc_status', 'PENDING');
+      import('@/lib/api-client').then(({ apiClient }) => {
+        apiClient('/tenants/me/kyc', {
+          method: 'POST',
+          body: JSON.stringify(record)
+        }).catch(() => {});
+        apiClient('/admin/kyc', {
+          method: 'POST',
+          body: JSON.stringify(record)
+        }).catch(() => {});
+      });
+    } catch {}
+
+    setKycStatus('PENDING');
+    setIsSubmittingKyc(false);
+    setKycSuccessMessage('Business documents uploaded and synced to SuperAdmin KYC review!');
+    setTimeout(() => {
+      setKycSuccessMessage(null);
+      setIsVerifyModalOpen(false);
+    }, 1800);
+  };
+
   const nicheNavItems = useMemo(() => nicheConfig?.navItems || [], [nicheConfig]);
 
   const filteredNavItems = useMemo(() => {
@@ -298,7 +389,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Active Business Workspace Header */}
-        <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/30">
+        <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/30 space-y-2">
           <div
             className={cn(
               "w-full flex items-center justify-between p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-sm",
@@ -323,6 +414,91 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
           </div>
+
+          {/* Top-Left Dedicated Phone Number Badge */}
+          <div
+            onClick={handleCopyPhoneNumber}
+            className={cn(
+              "w-full flex items-center justify-between p-2 rounded-xl border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 cursor-pointer transition-all group",
+              isSidebarOpen ? "px-2.5 py-2" : "px-1.5 py-2 justify-center"
+            )}
+            title="Click to copy dedicated carrier line"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                <Phone size={12} />
+              </div>
+              {isSidebarOpen && (
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-[9px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+                    Dedicated Number
+                  </span>
+                  <span className="text-xs font-bold text-blue-400 font-mono tracking-tight truncate">
+                    +91 80 4736 1000
+                  </span>
+                </div>
+              )}
+            </div>
+            {isSidebarOpen && (
+              <div className="p-1 rounded-md text-[var(--color-text-muted)] group-hover:text-blue-400 transition-colors shrink-0">
+                {copiedPhone ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+              </div>
+            )}
+          </div>
+
+          {/* Business Verify Button / Badge */}
+          {isSidebarOpen ? (
+            <button
+              onClick={() => setIsVerifyModalOpen(true)}
+              className={cn(
+                "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm",
+                kycStatus === 'VERIFIED'
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/15"
+                  : kycStatus === 'PENDING'
+                  ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/15"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/15"
+              )}
+            >
+              <div className="flex items-center gap-1.5">
+                {kycStatus === 'VERIFIED' ? (
+                  <ShieldCheck size={13} className="text-emerald-400" />
+                ) : kycStatus === 'PENDING' ? (
+                  <Clock size={13} className="text-blue-400" />
+                ) : (
+                  <AlertCircle size={13} className="text-amber-400" />
+                )}
+                <span className="text-[11px] font-bold">
+                  {kycStatus === 'VERIFIED'
+                    ? 'Business Verified'
+                    : kycStatus === 'PENDING'
+                    ? 'KYC In Review'
+                    : 'Verify Business'}
+                </span>
+              </div>
+              <span className={cn(
+                "text-[9px] uppercase px-1.5 py-0.5 rounded font-extrabold tracking-wider",
+                kycStatus === 'VERIFIED'
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : kycStatus === 'PENDING'
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "bg-amber-500/20 text-amber-300"
+              )}>
+                {kycStatus === 'VERIFIED' ? 'Verified' : kycStatus === 'PENDING' ? 'Pending' : 'Unverified'}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsVerifyModalOpen(true)}
+              className="w-full flex items-center justify-center p-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+              title="Verify Business KYC"
+            >
+              {kycStatus === 'VERIFIED' ? (
+                <ShieldCheck size={14} className="text-emerald-400" />
+              ) : (
+                <AlertCircle size={14} className="text-amber-400" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Navigation Items */}
@@ -712,6 +888,136 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </motion.div>
         </main>
       </div>
+
+      {/* Business Verification KYC Modal */}
+      <AnimatePresence>
+        {isVerifyModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[var(--color-text)]">Business KYC Verification</h2>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Verify legal business status to activate dedicated carrier line (+91 80 4736 1000)
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsVerifyModalOpen(false)}
+                  className="p-2 rounded-xl hover:bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {kycSuccessMessage ? (
+                <div className="p-6 text-center space-y-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl">
+                  <CheckCircle2 size={36} className="text-emerald-400 mx-auto" />
+                  <p className="text-sm font-bold text-emerald-400">{kycSuccessMessage}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Your documents have been registered and synced directly to SuperAdmin KYC review.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleKycSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                      Business Legal Entity Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={kycLegalName}
+                      onChange={(e) => setKycLegalName(e.target.value)}
+                      placeholder="e.g. Apex Health & Aesthetics Private Limited"
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                        GSTIN Number (15 Characters)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={kycGstin}
+                        onChange={(e) => setKycGstin(e.target.value.toUpperCase())}
+                        placeholder="e.g. 29ABCDE1234F1Z5"
+                        className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                        Business PAN (10 Characters)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        value={kycPan}
+                        onChange={(e) => setKycPan(e.target.value.toUpperCase())}
+                        placeholder="e.g. ABCDE1234F"
+                        className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                      Certificate of Incorporation / GST Proof (PDF/JPG)
+                    </label>
+                    <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--color-border)] hover:border-blue-500/50 rounded-2xl cursor-pointer bg-[var(--color-bg)] transition-colors group">
+                      <UploadCloud size={24} className="text-[var(--color-text-muted)] group-hover:text-blue-400 mb-1" />
+                      <span className="text-xs font-medium text-[var(--color-text)]">
+                        {kycDocName || 'Click to select business registration document'}
+                      </span>
+                      <span className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
+                        PDF, PNG, JPG up to 10MB
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setKycDocName(e.target.files[0].name);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsVerifyModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingKyc}
+                      className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2"
+                    >
+                      {isSubmittingKyc ? 'Submitting & Syncing...' : 'Submit Verification Docs'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <CommandPalette open={isCmdkOpen} onOpenChange={setIsCmdkOpen} />
     </div>

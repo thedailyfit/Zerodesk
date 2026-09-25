@@ -24,11 +24,25 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
     service: 'Service / Amenity',
     services: 'Services & Amenities',
     staff: 'Hotel Staff',
+    staffPlural: 'Hosts',
     waitingRoom: 'Check-in Lobby',
     patientFiles: 'Guest Profiles',
     calendar: 'Room Occupancy Chart',
     billing: 'Folio',
     overview: 'Business Health',
+    consultation: 'Concierge Booking',
+    consultationFee: 'Reservation Fee',
+    treatmentPackage: 'Stay Package',
+    treatmentPackages: 'Stay Packages',
+    individualService: 'Room Service',
+    individualServices: 'Room Services',
+    patientDetails: 'Guest Details',
+    clinicTeam: 'Hotel Team',
+    prescriptions: 'Folio Records',
+    clinicalNotes: 'Guest Preferences',
+    shiftSlot: 'Shift Host Slot',
+    slotAllocation: 'Room Allocation',
+    businessEntity: 'Resort & Suites',
   },
 
   roles: [
@@ -73,7 +87,6 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
 
     { name: 'Voice Telephony', roles: ['ADMIN'], divider: true },
     { name: 'Voice AI Agent', href: '/voice', icon: Cpu, roles: ['ADMIN'] },
-    { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, roles: ['ADMIN'] },
     { name: 'Inbound Calls', href: '/inbound-calls', icon: PhoneIncoming, roles: ['ADMIN'] },
     { name: 'Outbound Campaigns', href: '/outbound-campaigns', icon: Megaphone, roles: ['ADMIN'] },
 

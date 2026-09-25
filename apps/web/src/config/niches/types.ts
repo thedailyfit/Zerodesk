@@ -97,11 +97,25 @@ export interface NicheTerminology {
   service: string;
   services: string;
   staff: string;
+  staffPlural: string;
   waitingRoom: string;
   patientFiles: string;
   calendar: string;
   billing: string;
   overview: string;
+  consultation: string;
+  consultationFee: string;
+  treatmentPackage: string;
+  treatmentPackages: string;
+  individualService: string;
+  individualServices: string;
+  patientDetails: string;
+  clinicTeam: string;
+  prescriptions: string;
+  clinicalNotes: string;
+  shiftSlot: string;
+  slotAllocation: string;
+  businessEntity: string;
 }
 
 // ============================================================

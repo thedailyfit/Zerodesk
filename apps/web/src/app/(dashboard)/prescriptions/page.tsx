@@ -73,12 +73,23 @@ const DEFAULT_MEDICINES_BY_NICHE: Record<string, string[]> = {
     'Toothpaste Potassium Nitrate 5%',
     'Gel Choline Salicylate (Topical Gum Gel)',
     'Tab. Calcium 500mg + Vitamin D3'
+  ],
+  spa: [
+    'Organic Lavender Essential Oil (5ml)',
+    'Warm Herbal Compress Therapy',
+    'Deep Tissue Muscle Relief Balm',
+    'Eucalyptus Steam Inhalation',
+    'Cold-Pressed Jojoba Hydration Base',
+    'Chamomile & Green Tea Detox Infusion',
+    'Rosewater Soothing Facial Mist',
+    'Magnesium Mineral Bath Soak'
   ]
 };
 
 const QUICK_DIAGNOSES_BY_NICHE: Record<string, string[]> = {
   skin: ['Acne Vulgaris (Grade 2)', 'Melasma / Hyperpigmentation', 'Post-Inflammatory Erythema', 'Alopecia Androgenetica', 'Atopic Dermatitis', 'Tinea Corporis', 'Post-Laser Erythema'],
-  dental: ['Acute Irreversible Pulpitis', 'Periapical Abscess (Tooth #46)', 'Chronic Generalized Gingivitis', 'Impacted 3rd Molar (Tooth #38)', 'Post-Extraction Pain', 'Dental Caries with Dentin Sensitivity']
+  dental: ['Acute Irreversible Pulpitis', 'Periapical Abscess (Tooth #46)', 'Chronic Generalized Gingivitis', 'Impacted 3rd Molar (Tooth #38)', 'Post-Extraction Pain', 'Dental Caries with Dentin Sensitivity'],
+  spa: ['Muscle Tension & Fatigue', 'Stress & Anxiety Relief', 'Dry Skin Dehydration', 'Post-Workout Recovery', 'Holistic Wellness Checkup', 'Insomnia & Restlessness Support']
 };
 
 export default function PrescriptionsPage() {
@@ -98,21 +109,31 @@ export default function PrescriptionsPage() {
     headerImage: null,
     logoImage: null,
     signatureImage: null,
-    disclaimer: 'Prescription generated via ZeroDesk Verified Clinical Suite. Valid for 30 days. Generic drug substitution permitted as per statutory regulations.',
+    disclaimer: currentNiche === 'spa'
+      ? 'Wellness Care Plan generated via ZeroDesk Verified Spa & Wellness Suite. Designed for relaxation, holistic care, and body rejuvenation.'
+      : 'Prescription generated via ZeroDesk Verified Clinical Suite. Valid for 30 days. Generic drug substitution permitted as per statutory regulations.',
     useHeaderPadOnly: false
   }));
 
   // Current Prescription Form
-  const [rxNumber] = useState<string>(() => `RX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [rxNumber] = useState<string>(() => `${currentNiche === 'spa' ? 'CP' : 'RX'}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientGender, setPatientGender] = useState<'Female' | 'Male' | 'Other'>('Female');
   const [patientPhone, setPatientPhone] = useState('');
-  const [diagnosis, setDiagnosis] = useState(currentNiche === 'dental' ? 'Acute Irreversible Pulpitis' : 'Acne Vulgaris (Grade 2)');
+  const [diagnosis, setDiagnosis] = useState(
+    currentNiche === 'dental' 
+      ? 'Acute Irreversible Pulpitis' 
+      : currentNiche === 'spa'
+        ? 'Muscle Tension & Fatigue Relief'
+        : 'Acne Vulgaris (Grade 2)'
+  );
   const [advice, setAdvice] = useState(
     currentNiche === 'dental' 
       ? 'Avoid hard or chewing food on the affected side. Warm saline gargle 3 times a day starting 24h post procedure.'
-      : 'Apply sunscreen liberally 20 minutes before stepping into sunlight. Avoid harsh scrubs and steam on facial skin.'
+      : currentNiche === 'spa'
+        ? 'Stay well-hydrated throughout the day. Rest in quiet atmosphere post-therapy. Apply soothing lavender oil prior to sleep.'
+        : 'Apply sunscreen liberally 20 minutes before stepping into sunlight. Avoid harsh scrubs and steam on facial skin.'
   );
   const [followUp, setFollowUp] = useState('Review after 7 days');
 
@@ -203,7 +224,7 @@ export default function PrescriptionsPage() {
     const updated = [newRx, ...pastPrescriptions];
     setPastPrescriptions(updated);
     localStorage.setItem(`zd_prescriptions_${currentNiche}`, JSON.stringify(updated));
-    setToastMessage(`Prescription ${rxNumber} saved to Patient EMR archive!`);
+    setToastMessage(`${nicheConfig.id === 'spa' ? 'Care Plan' : 'Prescription'} ${rxNumber} saved to ${nicheConfig.terminology?.customer || 'Guest'} archive!`);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -217,7 +238,7 @@ export default function PrescriptionsPage() {
     setIsSendingWhatsApp(true);
     try {
       await new Promise(r => setTimeout(r, 900));
-      setToastMessage(`Digital Prescription PDF sent to ${patientName} (${patientPhone}) via Meta WhatsApp Cloud API!`);
+      setToastMessage(`Digital ${nicheConfig.id === 'spa' ? 'Wellness Care Plan' : 'Prescription'} PDF sent to ${patientName} (${patientPhone}) via Meta WhatsApp Cloud API!`);
       setTimeout(() => setToastMessage(null), 5000);
     } finally {
       setIsSendingWhatsApp(false);
@@ -234,13 +255,15 @@ export default function PrescriptionsPage() {
       <div className="print:hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--color-text)] tracking-tight">Digital Prescriptions (Rx)</h1>
+            <h1 className="text-2xl font-bold text-[var(--color-text)] tracking-tight">
+              {nicheConfig.id === 'spa' ? 'Wellness Care Plans & Recommendations' : 'Digital Prescriptions (Rx)'}
+            </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              {nicheConfig.label} EMR
+              {nicheConfig.id === 'spa' ? `${nicheConfig.label} Care Suite` : `${nicheConfig.label} EMR`}
             </span>
           </div>
           <p className="text-[var(--color-text-muted)] text-sm mt-1">
-            Create compliance-ready digital prescriptions with custom letterhead, 1-click WhatsApp delivery & print export.
+            {nicheConfig.id === 'spa' ? 'Create customized wellness care plans, therapy recommendations & lifestyle regimens with custom branding, 1-click WhatsApp delivery & print export.' : 'Create compliance-ready digital prescriptions with custom letterhead, 1-click WhatsApp delivery & print export.'}
           </p>
         </div>
 
@@ -253,7 +276,7 @@ export default function PrescriptionsPage() {
               activeTab === 'write' ? "bg-blue-600 text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             )}
           >
-            Write Rx
+            {nicheConfig.id === 'spa' ? 'Write Care Plan' : 'Write Rx'}
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -263,7 +286,7 @@ export default function PrescriptionsPage() {
             )}
           >
             <Settings size={13} />
-            <span>Letterhead Template</span>
+            <span>{nicheConfig.id === 'spa' ? 'Header & Branding' : 'Letterhead Template'}</span>
           </button>
           <button
             onClick={() => setActiveTab('history')}
@@ -289,7 +312,7 @@ export default function PrescriptionsPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
                   <User size={16} className="text-blue-500" />
-                  <span>Patient Demographics</span>
+                  <span>{nicheConfig.terminology?.customer || 'Guest'} Demographics</span>
                 </h3>
                 <span className="text-xs font-mono text-[var(--color-text-muted)]">{rxNumber}</span>
               </div>
@@ -298,7 +321,7 @@ export default function PrescriptionsPage() {
                 {patients && patients.length > 0 && (
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                      Quick-Select Patient from EMR
+                      Quick-Select {nicheConfig.terminology?.customer || 'Guest'} from Records
                     </label>
                     <select
                       onChange={(e) => {
@@ -312,7 +335,7 @@ export default function PrescriptionsPage() {
                       }}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-blue-500"
                     >
-                      <option value="">-- Choose Existing Patient or Type Below --</option>
+                      <option value="">-- Choose Existing {nicheConfig.terminology?.customer || 'Guest'} or Type Below --</option>
                       {patients.map(p => (
                         <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
                       ))}
@@ -320,7 +343,7 @@ export default function PrescriptionsPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Patient Name</label>
+                  <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">{nicheConfig.terminology?.customer || 'Guest'} Name</label>
                   <input
                     type="text"
                     value={patientName}
@@ -379,13 +402,15 @@ export default function PrescriptionsPage() {
 
               {/* Diagnosis / Chief Complaint */}
               <div className="pt-2 border-t border-[var(--color-border)]">
-                <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Clinical Diagnosis / Chief Complaint</label>
+                <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                  {nicheConfig.id === 'spa' ? 'Wellness Focus / Goals & Session Assessment' : 'Clinical Diagnosis / Chief Complaint'}
+                </label>
                 <input
                   type="text"
                   value={diagnosis}
                   onChange={(e) => setDiagnosis(e.target.value)}
                   className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-blue-500"
-                  placeholder="e.g. Acne Vulgaris Grade 2 / Irreversible Pulpitis"
+                  placeholder={nicheConfig.id === 'spa' ? 'e.g. Muscle Tension & Stress Relief' : 'e.g. Acne Vulgaris Grade 2 / Irreversible Pulpitis'}
                 />
 
                 <div className="flex items-center gap-1.5 flex-wrap mt-2">
@@ -409,7 +434,9 @@ export default function PrescriptionsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Pill size={16} className="text-emerald-500" />
-                  <h3 className="text-sm font-semibold text-[var(--color-text)]">Medications & Dosage (Rx)</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                    {nicheConfig.id === 'spa' ? 'Therapies, Oils & Regimen' : 'Medications & Dosage (Rx)'}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -417,14 +444,14 @@ export default function PrescriptionsPage() {
                   className="flex items-center gap-1 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-semibold transition-colors"
                 >
                   <Plus size={13} />
-                  <span>Add Medicine</span>
+                  <span>{nicheConfig.id === 'spa' ? 'Add Therapy / Item' : 'Add Medicine'}</span>
                 </button>
               </div>
 
               {/* Quick Drug Add Chips */}
               <div className="flex items-center gap-1.5 flex-wrap p-2.5 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
                 <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider block w-full mb-1">
-                  1-Tap Fast Prescribe ({nicheConfig.label}):
+                  {nicheConfig.id === 'spa' ? '1-Tap Fast Recommendations' : '1-Tap Fast Prescribe'} ({nicheConfig.label}):
                 </span>
                 {quickMedList.map(drug => (
                   <button
@@ -443,7 +470,7 @@ export default function PrescriptionsPage() {
               <div className="space-y-3">
                 {medicines.length === 0 ? (
                   <div className="py-6 text-center text-xs text-[var(--color-text-muted)] border border-dashed border-[var(--color-border)] rounded-xl">
-                    No medications added yet. Click &quot;Add Medicine&quot; or select from quick suggestions above.
+                    {nicheConfig.id === 'spa' ? 'No therapies or care items added yet. Click "Add Therapy / Item" or select from suggestions above.' : 'No medications added yet. Click "Add Medicine" or select from quick suggestions above.'}
                   </div>
                 ) : (
                   medicines.map((med, idx) => (
@@ -584,7 +611,7 @@ export default function PrescriptionsPage() {
                       <img src={letterhead.logoImage} alt="Clinic Logo" className="w-14 h-14 object-contain rounded-lg border border-slate-200 bg-white p-1" />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-sm">
-                        {currentNiche === 'dental' ? '🦷' : '✨'}
+                        {currentNiche === 'dental' ? '🦷' : currentNiche === 'spa' ? '🌿' : '✨'}
                       </div>
                     )}
                     <div>
@@ -605,9 +632,9 @@ export default function PrescriptionsPage() {
 
               {/* Patient Bar */}
               <div className="px-6 py-3 bg-slate-100/80 border-b border-slate-200 text-xs text-slate-800 flex flex-wrap items-center justify-between gap-2">
-                <div><span className="font-semibold text-slate-500">Patient:</span> <span className="font-bold">{patientName}</span> ({patientAge}y / {patientGender})</div>
+                <div><span className="font-semibold text-slate-500">{nicheConfig.terminology?.customer || 'Guest'}:</span> <span className="font-bold">{patientName}</span> ({patientAge}y / {patientGender})</div>
                 <div><span className="font-semibold text-slate-500">Phone:</span> {patientPhone}</div>
-                <div><span className="font-semibold text-slate-500">Rx No:</span> <span className="font-mono font-bold text-blue-700">{rxNumber}</span></div>
+                <div><span className="font-semibold text-slate-500">{nicheConfig.id === 'spa' ? 'Plan No:' : 'Rx No:'}</span> <span className="font-mono font-bold text-blue-700">{rxNumber}</span></div>
                 <div><span className="font-semibold text-slate-500">Date:</span> {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               </div>
 
@@ -616,20 +643,20 @@ export default function PrescriptionsPage() {
                 
                 {/* Rx Symbol Background Watermark */}
                 <div className="absolute right-8 top-12 text-slate-100 select-none pointer-events-none font-serif text-9xl font-bold opacity-40">
-                  Rx
+                  {nicheConfig.id === 'spa' ? 'CARE' : 'Rx'}
                 </div>
 
                 {/* Diagnosis */}
                 {diagnosis && (
                   <div className="relative z-10 pb-2 border-b border-slate-100">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Diagnosis:</span>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{nicheConfig.id === 'spa' ? 'Session Focus:' : 'Diagnosis:'}</span>
                     <span className="text-xs font-bold text-slate-800 ml-2">{diagnosis}</span>
                   </div>
                 )}
 
                 {/* Rx Symbol */}
                 <div className="text-2xl font-serif font-bold text-blue-800 flex items-center gap-2">
-                  <span>℞</span>
+                  <span>{nicheConfig.id === 'spa' ? '🌿 Care Plan' : '℞'}</span>
                 </div>
 
                 {/* Medication Table */}
@@ -638,7 +665,7 @@ export default function PrescriptionsPage() {
                     <thead>
                       <tr className="border-b-2 border-slate-200 text-[10px] uppercase font-bold text-slate-500">
                         <th className="py-2 pr-2">#</th>
-                        <th className="py-2">Medication / Strength</th>
+                        <th className="py-2">{nicheConfig.id === 'spa' ? 'Therapy / Recommended Item' : 'Medication / Strength'}</th>
                         <th className="py-2">Frequency</th>
                         <th className="py-2">Duration</th>
                         <th className="py-2 text-right">Instructions</th>
@@ -896,15 +923,21 @@ export default function PrescriptionsPage() {
       {activeTab === 'history' && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[var(--color-text)]">Prescription Archive & EMR Logs</h2>
+            <h2 className="text-base font-bold text-[var(--color-text)]">
+              {nicheConfig.id === 'spa' ? 'Wellness Care Plan Archive & Records' : 'Prescription Archive & EMR Logs'}
+            </h2>
             <span className="text-xs text-[var(--color-text-muted)]">{pastPrescriptions.length} Records Saved</span>
           </div>
 
           {pastPrescriptions.length === 0 ? (
             <div className="text-center py-16 border border-dashed border-[var(--color-border)] rounded-2xl">
               <FileText className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-semibold text-[var(--color-text)]">No prescriptions archived yet</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Prescriptions you create will be automatically saved here for quick re-print and WhatsApp dispatch.</p>
+              <p className="text-sm font-semibold text-[var(--color-text)]">
+                No {nicheConfig.id === 'spa' ? 'care plans' : 'prescriptions'} archived yet
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                {nicheConfig.id === 'spa' ? 'Care plans you create will be automatically saved here for quick re-print and WhatsApp dispatch.' : 'Prescriptions you create will be automatically saved here for quick re-print and WhatsApp dispatch.'}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-border)]">
@@ -917,7 +950,7 @@ export default function PrescriptionsPage() {
                       <span className="text-xs text-[var(--color-text-muted)]">({rx.patientAge}y / {rx.patientGender})</span>
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                      <span className="font-medium text-[var(--color-text)]">Diagnosis:</span> {rx.diagnosis} · {rx.medicines.length} Medicines Prescribed
+                      <span className="font-medium text-[var(--color-text)]">{nicheConfig.id === 'spa' ? 'Focus:' : 'Diagnosis:'}</span> {rx.diagnosis} · {rx.medicines.length} {nicheConfig.id === 'spa' ? 'Therapies & Items' : 'Medicines Prescribed'}
                     </p>
                     <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Date: {rx.date} · Phone: {rx.patientPhone}</p>
                   </div>

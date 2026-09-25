@@ -150,7 +150,7 @@ export default function SentimentAnalyticsPage() {
               <span className="text-xs text-[var(--color-text-muted)] font-medium">Interactions</span>
             </div>
           </div>
-          <p className="text-xs text-[var(--color-text-muted)] mt-4">Processed by Sarvam AI & LiveKit</p>
+          <p className="text-xs text-[var(--color-text-muted)] mt-4">Processed by ZeroDesk Neural Engine</p>
         </div>
 
         <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm flex flex-col justify-between">

@@ -24,14 +24,14 @@ interface SequenceTemplate {
 
 const NICHE_SEQUENCE_TEMPLATES: Record<ActiveNicheId, SequenceTemplate[]> = {
   skin: [
-    { id: 'sk_1', name: 'Appointment Confirmation', category: 'Utility', trigger: 'Instant on Booking', status: 'APPROVED', enabled: true, description: 'Sends sitting details, doctor name, clinic GPS pin & pre-sitting instructions.' },
+    { id: 'sk_1', name: 'Appointment Confirmation', category: 'Utility', trigger: 'Instant on Booking', status: 'APPROVED', enabled: true, description: 'Sends sitting details, provider name, location GPS pin & pre-sitting instructions.' },
     { id: 'sk_2', name: '2-Hour Pre-Sitting Reminder', category: 'Utility', trigger: '2 Hours Before', status: 'APPROVED', enabled: true, description: 'Cuts no-shows by 35% with 1-tap WhatsApp confirmation button.' },
     { id: 'sk_3', name: 'Missed Call Recovery (15m)', category: 'Utility', trigger: '15m Post Missed Call', status: 'APPROVED', enabled: true, description: 'AI conversational opener offering instant appointment booking to missed callers.' },
     { id: 'sk_4', name: 'Post-Laser Care Protocol', category: 'Utility', trigger: '2h Post Treatment', status: 'APPROVED', enabled: true, description: 'Automated aftercare PDF, sunscreen rules & SOS helpline for cosmetic procedures.' },
     { id: 'sk_5', name: 'HydraFacial 28-Day Glow Recall', category: 'Marketing', trigger: '28 Days Post Visit', status: 'APPROVED', enabled: true, description: 'Recurring maintenance nudge for HydraFacial & Medifacial retention.' },
-    { id: 'sk_6', name: 'Google Review CSAT Shield', category: 'Marketing', trigger: '4h Post Sitting', status: 'APPROVED', enabled: true, description: 'Routes 5-star patients to Google Reviews and privately triages lower ratings.' },
-    { id: 'sk_7', name: 'Patch Test Allergy Clearance', category: 'Utility', trigger: '48h Post Test', status: 'APPROVED', enabled: true, description: 'Safety check-in asking patient to upload photo before chemical peel or laser.' },
-    { id: 'sk_8', name: 'GST Invoice & Prescription Delivery', category: 'Utility', trigger: 'Instant on Checkout', status: 'APPROVED', enabled: true, description: 'Delivers digital tax invoice and doctor prescription PDF directly to patient WhatsApp.' }
+    { id: 'sk_6', name: 'Google Review CSAT Shield', category: 'Marketing', trigger: '4h Post Sitting', status: 'APPROVED', enabled: true, description: 'Routes 5-star clients to Google Reviews and privately triages lower ratings.' },
+    { id: 'sk_7', name: 'Patch Test Allergy Clearance', category: 'Utility', trigger: '48h Post Test', status: 'APPROVED', enabled: true, description: 'Safety check-in asking client to upload photo before chemical peel or laser.' },
+    { id: 'sk_8', name: 'GST Invoice & Session Summary', category: 'Utility', trigger: 'Instant on Checkout', status: 'APPROVED', enabled: true, description: 'Delivers digital tax invoice and session summary PDF directly to customer WhatsApp.' }
   ],
   dental: [
     { id: 'dt_1', name: 'Dental Appointment Confirmation', category: 'Utility', trigger: 'Instant on Booking', status: 'APPROVED', enabled: true, description: 'Sends chair slot, treating dentist, clinic map and medical history intake link.' },
@@ -49,7 +49,7 @@ const NICHE_SEQUENCE_TEMPLATES: Record<ActiveNicheId, SequenceTemplate[]> = {
     { id: 'sp_3', name: 'Missed Call Recovery (15m)', category: 'Utility', trigger: '15m Post Missed Call', status: 'APPROVED', enabled: true, description: 'Recovers luxury spa inquiries with digital service menu and instant booking.' },
     { id: 'sp_4', name: 'Post-Massage Hydration Guide', category: 'Utility', trigger: '2h Post Therapy', status: 'APPROVED', enabled: true, description: 'Herbal detox tea recommendations and relaxation advice after therapy.' },
     { id: 'sp_5', name: 'Midweek Stress Relief Offer', category: 'Marketing', trigger: 'Every Tuesday 10am', status: 'APPROVED', enabled: true, description: 'Broadcasts off-peak afternoon 20% privilege slots to regular guests.' },
-    { id: 'sp_6', name: 'Favorite Therapist 21-Day Recall', category: 'Marketing', trigger: '21 Days Post Visit', status: 'APPROVED', enabled: true, description: 'Re-books guests with their preferred masseuse or Ayurvedic doctor.' },
+    { id: 'sp_6', name: 'Favorite Therapist 21-Day Recall', category: 'Marketing', trigger: '21 Days Post Visit', status: 'APPROVED', enabled: true, description: 'Re-books guests with their preferred therapist or wellness specialist.' },
     { id: 'sp_7', name: 'Quarterly Wellness Club Renewal', category: 'Marketing', trigger: '14 Days Pre-Expiry', status: 'APPROVED', enabled: true, description: 'Retains spa club members with automated renewal link and bonus treatment.' },
     { id: 'sp_8', name: 'Guest CSAT & Feedback Form', category: 'Marketing', trigger: '3h Post Treatment', status: 'APPROVED', enabled: true, description: 'Captures guest satisfaction scores and directs positive reviews to Google/TripAdvisor.' }
   ],
@@ -97,7 +97,7 @@ export default function WhatsappPage() {
 
   const [businessInfo, setBusinessInfo] = useState({
     phone: 'Meta Cloud API Connected',
-    name: 'Clinic WhatsApp Channel',
+    name: `${nicheConfig?.label || 'ZeroDesk'} WhatsApp Channel`,
   });
 
   // Load niche templates with persistent localStorage
@@ -150,6 +150,11 @@ export default function WhatsappPage() {
             phone: t.whatsappNumber || t.phone || 'Meta Cloud API Connected',
             name: t.name || `${nicheConfig?.label || 'ZeroDesk'} WhatsApp Channel`,
           });
+        } else {
+          setBusinessInfo(prev => ({
+            ...prev,
+            name: `${nicheConfig?.label || 'ZeroDesk'} WhatsApp Channel`,
+          }));
         }
 
         const waConvs = convs.filter((c: any) => (c.channel || '').toUpperCase() === 'WHATSAPP');
@@ -160,7 +165,7 @@ export default function WhatsappPage() {
           totalToday: waConvs.length,
           resolvedRate: rate,
           avgResponse: '0.8s',
-          templatesSent: Math.round(waConvs.length * 1.5) + 14,
+          templatesSent: waConvs.length > 0 ? Math.round(waConvs.length * 0.8) : 0,
         });
 
         const mapped = waConvs.slice(0, 6).map((c: any) => ({
@@ -269,7 +274,7 @@ export default function WhatsappPage() {
             <div className="text-center py-12 text-xs text-[var(--color-text-muted)] border border-dashed border-[var(--color-border)] rounded-xl">
               <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p>No WhatsApp messages received yet.</p>
-              <p className="text-[11px] mt-1">Inbound patient chats will appear here with instant AI auto-replies.</p>
+              <p className="text-[11px] mt-1">Inbound {nicheConfig?.terminology?.customer ? `${nicheConfig.terminology.customer.toLowerCase()} ` : ''}chats will appear here with instant AI auto-replies.</p>
             </div>
           ) : (
             <div className="space-y-3">

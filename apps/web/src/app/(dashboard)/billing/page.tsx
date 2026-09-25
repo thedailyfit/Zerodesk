@@ -28,7 +28,7 @@ import { useParkedBills } from '@/lib/billing-store';
 import { PatientSearchInput } from '@/components/ui/patient-search-input';
 
 export default function BillingPage() {
-  const { currentNiche } = useNiche();
+  const { currentNiche, nicheConfig } = useNiche();
   const { activeServices } = useServices();
   const { patients } = usePatients();
   const { addInvoice } = useInvoices();
@@ -62,7 +62,7 @@ export default function BillingPage() {
 
   // Billing Park State is now global (useParkedBills)
 
-  const selectedPatient = patients.find(p => p.id === selectedPatientId) || (selectedPatientId ? { id: selectedPatientId, name: 'Patient #' + selectedPatientId, phone: '', email: '', priority: 'Standard', tags: [], registrationDate: '' } : undefined);
+  const selectedPatient = patients.find(p => p.id === selectedPatientId) || (selectedPatientId ? { id: selectedPatientId, name: `${nicheConfig.terminology?.customer || 'Customer'} #${selectedPatientId}`, phone: '', email: '', priority: 'Standard', tags: [], registrationDate: '' } : undefined);
 
   const updateQty = (id: string, delta: number) => {
     setQuantities(prev => {
@@ -244,7 +244,8 @@ export default function BillingPage() {
             
             <div>
               <PatientSearchInput
-                label="Patient Details / Search by ID or Name"
+                label={`${nicheConfig.terminology?.patientDetails || 'Customer / Guest Details'} / Search by ID or Name`}
+                placeholder={`Search by ${nicheConfig.terminology?.customer || 'Guest'} ID, Name, or Phone...`}
                 selectedPatientId={selectedPatientId}
                 onSelect={(patient) => setSelectedPatientId(patient.id)}
               />
@@ -252,7 +253,7 @@ export default function BillingPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-[var(--color-text)] text-base">Select Services & Procedures</h2>
+                <h2 className="font-bold text-[var(--color-text)] text-base">{nicheConfig.terminology?.individualServices || 'Individual Sessions'}</h2>
                 <button 
                   onClick={() => setShowCustomItemModal(true)}
                   className="text-xs text-blue-400 font-bold flex items-center gap-1 hover:text-blue-300 transition-colors bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 cursor-pointer"
@@ -332,7 +333,7 @@ export default function BillingPage() {
             </div>
 
             <div>
-              <h2 className="font-bold text-[var(--color-text)] text-base mb-3">Treatment Packages</h2>
+              <h2 className="font-bold text-[var(--color-text)] text-base mb-3">{nicheConfig.terminology?.treatmentPackages || 'Session Packages'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {PACKAGES.map(pkg => {
                   const qty = quantities[pkg.id] || 0;
@@ -599,7 +600,7 @@ export default function BillingPage() {
                       items: activeItemsList.map(i => i.name).join(', '),
                       totalAmount: grandTotal,
                       time: 'Just now',
-                      tag: activeItemsList.some(i => i.name.toLowerCase().includes('consult')) ? 'Consultation Fee' : 'Service Session',
+                      tag: activeItemsList.some(i => i.name.toLowerCase().includes('consult')) ? (nicheConfig.terminology?.consultationFee || 'Session Fee') : (nicheConfig.terminology?.individualServices || 'Individual Sessions'),
                       quantities: { ...quantities }
                     };
                     addParkedBill(newPark);
@@ -630,7 +631,7 @@ export default function BillingPage() {
                     </span>
                   </h3>
                   <p className="text-[10px] text-[var(--color-text-muted)]">
-                    Pending consultation fees & services ready to process
+                    Pending {nicheConfig.terminology?.consultationFee?.toLowerCase() || 'session fee'}s & {nicheConfig.terminology?.services?.toLowerCase() || 'services'} ready to process
                   </p>
                 </div>
               </div>
@@ -795,9 +796,9 @@ export default function BillingPage() {
                   <div>
                     <div className="flex items-center gap-2 text-slate-900 font-extrabold text-xl tracking-tight">
                       <Building2 size={22} className="text-blue-600" />
-                      <span>{currentNiche.toUpperCase()} CLINIC & SPA</span>
+                      <span>{nicheConfig.label.toUpperCase()}</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1">102 Medical Enclave, Jubilee Hills, Hyderabad</p>
+                    <p className="text-[11px] text-slate-500 mt-1">{nicheConfig.id === 'spa' ? '102 Wellness Pavilion, Jubilee Hills, Hyderabad' : '102 Central Enclave, Jubilee Hills, Hyderabad'}</p>
                     <p className="text-[11px] text-slate-500">Phone: +91 40 2345 6789 | GSTIN: 36AAAAA0000A1Z5</p>
                   </div>
 
@@ -814,7 +815,7 @@ export default function BillingPage() {
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Billed To</span>
                     <h4 className="font-bold text-sm text-slate-900 mt-0.5">{selectedPatient?.name}</h4>
-                    <p className="text-[11px] text-slate-500">Patient ID: #{selectedPatient?.id} · {selectedPatient?.phone}</p>
+                    <p className="text-[11px] text-slate-500">{nicheConfig.terminology?.customer || 'Guest'} ID: #{selectedPatient?.id} · {selectedPatient?.phone}</p>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment Mode</span>
@@ -893,7 +894,7 @@ export default function BillingPage() {
                 </div>
 
                 <div className="text-center text-[10px] text-slate-400 pt-6 border-t border-slate-200">
-                  <p>Thank you for choosing us. For questions, contact support@clinic.com</p>
+                  <p>Thank you for choosing us. For questions, contact support@zerodesk.app</p>
                   <p className="font-mono mt-0.5">Computer-generated tax invoice. No signature required.</p>
                 </div>
               </div>

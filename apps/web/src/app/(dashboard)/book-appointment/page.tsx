@@ -94,7 +94,7 @@ export default function BookAppointmentPage() {
 
   // Appointment Details State
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-  const [selectedDoctor, setSelectedDoctor] = useState(nicheConfig.roles[0]?.label || 'Lead Specialist');
+  const [selectedStaff, setSelectedStaff] = useState(nicheConfig.roles[0]?.label || (nicheConfig.terminology?.staff || 'Specialist'));
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[1]);
   
@@ -121,7 +121,8 @@ export default function BookAppointmentPage() {
     customerName: string;
     phone: string;
     serviceName: string;
-    doctorName: string;
+    staffName: string;
+    doctorName?: string;
     date: string;
     time: string;
     totalAmount: number;
@@ -136,7 +137,7 @@ export default function BookAppointmentPage() {
       apiClient('/staff').then((res: any) => {
         if (Array.isArray(res) && res.length > 0) {
           setStaffOptions(res);
-          setSelectedDoctor(res[0].name || 'Duty Specialist');
+          setSelectedStaff(res[0].name || (nicheConfig.terminology?.staff || 'Specialist'));
         }
       }).catch(() => {});
 
@@ -148,17 +149,17 @@ export default function BookAppointmentPage() {
             .slice(0, 5)
             .map((a: any, idx: number) => ({
               token: `T-${101 + idx}`,
-              name: a.customer?.name || 'Inquiry Patient',
-              service: a.service?.name || 'Consultation',
-              doctor: a.staff?.name || 'Duty Specialist',
+              name: a.customer?.name || ('Inquiry ' + (nicheConfig.terminology?.customer || 'Guest')),
+              service: a.service?.name || (nicheConfig.terminology?.service || 'Session'),
+              staff: a.staff?.name || (nicheConfig.terminology?.staff || 'Specialist'),
               time: a.scheduledAt ? new Date(a.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '10:00 AM',
-              status: a.status === 'COMPLETED' ? 'Completed' : a.status === 'IN_PROGRESS' ? 'With Doctor' : 'In Waiting Room'
+              status: a.status === 'COMPLETED' ? 'Completed' : a.status === 'IN_PROGRESS' ? ('With ' + (nicheConfig.terminology?.staff || 'Staff')) : ('In ' + (nicheConfig.terminology?.waitingRoom || 'Waiting Room'))
             }));
           setRecentBookings(mapped);
         }
       }).catch(() => {});
     });
-  }, []);
+  }, [nicheConfig]);
 
   // Selected Service object
   const selectedService = useMemo(() => {
@@ -256,8 +257,9 @@ export default function BookAppointmentPage() {
       customerId: finalCustomerId,
       customerName,
       phone: customerPhone,
-      serviceName: selectedService?.name || 'General Consultation',
-      doctorName: selectedDoctor,
+      serviceName: selectedService?.name || `${nicheConfig.terminology?.consultation || 'Session'}`,
+      staffName: selectedStaff,
+      doctorName: selectedStaff,
       date: bookingDate,
       time: finalTime,
       totalAmount: totalPayable,
@@ -269,8 +271,9 @@ export default function BookAppointmentPage() {
         customerName,
         phone: customerPhone,
         serviceId: selectedService?.id,
-        serviceName: selectedService?.name || 'General Consultation',
-        doctorName: selectedDoctor,
+        serviceName: selectedService?.name || `${nicheConfig.terminology?.consultation || 'Session'}`,
+        doctorName: selectedStaff,
+        staffName: selectedStaff,
         date: bookingDate,
         time: finalTime,
         totalAmount: totalPayable,
@@ -285,10 +288,11 @@ export default function BookAppointmentPage() {
         {
           token: `T-${tokenNo}`,
           name: customerName,
-          service: selectedService?.name || 'Consultation',
-          doctor: selectedDoctor,
+          service: selectedService?.name || (nicheConfig.terminology?.consultation || 'Session'),
+          doctor: selectedStaff,
+          staff: selectedStaff,
           time: finalTime,
-          status: 'In Waiting Room',
+          status: `In ${nicheConfig.terminology?.waitingRoom || 'Waiting Room'}`,
         },
         ...prev
       ]);
@@ -377,7 +381,7 @@ export default function BookAppointmentPage() {
                       <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
                       <input
                         type="text"
-                        placeholder={`Search existing ${customerLabel.toLowerCase()} by Name, Phone Number, or Patient ID...`}
+                        placeholder={`Search existing ${customerLabel.toLowerCase()} by Name, Phone Number, or ${customerLabel} ID...`}
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
                         className="w-full pl-9 pr-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -558,7 +562,7 @@ export default function BookAppointmentPage() {
                         onChange={(e) => setIncludeRegFee(e.target.checked)}
                         className="rounded text-blue-600 focus:ring-blue-500"
                       />
-                      <span>Apply One-Time New Patient Registration & Case Sheet Fee (+₹{registrationFee})</span>
+                      <span>Apply One-Time New {customerLabel} Registration Fee (+₹{registrationFee})</span>
                     </label>
                     <span className="text-xs font-bold text-blue-500 font-mono">₹{registrationFee}</span>
                   </div>
@@ -592,7 +596,7 @@ export default function BookAppointmentPage() {
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 )}
               >
-                🩺 Consultation
+                {currentNiche === 'spa' ? '🌿 ' : (isClinic ? '🩺 ' : '✨ ')}{nicheConfig.terminology?.consultation || 'Consultation'}
               </button>
               <button
                 type="button"
@@ -604,7 +608,7 @@ export default function BookAppointmentPage() {
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 )}
               >
-                Individual Services
+                {nicheConfig.terminology?.individualServices || 'Individual Sessions'}
               </button>
               <button
                 type="button"
@@ -616,7 +620,7 @@ export default function BookAppointmentPage() {
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 )}
               >
-                Treatment Packages
+                {nicheConfig.terminology?.treatmentPackages || 'Session Packages'}
               </button>
             </div>
 
@@ -661,18 +665,18 @@ export default function BookAppointmentPage() {
                   Assign {staffLabel} *
                 </label>
                 <select
-                  value={selectedDoctor}
-                  onChange={(e) => setSelectedDoctor(e.target.value)}
+                  value={selectedStaff}
+                  onChange={(e) => setSelectedStaff(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {staffOptions.length > 0 ? (
                     staffOptions.map((s: any) => (
-                      <option key={s.id} value={s.name}>{s.name} ({s.role || 'Specialist'})</option>
+                      <option key={s.id} value={s.name}>{s.name} ({s.role || staffLabel})</option>
                     ))
                   ) : (
                     <>
-                      <option value="Duty Specialist (Available Now)">Duty Specialist (Available Now)</option>
-                      <option value="Lead Consultant">Lead Consultant</option>
+                      <option value={`Duty ${staffLabel} (Available Now)`}>Duty {staffLabel} (Available Now)</option>
+                      <option value={`Lead ${staffLabel}`}>Lead {staffLabel}</option>
                     </>
                   )}
                 </select>
@@ -969,10 +973,10 @@ export default function BookAppointmentPage() {
                   TOKEN #{confirmedBooking.tokenNumber}
                 </span>
                 <h2 className="text-xl font-bold text-[var(--color-text)] mt-2">
-                  Appointment Booked & Checked-In!
+                  {nicheConfig.terminology?.appointment || 'Appointment'} Booked & Checked-In!
                 </h2>
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                  Added to live Waiting Room queue and synced with doctor schedule.
+                  Added to live {nicheConfig.terminology?.waitingRoom || 'Waiting Room'} queue and synced with {staffLabel.toLowerCase()} schedule.
                 </p>
                 <div className="mt-2 inline-block px-3 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg text-xs font-mono font-bold">
                   {customerLabel} ID: {confirmedBooking.customerId}
@@ -991,7 +995,7 @@ export default function BookAppointmentPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--color-text-muted)]">{staffLabel}:</span>
-                  <span className="font-bold text-blue-500">{confirmedBooking.doctorName}</span>
+                  <span className="font-bold text-blue-500">{confirmedBooking.staffName || confirmedBooking.doctorName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--color-text-muted)]">Scheduled Time:</span>

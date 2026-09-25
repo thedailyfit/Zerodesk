@@ -26,19 +26,19 @@ export interface ChatWidgetProps {
 }
 
 const TONE_MESSAGES: Record<string, string> = {
-  professional: "Good day! Welcome to our clinic. How may I assist you with your medical or appointment inquiries today?",
+  professional: "Good day! Welcome to our desk. How may I assist you with your inquiries or reservations today?",
   friendly: "Hey there! 👋 Welcome! How can I help you out today?",
-  empathetic: "Hello! We're so glad you're here. How are you feeling today, and how can we support your health journey?",
-  enthusiastic: "Hi! 🌟 Welcome to our clinic! We're thrilled to assist you. What can we do for you today?",
+  empathetic: "Hello! We are delighted to welcome you. How can our team best support you today?",
+  enthusiastic: "Hi! 🌟 Welcome! We are thrilled to assist you. What can we do for you today?",
   direct: "Welcome. Please let me know what information or service you need.",
-  humorous: "Hello! Don't worry, I'm an AI doctor's assistant—I won't tell you to eat apples! How can I help you today?"
+  humorous: "Hello! Always at your service. How can I brighten your day or assist your booking today?"
 };
 
 const SUGGESTIONS = [
-  "✨ Book an Appointment",
-  "💰 Pricing & Treatments",
+  "✨ Book Consultation / Visit",
+  "💰 Pricing & Services",
   "⏰ Working Hours",
-  "📍 Clinic Location"
+  "📍 Location & Contact"
 ];
 
 export function ChatWidget({
@@ -96,12 +96,14 @@ export function ChatWidget({
     setTimeout(() => {
       let botResponse = "Thank you for reaching out! I've noted your enquiry and our team will get back to you shortly.";
       
-      if (text.includes('Appointment') || text.includes('Book')) {
-        botResponse = "I can certainly help you schedule a consultation! What date and time works best for you?";
-      } else if (text.includes('Pricing') || text.includes('Treatment')) {
-        botResponse = "Our treatment packages start from $199. Would you like me to send the complete digital brochure to your WhatsApp?";
-      } else if (text.includes('Hours')) {
-        botResponse = "We are open Monday to Saturday, 9:00 AM – 8:00 PM. Would you like to reserve a spot?";
+      if (text.includes('Appointment') || text.includes('Book') || text.includes('Visit') || text.includes('Consultation')) {
+        botResponse = "I can certainly help you schedule a consultation or appointment! What date and time works best for you?";
+      } else if (text.includes('Pricing') || text.includes('Services') || text.includes('Treatment')) {
+        botResponse = "Our service packages start from $199. Would you like me to share our digital catalogue to your WhatsApp?";
+      } else if (text.includes('Hours') || text.includes('Timing')) {
+        botResponse = "We are open Monday to Saturday, 9:00 AM – 8:00 PM. Would you like to reserve a slot?";
+      } else if (text.includes('Location') || text.includes('Contact')) {
+        botResponse = "We are centrally located with on-site parking. Would you like directions or a direct callback?";
       }
 
       setMessages(prev => [

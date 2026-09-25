@@ -91,6 +91,24 @@ export default function GetLiveHelpPage() {
       };
 
       saveTickets([newTicket, ...tickets]);
+
+      // Synchronize directly to SuperAdmin Central Support Queue
+      try {
+        const businessName = typeof window !== 'undefined' ? localStorage.getItem('zerodesk-business-name') || (currentNiche === 'spa' ? 'Serenity Wellness Spa' : 'ZeroDesk Workspace') : 'ZeroDesk Workspace';
+        const globalKey = 'zerodesk_global_support_tickets';
+        const existingGlobal = JSON.parse(localStorage.getItem(globalKey) || '[]');
+        const globalTicket = {
+          ...newTicket,
+          tenantName: businessName,
+          niche: currentNiche,
+          description: description.trim()
+        };
+        localStorage.setItem(globalKey, JSON.stringify([globalTicket, ...existingGlobal]));
+        window.dispatchEvent(new Event('zerodesk:support-ticket-created'));
+      } catch (err) {
+        console.warn('Could not sync to global support queue', err);
+      }
+
       setIsSubmitting(false);
       setSubmitSuccess(true);
       setSubject('');
