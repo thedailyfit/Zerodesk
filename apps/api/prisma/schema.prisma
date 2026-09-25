@@ -65,6 +65,7 @@ model Tenant {
   llmTraces          LlmTrace[]
   agentEstates       AgentEstate[]
   actionTraces       ActionTrace[]
+  supportTickets     SupportTicket[]
 
   @@map("tenants")
 }
@@ -865,5 +866,27 @@ model ActionTrace {
   @@index([tenantId, executionStatus])
   @@map("action_traces")
 }
+
+model SupportTicket {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  subject      String
+  description  String
+  priority     String   @default("MEDIUM")
+  status       String   @default("OPEN")
+  category     String   @default("GENERAL")
+  contactEmail String?  @map("contact_email")
+  contactPhone String?  @map("contact_phone")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
 
 

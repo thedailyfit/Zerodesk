@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req, Param, HttpCode } from '@nestjs/common';
 import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -7,6 +7,7 @@ import { IdempotencyGuard } from '../../common/guards/idempotency.guard';
 import { InternalVoiceGuard } from '../../common/guards/internal-voice.guard';
 import { AuthOrInternalVoiceGuard } from '../../common/guards/auth-or-internal-voice.guard';
 import { LiveKitSipGuard } from '../../common/guards/livekit-sip.guard';
+import { RetellSignatureGuard } from '../../common/guards/retell-signature.guard';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import * as crypto from 'crypto';
@@ -46,7 +47,7 @@ export class VoiceController {
   }
 
   @Post('webhook/retell')
-  @UseGuards(IdempotencyGuard)
+  @UseGuards(RetellSignatureGuard, IdempotencyGuard)
   async handleRetellWebhook(@Req() req: any, @Body() payload: any, @Headers('x-retell-signature') signature: string) {
     const secret = process.env.RETELL_WEBHOOK_SECRET;
     if (process.env.NODE_ENV === 'production') {
@@ -205,6 +206,7 @@ export class VoiceController {
   }
 
   @Post('calls/transfer')
+  @HttpCode(200)
   @UseGuards(InternalVoiceGuard)
   async initiateCallTransfer(
     @TenantId() tenantId: string,

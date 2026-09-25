@@ -57,19 +57,36 @@ export class VoiceService {
    * Get voice config for a tenant.
    */
   async getConfig(tenantId: string) {
-    return this.prisma.voiceConfig.findUnique({
+    const config = await this.prisma.voiceConfig.findUnique({
       where: { tenantId },
     });
+    if (!config) return null;
+    return {
+      ...config,
+      plivoAuthToken: config.plivoAuthToken ? '••••••••' + config.plivoAuthToken.slice(-4) : null,
+    };
   }
 
   /**
    * Create or update voice config.
    */
   async updateConfig(tenantId: string, data: any) {
+    const allowed = [
+      'provider', 'voiceId', 'language', 'fallbackAction', 'ringTimeoutSecs',
+      'maxDurationMins', 'recordCalls', 'inboundPhoneNumber', 'settings', 'voicePersonaId',
+      'transferPhoneNumber', 'plivoAuthId', 'plivoAppId'
+    ];
+    const updateData: Record<string, any> = {};
+    for (const key of allowed) {
+      if (data && data[key] !== undefined) updateData[key] = data[key];
+    }
+    if (data?.plivoAuthToken && !data.plivoAuthToken.includes('••••')) {
+      updateData.plivoAuthToken = data.plivoAuthToken;
+    }
     return this.prisma.voiceConfig.upsert({
       where: { tenantId },
-      update: data,
-      create: { ...data, tenantId },
+      update: updateData,
+      create: { ...updateData, tenantId },
     });
   }
 
@@ -508,31 +525,20 @@ export class VoiceService {
     if (event.event === 'room_finished') {
       const durationSec = Number(event.room?.duration || 0);
       const roomName = event.room?.name || '';
+      const roomSid = event.room?.sid || roomName;
       
       // If roomName is formatted as tenant_<tenantId>_<callId>
       const tenantMatch = roomName.match(/^tenant_([^_]+)/);
       const tenantId = tenantMatch ? tenantMatch[1] : null;
 
-      if (durationSec > 0 && tenantId) {
-        // Metering is handled idempotently via recordCallCompletion and UsageLedger to prevent double-billing
-        await this.recordCallCompletion(
-          tenantId,
-          '',
-          durationSec,
-          roomName,
-          { provider: 'livekit', roomSid: event.room?.sid },
-        ).catch((err) => {
-          this.logger.warn(`LiveKit webhook recordCallCompletion non-fatal error: ${err.message}`);
-        });
-      }
-
+      // Emit single canonical voice.call.ended event to unify usage metering and prevent double billing
       this.eventEmitter.emit('voice.call.ended', {
         provider: 'livekit',
         tenantId,
-        callId: event.room?.sid || roomName,
+        callId: roomSid,
         type: 'ROOM_FINISHED',
         duration: durationSec,
-        metadata: { roomName: event.room?.name },
+        metadata: { roomName: event.room?.name, roomSid },
       });
     }
 
@@ -1224,7 +1230,11 @@ RULES:
     if (!event.tenantId) {
       return;
     }
-    const duration = event.duration || 60;
+    const duration = event.duration !== undefined && event.duration !== null ? Number(event.duration) : 0;
+    if (duration <= 0) {
+      this.logger.log(`Skipping call usage ledger for non-billable or zero duration call: ${event.callId}`);
+      return;
+    }
     await this.recordCallCompletion(
       event.tenantId,
       event.phoneNumber || 'Unknown',

@@ -29,4 +29,16 @@ export class TenantController {
   async updateBranding(@Req() req: any, @Body() data: any) {
     return this.tenantService.updateBranding(req.tenantId, data);
   }
+
+  @Get('me/llm-settings')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getLlmSettings(@Req() req: any) {
+    return this.tenantService.getLlmSettings(req.tenantId);
+  }
+
+  @Put('me/llm-settings')
+  @UseGuards(AuthGuard, TenantGuard)
+  async updateLlmSettings(@Req() req: any, @Body() data: any) {
+    return this.tenantService.updateLlmSettings(req.tenantId, data);
+  }
 }

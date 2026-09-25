@@ -31,7 +31,7 @@ import { useEffect } from 'react';
 
 export default function SuperAdminTenantsPage() {
   const router = useRouter();
-  const { tenants, voices, llmModels, updateTenant, deleteTenant, impersonateTenant } = useSuperAdminStore();
+  const { tenants, voices, llmModels, setTenants, updateTenant, deleteTenant, impersonateTenant } = useSuperAdminStore();
   const [search, setSearch] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('All');
   const [editingTenant, setEditingTenant] = useState<AdminTenant | null>(null);
@@ -41,18 +41,17 @@ export default function SuperAdminTenantsPage() {
     async function loadTenants() {
       try {
         const liveTenants = await apiClient<any[]>('/admin/tenants');
-        if (isMounted && Array.isArray(liveTenants) && liveTenants.length > 0) {
-          liveTenants.forEach((t: any) => {
-            updateTenant(t.id, {
-              ...t,
-              voiceMinutesUsed: t.subscription?.voiceMinutesUsed || 0,
-              voiceMinutesLimit: t.subscription?.voiceMinutesLimit || 500,
-              whatsappMessagesUsed: t.subscription?.whatsappMessagesUsed || 0,
-              whatsappMessagesLimit: t.subscription?.whatsappMessagesLimit || 2000,
-              llmTokensUsed: t.subscription?.llmTokensUsed || 0,
-              llmTokensLimit: t.subscription?.llmTokensLimit || 1000000,
-            });
-          });
+        if (isMounted && Array.isArray(liveTenants)) {
+          const formatted = liveTenants.map((t: any) => ({
+            ...t,
+            voiceMinutesUsed: t.subscription?.voiceMinutesUsed || 0,
+            voiceMinutesLimit: t.subscription?.voiceMinutesLimit || 500,
+            whatsappMessagesUsed: t.subscription?.whatsappMessagesUsed || 0,
+            whatsappMessagesLimit: t.subscription?.whatsappMessagesLimit || 2000,
+            llmTokensUsed: t.subscription?.llmTokensUsed || 0,
+            llmTokensLimit: t.subscription?.llmTokensLimit || 1000000,
+          }));
+          setTenants(formatted);
         }
       } catch (err) {
         console.warn('Could not sync admin tenants from backend API:', err);
@@ -60,7 +59,7 @@ export default function SuperAdminTenantsPage() {
     }
     loadTenants();
     return () => { isMounted = false; };
-  }, []);
+  }, [setTenants]);
 
   const niches = ['All', 'Clinic', 'Real Estate', 'Dental', 'Hotel', 'Coaching', 'Fintech', 'Dealership', 'FMCG'];
 

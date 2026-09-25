@@ -30,6 +30,12 @@ describe('ConsentService', () => {
       auditLog: {
         create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
       },
+      appointment: {
+        updateMany: jest.fn(),
+      },
+      llmTrace: {
+        updateMany: jest.fn(),
+      },
     };
     service = new ConsentService(mockPrisma);
   });

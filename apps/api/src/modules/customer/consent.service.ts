@@ -133,7 +133,38 @@ export class ConsentService {
         },
       });
 
-      // 5. Create Audit Log for compliance proof
+      // 5. Redact clinical appointment notes
+      if (tx.appointment?.updateMany) {
+        await tx.appointment.updateMany({
+          where: { tenantId, customerId },
+          data: {
+            notes: '[CLINICAL NOTES ERASED UNDER DPDP SECTION 12]',
+          },
+        });
+      }
+
+      // 6. Redact LLM prompt/completion traces
+      if (tx.llmTrace?.updateMany) {
+        const traceWhere: any = { tenantId };
+        if (convIds.length > 0) {
+          traceWhere.OR = [
+            { conversationId: { in: convIds } },
+            { userQuery: { contains: customerId } },
+          ];
+        } else {
+          traceWhere.userQuery = { contains: customerId };
+        }
+        await tx.llmTrace.updateMany({
+          where: traceWhere,
+          data: {
+            userQuery: '[QUERY REDACTED UNDER DPDP SECTION 12]',
+            rawResponse: '[RESPONSE REDACTED UNDER DPDP SECTION 12]',
+            sanitizedQuery: '[REDACTED]',
+          },
+        });
+      }
+
+      // 7. Create Audit Log for compliance proof
       await tx.auditLog.create({
         data: {
           tenantId,

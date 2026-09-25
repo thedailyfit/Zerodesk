@@ -5,6 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CryptoService } from '../../common/crypto/crypto.service';
 
 import { RedisService } from '../redis/redis.service';
+import { normalizePhoneNumber } from '../../common/utils/phone.util';
 
 interface WhatsAppMessage {
   from: string;
@@ -170,6 +171,15 @@ export class WhatsappService {
    * Send a text message via WhatsApp Cloud API.
    */
   async sendMessage(tenantId: string, to: string, message: string): Promise<any> {
+    const normalizedTo = normalizePhoneNumber(to);
+    const customer = await this.prisma.customer.findFirst({
+      where: { tenantId, phone: normalizedTo },
+    });
+    if (customer?.dndStatus) {
+      this.logger.warn(`Skipping WhatsApp outbound message to ${to}: Customer has opted out (DND active)`);
+      return { success: false, reason: 'DND_ACTIVE', skipped: true };
+    }
+
     const config = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
     if (!config?.accessToken || !config?.phoneNumberId) {
       throw new Error('WhatsApp not configured for this tenant');
@@ -444,10 +454,13 @@ export class WhatsappService {
   }
 
   async updateConfig(tenantId: string, data: any) {
-    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data;
-    const updateData = { ...safeData };
-    if (updateData.accessToken) {
-      updateData.accessToken = this.cryptoService.encrypt(updateData.accessToken);
+    const allowed = ['phoneNumberId', 'wabaId', 'businessAccountId', 'appId', 'appSecret', 'webhookVerifyToken', 'status', 'settings'];
+    const updateData: Record<string, any> = {};
+    for (const key of allowed) {
+      if (data && data[key] !== undefined) updateData[key] = data[key];
+    }
+    if (data?.accessToken) {
+      updateData.accessToken = this.cryptoService.encrypt(data.accessToken);
     }
     return this.prisma.whatsappConfig.upsert({
       where: { tenantId },
@@ -606,9 +619,14 @@ export class WhatsappService {
   }
 
   private async findOrCreateConversation(tenantId: string, customerId: string) {
-    // Find active WhatsApp conversation
+    // Find active or handed-off WhatsApp conversation to prevent duplicate threads
     let conversation = await this.prisma.conversation.findFirst({
-      where: { tenantId, customerId, channel: 'WHATSAPP', status: 'ACTIVE' },
+      where: {
+        tenantId,
+        customerId,
+        channel: 'WHATSAPP',
+        status: { in: ['ACTIVE', 'WAITING', 'HANDOFF'] },
+      },
       orderBy: { createdAt: 'desc' },
     });
 

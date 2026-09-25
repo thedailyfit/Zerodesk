@@ -201,7 +201,10 @@ export class AdminService {
 
     await this.prisma.tenant.update({
       where: { id: tenantId },
-      data: { planTier: normalizedPlan },
+      data: {
+        planTier: normalizedPlan,
+        subscriptionTier: normalizedPlan,
+      },
     });
 
     const subscription = await this.prisma.subscription.upsert({

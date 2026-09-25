@@ -26,6 +26,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { ObservabilityModule } from './modules/observability/observability.module';
 import { GovernanceModule } from './modules/governance/governance.module';
 import { TypeSafeModule } from './modules/typesafe/typesafe.module';
+import { SupportModule } from './modules/support/support.module';
 
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -99,6 +100,7 @@ import { SecurityModule } from './common/security/security.module';
     ObservabilityModule,
     GovernanceModule,
     TypeSafeModule,
+    SupportModule,
   ],
   providers: [
     {

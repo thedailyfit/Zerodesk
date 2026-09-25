@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -10,8 +10,8 @@ export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
   @Get()
-  async findAll(@TenantId() tenantId: string) {
-    return this.conversationService.findAll(tenantId);
+  async findAll(@TenantId() tenantId: string, @Query('status') status?: string) {
+    return this.conversationService.findAll(tenantId, status);
   }
 
   @Get(':id')
@@ -22,6 +22,24 @@ export class ConversationController {
   @Get(':id/messages')
   async getMessages(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.conversationService.getMessages(tenantId, id);
+  }
+
+  @Patch(':id')
+  async update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: { status?: string; aiSummary?: string; sentiment?: string; resolution?: string; metadata?: any },
+  ) {
+    return this.conversationService.update(tenantId, id, body);
+  }
+
+  @Put(':id/status')
+  async updateStatus(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: { status: string },
+  ) {
+    return this.conversationService.update(tenantId, id, { status: body.status });
   }
 
   @Post(':id/transfer')

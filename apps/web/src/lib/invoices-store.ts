@@ -73,20 +73,31 @@ export function useInvoices() {
       const data = await api.get<any[]>('/invoices');
       if (Array.isArray(data) && data.length > 0) {
         const mapped: InvoiceRecord[] = data.map((inv) => {
-          const grandTotal = inv.grandTotal || inv.totalAmount || 0;
-          const paid = inv.paidAmount || (inv.paymentStatus === 'PAID' ? grandTotal : 0);
+          const grandTotal = Number(inv.grandTotal || inv.totalAmount || 0);
+          const isPaid = inv.paymentStatus === 'PAID' || inv.status === 'PAID';
+          const paid = inv.paidAmount !== undefined && inv.paidAmount !== null 
+            ? Number(inv.paidAmount) 
+            : (isPaid ? grandTotal : 0);
           const remaining = Math.max(0, grandTotal - paid);
 
           const items: InvoiceLineItem[] = Array.isArray(inv.lineItems || inv.items)
-            ? (inv.lineItems || inv.items).map((li: any) => ({
-                serviceId: li.serviceId,
-                serviceName: li.serviceName || li.description || 'Clinical Service',
-                quantity: li.quantity || 1,
-                unitPrice: li.unitPrice || 0,
-                gstRate: li.gstRate || 18,
-                gstAmount: li.gstAmount || Math.round((li.unitPrice || 0) * 0.18),
-                totalPrice: li.totalPrice || (li.unitPrice || 0) * (li.quantity || 1),
-              }))
+            ? (inv.lineItems || inv.items).map((li: any) => {
+                const rate = li.gstRate !== undefined && li.gstRate !== null ? Number(li.gstRate) : 0;
+                const price = Number(li.unitPrice || li.price || 0);
+                const qty = Number(li.quantity || 1);
+                const tax = li.gstAmount !== undefined && li.gstAmount !== null 
+                  ? Number(li.gstAmount) 
+                  : Math.round(price * qty * (rate / 100));
+                return {
+                  serviceId: li.serviceId,
+                  serviceName: li.serviceName || li.description || 'Service',
+                  quantity: qty,
+                  unitPrice: price,
+                  gstRate: rate,
+                  gstAmount: tax,
+                  totalPrice: Number(li.totalPrice || price * qty + tax),
+                };
+              })
             : [];
 
           return {

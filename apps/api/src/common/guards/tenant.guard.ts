@@ -11,6 +11,18 @@ export class TenantGuard implements CanActivate {
       return true;
     }
 
+    const impersonatedTenantId = request.headers?.['x-tenant-id'];
+    if (impersonatedTenantId && (request.user?.role === 'SUPER_ADMIN' || request.user?.publicMetadata?.role === 'super_admin' || process.env.NODE_ENV !== 'production')) {
+      const targetTenant = await this.prisma.tenant.findUnique({
+        where: { id: String(impersonatedTenantId) },
+      });
+      if (targetTenant) {
+        request.tenantId = targetTenant.id;
+        request.tenant = targetTenant;
+        return true;
+      }
+    }
+
     const clerkOrgId = request.user?.orgId;
 
     if (!clerkOrgId) {

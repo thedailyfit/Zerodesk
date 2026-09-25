@@ -68,6 +68,7 @@ export class InvoiceService {
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
         items: {
           create: items.map((it: any) => ({
+            tenantId,
             description: it.description || it.name || 'Service',
             quantity: Number(it.quantity || 1),
             unitPrice: Number(it.unitPrice || it.price || 0),

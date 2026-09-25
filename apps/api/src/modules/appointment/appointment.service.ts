@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, Logger, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { RedisService } from '../redis/redis.service';
@@ -221,7 +221,14 @@ export class AppointmentService {
   async book(tenantId: string, data: any) {
     // 1. Resolve or auto-provision Customer if customerId not explicitly provided
     let customerId = data.customerId;
-    if (!customerId) {
+    if (customerId) {
+      const existingCustomer = await this.prisma.customer.findFirst({
+        where: { id: customerId, tenantId },
+      });
+      if (!existingCustomer) {
+        throw new BadRequestException('Customer does not belong to this tenant');
+      }
+    } else {
       const phone = (data.customerPhone || data.phone || '+919999999999').replace(/[^0-9+]/g, '');
       const name = data.customerName || data.name || 'Frontdesk Guest';
       let customer = await this.prisma.customer.findFirst({
@@ -251,10 +258,17 @@ export class AppointmentService {
       scheduledAt = new Date();
     }
     if (isNaN(scheduledAt.getTime())) {
-      scheduledAt = new Date();
+      throw new BadRequestException('Invalid scheduledAt timestamp');
+    }
+    if (!data.allowPast && scheduledAt.getTime() < Date.now() - 5 * 60 * 1000) {
+      throw new BadRequestException('Cannot schedule an appointment in the past');
     }
 
     const durationMins = Number(data.durationMins || data.durationMinutes || 30);
+    if (isNaN(durationMins) || durationMins < 5 || durationMins > 1440) {
+      throw new BadRequestException('Appointment duration must be between 5 and 1440 minutes');
+    }
+
     let staffId = data.staffId || null;
     let serviceId = data.serviceId || null;
 
@@ -266,6 +280,14 @@ export class AppointmentService {
       });
       if (matchedService) serviceId = matchedService.id;
     }
+    if (serviceId) {
+      const existingService = await this.prisma.service.findFirst({
+        where: { id: serviceId, tenantId },
+      });
+      if (!existingService) {
+        throw new BadRequestException('Service does not belong to this tenant');
+      }
+    }
 
     // Resolve staffId from doctorName if omitted
     if (!staffId && (data.doctorName || data.staffName || data.doctor)) {
@@ -274,6 +296,14 @@ export class AppointmentService {
         where: { tenantId, name: { contains: dName, mode: 'insensitive' }, isActive: true },
       });
       if (matchedStaff) staffId = matchedStaff.id;
+    }
+    if (staffId) {
+      const existingStaff = await this.prisma.staffMember.findFirst({
+        where: { id: staffId, tenantId },
+      });
+      if (!existingStaff) {
+        throw new BadRequestException('Staff member does not belong to this tenant');
+      }
     }
 
     // Auto-resolve staff member if still unassigned
@@ -609,34 +639,71 @@ export class AppointmentService {
       throw new NotFoundException('Appointment not found');
     }
 
+    if (data.staffId) {
+      const existingStaff = await this.prisma.staffMember.findFirst({
+        where: { id: data.staffId, tenantId },
+      });
+      if (!existingStaff) {
+        throw new BadRequestException('Staff member does not belong to this tenant');
+      }
+    }
+    if (data.serviceId) {
+      const existingService = await this.prisma.service.findFirst({
+        where: { id: data.serviceId, tenantId },
+      });
+      if (!existingService) {
+        throw new BadRequestException('Service does not belong to this tenant');
+      }
+    }
+
+    if (data.scheduledAt) {
+      const parsed = new Date(data.scheduledAt);
+      if (isNaN(parsed.getTime())) {
+        throw new BadRequestException('Invalid scheduledAt timestamp');
+      }
+    }
+    if (data.durationMins || data.durationMinutes) {
+      const dur = Number(data.durationMins || data.durationMinutes);
+      if (isNaN(dur) || dur < 5 || dur > 1440) {
+        throw new BadRequestException('Appointment duration must be between 5 and 1440 minutes');
+      }
+    }
+
     const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : appt.scheduledAt;
     const durationMins = Number(data.durationMins || data.durationMinutes || appt.durationMins);
     const staffId = data.staffId !== undefined ? (data.staffId || null) : appt.staffId;
     const serviceId = data.serviceId !== undefined ? (data.serviceId || null) : appt.serviceId;
-    const isRescheduling = Boolean(
-      data.scheduledAt ||
-      data.durationMins ||
-      data.durationMinutes ||
+
+    const currentStatus = appt.status;
+    const targetStatus = data.status || currentStatus;
+    const isTargetActive = !['CANCELLED', 'NO_SHOW'].includes(targetStatus);
+    const wasInactive = ['CANCELLED', 'NO_SHOW'].includes(currentStatus);
+    const isActivating = wasInactive && isTargetActive;
+    const timingChanged = Boolean(
+      (data.scheduledAt && new Date(data.scheduledAt).getTime() !== appt.scheduledAt.getTime()) ||
+      (data.durationMins && data.durationMins !== appt.durationMins) ||
+      (data.durationMinutes && data.durationMinutes !== appt.durationMins) ||
       (data.staffId !== undefined && data.staffId !== appt.staffId)
     );
+    const requiresConflictCheck = isTargetActive && (timingChanged || isActivating);
 
     const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
     const lockKey = `slot_lock:${resourceKey}`;
 
-    if (isRescheduling && this.redisService) {
+    if (requiresConflictCheck && this.redisService) {
       const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
       if (!acquired) {
-        throw new ConflictException('Doctor schedule is currently being modified. Please try again.');
+        throw new ConflictException('Schedule is currently being modified. Please try again.');
       }
     }
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        if (isRescheduling && typeof (tx as any).$executeRaw === 'function') {
+        if (requiresConflictCheck && typeof (tx as any).$executeRaw === 'function') {
           await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
         }
 
-        if (isRescheduling && staffId && data.status !== 'CANCELLED' && appt.status !== 'CANCELLED') {
+        if (requiresConflictCheck) {
           const newStart = scheduledAt;
           const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
           await this.checkIntervalConflict(tx, tenantId, staffId, newStart, newEnd, appt.id);
@@ -670,11 +737,11 @@ export class AppointmentService {
       });
     } catch (err: any) {
       if (err.code === 'P2002') {
-        throw new ConflictException('This time slot was just confirmed by another patient. Please choose another time.');
+        throw new ConflictException('This time slot was just confirmed by another guest. Please choose another time.');
       }
       throw err;
     } finally {
-      if (isRescheduling && this.redisService) {
+      if (requiresConflictCheck && this.redisService) {
         await this.redisService.del(lockKey);
       }
     }

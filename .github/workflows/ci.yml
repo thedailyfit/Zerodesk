@@ -43,6 +43,9 @@ jobs:
 
       - name: Validate Prisma Schema
         working-directory: apps/api
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
+          DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
         run: |
           npx prisma validate
           npx prisma generate

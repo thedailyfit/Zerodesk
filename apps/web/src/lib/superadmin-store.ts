@@ -67,6 +67,8 @@ export interface SuperAdminState {
   impersonatedTenantId: string | null;
   
   addTenant: (tenant: AdminTenant) => void;
+  setTenants: (tenants: AdminTenant[]) => void;
+  upsertTenant: (tenant: AdminTenant) => void;
   updateTenant: (id: string, data: Partial<AdminTenant>) => void;
   deleteTenant: (id: string) => void;
   impersonateTenant: (id: string | null) => void;
@@ -312,10 +314,30 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       addTenant: (tenant: AdminTenant) =>
         set((state: SuperAdminState) => ({ tenants: [tenant, ...state.tenants] })),
 
+      setTenants: (tenants: AdminTenant[]) =>
+        set(() => ({ tenants })),
+
+      upsertTenant: (tenant: AdminTenant) =>
+        set((state: SuperAdminState) => {
+          const index = state.tenants.findIndex((t) => t.id === tenant.id);
+          if (index >= 0) {
+            const next = [...state.tenants];
+            next[index] = { ...next[index], ...tenant };
+            return { tenants: next };
+          }
+          return { tenants: [tenant, ...state.tenants] };
+        }),
+
       updateTenant: (id: string, data: Partial<AdminTenant>) =>
-        set((state: SuperAdminState) => ({
-          tenants: state.tenants.map((t: AdminTenant) => (t.id === id ? { ...t, ...data } : t)),
-        })),
+        set((state: SuperAdminState) => {
+          const exists = state.tenants.some((t: AdminTenant) => t.id === id);
+          if (!exists) {
+            return { tenants: [{ id, ...data } as AdminTenant, ...state.tenants] };
+          }
+          return {
+            tenants: state.tenants.map((t: AdminTenant) => (t.id === id ? { ...t, ...data } : t)),
+          };
+        }),
 
       deleteTenant: (id: string) =>
         set((state: SuperAdminState) => ({

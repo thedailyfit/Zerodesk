@@ -24,9 +24,25 @@ export class CustomerService {
     return customer;
   }
 
+  private sanitizeCustomerData(data: any): Record<string, any> {
+    if (!data || typeof data !== 'object') return {};
+    const allowedKeys = [
+      'name', 'phone', 'email', 'language', 'leadScore',
+      'sentiment', 'lifetimeValue', 'tags', 'aiSummary',
+      'metadata', 'dndStatus', 'optedOutAt'
+    ];
+    const sanitized: Record<string, any> = {};
+    for (const key of allowedKeys) {
+      if (data[key] !== undefined) {
+        sanitized[key] = data[key];
+      }
+    }
+    return sanitized;
+  }
+
   async create(tenantId: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data || {};
+    const safeData = this.sanitizeCustomerData(data);
     const phone = safeData.phone ? normalizePhoneNumber(safeData.phone) : undefined;
     return db.customers.create({
       data: {
@@ -38,7 +54,7 @@ export class CustomerService {
 
   async update(tenantId: string, id: string, data: any) {
     const db = this.tenantPrisma.forTenant(tenantId);
-    const { tenantId: _t, id: _i, createdAt: _c, updatedAt: _u, ...safeData } = data || {};
+    const safeData = this.sanitizeCustomerData(data);
     const phone = safeData.phone ? normalizePhoneNumber(safeData.phone) : undefined;
     try {
       return await db.customers.update({

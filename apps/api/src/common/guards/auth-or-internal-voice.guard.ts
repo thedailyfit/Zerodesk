@@ -38,10 +38,13 @@ export class AuthOrInternalVoiceGuard implements CanActivate {
       }
     }
 
-    // In development mode, allow public/demo requests for testing if no auth header is provided
+    // In development mode, only allow unauthenticated requests if an explicit x-tenant-id is provided
     if (process.env.NODE_ENV !== 'production' && !request.headers['authorization'] && !voiceKey) {
-      request.tenantId = request.headers['x-tenant-id'] || request.query?.tenantId || '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
-      return true;
+      const explicitTenant = request.headers['x-tenant-id'] || request.query?.tenantId;
+      if (explicitTenant) {
+        request.tenantId = String(explicitTenant);
+        return true;
+      }
     }
 
     // Otherwise require normal Clerk user authentication and tenant context

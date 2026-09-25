@@ -86,13 +86,16 @@ export default function SuperAdminVoiceFleetPage() {
 
     // Sync to PostgreSQL DB
     try {
-      await apiClient('/admin/voices', {
+      const serverVoice = await apiClient<any>('/admin/voices', {
         method: 'POST',
         body: JSON.stringify(voiceToAdd)
       });
+      if (serverVoice?.id) {
+        updateVoice(voiceToAdd.id, { id: serverVoice.id, ...serverVoice });
+      }
       toast.success(`Registered ${voiceToAdd.name} and synced to client dashboards!`);
     } catch (err: any) {
-      toast.success(`Added ${voiceToAdd.name} to global fleet!`);
+      toast.error(`Failed to register voice on backend: ${err.message || 'Server error'}`);
     }
 
     setShowAddModal(false);

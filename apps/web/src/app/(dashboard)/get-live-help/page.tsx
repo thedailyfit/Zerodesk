@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
+import { api } from '@/lib/api-client';
 
 interface SupportTicket {
   id: string;
@@ -74,15 +75,22 @@ export default function GetLiveHelpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const handleSubmitTicket = (e: React.FormEvent) => {
+  const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !description.trim()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const serverTicket = await api.post<any>('/support/tickets', {
+        subject: subject.trim(),
+        description: description.trim(),
+        category,
+        priority: priority.toUpperCase(),
+      }).catch(() => null);
+
       const newTicket: SupportTicket = {
-        id: `t-${Date.now()}`,
-        ticketNumber: `ZD-2026-${String(Math.floor(100 + Math.random() * 900))}`,
+        id: serverTicket?.id || `t-${Date.now()}`,
+        ticketNumber: serverTicket?.id ? `ZD-${serverTicket.id.slice(0, 6).toUpperCase()}` : `ZD-2026-${String(Math.floor(100 + Math.random() * 900))}`,
         subject: subject.trim(),
         category,
         priority,
@@ -92,7 +100,6 @@ export default function GetLiveHelpPage() {
 
       saveTickets([newTicket, ...tickets]);
 
-      // Synchronize directly to SuperAdmin Central Support Queue
       try {
         const businessName = typeof window !== 'undefined' ? localStorage.getItem('zerodesk-business-name') || (currentNiche === 'spa' ? 'Serenity Wellness Spa' : 'ZeroDesk Workspace') : 'ZeroDesk Workspace';
         const globalKey = 'zerodesk_global_support_tickets';
@@ -109,12 +116,13 @@ export default function GetLiveHelpPage() {
         console.warn('Could not sync to global support queue', err);
       }
 
-      setIsSubmitting(false);
       setSubmitSuccess(true);
       setSubject('');
       setDescription('');
       setTimeout(() => setSubmitSuccess(false), 3000);
-    }, 1000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

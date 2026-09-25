@@ -84,45 +84,64 @@ export class ActionPolicyGuard {
 
     // Rule 3: Blast Radius Guard on Appointments
     if (normalizedAction.includes('book') || normalizedAction.includes('appointment')) {
-      const requestedDateStr = parameters.date || parameters.preferred_date || parameters.dateTime;
-      if (requestedDateStr) {
-        const requestedDate = new Date(requestedDateStr);
-        if (!isNaN(requestedDate.getTime())) {
-          const now = new Date();
-          const maxAllowedDate = new Date();
-          maxAllowedDate.setDate(now.getDate() + (hardLimits.maxBookingDaysAhead || 30));
+      const requestedDateStr = parameters.date || parameters.preferred_date || parameters.dateTime || parameters.scheduledAt;
+      if (!requestedDateStr) {
+        return {
+          allowed: false,
+          ruleId: 'DENY_MISSING_BOOKING_DATE',
+          reason: 'Booking date or timestamp is required for appointment actions.',
+        };
+      }
+      const requestedDate = new Date(requestedDateStr);
+      if (isNaN(requestedDate.getTime())) {
+        return {
+          allowed: false,
+          ruleId: 'DENY_INVALID_BOOKING_DATE',
+          reason: 'Provided booking date is not a valid date/timestamp.',
+        };
+      }
+      const now = new Date();
+      const maxAllowedDate = new Date();
+      maxAllowedDate.setDate(now.getDate() + (hardLimits.maxBookingDaysAhead || 30));
 
-          // Cannot book past allowed booking horizon
-          if (requestedDate > maxAllowedDate) {
-            return {
-              allowed: false,
-              ruleId: 'DENY_EXCEEDED_BOOKING_HORIZON',
-              reason: `Requested booking date exceeds the clinic's maximum allowed booking horizon of ${hardLimits.maxBookingDaysAhead || 30} days.`,
-            };
-          }
+      // Cannot book past allowed booking horizon
+      if (requestedDate > maxAllowedDate) {
+        return {
+          allowed: false,
+          ruleId: 'DENY_EXCEEDED_BOOKING_HORIZON',
+          reason: `Requested booking date exceeds the business's maximum allowed booking horizon of ${hardLimits.maxBookingDaysAhead || 30} days.`,
+        };
+      }
 
-          // Cannot book in the past (more than 1 hour ago)
-          if (requestedDate.getTime() < now.getTime() - 3600 * 1000) {
-            return {
-              allowed: false,
-              ruleId: 'DENY_PAST_BOOKING_DATE',
-              reason: 'Cannot book appointments for past dates or times.',
-            };
-          }
-        }
+      // Cannot book in the past (more than 15 minutes ago)
+      if (requestedDate.getTime() < now.getTime() - 15 * 60 * 1000) {
+        return {
+          allowed: false,
+          ruleId: 'DENY_PAST_BOOKING_DATE',
+          reason: 'Cannot book appointments for past dates or times.',
+        };
       }
     }
 
     // Rule 4: Financial Blast Radius Guard (Rate Card Discounting Prohibited)
     if (parameters.discountPct !== undefined || parameters.discountAmount !== undefined) {
       const discountPct = Number(parameters.discountPct) || 0;
-      const maxDiscount = hardLimits.maxDiscountAllowedPct ?? 0;
+      const discountAmount = Number(parameters.discountAmount) || 0;
+      const maxDiscountPct = hardLimits.maxDiscountAllowedPct ?? 0;
+      const maxDiscountAmount = hardLimits.maxDiscountAmountINR ?? (maxDiscountPct > 0 ? 500 : 0);
 
-      if (discountPct > maxDiscount) {
+      if (discountPct > maxDiscountPct) {
         return {
           allowed: false,
           ruleId: 'DENY_UNAUTHORIZED_DISCOUNT',
-          reason: `AI is strictly forbidden from offering discounts greater than ${maxDiscount}% without manager approval.`,
+          reason: `AI is strictly forbidden from offering discounts greater than ${maxDiscountPct}% without manager approval.`,
+        };
+      }
+      if (discountAmount > maxDiscountAmount) {
+        return {
+          allowed: false,
+          ruleId: 'DENY_UNAUTHORIZED_DISCOUNT_AMOUNT',
+          reason: `AI is strictly forbidden from applying discount amounts greater than ₹${maxDiscountAmount} without manager approval.`,
         };
       }
     }

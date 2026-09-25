@@ -60,12 +60,14 @@ export interface PatientRecord {
   treatmentPlans: TreatmentPlan[];
 }
 
-export const PATIENTS_STORAGE_KEY = 'zerodesk_patients_cache';
+export const getPatientsStorageKey = (niche?: string) => `zerodesk_patients_${niche || 'default'}`;
 
 export function usePatients() {
   const { currentNiche } = useNiche();
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const storageKey = getPatientsStorageKey(currentNiche);
 
   const loadPatients = useCallback(async () => {
     setIsLoading(true);
@@ -73,7 +75,7 @@ export function usePatients() {
     let cached: PatientRecord[] = [];
     if (typeof window !== 'undefined') {
       try {
-        const raw = localStorage.getItem(PATIENTS_STORAGE_KEY);
+        const raw = localStorage.getItem(storageKey);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -90,9 +92,9 @@ export function usePatients() {
       const data = await api.get<any[]>('/customers');
       if (Array.isArray(data) && data.length > 0) {
         const mapped: PatientRecord[] = data.map((c) => ({
-          id: c.id.slice(0, 8).toUpperCase(),
+          id: c.id,
           nicheId: currentNiche,
-          name: c.name || 'Anonymous Patient',
+          name: c.name || 'Anonymous Guest',
           phone: c.phone || '',
           email: c.email || undefined,
           gender: c.metadata?.gender || 'Other',
@@ -115,7 +117,7 @@ export function usePatients() {
 
         setPatients(merged);
         if (typeof window !== 'undefined') {
-          localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(merged));
+          localStorage.setItem(storageKey, JSON.stringify(merged));
         }
       } else if (cached.length > 0) {
         setPatients(cached);
@@ -143,7 +145,7 @@ export function usePatients() {
     const handleSync = () => {
       if (typeof window !== 'undefined') {
         try {
-          const raw = localStorage.getItem(PATIENTS_STORAGE_KEY);
+          const raw = localStorage.getItem(storageKey);
           if (raw) {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
@@ -162,12 +164,16 @@ export function usePatients() {
       window.removeEventListener('zerodesk:patients-updated', handleSync);
       window.removeEventListener('storage', handleSync);
     };
-  }, []);
+  }, [storageKey]);
 
   const addPatient = useCallback((data: Omit<PatientRecord, 'id' | 'nicheId' | 'registrationDate' | 'totalVisits' | 'ltv' | 'prescriptions' | 'uploadedFiles' | 'treatmentPlans'>): PatientRecord => {
+    const generatedId = typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : 'CUST-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+
     const newPatient: PatientRecord = {
       ...data,
-      id: Date.now().toString().slice(0, 8).toUpperCase(),
+      id: generatedId,
       nicheId: currentNiche,
       registrationDate: new Date().toISOString().split('T')[0],
       totalVisits: 0,
@@ -179,10 +185,10 @@ export function usePatients() {
 
     if (typeof window !== 'undefined') {
       try {
-        const raw = localStorage.getItem(PATIENTS_STORAGE_KEY);
+        const raw = localStorage.getItem(storageKey);
         const existing = raw ? JSON.parse(raw) : [];
         const updated = [newPatient, ...(Array.isArray(existing) ? existing.filter((p: any) => p.id !== newPatient.id) : [])];
-        localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(storageKey, JSON.stringify(updated));
         window.dispatchEvent(new Event('zerodesk:patients-updated'));
       } catch (err) {
         console.error('Failed to update patients cache in addPatient:', err);
@@ -216,7 +222,7 @@ export function usePatients() {
       const updated = prev.map((p) => (p.id === id ? { ...p, ...updates } : p));
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(storageKey, JSON.stringify(updated));
           window.dispatchEvent(new Event('zerodesk:patients-updated'));
         } catch (e) {
           console.warn('Failed to update patients cache on update:', e);
@@ -234,7 +240,7 @@ export function usePatients() {
         tags: updates.tags || target.tags,
       }).catch(() => {});
     }
-  }, [patients]);
+  }, [patients, storageKey]);
 
   const deletePatient = useCallback((id: string) => {
     const target = patients.find((p) => p.id === id);
@@ -242,7 +248,7 @@ export function usePatients() {
       const updated = prev.filter((p) => p.id !== id);
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(storageKey, JSON.stringify(updated));
           window.dispatchEvent(new Event('zerodesk:patients-updated'));
         } catch (e) {
           console.warn('Failed to update patients cache on delete:', e);
@@ -254,7 +260,7 @@ export function usePatients() {
       const backendId = (target as any)._backendId || target.id;
       api.delete(`/customers/${backendId}`).catch(() => {});
     }
-  }, [patients]);
+  }, [patients, storageKey]);
 
   const getPatientById = useCallback((id: string) => {
     return patients.find((p) => p.id === id);

@@ -34,6 +34,7 @@ export class AppointmentController {
   }
 
   @Patch(':id')
+  @Put(':id')
   @UseGuards(AuthGuard, TenantGuard)
   async update(
     @TenantId() tenantId: string,
@@ -44,6 +45,7 @@ export class AppointmentController {
   }
 
   @Patch(':id/status')
+  @Put(':id/status')
   @UseGuards(AuthGuard, TenantGuard)
   async updateStatus(
     @TenantId() tenantId: string,

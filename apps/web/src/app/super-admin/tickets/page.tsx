@@ -90,29 +90,54 @@ export default function SuperAdminSupportTicketsPage() {
   const [replyText, setReplyText] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Load from global storage key and backend
-  const loadTickets = () => {
-    try {
-      const globalKey = 'zerodesk_global_support_tickets';
-      const stored = localStorage.getItem(globalKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with defaults if not present
-          const merged = [...parsed];
-          DEFAULT_GLOBAL_TICKETS.forEach(dt => {
-            if (!merged.some(m => m.ticketNumber === dt.ticketNumber)) {
-              merged.push(dt);
-            }
-          });
-          setTickets(merged);
-          return;
+  // Load from database API and fallback to local storage
+  const loadTickets = async () => {
+    const readLocalTickets = () => {
+      try {
+        const globalKey = 'zerodesk_global_support_tickets';
+        const stored = localStorage.getItem(globalKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const merged = [...parsed];
+            DEFAULT_GLOBAL_TICKETS.forEach(dt => {
+              if (!merged.some(m => m.ticketNumber === dt.ticketNumber)) {
+                merged.push(dt);
+              }
+            });
+            setTickets(merged);
+            return;
+          }
         }
+      } catch (e) {
+        console.warn('Failed loading global support tickets', e);
       }
-    } catch (e) {
-      console.warn('Failed loading global support tickets', e);
+      setTickets(DEFAULT_GLOBAL_TICKETS);
+    };
+
+    try {
+      const data = await apiClient<any[]>('/admin/support/tickets');
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped: GlobalSupportTicket[] = data.map((t) => ({
+          id: t.id,
+          ticketNumber: `ZD-${t.id.slice(0, 6).toUpperCase()}`,
+          tenantId: t.tenantId,
+          tenantName: t.tenant?.name || 'Workspace',
+          niche: t.tenant?.industry || 'general',
+          subject: t.subject,
+          description: t.description,
+          category: t.category,
+          priority: (t.priority === 'HIGH' ? 'High' : t.priority === 'LOW' ? 'Low' : 'Medium'),
+          status: (t.status === 'RESOLVED' ? 'Resolved' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Open'),
+          createdAt: new Date(t.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        }));
+        setTickets(mapped);
+      } else {
+        readLocalTickets();
+      }
+    } catch {
+      readLocalTickets();
     }
-    setTickets(DEFAULT_GLOBAL_TICKETS);
   };
 
   useEffect(() => {
@@ -126,7 +151,7 @@ export default function SuperAdminSupportTicketsPage() {
     };
   }, []);
 
-  const handleUpdateStatus = (ticketId: string, newStatus: 'Open' | 'In Progress' | 'Resolved') => {
+  const handleUpdateStatus = async (ticketId: string, newStatus: 'Open' | 'In Progress' | 'Resolved') => {
     setIsUpdating(true);
     const updated = tickets.map(t => {
       if (t.id === ticketId || t.ticketNumber === ticketId) {
@@ -140,6 +165,19 @@ export default function SuperAdminSupportTicketsPage() {
       localStorage.setItem('zerodesk_global_support_tickets', JSON.stringify(updated));
       window.dispatchEvent(new Event('zerodesk:support-ticket-updated'));
     } catch {}
+
+    // Sync to backend DB if valid UUID
+    if (ticketId.length > 10 && !ticketId.startsWith('t-')) {
+      try {
+        const dbStatus = newStatus === 'Resolved' ? 'RESOLVED' : newStatus === 'In Progress' ? 'IN_PROGRESS' : 'OPEN';
+        await apiClient(`/admin/support/tickets/${ticketId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: dbStatus })
+        });
+      } catch (err) {
+        console.warn('Failed to update ticket status on server:', err);
+      }
+    }
 
     if (selectedTicket && (selectedTicket.id === ticketId || selectedTicket.ticketNumber === ticketId)) {
       setSelectedTicket({ ...selectedTicket, status: newStatus, resolutionNote: replyText || selectedTicket.resolutionNote });

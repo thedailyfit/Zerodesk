@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KnowledgeService } from './knowledge.service';
@@ -85,14 +86,17 @@ export class KnowledgeController {
   @UseGuards(AuthOrInternalVoiceGuard)
   async search(
     @TenantId() tenantId: string,
+    @Req() req: any,
     @Body() data: { query: string; topK?: number; niche?: any; bypassShield?: boolean },
   ) {
+    const isInternalVoice = Boolean(req.headers['x-internal-voice-key']);
+    const allowBypass = isInternalVoice && Boolean(data.bypassShield);
     return this.ragService.search(
       tenantId,
       data.query,
       data.topK || 5,
       data.niche || 'skin',
-      { bypassShield: Boolean(data.bypassShield) },
+      { bypassShield: allowBypass },
     );
   }
 }

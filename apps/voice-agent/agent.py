@@ -369,7 +369,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                     "x-tenant-id": call_ctx.tenant_id,
                 }
                 async with http_session.post(transfer_url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=3.0)) as resp:
-                    if resp.status == 200:
+                    if resp.status in (200, 201):
                         data = await resp.json()
                         fwd = data.get("forwardingNumber")
                         if fwd:
@@ -378,10 +378,10 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         return "I have alerted our frontdesk team to connect with you. Please stay on the line."
                     else:
                         logger.warning(f"transfer_to_human backend returned status {resp.status}")
-                        return "I apologize, but I am unable to connect you with our front desk right now. I have alerted our team to call you back immediately."
+                        return "I apologize, but I am unable to connect you directly with our front desk right now due to a network delay. Please hold or call our front desk directly."
         except Exception as e:
             logger.error(f"transfer_to_human backend call error: {e}")
-        return "I apologize, but I am unable to connect you with our front desk right now. I have alerted our team to call you back immediately."
+        return "I apologize, but I am unable to connect you directly with our front desk right now due to a network delay. Please hold or call our front desk directly."
 
     return [book_appointment, get_pricing, query_knowledge_base, send_whatsapp_info, transfer_to_human]
 

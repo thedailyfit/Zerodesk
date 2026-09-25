@@ -155,8 +155,25 @@ export class BillingService {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as any;
         const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        const invoiceId = invoice.id;
         // Only reset usage on recurring billing cycle renewal, avoiding mid-cycle resets on one-off adjustments
         if (subId && invoice.billing_reason === 'subscription_cycle') {
+          const sub = await this.prisma.subscription.findFirst({
+            where: { stripeSubId: subId },
+          });
+
+          const periodStart = invoice.lines?.data?.[0]?.period?.start
+            ? new Date(invoice.lines.data[0].period.start * 1000)
+            : null;
+          const periodEnd = invoice.lines?.data?.[0]?.period?.end
+            ? new Date(invoice.lines.data[0].period.end * 1000)
+            : null;
+
+          if (sub && periodStart && sub.currentPeriodStart && periodStart.getTime() <= sub.currentPeriodStart.getTime()) {
+            this.logger.log(`Ignoring replay of already-processed billing cycle invoice ${invoiceId} for sub ${subId}`);
+            break;
+          }
+
           // Reset usage counters for new billing period
           await this.prisma.subscription.updateMany({
             where: { stripeSubId: subId },
@@ -165,10 +182,12 @@ export class BillingService {
               whatsappMessagesUsed: 0,
               llmTokensUsed: 0,
               status: 'active',
+              currentPeriodStart: periodStart || new Date(),
+              currentPeriodEnd: periodEnd || undefined,
               updatedAt: new Date(),
             },
           });
-          this.logger.log(`Reset usage metrics for renewed subscription cycle ${subId}`);
+          this.logger.log(`Reset usage metrics for renewed subscription cycle ${subId} (invoice: ${invoiceId})`);
         }
         break;
       }

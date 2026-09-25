@@ -18,8 +18,8 @@ ALTER TABLE "knowledge_documents" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_chunks" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "automation_workflows" ENABLE ROW LEVEL SECURITY;
 
--- Note: invoice_items does not have a tenant_id column; tenant isolation is enforced via invoice relation.
-ALTER TABLE "invoice_items" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "invoice_items" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "invoice_items" NO FORCE ROW LEVEL SECURITY;
 
 -- 2. Ensure table owner (postgres / service_role) is NOT locked out by un-forcing RLS
 ALTER TABLE "customers" NO FORCE ROW LEVEL SECURITY;
@@ -118,6 +118,13 @@ CREATE POLICY tenant_isolation_activities ON "activities"
     );
 
 CREATE POLICY tenant_isolation_invoices ON "invoices"
+    FOR ALL
+    USING (
+      session_user IN ('postgres', 'service_role', 'supabase_admin')
+      OR "tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid
+    );
+
+CREATE POLICY tenant_isolation_invoice_items ON "invoice_items"
     FOR ALL
     USING (
       session_user IN ('postgres', 'service_role', 'supabase_admin')
