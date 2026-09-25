@@ -68,7 +68,7 @@ export default function BookAppointmentPage() {
   const registrationFee = isClinic ? (regFeeOffering?.price ?? 0) : 0;
 
   // Service Tab (Consultation, Individual Services, Treatment Packages)
-  const [serviceTab, setServiceTab] = useState<'consultation' | 'individual' | 'package'>('consultation');
+  const [serviceTab, setServiceTab] = useState<'consultation' | 'individual' | 'package'>(currentNiche === 'spa' ? 'individual' : 'consultation');
   const [packagePaymentMode, setPackagePaymentMode] = useState<'FULL' | 'PER_SESSION' | 'CUSTOM'>('FULL');
   const [customPaymentAmount, setCustomPaymentAmount] = useState<string>('');
 
@@ -586,18 +586,20 @@ export default function BookAppointmentPage() {
             
             {/* Consultation vs Individual Services vs Treatment Packages Toggle */}
             <div className="flex bg-[var(--color-bg)] rounded-xl p-1 border border-[var(--color-border)] mb-4">
-              <button
-                type="button"
-                onClick={() => setServiceTab('consultation')}
-                className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  serviceTab === 'consultation'
-                    ? "bg-blue-600 text-white shadow font-bold"
-                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                )}
-              >
-                {currentNiche === 'spa' ? '🌿 ' : (isClinic ? '🩺 ' : '✨ ')}{nicheConfig.terminology?.consultation || 'Consultation'}
-              </button>
+              {currentNiche !== 'spa' && (
+                <button
+                  type="button"
+                  onClick={() => setServiceTab('consultation')}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                    serviceTab === 'consultation'
+                      ? "bg-blue-600 text-white shadow font-bold"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  )}
+                >
+                  {(isClinic ? '🩺 ' : '✨ ')}{nicheConfig.terminology?.consultation || 'Consultation'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setServiceTab('individual')}

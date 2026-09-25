@@ -282,7 +282,7 @@ export default function ServicesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Service catalog & search */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className={cn(nicheConfig.id === 'spa' ? "lg:col-span-12" : "lg:col-span-8", "space-y-4")}>
           {/* Search & Category Filter */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-2xl shadow-sm">
             {/* Search */}
@@ -458,9 +458,10 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* Right Column: Consultation Fee Configuration Sidepanel */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4 sticky top-6">
+        {/* Right Column: Consultation Fee Configuration Sidepanel (Hidden for Spa & Wellness) */}
+        {nicheConfig.id !== 'spa' && (
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4 sticky top-6">
             <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-3">
               <span className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-sm">
                 🩺
@@ -581,6 +582,7 @@ export default function ServicesPage() {
             </form>
           </div>
         </div>
+        )}
       </div>
 
       {/* Add / Edit Service Modal */}
