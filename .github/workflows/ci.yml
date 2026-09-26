@@ -10,6 +10,13 @@ jobs:
   validate-and-test:
     name: Lint, Typecheck, Prisma & Unit Tests
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
+      NODE_ENV: test
+      INTERNAL_VOICE_SECRET: "test-ci-internal-voice-secret-key-32ch"
+      JWT_SECRET: "test-ci-jwt-secret-key-32-chars-long"
+      CALENDAR_FEED_SECRET: "test-ci-calendar-feed-secret-32-chars"
 
     steps:
       - name: Checkout Code
@@ -43,9 +50,6 @@ jobs:
 
       - name: Validate Prisma Schema
         working-directory: apps/api
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
-          DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
         run: |
           npx prisma validate
           npx prisma generate

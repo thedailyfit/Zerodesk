@@ -34,14 +34,14 @@ export class HealthController {
     }
 
     try {
-      await this.redis.ping();
-      redisStatus = 'up';
+      const pong = await this.redis.ping();
+      redisStatus = pong === 'PONG' ? 'up' : `down: ${pong}`;
     } catch (e: any) {
       redisStatus = `down: ${e.message}`;
     }
 
     const memory = process.memoryUsage();
-    const isHealthy = dbStatus === 'up';
+    const isHealthy = dbStatus === 'up' && redisStatus === 'up';
 
     const healthData = {
       status: isHealthy ? 'ok' : 'degraded',
@@ -57,7 +57,7 @@ export class HealthController {
     };
 
     // Cold-start protection: Only throw 503 if container has been up > 30s and DB is still down
-    if (!isHealthy && process.env.NODE_ENV === 'production' && process.uptime() > 30) {
+    if (dbStatus !== 'up' && process.env.NODE_ENV === 'production' && process.uptime() > 30) {
       throw new ServiceUnavailableException(healthData);
     }
 

@@ -39,4 +39,11 @@ describe('HealthController', () => {
     expect(res.status).toBe('degraded');
     expect(res.services.database).toContain('Connection failed');
   });
+
+  it('should report redis down when ping returns offline', async () => {
+    mockRedis.ping = jest.fn().mockResolvedValue('offline');
+    const res = await controller.check();
+    expect(res.status).toBe('degraded');
+    expect(res.services.redis).toBe('down: offline');
+  });
 });
