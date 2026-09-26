@@ -43,17 +43,31 @@ export class SupportService {
     });
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: string, resolutionNote?: string) {
     const ticket = await this.prisma.supportTicket.findUnique({ where: { id } });
     if (!ticket) throw new NotFoundException('Support ticket not found');
+    const updateData: any = { status };
+    if (resolutionNote !== undefined) {
+      const currentMeta = (ticket.metadata as any) || {};
+      updateData.metadata = { ...currentMeta, resolutionNote };
+    }
     return this.prisma.supportTicket.update({
       where: { id },
-      data: { status },
+      data: updateData,
       include: {
         tenant: {
           select: { id: true, name: true, industry: true },
         },
       },
+    });
+  }
+
+  async updateTenantTicketStatus(tenantId: string, id: string, status: string) {
+    const ticket = await this.prisma.supportTicket.findFirst({ where: { id, tenantId } });
+    if (!ticket) throw new NotFoundException('Support ticket not found for this tenant');
+    return this.prisma.supportTicket.update({
+      where: { id },
+      data: { status },
     });
   }
 }

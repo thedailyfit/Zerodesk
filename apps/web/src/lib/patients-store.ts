@@ -60,14 +60,18 @@ export interface PatientRecord {
   treatmentPlans: TreatmentPlan[];
 }
 
-export const getPatientsStorageKey = (niche?: string) => `zerodesk_patients_${niche || 'default'}`;
+export const getPatientsStorageKey = (niche?: string, tenantId?: string | null) => {
+  const tid = tenantId || (typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') : null) || 'default';
+  return `zerodesk_patients_${tid}_${niche || 'default'}`;
+};
 
 export function usePatients() {
   const { currentNiche } = useNiche();
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const storageKey = getPatientsStorageKey(currentNiche);
+  const activeTenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') : null;
+  const storageKey = getPatientsStorageKey(currentNiche, activeTenantId);
 
   const loadPatients = useCallback(async () => {
     setIsLoading(true);
@@ -134,7 +138,7 @@ export function usePatients() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentNiche]);
+  }, [currentNiche, storageKey]);
 
   useEffect(() => {
     loadPatients();
@@ -210,12 +214,23 @@ export function usePatients() {
       },
     }).then((created) => {
       if (created?.id) {
+        newPatient.id = created.id;
         (newPatient as any)._backendId = created.id;
+        setPatients((prev) => {
+          const updated = prev.map((p) => (p.id === generatedId ? { ...p, id: created.id, _backendId: created.id } : p));
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(updated));
+              window.dispatchEvent(new Event('zerodesk:patients-updated'));
+            } catch (err) {}
+          }
+          return updated;
+        });
       }
     }).catch(() => {});
 
     return newPatient;
-  }, [currentNiche]);
+  }, [currentNiche, storageKey]);
 
   const updatePatient = useCallback((id: string, updates: Partial<PatientRecord>) => {
     setPatients((prev) => {

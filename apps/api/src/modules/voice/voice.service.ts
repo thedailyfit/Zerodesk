@@ -71,23 +71,57 @@ export class VoiceService {
    * Create or update voice config.
    */
   async updateConfig(tenantId: string, data: any) {
-    const allowed = [
-      'provider', 'voiceId', 'language', 'fallbackAction', 'ringTimeoutSecs',
-      'maxDurationMins', 'recordCalls', 'inboundPhoneNumber', 'settings', 'voicePersonaId',
-      'transferPhoneNumber', 'plivoAuthId', 'plivoAppId'
-    ];
     const updateData: Record<string, any> = {};
-    for (const key of allowed) {
-      if (data && data[key] !== undefined) updateData[key] = data[key];
+
+    // 1. Direct schema scalar fields
+    if (data.plivoPhoneNumber !== undefined) updateData.plivoPhoneNumber = data.plivoPhoneNumber;
+    if (data.inboundPhoneNumber !== undefined && updateData.plivoPhoneNumber === undefined) {
+      updateData.plivoPhoneNumber = data.inboundPhoneNumber;
     }
+    if (data.plivoAuthId !== undefined) updateData.plivoAuthId = data.plivoAuthId;
+    if (data.plivoAppId !== undefined) updateData.plivoAppId = data.plivoAppId;
+    if (data.livekitTrunkId !== undefined) updateData.livekitTrunkId = data.livekitTrunkId;
+    if (data.retellPhoneNumber !== undefined) updateData.retellPhoneNumber = data.retellPhoneNumber;
+    if (data.retellAgentId !== undefined) updateData.retellAgentId = data.retellAgentId;
+    if (data.voicePersonality !== undefined) updateData.voicePersonality = data.voicePersonality;
+    if (data.greeting !== undefined) updateData.greeting = data.greeting;
+    if (data.languages !== undefined && Array.isArray(data.languages)) updateData.languages = data.languages;
+    if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+
+    const transferNum = data.transferNumber || data.transferPhoneNumber;
+    if (transferNum !== undefined) updateData.transferNumber = transferNum;
+
     if (data?.plivoAuthToken && !data.plivoAuthToken.includes('••••')) {
       updateData.plivoAuthToken = data.plivoAuthToken;
     }
-    return this.prisma.voiceConfig.upsert({
+
+    // 2. Map runtime/UI properties into settings JSON
+    const current = await this.prisma.voiceConfig.findUnique({ where: { tenantId } });
+    const currentSettings = (current?.settings as Record<string, any>) || {};
+    const newSettings = { ...currentSettings };
+
+    const settingKeys = [
+      'provider', 'voiceId', 'language', 'fallbackAction', 'ringTimeoutSecs',
+      'maxDurationMins', 'recordCalls', 'voicePersonaId', 'agentName'
+    ];
+    for (const key of settingKeys) {
+      if (data && data[key] !== undefined) newSettings[key] = data[key];
+    }
+    if (data && typeof data.settings === 'object' && data.settings !== null) {
+      Object.assign(newSettings, data.settings);
+    }
+    updateData.settings = newSettings;
+
+    const result = await this.prisma.voiceConfig.upsert({
       where: { tenantId },
       update: updateData,
       create: { ...updateData, tenantId },
     });
+
+    return {
+      ...result,
+      plivoAuthToken: result.plivoAuthToken ? '••••••••' + result.plivoAuthToken.slice(-4) : null,
+    };
   }
 
   /**

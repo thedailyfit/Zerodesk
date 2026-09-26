@@ -64,7 +64,25 @@ export class AdminService {
     return this.prisma.tenant.findMany({
       include: {
         subscription: true,
-        voiceConfig: true,
+        voiceConfig: {
+          select: {
+            id: true,
+            tenantId: true,
+            plivoPhoneNumber: true,
+            plivoAuthId: true,
+            plivoAppId: true,
+            retellPhoneNumber: true,
+            retellAgentId: true,
+            voicePersonality: true,
+            greeting: true,
+            languages: true,
+            transferNumber: true,
+            isActive: true,
+            settings: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
         kyc: true,
         assignedLlm: true,
         assignedFallbackLlm: true,
@@ -87,7 +105,14 @@ export class AdminService {
         tenant: {
           include: {
             subscription: true,
-            voiceConfig: true,
+            voiceConfig: {
+              select: {
+                id: true,
+                tenantId: true,
+                plivoPhoneNumber: true,
+                isActive: true,
+              },
+            },
           },
         },
       },
@@ -104,7 +129,14 @@ export class AdminService {
         tenant: {
           include: {
             subscription: true,
-            voiceConfig: true,
+            voiceConfig: {
+              select: {
+                id: true,
+                tenantId: true,
+                plivoPhoneNumber: true,
+                isActive: true,
+              },
+            },
           },
         },
       },

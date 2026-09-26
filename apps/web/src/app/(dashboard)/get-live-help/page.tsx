@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
 import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 interface SupportTicket {
   id: string;
@@ -41,27 +42,57 @@ export default function GetLiveHelpPage() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoBooked, setVideoBooked] = useState(false);
 
-  // Load from localStorage or defaults
+  const tenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') || 'default' : 'default';
+  const storageKey = `zerodesk_support_tickets_${tenantId}_${currentNiche}`;
+
+  // Load from server and merge with localStorage cache
   useEffect(() => {
+    let cached: SupportTicket[] = [];
     try {
-      const saved = localStorage.getItem(`zerodesk_support_tickets_${currentNiche}`);
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setTickets(parsed);
-          return;
+          cached = parsed;
+          setTickets(cached);
         }
       }
     } catch (e) {
-      console.error('Failed to load support tickets', e);
+      console.error('Failed to load cached support tickets', e);
     }
-    setTickets(DEFAULT_TICKETS_BY_NICHE[currentNiche] || DEFAULT_TICKETS_BY_NICHE.skin);
-  }, [currentNiche]);
+
+    api.get<any[]>('/support/tickets')
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: SupportTicket[] = data.map((t) => ({
+            id: t.id,
+            ticketNumber: `ZD-${t.id.slice(0, 6).toUpperCase()}`,
+            subject: t.subject,
+            category: t.category || 'Technical Issue',
+            priority: (t.priority === 'HIGH' ? 'High' : t.priority === 'LOW' ? 'Low' : 'Medium') as any,
+            status: (t.status === 'RESOLVED' ? 'Resolved' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Open') as any,
+            createdAt: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : 'Recent',
+          }));
+
+          const serverIds = new Set(mapped.map((m) => m.id));
+          const localOnly = cached.filter((c) => !serverIds.has(c.id));
+          const merged = [...mapped, ...localOnly];
+
+          setTickets(merged);
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(merged));
+          } catch (err) {}
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch server tickets, relying on cache:', err);
+      });
+  }, [currentNiche, storageKey]);
 
   const saveTickets = (newTickets: SupportTicket[]) => {
     setTickets(newTickets);
     try {
-      localStorage.setItem(`zerodesk_support_tickets_${currentNiche}`, JSON.stringify(newTickets));
+      localStorage.setItem(storageKey, JSON.stringify(newTickets));
     } catch (e) {
       console.error('Failed to save support tickets', e);
     }
@@ -86,7 +117,7 @@ export default function GetLiveHelpPage() {
         description: description.trim(),
         category,
         priority: priority.toUpperCase(),
-      }).catch(() => null);
+      });
 
       const newTicket: SupportTicket = {
         id: serverTicket?.id || `t-${Date.now()}`,
@@ -117,9 +148,13 @@ export default function GetLiveHelpPage() {
       }
 
       setSubmitSuccess(true);
+      toast.success('Support ticket submitted successfully!');
       setSubject('');
       setDescription('');
-      setTimeout(() => setSubmitSuccess(false), 3000);
+      setTimeout(() => setSubmitSuccess(false), 4000);
+    } catch (err: any) {
+      console.error('Failed to submit support ticket to server:', err);
+      toast.error('Failed to submit support ticket. Please check connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

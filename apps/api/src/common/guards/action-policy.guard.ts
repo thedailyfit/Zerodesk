@@ -128,7 +128,7 @@ export class ActionPolicyGuard {
       const discountPct = Number(parameters.discountPct) || 0;
       const discountAmount = Number(parameters.discountAmount) || 0;
       const maxDiscountPct = hardLimits.maxDiscountAllowedPct ?? 0;
-      const maxDiscountAmount = hardLimits.maxDiscountAmountINR ?? (maxDiscountPct > 0 ? 500 : 0);
+      const maxDiscountAmount = hardLimits.maxDiscountAmountINR ?? 0;
 
       if (discountPct > maxDiscountPct) {
         return {

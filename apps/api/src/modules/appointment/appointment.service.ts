@@ -703,10 +703,18 @@ export class AppointmentService {
           await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
         }
 
+        // Re-read row under transaction lock to prevent stale merge on concurrent PATCH
+        const currentAppt = await tx.appointment.findUnique({ where: { id: appt.id } });
+        if (!currentAppt) throw new NotFoundException('Appointment not found');
+
+        const effectiveStart = data.scheduledAt ? scheduledAt : currentAppt.scheduledAt;
+        const effectiveDuration = (data.durationMins || data.durationMinutes) ? durationMins : currentAppt.durationMins;
+        const effectiveStaffId = data.staffId !== undefined ? staffId : currentAppt.staffId;
+
         if (requiresConflictCheck) {
-          const newStart = scheduledAt;
-          const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
-          await this.checkIntervalConflict(tx, tenantId, staffId, newStart, newEnd, appt.id);
+          const newStart = effectiveStart;
+          const newEnd = new Date(effectiveStart.getTime() + effectiveDuration * 60 * 1000);
+          await this.checkIntervalConflict(tx, tenantId, effectiveStaffId, newStart, newEnd, appt.id);
         }
 
         const updateData: any = {};

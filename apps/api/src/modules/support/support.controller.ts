@@ -24,15 +24,29 @@ export class SupportController {
 
   @Get('admin/support/tickets')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'ORG_ADMIN')
+  @Roles('SUPER_ADMIN')
   async getAllTicketsAdmin() {
     return this.supportService.findAllAdmin();
   }
 
   @Patch('admin/support/tickets/:id')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'ORG_ADMIN')
-  async updateTicketStatusAdmin(@Param('id') id: string, @Body('status') status: string) {
-    return this.supportService.updateStatus(id, status);
+  @Roles('SUPER_ADMIN')
+  async updateTicketStatusAdmin(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Body('resolutionNote') resolutionNote?: string,
+  ) {
+    return this.supportService.updateStatus(id, status, resolutionNote);
+  }
+
+  @Patch('support/tickets/:id')
+  @UseGuards(AuthGuard, TenantGuard)
+  async updateTenantTicket(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    return this.supportService.updateTenantTicketStatus(tenantId, id, status);
   }
 }

@@ -89,7 +89,7 @@ export class KnowledgeController {
     @Req() req: any,
     @Body() data: { query: string; topK?: number; niche?: any; bypassShield?: boolean },
   ) {
-    const isInternalVoice = Boolean(req.headers['x-internal-voice-key']);
+    const isInternalVoice = Boolean(req.isInternalVoice === true);
     const allowBypass = isInternalVoice && Boolean(data.bypassShield);
     return this.ragService.search(
       tenantId,

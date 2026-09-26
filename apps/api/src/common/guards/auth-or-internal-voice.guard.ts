@@ -25,7 +25,10 @@ export class AuthOrInternalVoiceGuard implements CanActivate {
     const voiceKey = request.headers['x-internal-voice-key'];
     const expectedKey = this.configService.get<string>('INTERNAL_VOICE_SECRET');
 
-    if (voiceKey && expectedKey) {
+    if (voiceKey) {
+      if (!expectedKey) {
+        throw new UnauthorizedException('Internal voice secret is unconfigured');
+      }
       const keyBuf = Buffer.from(String(voiceKey));
       const expBuf = Buffer.from(String(expectedKey));
       if (keyBuf.length === expBuf.length && crypto.timingSafeEqual(keyBuf, expBuf)) {
@@ -33,19 +36,14 @@ export class AuthOrInternalVoiceGuard implements CanActivate {
         if (!tenantId) {
           throw new UnauthorizedException('Missing x-tenant-id for voice operation');
         }
-        request.tenantId = tenantId;
+        request.tenantId = String(tenantId);
+        request.isInternalVoice = true;
         return true;
       }
+      throw new UnauthorizedException('Invalid internal voice key');
     }
 
-    // In development mode, only allow unauthenticated requests if an explicit x-tenant-id is provided
-    if (process.env.NODE_ENV !== 'production' && !request.headers['authorization'] && !voiceKey) {
-      const explicitTenant = request.headers['x-tenant-id'] || request.query?.tenantId;
-      if (explicitTenant) {
-        request.tenantId = String(explicitTenant);
-        return true;
-      }
-    }
+    request.isInternalVoice = false;
 
     // Otherwise require normal Clerk user authentication and tenant context
     const authOk = await this.authGuard.canActivate(context);

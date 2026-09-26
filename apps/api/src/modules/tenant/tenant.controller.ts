@@ -2,6 +2,8 @@ import { Controller, Get, Put, Body, UseGuards, Req, Param } from '@nestjs/commo
 import { TenantService } from './tenant.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('tenants')
 export class TenantController {
@@ -19,13 +21,15 @@ export class TenantController {
   }
 
   @Put('me')
-  @UseGuards(AuthGuard, TenantGuard)
+  @UseGuards(AuthGuard, TenantGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'ORG_ADMIN')
   async updateTenant(@Req() req: any, @Body() data: any) {
     return this.tenantService.update(req.tenantId, data);
   }
 
   @Put('me/branding')
-  @UseGuards(AuthGuard, TenantGuard)
+  @UseGuards(AuthGuard, TenantGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'ORG_ADMIN')
   async updateBranding(@Req() req: any, @Body() data: any) {
     return this.tenantService.updateBranding(req.tenantId, data);
   }
@@ -37,7 +41,8 @@ export class TenantController {
   }
 
   @Put('me/llm-settings')
-  @UseGuards(AuthGuard, TenantGuard)
+  @UseGuards(AuthGuard, TenantGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'ORG_ADMIN')
   async updateLlmSettings(@Req() req: any, @Body() data: any) {
     return this.tenantService.updateLlmSettings(req.tenantId, data);
   }

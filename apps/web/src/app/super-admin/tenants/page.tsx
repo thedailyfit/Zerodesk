@@ -44,12 +44,18 @@ export default function SuperAdminTenantsPage() {
         if (isMounted && Array.isArray(liveTenants)) {
           const formatted = liveTenants.map((t: any) => ({
             ...t,
-            voiceMinutesUsed: t.subscription?.voiceMinutesUsed || 0,
-            voiceMinutesLimit: t.subscription?.voiceMinutesLimit || 500,
-            whatsappMessagesUsed: t.subscription?.whatsappMessagesUsed || 0,
-            whatsappMessagesLimit: t.subscription?.whatsappMessagesLimit || 2000,
-            llmTokensUsed: t.subscription?.llmTokensUsed || 0,
-            llmTokensLimit: t.subscription?.llmTokensLimit || 1000000,
+            mrr: Number(t.subscription?.mrr || t.mrr || 0),
+            plan: t.subscription?.planTier || t.planTier || t.plan || 'Starter',
+            allowedVoiceIds: Array.isArray(t.allowedVoices)
+              ? t.allowedVoices.map((v: any) => v.id || v)
+              : (Array.isArray(t.allowedVoiceIds) ? t.allowedVoiceIds : []),
+            ragChunksCount: t._count?.knowledgeChunks || t.ragChunksCount || 0,
+            voiceMinutesUsed: t.subscription?.voiceMinutesUsed || t.voiceMinutesUsed || 0,
+            voiceMinutesLimit: t.subscription?.voiceMinutesLimit || t.voiceMinutesLimit || 500,
+            whatsappMessagesUsed: t.subscription?.whatsappMessagesUsed || t.whatsappMessagesUsed || 0,
+            whatsappMessagesLimit: t.subscription?.whatsappMessagesLimit || t.whatsappMessagesLimit || 2000,
+            llmTokensUsed: t.subscription?.llmTokensUsed || t.llmTokensUsed || 0,
+            llmTokensLimit: t.subscription?.llmTokensLimit || t.llmTokensLimit || 1000000,
           }));
           setTenants(formatted);
         }
@@ -72,7 +78,6 @@ export default function SuperAdminTenantsPage() {
   const handleSaveTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTenant) return;
-    updateTenant(editingTenant.id, editingTenant);
     try {
       await apiClient(`/admin/tenants/${editingTenant.id}/limits`, {
         method: 'PUT',
@@ -83,11 +88,13 @@ export default function SuperAdminTenantsPage() {
           assignedLlmId: editingTenant.assignedLlmId,
         }),
       });
+      updateTenant(editingTenant.id, editingTenant);
+      toast.success(`Updated ${editingTenant.name} settings successfully!`);
+      setEditingTenant(null);
     } catch (err) {
       console.warn('Failed to sync tenant limits to backend:', err);
+      toast.error(`Failed to update ${editingTenant.name} settings on server`);
     }
-    toast.success(`Updated ${editingTenant.name} settings successfully!`);
-    setEditingTenant(null);
   };
 
   const handleGhostMode = (tenant: AdminTenant) => {
@@ -192,7 +199,7 @@ export default function SuperAdminTenantsPage() {
                     </td>
                     <td className="px-5 py-4">
                       <span className="font-mono text-blue-300 text-[11px] bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
-                        {t.allowedVoiceIds.length} Voices Active
+                        {(t.allowedVoiceIds?.length || 0)} Voices Active
                       </span>
                     </td>
                     <td className="px-5 py-4 font-mono">

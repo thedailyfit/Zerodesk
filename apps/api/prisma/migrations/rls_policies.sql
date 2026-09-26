@@ -17,6 +17,7 @@ ALTER TABLE "invoices" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_documents" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_chunks" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "automation_workflows" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "support_tickets" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "invoice_items" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "invoice_items" NO FORCE ROW LEVEL SECURITY;
@@ -35,6 +36,7 @@ ALTER TABLE "invoices" NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_documents" NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE "knowledge_chunks" NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE "automation_workflows" NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE "support_tickets" NO FORCE ROW LEVEL SECURITY;
 
 -- 3. Drop existing policies if any
 DROP POLICY IF EXISTS tenant_isolation_customers ON "customers";
@@ -47,9 +49,11 @@ DROP POLICY IF EXISTS tenant_isolation_leads ON "leads";
 DROP POLICY IF EXISTS tenant_isolation_tasks ON "tasks";
 DROP POLICY IF EXISTS tenant_isolation_activities ON "activities";
 DROP POLICY IF EXISTS tenant_isolation_invoices ON "invoices";
+DROP POLICY IF EXISTS tenant_isolation_invoice_items ON "invoice_items";
 DROP POLICY IF EXISTS tenant_isolation_knowledge_documents ON "knowledge_documents";
 DROP POLICY IF EXISTS tenant_isolation_knowledge_chunks ON "knowledge_chunks";
 DROP POLICY IF EXISTS tenant_isolation_automation_workflows ON "automation_workflows";
+DROP POLICY IF EXISTS tenant_isolation_support_tickets ON "support_tickets";
 
 -- 4. Define resilient RLS isolation policies
 -- Grants full access to administrative backend roles (postgres, service_role, supabase_admin)
@@ -146,6 +150,13 @@ CREATE POLICY tenant_isolation_knowledge_chunks ON "knowledge_chunks"
     );
 
 CREATE POLICY tenant_isolation_automation_workflows ON "automation_workflows"
+    FOR ALL
+    USING (
+      session_user IN ('postgres', 'service_role', 'supabase_admin')
+      OR "tenant_id" = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid
+    );
+
+CREATE POLICY tenant_isolation_support_tickets ON "support_tickets"
     FOR ALL
     USING (
       session_user IN ('postgres', 'service_role', 'supabase_admin')

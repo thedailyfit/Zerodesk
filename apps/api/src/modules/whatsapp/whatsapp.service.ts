@@ -454,19 +454,57 @@ export class WhatsappService {
   }
 
   async updateConfig(tenantId: string, data: any) {
-    const allowed = ['phoneNumberId', 'wabaId', 'businessAccountId', 'appId', 'appSecret', 'webhookVerifyToken', 'status', 'settings'];
     const updateData: Record<string, any> = {};
-    for (const key of allowed) {
-      if (data && data[key] !== undefined) updateData[key] = data[key];
-    }
-    if (data?.accessToken) {
+
+    // 1. Direct schema scalar fields
+    if (data.phoneNumberId !== undefined) updateData.phoneNumberId = data.phoneNumberId;
+    if (data.wabaId !== undefined) updateData.wabaId = data.wabaId;
+    if (data.displayPhone !== undefined) updateData.displayPhone = data.displayPhone;
+    if (data.greeting !== undefined) updateData.greeting = data.greeting;
+    if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+
+    const token = data.verifyToken || data.webhookVerifyToken;
+    if (token !== undefined) updateData.verifyToken = token;
+
+    if (data?.accessToken && !data.accessToken.includes('••••')) {
       updateData.accessToken = this.cryptoService.encrypt(data.accessToken);
     }
-    return this.prisma.whatsappConfig.upsert({
+
+    // 2. Map runtime/UI properties into settings JSON
+    const current = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
+    const currentSettings = (current?.settings as Record<string, any>) || {};
+    const newSettings = { ...currentSettings };
+
+    const settingKeys = ['businessAccountId', 'appId', 'appSecret', 'status'];
+    for (const key of settingKeys) {
+      if (data && data[key] !== undefined) newSettings[key] = data[key];
+    }
+    if (data && typeof data.settings === 'object' && data.settings !== null) {
+      Object.assign(newSettings, data.settings);
+    }
+    updateData.settings = newSettings;
+
+    const result = await this.prisma.whatsappConfig.upsert({
       where: { tenantId },
       update: updateData,
       create: { ...updateData, tenantId },
     });
+
+    return {
+      id: result.id,
+      tenantId: result.tenantId,
+      phoneNumberId: result.phoneNumberId,
+      wabaId: result.wabaId,
+      displayPhone: result.displayPhone,
+      greeting: result.greeting,
+      isActive: result.isActive,
+      verifyToken: result.verifyToken,
+      hasToken: Boolean(result.accessToken),
+      accessToken: result.accessToken ? '••••••••' : null,
+      settings: result.settings,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
   }
 
   /**
