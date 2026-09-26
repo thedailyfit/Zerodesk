@@ -30,22 +30,11 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 
-const DEFAULT_HOURS = [
-  { time: "09:00", delay: 0 },
-  { time: "10:00", delay: 0 },
-  { time: "11:00", delay: 0 },
-  { time: "12:00", delay: 0 },
-  { time: "13:00", delay: 0 },
-  { time: "14:00", delay: 0 },
-  { time: "15:00", delay: 0 },
-  { time: "16:00", delay: 0 },
-  { time: "17:00", delay: 0 },
-  { time: "18:00", delay: 0 }
-];
+
 
 export default function OperationalDelaysPage() {
   const [loading, setLoading] = useState(true);
-  const [hourlyData, setHourlyData] = useState(DEFAULT_HOURS);
+  const [hourlyData, setHourlyData] = useState<{time: string, delay: number}[]>([]);
   const [stats, setStats] = useState({
     avgDelay: 0,
     peakWait: 0,
@@ -155,7 +144,15 @@ export default function OperationalDelaysPage() {
         className="space-y-6"
       >
         {/* Metric Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.totalToday === 0 ? (
+          <div className="p-12 text-center rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm">
+            <Clock className="w-12 h-12 mx-auto text-blue-500/50 mb-3" />
+            <h3 className="font-bold text-[var(--color-text)] mb-1">No Delay Data Yet</h3>
+            <p className="text-[var(--color-text-muted)] text-sm">Wait time analytics will appear here once today's appointments begin.</p>
+          </div>
+        ) : (
+          <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <motion.div variants={itemVariants} className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Avg Consultation Delay</span>
@@ -284,6 +281,8 @@ export default function OperationalDelaysPage() {
             </div>
           </motion.div>
         </div>
+      </>
+      )}
       </motion.div>
     </div>
   );

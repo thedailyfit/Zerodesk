@@ -19,12 +19,7 @@ import { useSuperAdminStore } from '@/lib/superadmin-store';
 export default function SuperAdminInfrastructurePage() {
   const { tenants } = useSuperAdminStore();
 
-  const services = [
-    { name: 'PostgreSQL + pgvector', host: 'Supabase Cloud (AWS Mumbai)', status: 'Healthy', latency: '24ms', load: '18%' },
-    { name: 'BullMQ Task Worker', host: 'Railway Cluster (Singapore)', status: 'Healthy', latency: '42ms', load: '31%' },
-    { name: 'Redis Cache & Locks', host: 'Upstash Global Serverless', status: 'Healthy', latency: '12ms', load: '8%' },
-    { name: 'LiveKit WebRTC Server', host: 'LiveKit Cloud Ingress', status: 'Healthy', latency: '35ms', load: '44%' },
-  ];
+  const services: any[] = [];
 
   return (
     <div className="space-y-8">
@@ -39,23 +34,10 @@ export default function SuperAdminInfrastructurePage() {
       </div>
 
       {/* Services Health Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {services.map((svc, idx) => (
-          <div key={idx} className="p-5 rounded-2xl bg-[#0D111D] border border-slate-800 shadow-lg">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-bold text-white">{svc.name}</span>
-              <span className="flex items-center gap-1 text-emerald-400 text-[10px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {svc.status}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-4">{svc.host}</p>
-            <div className="flex justify-between text-xs font-mono text-slate-300 pt-3 border-t border-slate-800/80">
-              <span>Latency: <strong className="text-emerald-400">{svc.latency}</strong></span>
-              <span>Load: <strong className="text-slate-200">{svc.load}</strong></span>
-            </div>
-          </div>
-        ))}
+            <div className="p-12 text-center rounded-2xl bg-[#0D111D] border border-slate-800 shadow-lg">
+        <Activity className="w-12 h-12 mx-auto text-slate-700 mb-3" />
+        <h3 className="font-bold text-white mb-1">No Monitoring Data</h3>
+        <p className="text-slate-400 text-sm">Connect to a monitoring service like Datadog or Prometheus for live metrics.</p>
       </div>
 
       {/* Vector Storage Breakdown */}

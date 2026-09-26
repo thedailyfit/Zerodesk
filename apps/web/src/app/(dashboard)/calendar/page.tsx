@@ -74,7 +74,7 @@ const TYPE_CONFIG = {
   },
 };
 
-const DEFAULT_STAFF: string[] = ['Duty Specialist', 'Lead Consultant'];
+const DEFAULT_STAFF: string[] = [];
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -179,7 +179,7 @@ export default function DoctorSlotsPage() {
 
   const handleOpenNewAppt = (dayIdx = 0, startHr = 9.0) => {
     const newAppt: Appointment = {
-      id: `new-${Date.now()}`,
+      id: `new-${crypto.randomUUID()}`,
       dayIndex: dayIdx,
       dateStr: `2026-08-0${dayIdx + 3}`,
       startTime: startHr,
@@ -529,7 +529,7 @@ function DetailHoursView({
                         <div 
                           onClick={() => {
                             onEdit({
-                              id: `new-${Date.now()}`,
+                              id: `new-${crypto.randomUUID()}`,
                               dayIndex: 3,
                               dateStr: '2026-08-06',
                               startTime: slot.time,
@@ -747,7 +747,7 @@ function WeeklyGridMode({
                 key={i} 
                 onClick={() => {
                   onEdit({
-                    id: `new-${Date.now()}`,
+                    id: `new-${crypto.randomUUID()}`,
                     dayIndex: i,
                     dateStr: `2026-08-0${i + 3}`,
                     startTime: time,
@@ -921,7 +921,7 @@ function FifteenDaysMatrixMode({
               <button
                 onClick={() => {
                   onEdit({
-                    id: `new-${Date.now()}`,
+                    id: `new-${crypto.randomUUID()}`,
                     dayIndex: d.dayIndex,
                     dateStr: `2026-08-${d.dateNum < 10 ? '0' : ''}${d.dateNum}`,
                     startTime: 9.0,

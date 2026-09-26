@@ -100,11 +100,11 @@ export default function AppointmentsPage() {
       if (Array.isArray(res) && res.length > 0) {
         const mapped: AppointmentItem[] = res.map((a: any) => ({
           id: a.id,
-          customer: a.customer?.name || 'Inquiry Patient',
+          customer: a.customer?.name || (nicheConfig.terminology?.customer || 'Customer'),
           phone: a.customer?.phone || '',
           email: a.customer?.email || '',
-          service: a.service?.name || 'Clinic Consultation',
-          staff: a.staff?.name || 'Specialist Doctor',
+          service: a.service?.name || (nicheConfig.terminology?.service || 'Service'),
+          staff: a.staff?.name || (nicheConfig.terminology?.staff || 'Staff'),
           scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString() : new Date().toISOString(),
           duration: a.durationMins || 30,
           status: (a.status as any) || 'SCHEDULED',
@@ -473,7 +473,18 @@ export default function AppointmentsPage() {
           ) : (
             /* List View */
             <div className="space-y-3">
-              {appointments.map((appt) => {
+              {appointments.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[var(--color-text-muted)] bg-[var(--color-glass)] backdrop-blur border border-[var(--color-glass-border)] rounded-2xl space-y-3">
+                  <p className="font-semibold text-sm text-[var(--color-text)]">No appointments found</p>
+                  <p>There are no scheduled {nicheConfig.terminology?.appointments?.toLowerCase() || 'appointments'} recorded yet.</p>
+                  <Link
+                    href="/book-appointment"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs shadow-sm transition-all"
+                  >
+                    <Plus size={14} /> Book First {nicheConfig.terminology?.appointment || 'Appointment'}
+                  </Link>
+                </div>
+              ) : appointments.map((appt) => {
                 const status = statusConfig[appt.status] || statusConfig.SCHEDULED;
                 const StatusIcon = status.icon;
                 const apptDate = new Date(appt.scheduledAt);
@@ -494,9 +505,9 @@ export default function AppointmentsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
-                          <span>Patient: <strong className="text-[var(--color-text)]">{appt.customer}</strong></span>
+                          <span>{nicheConfig.terminology?.customer || 'Customer'}: <strong className="text-[var(--color-text)]">{appt.customer}</strong></span>
                           <span>•</span>
-                          <span>Staff: <strong className="text-blue-500">{appt.staff}</strong></span>
+                          <span>{nicheConfig.terminology?.staff || 'Staff'}: <strong className="text-blue-500">{appt.staff}</strong></span>
                           <span>•</span>
                           <span className="text-[var(--color-text)] font-medium">{sourceLabels[appt.source]}</span>
                         </div>

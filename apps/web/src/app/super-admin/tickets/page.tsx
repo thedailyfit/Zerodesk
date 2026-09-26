@@ -40,50 +40,11 @@ export interface GlobalSupportTicket {
   resolutionNote?: string;
 }
 
-const DEFAULT_GLOBAL_TICKETS: GlobalSupportTicket[] = [
-  {
-    id: 't-101',
-    ticketNumber: 'ZD-2026-904',
-    tenantName: 'Ananya Skin & Laser Clinic',
-    niche: 'skin',
-    subject: 'Meta WhatsApp Template verification delay on new OPD reminders',
-    description: 'Our custom pre-consultation reminder template is stuck in Meta review for 48 hours. Please check status.',
-    category: 'WhatsApp & Meta API',
-    priority: 'High',
-    status: 'In Progress',
-    createdAt: '2 hours ago'
-  },
-  {
-    id: 't-102',
-    ticketNumber: 'ZD-2026-882',
-    tenantName: 'Serenity Ayurvedic Sanctuary',
-    niche: 'spa',
-    subject: 'Request to verify BAMS Doctor license for Telephony AI voice persona',
-    description: 'We uploaded our clinic authorization documents for the Sarvam AI Hindi voice pipeline.',
-    category: 'Voice AI Telephony',
-    priority: 'Medium',
-    status: 'Open',
-    createdAt: '4 hours ago'
-  },
-  {
-    id: 't-103',
-    ticketNumber: 'ZD-2026-840',
-    tenantName: 'Apex Dental Care',
-    niche: 'dental',
-    subject: 'Need custom discount rule Cedar policy configuration in action policy',
-    description: 'We would like frontdesk staff to approve up to 10% on clear aligners without OTP confirmation.',
-    category: 'Billing & Rules',
-    priority: 'Low',
-    status: 'Resolved',
-    createdAt: 'Yesterday',
-    resolutionNote: 'Policy rule action_policy_dental_discount updated in Cedar store.'
-  }
-];
 
 export default function SuperAdminSupportTicketsPage() {
   const { theme } = useTheme();
   const { tenants } = useSuperAdminStore();
-  const [tickets, setTickets] = useState<GlobalSupportTicket[]>(DEFAULT_GLOBAL_TICKETS);
+  const [tickets, setTickets] = useState<GlobalSupportTicket[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'Open' | 'In Progress' | 'Resolved'>('ALL');
   const [selectedTicket, setSelectedTicket] = useState<GlobalSupportTicket | null>(null);
@@ -99,20 +60,14 @@ export default function SuperAdminSupportTicketsPage() {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const merged = [...parsed];
-            DEFAULT_GLOBAL_TICKETS.forEach(dt => {
-              if (!merged.some(m => m.ticketNumber === dt.ticketNumber)) {
-                merged.push(dt);
-              }
-            });
-            setTickets(merged);
+            setTickets(parsed);
             return;
           }
         }
       } catch (e) {
         console.warn('Failed loading global support tickets', e);
       }
-      setTickets(DEFAULT_GLOBAL_TICKETS);
+      setTickets([]);
     };
 
     try {

@@ -659,26 +659,20 @@ export default function InvoicesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   <tr>
-                    <td className="py-2.5 font-semibold text-slate-800">Laser Skin Procedure</td>
-                    <td className="py-2.5">1</td>
-                    <td className="py-2.5 font-mono">₹4,000</td>
-                    <td className="py-2.5 font-mono font-bold text-right">₹4,000</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 font-semibold text-slate-800">Post-care Serum Pack</td>
-                    <td className="py-2.5">1</td>
-                    <td className="py-2.5 font-mono">₹1,500</td>
-                    <td className="py-2.5 font-mono font-bold text-right">₹1,500</td>
+                    <td className="py-2.5 font-semibold text-slate-800">Sample Service</td>
+                    <td className="py-2.5">0</td>
+                    <td className="py-2.5 font-mono">₹0</td>
+                    <td className="py-2.5 font-mono font-bold text-right">₹0</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="w-56 ml-auto space-y-1 text-xs border-t-2 border-blue-600 pt-3">
-                <div className="flex justify-between text-slate-600"><span>Subtotal:</span><span className="font-mono">₹5,500</span></div>
-                <div className="flex justify-between text-slate-600"><span>GST (18%):</span><span className="font-mono">₹990</span></div>
+                <div className="flex justify-between text-slate-600"><span>Subtotal:</span><span className="font-mono">₹0</span></div>
+                <div className="flex justify-between text-slate-600"><span>GST (18%):</span><span className="font-mono">₹0</span></div>
                 <div className="flex justify-between text-base font-extrabold text-slate-900 pt-1 border-t border-slate-200">
                   <span>Total:</span>
-                  <span className="font-mono text-blue-600">₹6,490</span>
+                  <span className="font-mono text-blue-600">₹0</span>
                 </div>
               </div>
 

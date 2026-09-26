@@ -31,10 +31,12 @@ import {
 import { cn, formatCurrency } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { useRole } from "@/components/providers/role-provider";
+import { useNiche } from "@/components/providers/niche-provider";
 import Link from "next/link";
 
 export default function MonthlySalesPage() {
   const { isAdmin } = useRole();
+  const { nicheConfig } = useNiche();
   const [monthlyTarget, setMonthlyTarget] = useState<number>(500000);
   const [weeklyTarget, setWeeklyTarget] = useState<number>(125000);
   const [currentMonthRevenue, setCurrentMonthRevenue] = useState<number>(0);
@@ -131,7 +133,7 @@ export default function MonthlySalesPage() {
         // Top services/treatments
         const serviceCounts: Record<string, { count: number; total: number }> = {};
         invoices.forEach((inv: any) => {
-          const name = inv.service?.name || inv.description || inv.lineItems?.[0]?.serviceName || 'Clinical Consultation';
+          const name = inv.service?.name || inv.description || inv.lineItems?.[0]?.serviceName || (nicheConfig.terminology?.service || 'Service Offering');
           const amt = Number(inv.amount || inv.total || inv.grandTotal || inv.paidAmount) || 0;
           if (!serviceCounts[name]) serviceCounts[name] = { count: 0, total: 0 };
           serviceCounts[name].count++;
@@ -295,7 +297,7 @@ export default function MonthlySalesPage() {
                 <div key={idx} className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-between text-xs">
                   <div>
                     <p className="font-semibold text-[var(--color-text)] truncate max-w-[150px]">{t.name}</p>
-                    <p className="text-[10px] text-[var(--color-text-muted)]">{t.count} sittings</p>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">{t.count} {t.count === 1 ? 'order' : 'orders'}</p>
                   </div>
                   <span className="font-mono font-bold text-emerald-400">{t.revenue}</span>
                 </div>

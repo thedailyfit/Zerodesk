@@ -133,10 +133,14 @@ export const SPA_WELLNESS_CONFIG: NicheConfig = {
   ],
 
   kpis: [
-    { label: 'Room Occupancy Rate', value: '78%', change: '+5%', trend: 'up' },
-    { label: 'Therapist Utilization', value: '82%', change: '+2%', trend: 'up' },
-    { label: 'Average Ticket Value', value: '₹2,800', change: '+₹150', trend: 'up' },
-    { label: 'Membership Renewal Rate', value: '71%', change: '-2%', trend: 'down' },
+
+
+    { label: 'Room Occupancy Rate', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Therapist Utilization', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Average Ticket Value', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Membership Renewal Rate', value: '0', change: '0%', trend: 'neutral' },
+  
+  
   ],
 
   templates: [

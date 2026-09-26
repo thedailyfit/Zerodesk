@@ -133,10 +133,14 @@ export const HOTEL_RESORT_CONFIG: NicheConfig = {
   ],
 
   kpis: [
-    { label: 'Occupancy Rate', value: '76%', change: '+5%', trend: 'up' },
-    { label: 'RevPAR', value: '₹4,850', change: '+₹320', trend: 'up' },
-    { label: 'ADR', value: '₹6,200', change: '+₹150', trend: 'up' },
-    { label: 'Direct Booking Ratio', value: '42%', change: '+3%', trend: 'up' },
+
+
+    { label: 'Occupancy Rate', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'RevPAR', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'ADR', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Direct Booking Ratio', value: '0', change: '0%', trend: 'neutral' },
+  
+  
   ],
 
   templates: [

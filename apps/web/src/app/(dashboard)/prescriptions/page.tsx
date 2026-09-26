@@ -52,44 +52,15 @@ interface LetterheadConfig {
 }
 
 const DEFAULT_MEDICINES_BY_NICHE: Record<string, string[]> = {
-  skin: [
-    'Cap. Doxycycline 100mg',
-    'Tab. Isotretinoin 10mg',
-    'Tab. Levocetirizine 5mg',
-    'Gel Adapalene 0.1% + Benzoyl Peroxide 2.5%',
-    'Cream Clindamycin 1%',
-    'Cream Mupirocin 2%',
-    'Sunscreen Gel SPF 50+ PA++++',
-    'Lotion Calamine + Liquid Paraffin',
-    'Tab. Vitamin C 500mg + Zinc'
-  ],
-  dental: [
-    'Tab. Amoxicillin 500mg + Clavulanate 125mg',
-    'Tab. Metronidazole 400mg',
-    'Tab. Zerodol-SP (Aceclofenac + Paracetamol + Serratiopeptidase)',
-    'Tab. Ketorol-DT 10mg (Dispersible)',
-    'Tab. Pantoprazole 40mg',
-    'Mouthwash Chlorhexidine 0.2%',
-    'Toothpaste Potassium Nitrate 5%',
-    'Gel Choline Salicylate (Topical Gum Gel)',
-    'Tab. Calcium 500mg + Vitamin D3'
-  ],
-  spa: [
-    'Organic Lavender Essential Oil (5ml)',
-    'Warm Herbal Compress Therapy',
-    'Deep Tissue Muscle Relief Balm',
-    'Eucalyptus Steam Inhalation',
-    'Cold-Pressed Jojoba Hydration Base',
-    'Chamomile & Green Tea Detox Infusion',
-    'Rosewater Soothing Facial Mist',
-    'Magnesium Mineral Bath Soak'
-  ]
+  skin: [],
+  dental: [],
+  spa: [],
 };
 
 const QUICK_DIAGNOSES_BY_NICHE: Record<string, string[]> = {
-  skin: ['Acne Vulgaris (Grade 2)', 'Melasma / Hyperpigmentation', 'Post-Inflammatory Erythema', 'Alopecia Androgenetica', 'Atopic Dermatitis', 'Tinea Corporis', 'Post-Laser Erythema'],
-  dental: ['Acute Irreversible Pulpitis', 'Periapical Abscess (Tooth #46)', 'Chronic Generalized Gingivitis', 'Impacted 3rd Molar (Tooth #38)', 'Post-Extraction Pain', 'Dental Caries with Dentin Sensitivity'],
-  spa: ['Muscle Tension & Fatigue', 'Stress & Anxiety Relief', 'Dry Skin Dehydration', 'Post-Workout Recovery', 'Holistic Wellness Checkup', 'Insomnia & Restlessness Support']
+  skin: [],
+  dental: [],
+  spa: []
 };
 
 export default function PrescriptionsPage() {
@@ -116,7 +87,7 @@ export default function PrescriptionsPage() {
   }));
 
   // Current Prescription Form
-  const [rxNumber] = useState<string>(() => `${currentNiche === 'spa' ? 'CP' : 'RX'}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [rxNumber] = useState<string>(() => `${currentNiche === 'spa' ? 'CP' : 'RX'}-${new Date().getFullYear()}-${crypto.randomUUID().split('-')[0]}`);
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientGender, setPatientGender] = useState<'Female' | 'Male' | 'Other'>('Female');

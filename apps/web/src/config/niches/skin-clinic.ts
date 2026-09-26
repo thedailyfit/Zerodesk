@@ -136,10 +136,14 @@ export const SKIN_CLINIC_CONFIG: NicheConfig = {
   ],
 
   kpis: [
-    { label: 'Avg Revenue Per Patient', value: '₹4,250', change: '+12%', trend: 'up' },
-    { label: 'Package Conversion Rate', value: '34%', change: '+5%', trend: 'up' },
-    { label: 'No-Show Rate', value: '8%', change: '-2%', trend: 'down' },
-    { label: 'AI Resolution Rate', value: '78%', change: '+15%', trend: 'up' }
+
+
+    { label: 'Avg Revenue Per Patient', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Package Conversion Rate', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'No-Show Rate', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'AI Resolution Rate', value: '0', change: '0%', trend: 'neutral' }
+  
+  
   ],
 
   templates: [

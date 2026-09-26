@@ -135,10 +135,14 @@ export const DENTAL_CLINIC_CONFIG: NicheConfig = {
   ],
 
   kpis: [
-    { label: 'Chair Utilization', value: '82%', change: '+4%', trend: 'up' },
-    { label: 'Treatment Acceptance', value: '65%', change: '+10%', trend: 'up' },
-    { label: 'Revenue Per Chair', value: '₹12,400', change: '+2%', trend: 'up' },
-    { label: '6-Month Recall Rate', value: '45%', change: '-5%', trend: 'down' }
+
+
+    { label: 'Chair Utilization', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Treatment Acceptance', value: '0', change: '0%', trend: 'neutral' },
+    { label: 'Revenue Per Chair', value: '0', change: '0%', trend: 'neutral' },
+    { label: '6-Month Recall Rate', value: '0', change: '0%', trend: 'neutral' }
+  
+  
   ],
 
   templates: [

@@ -25,6 +25,7 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { apiClient } from "@/lib/api-client";
+import { useNiche } from "@/components/providers/niche-provider";
 
 interface InvoiceItem {
   id: string;
@@ -45,6 +46,7 @@ interface InvoiceItem {
 }
 
 export default function TodaysRevenuePage() {
+  const { nicheConfig } = useNiche();
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,7 +98,7 @@ export default function TodaysRevenuePage() {
   const treatmentMap = new Map<string, number>();
   paidInvoices.forEach((inv) => {
     inv.lineItems?.forEach((item) => {
-      const name = item.serviceName || item.description || "Clinical Procedure";
+      const name = item.serviceName || item.description || (nicheConfig.terminology?.service || "Service Offering");
       const amount = item.totalPrice || item.unitPrice * item.quantity || 0;
       treatmentMap.set(name, (treatmentMap.get(name) || 0) + amount);
     });
@@ -109,8 +111,8 @@ export default function TodaysRevenuePage() {
   }));
 
   const recentTransactions = paidInvoices.slice(0, 6).map((inv) => ({
-    patient: inv.customerName || "Customer",
-    treatment: inv.lineItems?.[0]?.serviceName || inv.lineItems?.[0]?.description || "Clinical Service",
+    patient: inv.customerName || (nicheConfig.terminology?.customer || "Customer"),
+    treatment: inv.lineItems?.[0]?.serviceName || inv.lineItems?.[0]?.description || (nicheConfig.terminology?.service || "Service Offering"),
     amount: (inv.paidAmount || inv.grandTotal || 0).toLocaleString("en-IN"),
     time: new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     method: (inv.paymentMethod || "UPI").toUpperCase(),

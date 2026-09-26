@@ -46,62 +46,7 @@ interface DocumentItem {
   updatedAt: string;
 }
 
-const INITIAL_DOCUMENTS: DocumentItem[] = [
-  { 
-    id: '1', 
-    title: 'Standard Operating Protocol 2026', 
-    category: 'SOP', 
-    content: 'Standard operating protocol. Requires mandatory assessment and pre-session check prior to full service. Post-care guidelines must be provided immediately upon completion.', 
-    chunks: 8, 
-    isActive: true, 
-    updatedAt: 'Aug 14, 2026' 
-  },
-  { 
-    id: '2', 
-    title: 'Treatment & Service Menu Pricing', 
-    category: 'PRICING', 
-    content: 'Detailed pricing menu: Initial Consultation ₹500, Standard Session ₹3,000, Full Package ₹25,000. All prices inclusive of GST. Package discounts of 20% apply for bookings of 4+ sessions.', 
-    chunks: 14, 
-    isActive: true, 
-    updatedAt: 'Aug 12, 2026' 
-  },
-  { 
-    id: '3', 
-    title: 'Emergency Handling & Escalation Protocol', 
-    category: 'RESTRICTED_GUIDELINES', 
-    content: 'STRICT RULE: Never prescribe medications over the phone. For severe pain, acute swelling, or urgent symptoms, immediately escalate to on-duty specialist or direct to nearest center.', 
-    chunks: 6, 
-    isActive: true, 
-    updatedAt: 'Aug 10, 2026' 
-  },
-  { 
-    id: '4', 
-    title: 'Client Objection Handling & Sales Scripts', 
-    category: 'SCRIPTS', 
-    content: 'Handle price objections by highlighting certified experts and clinical technology. Address hesitation with gentle consultation reassurance and clear timeline expectations.', 
-    chunks: 9, 
-    isActive: true, 
-    updatedAt: 'Aug 08, 2026' 
-  },
-  { 
-    id: '5', 
-    title: 'Frequently Asked Questions (FAQ)', 
-    category: 'FAQ', 
-    content: 'Common questions: How many sessions are recommended? What is the expected recovery downtime? What are post-care recommendations? When can results be observed?', 
-    chunks: 11, 
-    isActive: true, 
-    updatedAt: 'Aug 05, 2026' 
-  },
-  { 
-    id: '6', 
-    title: 'Complete Service Guide & Care Roadmap', 
-    category: 'SERVICE', 
-    content: 'Complete client journey: Initial diagnostic consultation -> Tailored session schedule -> Milestone reviews -> Long-term maintenance roadmap.', 
-    chunks: 8, 
-    isActive: true, 
-    updatedAt: 'Aug 01, 2026' 
-  },
-];
+const INITIAL_DOCUMENTS: DocumentItem[] = [];
 
 const categoryConfig: Record<string, { color: string; label: string; badge: string }> = {
   SOP: { color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', label: 'Standard Operating Procedure', badge: 'SOP' },

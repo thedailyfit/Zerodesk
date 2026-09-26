@@ -45,20 +45,12 @@ interface CampaignItem {
   status: 'ACTIVE' | 'PAUSED';
 }
 
-const DEFAULT_CAMPAIGNS_BY_NICHE: Record<NicheId, CampaignItem[]> = {
-  skin: [], dental: [], spa: [], salon: [], realestate: [], hotel: []
-};
-
-const DEFAULT_LEADS_BY_NICHE: Record<NicheId, AdLead[]> = {
-  skin: [], dental: [], spa: [], salon: [], realestate: [], hotel: []
-};
-
 export default function MetaAdsCrmPage() {
   const { currentNiche } = useNiche();
   const [activeTab, setActiveTab] = useState<'All' | 'Meta' | 'Google'>('All');
   const [selectedLead, setSelectedLead] = useState<AdLead | null>(null);
-  const [leads, setLeads] = useState<AdLead[]>(() => DEFAULT_LEADS_BY_NICHE[currentNiche] || DEFAULT_LEADS_BY_NICHE.skin);
-  const [campaigns, setCampaigns] = useState<CampaignItem[]>(() => DEFAULT_CAMPAIGNS_BY_NICHE[currentNiche] || DEFAULT_CAMPAIGNS_BY_NICHE.skin);
+  const [leads, setLeads] = useState<AdLead[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignItem[]>([]);
 
   useEffect(() => {
     try {
@@ -67,15 +59,15 @@ export default function MetaAdsCrmPage() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setLeads(parsed);
-          setCampaigns(DEFAULT_CAMPAIGNS_BY_NICHE[currentNiche] || DEFAULT_CAMPAIGNS_BY_NICHE.skin);
+          setCampaigns([]);
           return;
         }
       }
     } catch (e) {
       console.error('Failed to load ad leads from localStorage', e);
     }
-    setLeads(DEFAULT_LEADS_BY_NICHE[currentNiche] || DEFAULT_LEADS_BY_NICHE.skin);
-    setCampaigns(DEFAULT_CAMPAIGNS_BY_NICHE[currentNiche] || DEFAULT_CAMPAIGNS_BY_NICHE.skin);
+    setLeads([]);
+    setCampaigns([]);
   }, [currentNiche]);
 
   const saveLeads = (updated: AdLead[]) => {
@@ -181,8 +173,13 @@ export default function MetaAdsCrmPage() {
         <h2 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
           Active Ad Campaigns ({campaigns.length})
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {campaigns.map((camp) => (
+        {campaigns.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+            <p className="text-[var(--color-text-muted)] text-sm">No active campaigns.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {campaigns.map((camp) => (
             <div key={camp.id} className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-2.5 shadow-sm">
               <div className="flex items-start justify-between">
                 <span className={cn(
@@ -213,6 +210,7 @@ export default function MetaAdsCrmPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Main Leads Table */}
@@ -243,6 +241,11 @@ export default function MetaAdsCrmPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {filteredLeads.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-[var(--color-text-muted)] text-sm">No leads found. Start a campaign to get leads.</p>
+            </div>
+          ) : (
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[var(--color-surface)]/30 border-b border-[var(--color-border)] text-[var(--color-text-muted)] uppercase tracking-wider text-[10px] font-bold">
@@ -340,6 +343,7 @@ export default function MetaAdsCrmPage() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 

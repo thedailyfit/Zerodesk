@@ -120,7 +120,7 @@ export default function GetLiveHelpPage() {
       });
 
       const newTicket: SupportTicket = {
-        id: serverTicket?.id || `t-${Date.now()}`,
+        id: serverTicket?.id || `t-${crypto.randomUUID()}`,
         ticketNumber: serverTicket?.id ? `ZD-${serverTicket.id.slice(0, 6).toUpperCase()}` : `ZD-2026-${String(Math.floor(100 + Math.random() * 900))}`,
         subject: subject.trim(),
         category,
@@ -353,26 +353,30 @@ export default function GetLiveHelpPage() {
             </h3>
 
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {tickets.map((t) => (
-                <div key={t.id} className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-blue-400 text-[11px]">{t.ticketNumber}</span>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                      t.status === 'Resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                      t.status === 'In Progress' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                      "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                    )}>
-                      {t.status}
-                    </span>
+              {tickets.length === 0 ? (
+                <div className="p-4 text-center text-xs text-[var(--color-text-muted)] italic">No support tickets yet.</div>
+              ) : (
+                tickets.map((t) => (
+                  <div key={t.id} className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-blue-400 text-[11px]">{t.ticketNumber}</span>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                        t.status === 'Resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                        t.status === 'In Progress' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                        "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                      )}>
+                        {t.status}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-[var(--color-text)] line-clamp-1">{t.subject}</p>
+                    <div className="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] pt-1">
+                      <span>{t.category}</span>
+                      <span>{t.createdAt}</span>
+                    </div>
                   </div>
-                  <p className="font-semibold text-[var(--color-text)] line-clamp-1">{t.subject}</p>
-                  <div className="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] pt-1">
-                    <span>{t.category}</span>
-                    <span>{t.createdAt}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
