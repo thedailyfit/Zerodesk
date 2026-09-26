@@ -14,10 +14,10 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
+    "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"],
-      "@zerodesk/shared": ["../../packages/shared/src/index.ts"]
+      "@zerodesk/shared": ["../../packages/shared/dist"]
     }
   },
   "include": ["src/**/*"],

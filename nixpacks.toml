@@ -1,4 +1,4 @@
-﻿[phases.setup]
+[phases.setup]
 nixPkgs = ["nodejs_20", "openssl"]
 
 [phases.install]
@@ -10,6 +10,7 @@ cmds = [
 
 [phases.build]
 cmds = [
+  "pnpm --filter @zerodesk/shared build",
   "pnpm --filter @zerodesk/api db:generate",
   "pnpm --filter @zerodesk/api build"
 ]
