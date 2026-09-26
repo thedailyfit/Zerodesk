@@ -359,18 +359,12 @@ export class VoiceService {
     const durationSeconds = Number(report.durationSeconds || 0);
     const phoneNumber = report.call?.phoneNumber?.number || report.call?.customer?.number;
 
-    // Meter voice minutes consumed against tenant subscription
+    // Meter voice minutes consumed against tenant subscription (idempotently via UsageLedger)
     if (durationSeconds > 0 && phoneNumber) {
       const tenant = await this.findTenantByPhone(phoneNumber, 'vapi');
       if (tenant?.id) {
-        const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-        await this.prisma.subscription.updateMany({
-          where: { tenantId: tenant.id },
-          data: {
-            voiceMinutesUsed: { increment: billedMinutes },
-          },
-        });
-        this.logger.log(`[METERING] Billed ${billedMinutes} voice minute(s) to tenant "${tenant.name}" (${tenant.id})`);
+        const sessionId = report.call?.id || `vapi_${phoneNumber}_${Date.now()}`;
+        await this.recordIdempotentUsage(tenant.id, sessionId, durationSeconds, 0);
       }
     }
 
@@ -420,14 +414,8 @@ export class VoiceService {
         if (durationSec > 0 && fromNumber) {
           const tenant = await this.findTenantByPhone(fromNumber, 'retell');
           if (tenant?.id) {
-            const billedMinutes = Math.max(1, Math.ceil(durationSec / 60));
-            await this.prisma.subscription.updateMany({
-              where: { tenantId: tenant.id },
-              data: {
-                voiceMinutesUsed: { increment: billedMinutes },
-              },
-            });
-            this.logger.log(`[METERING] Billed ${billedMinutes} Retell voice minute(s) to tenant "${tenant.name}" (${tenant.id})`);
+            const sessionId = payload.call?.call_id || `retell_${fromNumber}_${Date.now()}`;
+            await this.recordIdempotentUsage(tenant.id, sessionId, durationSec, 0);
           }
         }
 
@@ -1169,76 +1157,8 @@ RULES:
       const tokensUsed = Number(metadata?.tokensUsed) || Math.max(150, Math.ceil(durationSeconds * 25));
       const sessionId = roomName || metadata?.callSid || metadata?.callId || `call_${normalizedPhone}_${Date.now()}`;
 
-      // Idempotency: verify this call session has not already been billed in UsageLedger
-      const existingLedger = await this.prisma.usageLedger.findUnique({
-        where: {
-          tenantId_sessionId_resourceType: {
-            tenantId,
-            sessionId,
-            resourceType: 'VOICE_MINUTES',
-          },
-        },
-      });
-
-      if (!existingLedger) {
-        await this.prisma.$transaction(async (tx) => {
-          await tx.usageLedger.create({
-            data: {
-              tenantId,
-              sessionId,
-              resourceType: 'VOICE_MINUTES',
-              amount: billedMinutes,
-            },
-          });
-
-          await tx.usageLedger.create({
-            data: {
-              tenantId,
-              sessionId,
-              resourceType: 'LLM_TOKENS',
-              amount: tokensUsed,
-            },
-          });
-
-          const existingSub = await tx.subscription.findUnique({ where: { tenantId } });
-          if (existingSub) {
-            await tx.subscription.update({
-              where: { tenantId },
-              data: {
-                voiceMinutesUsed: { increment: billedMinutes },
-                llmTokensUsed: { increment: tokensUsed },
-              },
-            });
-
-            if (existingSub.voiceMinutesUsed + billedMinutes >= existingSub.voiceMinutesLimit) {
-              this.logger.warn(`Tenant ${tenantId} reached or exceeded monthly voice minutes quota (${existingSub.voiceMinutesUsed + billedMinutes}/${existingSub.voiceMinutesLimit})`);
-              this.eventEmitter.emit('subscription.quota_exceeded', {
-                tenantId,
-                resource: 'voiceMinutes',
-                limit: existingSub.voiceMinutesLimit,
-                used: existingSub.voiceMinutesUsed + billedMinutes,
-              });
-            }
-          } else {
-            await tx.subscription.create({
-              data: {
-                tenantId,
-                plan: 'starter',
-                voiceMinutesLimit: 100,
-                voiceMinutesUsed: billedMinutes,
-                llmTokensLimit: 1000000,
-                llmTokensUsed: tokensUsed,
-                whatsappMessagesLimit: 500,
-                whatsappMessagesUsed: 0,
-                status: 'active',
-              },
-            });
-          }
-        });
-        this.logger.log(`Idempotently metered ${billedMinutes} mins and ${tokensUsed} tokens for session ${sessionId}`);
-      } else {
-        this.logger.log(`Call session ${sessionId} already metered in UsageLedger. Skipping duplicate billing.`);
-      }
+      // Idempotently meter voice minutes and LLM tokens in UsageLedger
+      await this.recordIdempotentUsage(tenantId, sessionId, durationSeconds, tokensUsed);
 
       this.eventEmitter.emit('inbox.update', {
         tenantId,
@@ -1254,6 +1174,94 @@ RULES:
       this.logger.error(`Failed to record call completion: ${err.message}`, err.stack);
       return { status: 'error', error: err.message };
     }
+  }
+
+  /**
+   * Idempotently meters voice minutes and optional LLM tokens against UsageLedger and Subscription.
+   * Protects against duplicate webhook deliveries across Vapi, Retell, and LiveKit.
+   */
+  private async recordIdempotentUsage(
+    tenantId: string,
+    sessionId: string,
+    durationSeconds: number,
+    tokensUsed: number = 0,
+  ): Promise<void> {
+    if (!tenantId || !sessionId || durationSeconds <= 0) return;
+    const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
+
+    const existingLedger = await this.prisma.usageLedger.findUnique({
+      where: {
+        tenantId_sessionId_resourceType: {
+          tenantId,
+          sessionId,
+          resourceType: 'VOICE_MINUTES',
+        },
+      },
+    });
+
+    if (existingLedger) {
+      this.logger.log(`Call session ${sessionId} already metered in UsageLedger for tenant ${tenantId}. Skipping duplicate billing.`);
+      return;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.usageLedger.create({
+        data: {
+          tenantId,
+          sessionId,
+          resourceType: 'VOICE_MINUTES',
+          amount: billedMinutes,
+        },
+      });
+
+      if (tokensUsed > 0) {
+        await tx.usageLedger.create({
+          data: {
+            tenantId,
+            sessionId,
+            resourceType: 'LLM_TOKENS',
+            amount: tokensUsed,
+          },
+        });
+      }
+
+      const existingSub = await tx.subscription.findUnique({ where: { tenantId } });
+      if (existingSub) {
+        await tx.subscription.update({
+          where: { tenantId },
+          data: {
+            voiceMinutesUsed: { increment: billedMinutes },
+            llmTokensUsed: { increment: tokensUsed },
+          },
+        });
+
+        if (existingSub.voiceMinutesUsed + billedMinutes >= existingSub.voiceMinutesLimit) {
+          this.logger.warn(`Tenant ${tenantId} reached or exceeded monthly voice minutes quota (${existingSub.voiceMinutesUsed + billedMinutes}/${existingSub.voiceMinutesLimit})`);
+          this.eventEmitter.emit('subscription.quota_exceeded', {
+            tenantId,
+            resource: 'voiceMinutes',
+            limit: existingSub.voiceMinutesLimit,
+            used: existingSub.voiceMinutesUsed + billedMinutes,
+          });
+        }
+      } else {
+        await tx.subscription.create({
+          data: {
+            tenantId,
+            plan: 'starter',
+            voiceMinutesLimit: 100,
+            voiceMinutesUsed: billedMinutes,
+            llmTokensLimit: 1000000,
+            llmTokensUsed: tokensUsed,
+            whatsappMessagesLimit: 500,
+            whatsappMessagesUsed: 0,
+            status: 'active',
+          },
+        });
+      }
+    });
+
+    this.logger.log(`[METERING] Idempotently billed ${billedMinutes} voice minute(s) to tenant ${tenantId} for session ${sessionId}`);
   }
 
   /**

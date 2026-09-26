@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -170,12 +170,17 @@ export class WhatsappService {
   /**
    * Send a text message via WhatsApp Cloud API.
    */
-  async sendMessage(tenantId: string, to: string, message: string): Promise<any> {
+  async sendMessage(
+    tenantId: string,
+    to: string,
+    message: string,
+    options?: { isSystemConfirmation?: boolean },
+  ): Promise<any> {
     const normalizedTo = normalizePhoneNumber(to);
     const customer = await this.prisma.customer.findFirst({
       where: { tenantId, phone: normalizedTo },
     });
-    if (customer?.dndStatus) {
+    if (customer?.dndStatus && !options?.isSystemConfirmation) {
       this.logger.warn(`Skipping WhatsApp outbound message to ${to}: Customer has opted out (DND active)`);
       return { success: false, reason: 'DND_ACTIVE', skipped: true };
     }
@@ -540,9 +545,9 @@ export class WhatsappService {
     }
 
     if (!accessToken || !phoneNumberId) {
-      if (!accessToken) accessToken = `EAAB_${Math.random().toString(36).substring(2, 15)}`;
-      if (!phoneNumberId) phoneNumberId = `phone_id_${Date.now()}`;
-      if (!wabaId) wabaId = `waba_${Date.now()}`;
+      throw new BadRequestException(
+        'Meta Embedded Signup could not be completed: valid accessToken and phoneNumberId are required from Meta OAuth exchange.',
+      );
     }
 
     const encryptedToken = this.cryptoService.encrypt(accessToken);

@@ -103,8 +103,28 @@ export class WhatsappAiListener {
           tenantId,
           from,
           'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
+          { isSystemConfirmation: true },
         );
         this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (TRAI statutory DND enabled).`);
+        return;
+      }
+
+      // Customer Opt-In: Reply "START" or "UNSTOP" to resume automated notifications
+      const isExplicitOptIn = ['START', 'UNSTOP'].includes(normalizedMsg);
+      if (isExplicitOptIn) {
+        if (customerId) {
+          await this.prisma.customer.update({
+            where: { id: customerId },
+            data: { dndStatus: false, optedOutAt: null },
+          });
+        }
+        await this.whatsappService.sendMessage(
+          tenantId,
+          from,
+          'You have been re-subscribed to notifications. How can we help you today?',
+          { isSystemConfirmation: true },
+        );
+        this.logger.log(`Customer ${customerId} opted back into WhatsApp notifications.`);
         return;
       }
 

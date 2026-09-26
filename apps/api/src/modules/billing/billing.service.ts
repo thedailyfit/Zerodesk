@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import { PLANS_REGISTRY, getPlanConfig } from '@zerodesk/shared';
 import Stripe from 'stripe';
 
@@ -29,6 +30,7 @@ export class BillingService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
+    private redisService: RedisService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -136,7 +138,16 @@ export class BillingService {
       throw new BadRequestException(`Webhook Error: ${err.message}`);
     }
 
-    this.logger.log(`Received verified Stripe webhook event: ${event.type}`);
+    this.logger.log(`Received verified Stripe webhook event: ${event.type} (${event.id})`);
+
+    // Event-level deduplication: block duplicate deliveries / replays within 3 days
+    if (event.id) {
+      const isNewEvent = await this.redisService.setNx(`stripe:event:${event.id}`, '1', 86400 * 3);
+      if (!isNewEvent) {
+        this.logger.log(`Ignoring duplicate/replayed Stripe webhook event: ${event.id}`);
+        return { received: true, deduplicated: true };
+      }
+    }
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -156,6 +167,16 @@ export class BillingService {
         const invoice = event.data.object as any;
         const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
         const invoiceId = invoice.id;
+
+        // Invoice-level deduplication: ensure single execution per invoice ID within 30 days
+        if (invoiceId) {
+          const isNewInvoice = await this.redisService.setNx(`stripe:invoice:${invoiceId}`, '1', 86400 * 30);
+          if (!isNewInvoice) {
+            this.logger.log(`Ignoring already-processed renewal invoice: ${invoiceId}`);
+            break;
+          }
+        }
+
         // Only reset usage on recurring billing cycle renewal, avoiding mid-cycle resets on one-off adjustments
         if (subId && invoice.billing_reason === 'subscription_cycle') {
           const sub = await this.prisma.subscription.findFirst({

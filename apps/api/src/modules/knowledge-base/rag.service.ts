@@ -281,6 +281,13 @@ export class RagService implements OnModuleInit {
         );
       }
 
+      // 3b. Verify 100% chunk completion before promoting version
+      if (indexed < chunks.length) {
+        throw new Error(
+          `Atomic indexing incomplete: only ${indexed} of ${chunks.length} chunks successfully generated embeddings. Aborting to preserve previous active corpus.`,
+        );
+      }
+
       // 4. Atomic pointer switch: Activate targetVersion and purge stale chunks
       await this.prisma.$transaction([
         this.prisma.knowledgeDocument.update({
@@ -306,7 +313,7 @@ export class RagService implements OnModuleInit {
       await this.prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: {
-          status: 'FAILED',
+          status: currentVersion > 1 ? 'ACTIVE' : 'FAILED',
           errorMessage: err.message,
         },
       });
