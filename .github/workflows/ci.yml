@@ -2,13 +2,13 @@ name: ZeroDesk CI & Production Readiness Suite
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, 'codex/**']
   pull_request:
     branches: [main, master]
 
 jobs:
   validate-and-test:
-    name: Lint, Typecheck, Prisma & Unit Tests
+    name: Typecheck, Build, Prisma & Regression Tests
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/zerodesk_ci?schema=public"
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -48,6 +48,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build shared package before dependent checks
+        run: pnpm --filter @zerodesk/shared build
+
       - name: Validate Prisma Schema
         working-directory: apps/api
         run: |
@@ -65,3 +68,17 @@ jobs:
       - name: Typecheck Frontend (apps/web)
         working-directory: apps/web
         run: npx tsc --noEmit
+
+      - name: Verify tenant boundary and migration guard
+        run: |
+          node apps/web/scripts/verify-tenant-boundary.cjs
+          node scripts/verify-migration-command.cjs
+          node scripts/verify-preflight.cjs
+
+      - name: Build API and web
+        run: |
+          pnpm --filter @zerodesk/api build
+          pnpm --filter @zerodesk/web build
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high

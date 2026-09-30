@@ -63,24 +63,27 @@ export class ObservabilityService {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const [totalTraces, pendingFlags, criticalFlags, evals, traces] = await Promise.all([
-      this.prisma.llmTrace.count({ where: { tenantId, createdAt: { gte: thirtyDaysAgo } } }),
+      this.prisma.llmTrace.count({ where: { tenantId, createdAt: { gte: thirtyDaysAgo, lte: now } } }),
       this.prisma.badAnswerFlag.count({ where: { tenantId, status: 'PENDING' } }),
       this.prisma.badAnswerFlag.count({ where: { tenantId, severity: 'CRITICAL', status: 'PENDING' } }),
       this.prisma.evaluationScore.findMany({
-        where: { tenantId, createdAt: { gte: thirtyDaysAgo } },
+        where: { tenantId, createdAt: { gte: thirtyDaysAgo, lte: now },
+          AND: [
+            { claimsAnalysis: { path: ['isEvaluated'], equals: true } },
+            { claimsAnalysis: { path: ['evalStatus'], equals: 'EVALUATED' } },
+          ],
+        },
         select: {
           contextRelevance: true,
           faithfulness: true,
           answerRelevance: true,
           hallucinationScore: true,
         },
-        take: 500,
       }),
       this.prisma.llmTrace.findMany({
-        where: { tenantId, createdAt: { gte: thirtyDaysAgo } },
+        where: { tenantId, createdAt: { gte: thirtyDaysAgo, lte: now } },
         select: { latencyMs: true, inputTokens: true, outputTokens: true },
         orderBy: { latencyMs: 'asc' },
-        take: 500,
       }),
     ]);
 
@@ -96,13 +99,18 @@ export class ObservabilityService {
       : null;
 
     const latencies = traces.map((t) => t.latencyMs);
-    const p50LatencyMs = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.5)] : 0;
-    const p95LatencyMs = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.95)] : 0;
-    const p99LatencyMs = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.99)] : 0;
+    // Nearest-rank percentiles over every trace in the stated window.
+    const percentile = (p: number) => latencies.length ? latencies[Math.ceil(latencies.length * p) - 1] : null;
+    const p50LatencyMs = percentile(0.5);
+    const p95LatencyMs = percentile(0.95);
+    const p99LatencyMs = percentile(0.99);
     const totalTokensUsed = traces.reduce((acc, t) => acc + (t.inputTokens + t.outputTokens), 0);
 
     return {
       totalTraces,
+      window: { from: thirtyDaysAgo.toISOString(), to: now.toISOString() },
+      sampleCount: traces.length,
+      evaluatedCount: evals.length,
       pendingFlags,
       criticalFlags,
       p95LatencyMs,
@@ -152,8 +160,8 @@ export class ObservabilityService {
         userQuery: data.userQuery,
         rawResponse: data.rawResponse,
         sanitizedQuery,
-        provider: data.provider || 'groq',
-        modelId: data.modelId || 'llama-3.3-70b-versatile',
+        provider: data.provider || 'unknown',
+        modelId: data.modelId || 'unknown',
         latencyMs: data.latencyMs,
         ttftMs: data.ttftMs || null,
         inputTokens: data.inputTokens || 0,

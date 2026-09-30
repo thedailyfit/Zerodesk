@@ -158,7 +158,7 @@ export default function BillingPage() {
     }
   }
 
-  const handleGenerateInvoice = () => {
+  const handleGenerateInvoice = async () => {
     if (!selectedPatient) return;
     
     const lineItems = activeItemsList.map(item => {
@@ -178,7 +178,8 @@ export default function BillingPage() {
       };
     });
     
-    addInvoice({
+    try {
+    await addInvoice({
       nicheId: currentNiche,
       patientId: selectedPatient.id,
       customerName: selectedPatient.name,
@@ -203,6 +204,7 @@ export default function BillingPage() {
     });
     
     setShowReceiptModal(true);
+    } catch (error) { alert(error instanceof Error ? error.message : 'Invoice could not be saved.'); }
   };
 
   const filteredServices = SERVICES.filter(s => 

@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -87,7 +88,7 @@ export default function UnifiedInboxPage() {
     let cleanup: (() => void) | undefined;
     async function init() {
       const token = await getToken();
-      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') || undefined : undefined;
+      const tenantId = typeof window !== 'undefined' ? tenantStorage.getItem('zerodesk_tenant_id') || undefined : undefined;
       cleanup = store.initSocket(token || undefined, tenantId);
     }
     init();

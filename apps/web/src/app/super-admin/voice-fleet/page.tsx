@@ -34,11 +34,11 @@ export default function SuperAdminVoiceFleetPage() {
     setIsLoading(true);
     try {
       const res = await apiClient<AdminVoice[]>('/admin/voices');
-      if (Array.isArray(res) && res.length > 0) {
+      if (Array.isArray(res)) {
         setVoices(res);
       }
     } catch (err) {
-      console.warn('Fallback to local cache for voices:', err);
+      setVoices([]); toast.error('Unable to load voice registry');
     } finally {
       setIsLoading(false);
     }
@@ -82,56 +82,54 @@ export default function SuperAdminVoiceFleetPage() {
     };
     
     // Add locally for instant UI responsiveness
-    addVoice(voiceToAdd);
+
 
     // Sync to PostgreSQL DB
     try {
       const serverVoice = await apiClient<any>('/admin/voices', {
         method: 'POST',
-        body: JSON.stringify(voiceToAdd)
+        body: JSON.stringify(Object.fromEntries(Object.entries(voiceToAdd).filter(([key]) => key !== 'id')))
       });
       if (serverVoice?.id) {
-        updateVoice(voiceToAdd.id, { id: serverVoice.id, ...serverVoice });
+        addVoice(serverVoice);
       }
-      toast.success(`Registered ${voiceToAdd.name} and synced to client dashboards!`);
+      if (!serverVoice?.id) throw new Error('Server did not confirm voice creation');
+      toast.success(`Registered ${voiceToAdd.name}`);
+      setShowAddModal(false);
     } catch (err: any) {
       toast.error(`Failed to register voice on backend: ${err.message || 'Server error'}`);
     }
 
-    setShowAddModal(false);
   };
 
   const handleToggleVoice = async (voice: AdminVoice) => {
-    toggleVoiceStatus(voice.id);
+
     try {
       await apiClient(`/admin/voices/${voice.id}`, {
         method: 'PUT',
         body: JSON.stringify({ isActive: !voice.isActive })
       });
+      updateVoice(voice.id, { isActive: !voice.isActive });
     } catch (err) {
-      console.warn('Failed to sync toggle to DB', err);
+      toast.error('Failed to update voice');
     }
   };
 
   const handleDeleteVoice = async (id: string) => {
-    deleteVoice(id);
+
     try {
       await apiClient(`/admin/voices/${id}`, {
         method: 'DELETE'
       });
+      deleteVoice(id);
       toast.info('Voice persona deleted from fleet');
     } catch (err) {
-      console.warn('Failed to delete voice from DB', err);
+      toast.error('Failed to delete voice');
     }
   };
 
   const togglePlaySimulation = (id: string) => {
-    if (playingId === id) {
-      setPlayingId(null);
-    } else {
-      setPlayingId(id);
-      setTimeout(() => setPlayingId(null), 4000);
-    }
+    toast.error('Audio preview is not connected to a provider');
   };
 
   return (

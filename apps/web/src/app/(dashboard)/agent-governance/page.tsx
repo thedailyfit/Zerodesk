@@ -130,10 +130,10 @@ export default function AgentGovernancePage() {
             <Radio size={16} className="text-emerald-500" />
           </div>
           <div className="text-lg font-black text-slate-900">
-            {frontierHealth?.trilogy?.devops?.status || 'HEALTHY'}
+            {frontierHealth?.trilogy?.devops?.status || 'UNKNOWN'}
           </div>
           <p className="text-[11px] text-emerald-600 font-medium mt-0.5">
-            Plivo SIP &bull; LiveKit Mumbai &bull; Queue Lag: 45ms
+            {frontierHealth?.trilogy?.devops?.queueLagMs == null ? 'Live dependency probes not configured' : `Queue Lag: ${frontierHealth.trilogy.devops.queueLagMs}ms`}
           </p>
         </div>
 
@@ -143,10 +143,10 @@ export default function AgentGovernancePage() {
             <Activity size={16} className="text-indigo-500" />
           </div>
           <div className="text-lg font-black text-slate-900">
-            {frontierHealth?.trilogy?.finops?.voiceMinutesPercent ?? 14}% Burn
+            {frontierHealth?.trilogy?.finops?.voiceMinutesPercent == null ? 'Not measured' : `${frontierHealth.trilogy.finops.voiceMinutesPercent}% Burn`}
           </div>
           <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-            Included quota on track &bull; Zero overage
+            {frontierHealth?.trilogy?.finops?.status || 'UNKNOWN'}
           </p>
         </div>
 
@@ -156,10 +156,10 @@ export default function AgentGovernancePage() {
             <ShieldCheck size={16} className="text-blue-500" />
           </div>
           <div className="text-lg font-black text-slate-900">
-            DPDP Enforced
+            {frontierHealth?.trilogy?.appsec?.status || 'UNKNOWN'}
           </div>
           <p className="text-[11px] text-blue-600 font-medium mt-0.5">
-            100% PII Redaction &bull; Presigned R2 Audio
+            Security verification evidence required
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export default function AgentGovernancePage() {
             <Zap size={16} className="text-amber-500" />
           </div>
           <div className="text-lg font-black text-slate-900">
-            {frontierHealth?.metrics24h?.successRate ?? 99.4}%
+            {frontierHealth?.metrics24h?.successRate == null ? 'Not measured' : `${frontierHealth.metrics24h.successRate}%`}
           </div>
           <p className="text-[11px] text-amber-600 font-medium mt-0.5">
             {frontierHealth?.metrics24h?.totalActions ?? 0} Actions Executed on Ledger

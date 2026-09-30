@@ -9,6 +9,7 @@ import { ObservabilityService } from '../observability/observability.service';
 import { GovernanceService } from '../governance/governance.service';
 import { ActionPolicyGuard } from '../../common/guards/action-policy.guard';
 import { MemoryQuarantineService } from '../../common/security/memory-quarantine.service';
+import { normalizePhoneNumber } from '../../common/utils/phone.util';
 import { TypeSafeService } from '../typesafe/typesafe.service';
 
 @Injectable()
@@ -49,6 +50,9 @@ export class WhatsappAiListener {
   }) {
     try {
       const { tenantId, customerId, conversationId, messageId, message, messageType, mediaUrl, from, accessToken } = payload;
+      const boundCustomer = await this.prisma.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
+      const boundConversation = await this.prisma.conversation.findFirst({ where: { id: conversationId, tenantId, customerId } });
+      if (!boundCustomer || !boundConversation || normalizePhoneNumber(boundCustomer.phone || '') !== normalizePhoneNumber(from)) return;
       let effectiveMessage = message;
 
       // Handle WhatsApp Voice Notes (audio/ogg)
@@ -59,17 +63,17 @@ export class WhatsappAiListener {
           const transcription = await this.aiService.transcribeAudio(media.buffer, media.mimeType);
 
           if (transcription) {
-            this.logger.log(`Transcribed WhatsApp voice note: "${transcription}"`);
+
             const { sanitized, isInjected } = this.promptGuard.sanitizeUserInput(transcription);
             if (isInjected) {
-              this.logger.warn(`[SECURITY ALERT] Audio note prompt injection detected for tenant ${tenantId} from ${from}: "${transcription}"`);
+              this.logger.warn(`[SECURITY ALERT] Audio note prompt injection detected for tenant ${tenantId} from customer ${customerId}`);
             }
             effectiveMessage = sanitized;
 
             // Update stored message with sanitized transcript
             if (messageId) {
               await this.prisma.message.update({
-                where: { id: messageId },
+                where: { id: messageId, tenantId, conversationId },
                 data: {
                   content: `[Voice Note]: "${sanitized}"`,
                 },
@@ -95,7 +99,7 @@ export class WhatsappAiListener {
       if (isExplicitDnd) {
         if (customerId) {
           await this.prisma.customer.update({
-            where: { id: customerId },
+            where: { id: customerId, tenantId },
             data: { dndStatus: true, optedOutAt: new Date() },
           });
         }
@@ -114,7 +118,7 @@ export class WhatsappAiListener {
       if (isExplicitOptIn) {
         if (customerId) {
           await this.prisma.customer.update({
-            where: { id: customerId },
+            where: { id: customerId, tenantId },
             data: { dndStatus: false, optedOutAt: null },
           });
         }
@@ -130,7 +134,7 @@ export class WhatsappAiListener {
 
       // 1. Check conversation state (skip auto-reply if human agent has taken over)
       const conversation = await this.prisma.conversation.findUnique({
-        where: { id: conversationId },
+        where: { id: conversationId, tenantId },
       });
 
       if (!conversation || conversation.status === 'CLOSED') {
@@ -168,7 +172,7 @@ export class WhatsappAiListener {
       if (dndTriggered) {
         if (customerId) {
           await this.prisma.customer.update({
-            where: { id: customerId },
+            where: { id: customerId, tenantId },
             data: { dndStatus: true, optedOutAt: new Date() },
           });
         }
@@ -184,7 +188,7 @@ export class WhatsappAiListener {
       // Fast-Track Human Handoff (skips generative LLM call)
       if (fastTrackHandoff) {
         await this.prisma.conversation.update({
-          where: { id: conversationId },
+          where: { id: conversationId, tenantId },
           data: {
             status: 'WAITING',
             metadata: {
@@ -197,7 +201,7 @@ export class WhatsappAiListener {
         await this.whatsappService.sendMessage(
           tenantId,
           from,
-          'I am escalating your request directly to our clinical staff. A team member will assist you shortly.',
+          'I am escalating your request directly to our support team. A team member will assist you shortly.',
         );
         this.logger.log(`Conversation ${conversationId} fast-tracked to human staff: ${handoffReason}`);
         return;
@@ -234,7 +238,8 @@ export class WhatsappAiListener {
       // 4. Real execution of AI booking action ("AI Never Claims Success Until Action Succeeds")
       const bookAction = aiResult.actions?.find((a) => a.type === 'BOOK_APPOINTMENT');
       if (bookAction && bookAction.params) {
-        let policyPermitted = true;
+        let policyPermitted = false;
+        if (!this.actionPolicy) replyText = 'Automated booking is unavailable. A team member must confirm your request.';
 
         // 4a. Cedar Default-Deny Policy Evaluation
         if (this.actionPolicy) {
@@ -246,6 +251,7 @@ export class WhatsappAiListener {
             parameters: bookAction.params,
           });
 
+          policyPermitted = policyCheck.allowed;
           if (!policyCheck.allowed) {
             policyPermitted = false;
             this.logger.warn(`ActionPolicyGuard blocked WhatsApp booking for tenant ${tenantId}: ${policyCheck.reason}`);
@@ -272,7 +278,7 @@ export class WhatsappAiListener {
         if (policyPermitted) {
           try {
             const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
-            const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } });
+            const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, timezone: true } });
             const clinicName = tenant?.name || 'ZeroDesk Clinic';
 
             const rawNotes = `Booked autonomously via WhatsApp AI: "${effectiveMessage}"`;
@@ -296,8 +302,8 @@ export class WhatsappAiListener {
               this.logger.log(`Successfully executed appointment ${bookingResult.id} from WhatsApp for customer ${customerId}`);
               const doctorName = bookingResult.staff?.name ? `Dr. ${bookingResult.staff.name}` : 'Assigned Specialist';
               const serviceName = bookingResult.service?.name || bookAction.params.serviceName || 'Consultation';
-              const scheduledDate = bookingResult.date || 'Scheduled Date';
-              const scheduledTime = bookingResult.time || 'Scheduled Time';
+              const scheduledDate = new Date(bookingResult.scheduledAt).toLocaleDateString('en-IN', { timeZone: tenant?.timezone || 'Asia/Kolkata' });
+              const scheduledTime = new Date(bookingResult.scheduledAt).toLocaleTimeString('en-IN', { timeZone: tenant?.timezone || 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
 
               replyText = `✅ *Appointment Confirmed!*\n\n` +
                 `🏥 *Clinic:* ${clinicName}\n` +
@@ -306,7 +312,7 @@ export class WhatsappAiListener {
                 `📅 *Date:* ${scheduledDate}\n` +
                 `⏰ *Time:* ${scheduledTime}\n` +
                 `🆔 *Booking Ref:* #${bookingResult.id.slice(0, 8).toUpperCase()}\n\n` +
-                `Please arrive 10 minutes prior to your slot. Reply *1* to cancel or *2* to reschedule.`;
+                `Please arrive 10 minutes prior to your slot. Contact the team to request cancellation or rescheduling.`;
 
               if (this.governance) {
                 this.governance.recordActionTrace({
@@ -350,7 +356,8 @@ export class WhatsappAiListener {
       }
 
       // 5. Send AI reply back to WhatsApp user
-      await this.whatsappService.sendMessage(tenantId, from, replyText);
+      const delivery = await this.whatsappService.sendMessage(tenantId, from, replyText);
+      if (!delivery?.messages?.[0]?.id) return;
       this.logger.log(`Auto-replied to WhatsApp user ${from} for tenant ${tenantId}`);
 
       // 5b. Ingest trace into BullMQ 3-tier evaluation engine
@@ -366,7 +373,7 @@ export class WhatsappAiListener {
           frozenContext: (aiResult as any)?.contextChunks || [],
           toolCalls: aiResult.actions || [],
           sessionGoal: bookAction ? 'BOOK_APPOINTMENT' : 'GENERAL_QUERY',
-          goalAchieved: bookAction ? (bookingResult && !!bookingResult.id) : true,
+          goalAchieved: bookAction ? !!bookingResult?.id : undefined,
         }).catch((traceErr: any) => {
           this.logger.warn(`Failed to record WhatsApp AI trace: ${traceErr.message}`);
         });
@@ -375,7 +382,7 @@ export class WhatsappAiListener {
       // 6. Handle human escalation if requested or low confidence
       if (aiResult.shouldTransfer || aiResult.confidence < 0.6) {
         await this.prisma.conversation.update({
-          where: { id: conversationId },
+          where: { id: conversationId, tenantId },
           data: { status: 'WAITING' },
         });
         this.logger.log(`Conversation ${conversationId} flagged for human escalation`);

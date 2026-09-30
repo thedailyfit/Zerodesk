@@ -31,6 +31,9 @@ export default function middleware(request: NextRequest, event: any) {
   if (clerkHandler) {
     return clerkHandler(request, event);
   }
+  if (process.env.NODE_ENV === 'production' || !isPublicRoute(request)) {
+    return NextResponse.json({ error: 'Authentication is not configured' }, { status: 503 });
+  }
   return NextResponse.next();
 }
 

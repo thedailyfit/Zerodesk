@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, DelayedError } from 'bullmq';
 import { VoiceService } from './voice.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -43,7 +43,7 @@ export class OutboundCallProcessor extends WorkerHost {
       const delayMs = this.calculateMsUntilNext8AM(timezone);
       
       await job.moveToDelayed(Date.now() + delayMs, job.token);
-      return { status: 'rescheduled', delayMs, reason: 'TCPA_OUTSIDE_HOURS' };
+      throw new DelayedError();
     }
 
     // Call allowed -> execute call via VoiceService
@@ -71,8 +71,8 @@ export class OutboundCallProcessor extends WorkerHost {
       const hour = parseInt(formatter.format(now), 10);
       return hour >= 8 && hour < 21;
     } catch (error) {
-      this.logger.warn(`Failed to parse timezone ${timezone}, defaulting to allowed: ${error}`);
-      return true;
+      this.logger.warn(`Failed to parse timezone ${timezone}; dispatch blocked: ${error}`);
+      return false;
     }
   }
 

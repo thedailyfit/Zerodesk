@@ -154,7 +154,7 @@ export class TypeSafeService {
           isRelevant: true,
           isPromptInjection: false,
           contradictsPolicy: false,
-          passed: true,
+          passed: process.env.NODE_ENV !== 'production',
         };
       }
 
@@ -315,7 +315,7 @@ export class TypeSafeService {
 
     if (!answers) {
       // Fail-open: if Jev is down, rely on hard programmatic Cedar rules
-      return { allowed: true };
+      return { allowed: process.env.NODE_ENV !== 'production', reason: 'Semantic policy verification unavailable' };
     }
 
     const violatesPolicy = (answers.violates_policy?.noul ?? 0) > 0.70;

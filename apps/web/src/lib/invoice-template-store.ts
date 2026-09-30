@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 
 export interface InvoiceTemplate {
@@ -30,11 +31,11 @@ export function useInvoiceTemplate() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('zerodesk_invoice_template');
+      const saved = tenantStorage.getItem('zerodesk_invoice_template');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.clinicPhone === '+91 98765 43210' || parsed.clinicGST === '29ABCDE1234F1Z5') {
-          localStorage.removeItem('zerodesk_invoice_template');
+          tenantStorage.removeItem('zerodesk_invoice_template');
           setTemplate(DEFAULT_TEMPLATE);
         } else if (parsed && typeof parsed === 'object') {
           setTemplate({ ...DEFAULT_TEMPLATE, ...parsed });
@@ -50,7 +51,7 @@ export function useInvoiceTemplate() {
     setTemplate((prev) => {
       const next = { ...prev, ...updates };
       try {
-        localStorage.setItem('zerodesk_invoice_template', JSON.stringify(next));
+        tenantStorage.setItem('zerodesk_invoice_template', JSON.stringify(next));
       } catch (e) {
         console.error('Failed to save invoice template', e);
       }
@@ -61,7 +62,7 @@ export function useInvoiceTemplate() {
   const resetTemplate = () => {
     setTemplate(DEFAULT_TEMPLATE);
     try {
-      localStorage.removeItem('zerodesk_invoice_template');
+      tenantStorage.removeItem('zerodesk_invoice_template');
     } catch (e) {
       console.error('Failed to reset template', e);
     }

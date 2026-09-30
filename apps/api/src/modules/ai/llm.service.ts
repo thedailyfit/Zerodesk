@@ -22,6 +22,9 @@ export interface LLMOptions {
   temperature?: number;
   maxTokens?: number;
   responseFormat?: 'text' | 'json';
+  fallback?: { provider: LLMProvider; model: string };
+  timeoutMs?: number;
+  strictRouting?: boolean;
 }
 
 @Injectable()
@@ -58,13 +61,15 @@ export class LlmService {
    */
   async chat(messages: LLMMessage[], options: LLMOptions = {}): Promise<LLMResponse> {
     const provider = options.provider || this.defaultProvider;
-    const fallbackOrder: LLMProvider[] = this.getFallbackOrder(provider);
+    const routes = options.strictRouting
+      ? [{ provider, model: options.model }, ...(options.fallback ? [options.fallback] : [])]
+      : this.getFallbackOrder(provider).map(p => ({ provider: p, model: p === provider ? options.model : undefined }));
 
-    for (const p of fallbackOrder) {
+    for (const route of routes) {
       try {
-        return await this.callProvider(p, messages, options);
+        return await this.callProvider(route.provider, messages, { ...options, model: route.model });
       } catch (error: any) {
-        this.logger.warn(`LLM provider [${p}] failed: ${error.message || error}. Falling back to next provider...`);
+        this.logger.warn(`LLM provider [${route.provider}] failed; trying the next configured route`);
       }
     }
 
@@ -91,7 +96,7 @@ export class LlmService {
       ...(options.responseFormat === 'json'
         ? { response_format: { type: 'json_object' as const } }
         : {}),
-    });
+    }, { timeout: options.timeoutMs || 30000, maxRetries: 0 });
 
     return {
       content: completion.choices[0]?.message?.content || '',
@@ -112,6 +117,7 @@ export class LlmService {
 
     const res = await fetch('https://api.sarvam.ai/v1/chat/completions', {
       method: 'POST',
+      signal: AbortSignal.timeout(options.timeoutMs || 30000),
       headers: {
         'api-subscription-key': apiKey,
         'content-type': 'application/json',

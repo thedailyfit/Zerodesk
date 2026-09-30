@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'sonner';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,26 +54,9 @@ export default function SuperAdminSupportTicketsPage() {
 
   // Load from database API and fallback to local storage
   const loadTickets = async () => {
-    const readLocalTickets = () => {
-      try {
-        const globalKey = 'zerodesk_global_support_tickets';
-        const stored = localStorage.getItem(globalKey);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTickets(parsed);
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Failed loading global support tickets', e);
-      }
-      setTickets([]);
-    };
-
     try {
       const data = await apiClient<any[]>('/admin/support/tickets');
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped: GlobalSupportTicket[] = data.map((t) => ({
           id: t.id,
           ticketNumber: `ZD-${t.id.slice(0, 6).toUpperCase()}`,
@@ -81,6 +65,7 @@ export default function SuperAdminSupportTicketsPage() {
           niche: t.tenant?.industry || 'general',
           subject: t.subject,
           description: t.description,
+          resolutionNote: t.metadata?.resolutionNote,
           category: t.category,
           priority: (t.priority === 'HIGH' ? 'High' : t.priority === 'LOW' ? 'Low' : 'Medium'),
           status: (t.status === 'RESOLVED' ? 'Resolved' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Open'),
@@ -88,10 +73,10 @@ export default function SuperAdminSupportTicketsPage() {
         }));
         setTickets(mapped);
       } else {
-        readLocalTickets();
+        setTickets([]);
       }
     } catch {
-      readLocalTickets();
+      setTickets([]);
     }
   };
 
@@ -115,23 +100,14 @@ export default function SuperAdminSupportTicketsPage() {
       return t;
     });
 
-    setTickets(updated);
     try {
-      localStorage.setItem('zerodesk_global_support_tickets', JSON.stringify(updated));
-      window.dispatchEvent(new Event('zerodesk:support-ticket-updated'));
-    } catch {}
-
-    // Sync to backend DB if valid UUID
-    if (ticketId.length > 10 && !ticketId.startsWith('t-')) {
-      try {
-        const dbStatus = newStatus === 'Resolved' ? 'RESOLVED' : newStatus === 'In Progress' ? 'IN_PROGRESS' : 'OPEN';
-        await apiClient(`/admin/support/tickets/${ticketId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ status: dbStatus })
-        });
-      } catch (err) {
-        console.warn('Failed to update ticket status on server:', err);
-      }
+      const dbStatus = newStatus === 'Resolved' ? 'RESOLVED' : newStatus === 'In Progress' ? 'IN_PROGRESS' : 'OPEN';
+      await apiClient(`/admin/support/tickets/${ticketId}`, { method: 'PATCH', body: JSON.stringify({ status: dbStatus, resolutionNote: replyText || undefined }) });
+      setTickets(updated);
+    } catch {
+      toast.error('Ticket update failed. Please retry.');
+      setIsUpdating(false);
+      return;
     }
 
     if (selectedTicket && (selectedTicket.id === ticketId || selectedTicket.ticketNumber === ticketId)) {

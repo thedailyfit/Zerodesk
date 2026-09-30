@@ -1,0 +1,44 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const ts = require('typescript');
+const base = path.resolve(__dirname, '../src/lib');
+const records = new Map([['patients', 'legacy-private-record']]);
+const storage = { getItem: key => records.get(key) ?? null, setItem: (key, value) => records.set(key, value), removeItem: key => records.delete(key) };
+const globals = { console, process: { env: {} }, window: {}, localStorage: storage, FormData, setTimeout };
+function load(name, deps = {}) {
+  const module = { exports: {} };
+  const source = fs.readFileSync(path.join(base, name + '.ts'), 'utf8');
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  vm.runInNewContext(code, { ...globals, module, exports: module.exports, require: key => deps[key] }, { filename: name });
+  return module.exports;
+}
+(async () => {
+  const scoped = load('tenant-storage');
+  assert.equal(scoped.tenantStorage.getItem('patients'), null);
+  scoped.setStorageScope('user-a:org-a');
+  assert.equal(scoped.tenantStorage.getItem('patients'), null, 'Legacy global data must not be imported');
+  scoped.tenantStorage.setItem('patients', 'a-private-record');
+  scoped.setStorageScope('user-a:org-b');
+  assert.equal(scoped.tenantStorage.getItem('patients'), null);
+  scoped.tenantStorage.setItem('patients', 'b-private-record');
+  scoped.setStorageScope('user-b:org-a');
+  assert.equal(scoped.tenantStorage.getItem('patients'), null, 'Users sharing an organization do not share browser caches');
+  scoped.setStorageScope('user-a:org-a');
+  assert.equal(scoped.tenantStorage.getItem('patients'), 'a-private-record');
+  let respond;
+  globals.fetch = () => new Promise(resolve => { respond = resolve; });
+  const api = load('api-client', { './tenant-storage': scoped });
+  const request = api.apiClient('/customers', { skipAuth: true });
+  scoped.setStorageScope('user-a:org-b');
+  scoped.setStorageScope('user-a:org-a');
+  respond({ ok: true, status: 200, json: async () => [{ private: true }] });
+  await assert.rejects(request, /Workspace changed/);
+  globals.fetch = async () => ({ ok: true, status: 200, json: async () => [] });
+  const api2 = load('api-client', { './tenant-storage': scoped });
+  assert.equal((await api2.apiClient('/customers', { skipAuth: true })).length, 0, 'Legitimate empty response remains usable');
+  scoped.setStorageScope(null);
+  assert.equal(scoped.tenantStorage.getItem('patients'), null);
+  console.log('PASS: legacy isolation, tenant/user separation, logout, late-response rejection, legitimate empty result');
+})().catch(error => { console.error(error); process.exitCode = 1; });

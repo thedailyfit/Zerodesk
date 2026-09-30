@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import * as crypto from 'node:crypto';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -37,63 +38,69 @@ export class InvoiceService {
       }
     }
 
-    const timestamp = Date.now().toString().slice(-6);
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const count = await this.prisma.invoice.count({ where: { tenantId } });
-    const invoiceNumber =
-      data.invoiceNumber || `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}-${timestamp.slice(-3)}${randomSuffix}`;
-
-    const items = data.items || [];
-    const subtotal = Number(
-      data.subtotal ||
-        items.reduce(
-          (sum: number, it: any) => sum + Number(it.unitPrice || it.price || 0) * Number(it.quantity || 1),
-          0
-        )
-    );
-    const taxAmount = Number(data.taxAmount || 0);
-    const totalAmount = Number(data.totalAmount || subtotal + taxAmount);
-
+    const accounting = this.calculate(data);
+    const invoiceNumber = data.invoiceNumber || `INV-${crypto.randomUUID()}`;
     return this.prisma.invoice.create({
       data: {
-        tenantId,
-        customerId: data.customerId || null,
-        invoiceNumber,
-        subtotal,
-        taxAmount,
-        totalAmount,
-        status: data.status || 'PAID',
-        paymentMethod: data.paymentMethod || 'UPI',
-        notes: data.notes,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-        items: {
-          create: items.map((it: any) => ({
-            tenantId,
-            description: it.description || it.name || 'Service',
-            quantity: Number(it.quantity || 1),
-            unitPrice: Number(it.unitPrice || it.price || 0),
-            totalPrice: Number(
-              it.totalPrice || Number(it.unitPrice || it.price || 0) * Number(it.quantity || 1)
-            ),
-          })),
-        },
-      },
-      include: {
-        customer: true,
-        items: true,
-      },
+        tenantId, customerId: data.customerId || null, invoiceNumber,
+        customerName: data.customerName, customerPhone: data.phone, customerEmail: data.email,
+        ...accounting, paymentMethod: data.paymentMethod || null, notes: data.notes,
+        dueDate: data.dueDate ? this.date(data.dueDate) : undefined,
+        items: { create: accounting.items.map((item: any) => ({ ...item, tenantId })) },
+      }, include: { customer: true, items: true },
     });
   }
 
+  private date(value: string) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) throw new BadRequestException('Invalid invoice date');
+    return date;
+  }
+
+  private number(value: unknown, name: string, max = 1e9) {
+    const n = Number(value);
+    if (value === null || value === '' || !Number.isFinite(n) || n < 0 || n > max) throw new BadRequestException(`Invalid ${name}`);
+    return n;
+  }
+
+  calculate(data: any) {
+    if (!Array.isArray(data?.items) || !data.items.length || data.items.length > 500) throw new BadRequestException('Invoice requires 1-500 items');
+    const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+    const items = data.items.map((item: any) => {
+      const quantity = this.number(item.quantity ?? 1, 'quantity', 100000);
+      if (!quantity || !Number.isInteger(quantity)) throw new BadRequestException('Quantity must be a positive integer');
+      const unitPrice = round(this.number(item.unitPrice ?? item.price ?? 0, 'unit price'));
+      const gstRate = this.number(item.gstRate ?? 0, 'tax rate', 100);
+      const description = item.description || item.serviceName || item.name;
+      if (typeof description !== 'string' || !description.trim() || description.length > 2000) throw new BadRequestException('Item description required');
+      return { description, quantity, unitPrice, gstRate, gstAmount: 0, totalPrice: round(quantity * unitPrice) };
+    });
+    const subtotal = round(items.reduce((sum: number, item: any) => sum + item.totalPrice, 0));
+    if (subtotal > 1e9) throw new BadRequestException('Invoice amount exceeds limit');
+    const discountType = data.discountType ?? 'amount';
+    if (!['amount', 'percent'].includes(discountType)) throw new BadRequestException('Invalid discount type');
+    const discountValue = this.number(data.discountValue ?? 0, 'discount', discountType === 'percent' ? 100 : subtotal);
+    const discountAmount = round(discountType === 'percent' ? subtotal * discountValue / 100 : discountValue);
+    for (const item of items) {
+      const discounted = item.totalPrice * (subtotal ? 1 - discountAmount / subtotal : 1);
+      item.gstAmount = round(discounted * item.gstRate / 100);
+      item.totalPrice = round(discounted + item.gstAmount);
+    }
+    const taxAmount = round(items.reduce((sum: number, item: any) => sum + item.gstAmount, 0));
+    const totalAmount = round(subtotal - discountAmount + taxAmount);
+    const paidAmount = round(this.number(data.paidAmount ?? 0, 'paid amount', totalAmount));
+    const status = paidAmount >= totalAmount ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'PENDING';
+    return { subtotal, taxAmount, totalAmount, discountType, discountValue, discountAmount, paidAmount, status, items };
+  }
+
   async update(tenantId: string, id: string, data: any) {
-    await this.findById(tenantId, id);
+    const invoice = await this.findById(tenantId, id);
+    const paidAmount = data.paidAmount === undefined ? Number(invoice.paidAmount) : this.number(data.paidAmount, 'paid amount', Number(invoice.totalAmount));
+    const status = paidAmount >= Number(invoice.totalAmount) ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : (data.status === 'OVERDUE' ? 'OVERDUE' : 'PENDING');
+    if (data.status === 'PAID' && status !== 'PAID') throw new BadRequestException('Record the paid amount before marking paid');
     return this.prisma.invoice.update({
-      where: { id },
-      data: {
-        status: data.status,
-        paymentMethod: data.paymentMethod,
-        notes: data.notes,
-      },
+      where: { id, tenantId, deletedAt: null },
+      data: { status, paidAmount, paymentMethod: data.paymentMethod, notes: data.notes },
       include: { customer: true, items: true },
     });
   }

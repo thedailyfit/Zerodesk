@@ -78,10 +78,6 @@ const DEFAULT_STAFF: string[] = [];
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const DEFAULT_CALENDAR_BY_NICHE: Record<NicheId, Appointment[]> = {
-  skin: [], dental: [], spa: [], salon: [], realestate: [], hotel: []
-};
-
 function formatTime(decimalHour: number): string {
   const hrs = Math.floor(decimalHour);
   const mins = Math.round((decimalHour - hrs) * 60);

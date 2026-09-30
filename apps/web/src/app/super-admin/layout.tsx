@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { TenantBoundary } from '@/components/providers/tenant-boundary';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -31,6 +32,10 @@ import { useSuperAdminStore } from '@/lib/superadmin-store';
 import { useTheme } from '@/components/providers/theme-provider';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+  return <TenantBoundary><SuperAdminContent>{children}</SuperAdminContent></TenantBoundary>;
+}
+
+function SuperAdminContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { tenants, voices, llmModels, globalFailoverEnabled } = useSuperAdminStore();

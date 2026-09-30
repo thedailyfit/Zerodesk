@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 
 export interface NotificationSettings {
@@ -22,7 +23,7 @@ export function useNotifications() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('zerodesk_notification_settings');
+      const saved = tenantStorage.getItem('zerodesk_notification_settings');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
@@ -42,7 +43,7 @@ export function useNotifications() {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       try {
-        localStorage.setItem('zerodesk_notification_settings', JSON.stringify(next));
+        tenantStorage.setItem('zerodesk_notification_settings', JSON.stringify(next));
       } catch (e) {
         console.error('Failed to save notification settings', e);
       }

@@ -54,7 +54,7 @@ export class KnowledgeController {
 
   @Post('upload-file')
   @UseGuards(AuthGuard, TenantGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 4 } }))
   async uploadFile(
     @TenantId() tenantId: string,
     @UploadedFile() file: any,

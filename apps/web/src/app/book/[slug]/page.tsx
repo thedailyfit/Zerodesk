@@ -19,7 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 import { useBookingLink } from '@/lib/booking-link-store';
 import { useServices } from '@/lib/services-store';
-import { usePatients } from '@/lib/patients-store';
 
 const TIME_SLOTS = [
   '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
@@ -35,7 +34,6 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
   void slug; // Consumed by Next.js routing; slug is used for URL matching
   const { config } = useBookingLink();
   const { activeServices } = useServices();
-  const { patients, addPatient } = usePatients();
 
   const [step, setStep] = useState<'dateTime' | 'details' | 'otp' | 'confirmed'>('dateTime');
   const [selectedDay, setSelectedDay] = useState<number>(24);
@@ -126,21 +124,6 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         setErrorMessage(errData.message || 'Invalid verification code. Please try again.');
         setIsVerifying(false);
         return;
-      }
-
-      // Save to local patient store
-      const cleanPhone = phone.replace(/\D/g, '');
-      const existing = patients.find(p => p.phone.replace(/\D/g, '') === cleanPhone || p.phone === phone);
-      if (!existing && fullName.trim() && phone.trim()) {
-        try {
-          addPatient({
-            name: fullName.trim(),
-            phone: phone.trim(),
-            email: email.trim() || undefined,
-            priority: 'Standard',
-            tags: ['Web Booking', selectedService || 'Consultation'],
-          });
-        } catch {}
       }
 
       setStep('confirmed');

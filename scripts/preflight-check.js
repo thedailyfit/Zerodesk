@@ -11,6 +11,7 @@ async function testHttp(url, options = {}) {
       res.on('end', () => resolve({ statusCode: res.statusCode, data }));
     });
     req.on('error', (err) => resolve({ error: err.message }));
+    req.setTimeout(10000, () => req.destroy(new Error('Request timed out')));
     if (options.body) req.write(options.body);
     req.end();
   });
@@ -28,7 +29,8 @@ async function runPreflight() {
   if (dbUrl) {
     try {
       const { Client } = require('pg');
-      const client = new Client({ connectionString: dbUrl, ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false } });
+      const hostname = new URL(dbUrl).hostname;
+      const client = new Client({ connectionString: dbUrl, connectionTimeoutMillis: 5000, query_timeout: 5000, ssl: ['localhost', '127.0.0.1', '[::1]'].includes(hostname) ? false : { rejectUnauthorized: true } });
       await client.connect();
       await client.query('SELECT 1;');
       await client.end();
@@ -45,7 +47,7 @@ async function runPreflight() {
   if (redisUrl) {
     try {
       const Redis = require('ioredis');
-      const redis = new Redis(redisUrl, { lazyConnect: true, connectTimeout: 3000 });
+      const redis = new Redis(redisUrl, { lazyConnect: true, connectTimeout: 3000, commandTimeout: 5000, retryStrategy: () => null });
       await redis.connect();
       await redis.ping();
       await redis.disconnect();
@@ -110,7 +112,9 @@ async function runPreflight() {
   // Summary Table
   console.log('Platform Component Status:');
   console.table(results);
+  process.exitCode = results.every(result => result.status.endsWith('PASS')) ? 0 : 1;
   console.log('\nAudit complete.\n');
 }
 
-runPreflight();
+if (require.main === module) runPreflight().catch(() => { console.error('Preflight failed'); process.exitCode = 1; });
+module.exports = { testHttp, runPreflight };

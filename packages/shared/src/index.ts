@@ -28,3 +28,4 @@ export type { Tenant, Customer, Conversation, Message, Lead, Appointment, Knowle
 
 export { PLANS_REGISTRY, getPlanConfig, isFeatureAllowed } from './constants/plans';
 export type { PlanDefinition, PlanTierType, PlanFeatures } from './constants/plans';
+export { sanitizeTelemetry } from './telemetry';

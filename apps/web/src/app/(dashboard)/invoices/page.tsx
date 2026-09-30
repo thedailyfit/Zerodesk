@@ -83,8 +83,8 @@ export default function InvoicesPage() {
   const [customer, setCustomer] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [service, setService] = useState('General Consultation');
-  const [amount, setAmount] = useState('1500');
+  const [service, setService] = useState('');
+  const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState(() => getPresetDateRange('Today').end);
 
   const handlePresetChange = (preset: string) => {
@@ -104,19 +104,21 @@ export default function InvoicesPage() {
     return true;
   });
 
-  const handleCreateInvoice = (e: React.FormEvent) => {
+  const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customer.trim() || !amount) return;
 
-    const baseAmt = parseFloat(amount) || 1000;
+    const baseAmt = Number(amount);
+    if (!Number.isFinite(baseAmt) || baseAmt <= 0) return;
     const taxAmt = Math.round(baseAmt * 0.18);
     const total = baseAmt + taxAmt;
 
-    addInvoice({
+    try {
+    await addInvoice({
       nicheId: currentNiche,
       customerName: customer,
-      phone: phone || '+91 98765 00000',
-      email: email || 'client@email.com',
+      phone: phone.trim(),
+      email: email.trim() || undefined,
       lineItems: [
         { serviceName: service, quantity: 1, unitPrice: baseAmt, gstRate: 18, gstAmount: taxAmt, totalPrice: total }
       ],
@@ -126,9 +128,9 @@ export default function InvoicesPage() {
       discountValue: 0,
       discountAmount: 0,
       grandTotal: total,
-      paidAmount: total,
-      remainingBalance: 0,
-      paymentStatus: 'PAID',
+      paidAmount: 0,
+      remainingBalance: total,
+      paymentStatus: 'PENDING',
       paymentMethod: 'upi',
       sentViaAi: false,
       isPackagePayment: false,
@@ -140,6 +142,7 @@ export default function InvoicesPage() {
     setCustomer('');
     setPhone('');
     setEmail('');
+    } catch (error) { alert(error instanceof Error ? error.message : 'Invoice could not be saved.'); }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

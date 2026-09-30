@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { tenantStorage } from '@/lib/tenant-storage';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, Plus, Trash2, Edit2, Copy, Save, X, Search,
@@ -9,6 +10,7 @@ import {
   Smartphone, User, CreditCard, Tag, FileSpreadsheet, Star,
   ArrowRight, HeartPulse, RotateCcw
 } from 'lucide-react';
+import { api } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import {
@@ -200,8 +202,9 @@ function InlineEditor({
 // MAIN COMPONENT
 // ---------------------------
 export default function AutomationsPage() {
+  const dispatchIds = useRef<Record<string, string>>({});
   const { currentNiche, nicheConfig } = useNiche();
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>(() => getWorkflowsForNiche(currentNiche));
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -213,112 +216,63 @@ export default function AutomationsPage() {
   const [triggeringId, setTriggeringId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const mapWorkflow = (row: any): WorkflowItem => ({
+    ...row.definition?.workflow, id: row.id, name: row.name, category: row.category || 'General',
+    steps: row.definition?.workflow?.steps || [], active: row.isActive,
+    lastRun: row.lastRunAt ? new Date(row.lastRunAt).toLocaleString() : 'Never',
+    runCount24h: 0, successRate: 0,
+  });
+  const loadWorkflows = async () => {
+    const rows = await api.get<any[]>('/automations');
+    setWorkflows(rows.filter(r => r.definition?.niche === currentNiche && r.definition?.kind === 'smart-action').map(mapWorkflow));
+  };
+  useEffect(() => { setWorkflows([]); void loadWorkflows().catch(() => setToastMessage('Unable to load workflows.')); }, [currentNiche]);
+  const saveWorkflow = async (wf: WorkflowItem, create = false) => {
+    const body = { name: wf.name, category: wf.category, triggerType: 'MANUAL', definition: { kind: 'smart-action', niche: currentNiche, workflow: { ...wf, active: false, runCount24h: 0, successRate: 0, lastRun: 'Never' } } };
+    if (create) await api.post('/automations', body);
+    else await api.patch(`/automations/${wf.id}`, body);
+    await loadWorkflows();
+  };
   const handleTriggerWorkflow = async (wf: WorkflowItem) => {
     setTriggeringId(wf.id);
     try {
-      await fetch('/v1/automations/sequences/run', { method: 'POST' }).catch(() => null);
-    } catch (e) {}
-
-    setTimeout(() => {
-      setTriggeringId(null);
-      setWorkflows(prev => prev.map(item => item.id === wf.id ? { 
-        ...item, 
-        lastRun: 'Just now', 
-        runCount24h: (item.runCount24h || 0) + 1 
-      } : item));
-      setToastMessage(`Dispatched "${wf.name}" — Live AI channels triggered.`);
-      setTimeout(() => setToastMessage(null), 3500);
-    }, 600);
+      const requestId = dispatchIds.current[wf.id] ||= crypto.randomUUID();
+      const result = await api.post<any>('/automations/trigger', { workflowId: wf.id, requestId, payload: {} });
+      if (!result?.success) throw new Error(result?.reason || result?.error || 'Execution was not accepted.');
+      delete dispatchIds.current[wf.id];
+      setToastMessage(`Run ${result.runId} accepted by the adapter. Delivery is not confirmed.`);
+      await loadWorkflows();
+    } catch (err: any) { setToastMessage(err.message || 'Workflow execution failed.'); }
+    finally { setTriggeringId(null); }
   };
-
-  // Reset activeCategory if it does not exist in the new niche
-  useEffect(() => {
-    if (activeCategory !== 'All' && !getCategoriesForNiche(currentNiche).includes(activeCategory)) {
-      setActiveCategory('All');
-    }
-  }, [currentNiche, activeCategory]);
-
-  // Initialize and react to niche changes with namespaced storage
-  useEffect(() => {
-    const storageKey = `zd_automations_v4_${currentNiche}`;
+  const resetToDefaults = async () => {
+    if (!confirm('Add missing niche templates as inactive drafts?')) return;
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const hasRealSteps = parsed.some(wf => wf.steps && wf.steps.length > 1);
-          if (hasRealSteps) {
-            setWorkflows(parsed);
-            return;
-          }
-        }
-      }
-    } catch (e) {
-      console.error(`Failed to load workflows for ${currentNiche}`, e);
-    }
-    // Fallback to rich 12 niche-specific templates
-    const fresh = getWorkflowsForNiche(currentNiche);
-    setWorkflows(fresh);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(fresh));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [currentNiche]);
-
-  // Save to local storage whenever workflows or currentNiche change
-  useEffect(() => {
-    if (workflows && workflows.length > 0) {
-      const storageKey = `zd_automations_v4_${currentNiche}`;
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(workflows));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [workflows, currentNiche]);
-
-  const resetToDefaults = () => {
-    const label = nicheConfig?.label || currentNiche;
-    if (confirm(`Restore all 12 pre-installed ${label} workflow templates?`)) {
-      const fresh = getWorkflowsForNiche(currentNiche);
-      setWorkflows(fresh);
-      const storageKey = `zd_automations_v4_${currentNiche}`;
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(fresh));
-      } catch (e) {
-        console.error(e);
+      for (const wf of getWorkflowsForNiche(currentNiche)) {
+        if (!workflows.some(existing => existing.name === wf.name)) await saveWorkflow(wf, true);
       }
       setEditingId(null);
-    }
+      setToastMessage('Templates saved as drafts. Execution requires a configured server workflow.');
+    } catch (err: any) { setToastMessage(err.message || 'Templates could not be saved.'); }
   };
-
-  const toggleActive = (id: string) => {
-    setWorkflows(wfs => wfs.map(wf => 
-      wf.id === id ? { ...wf, active: !wf.active } : wf
-    ));
+  const toggleActive = async (id: string) => {
+    const wf = workflows.find(w => w.id === id);
+    if (!wf) return;
+    try { await api.patch(`/automations/${id}`, { isActive: !wf.active }); await loadWorkflows(); }
+    catch (err: any) { setToastMessage(err.message || 'Activation failed.'); }
   };
-
-  const deleteWorkflow = (id: string) => {
-    if (confirm('Are you sure you want to delete this workflow?')) {
-      setWorkflows(wfs => wfs.filter(wf => wf.id !== id));
-      if (editingId === id) setEditingId(null);
-    }
+  const deleteWorkflow = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this workflow?')) return;
+    try { await api.delete(`/automations/${id}`); await loadWorkflows(); if (editingId === id) setEditingId(null); }
+    catch { setToastMessage('Workflow deletion failed.'); }
   };
-
-  const duplicateWorkflow = (wf: WorkflowItem) => {
-    const newWf = { 
-      ...wf, 
-      id: 'wf_' + Math.random().toString(36).substr(2, 9),
-      name: wf.name + ' (Copy)',
-      active: false
-    };
-    setWorkflows([newWf, ...workflows]);
+  const duplicateWorkflow = async (wf: WorkflowItem) => {
+    try { await saveWorkflow({ ...wf, name: wf.name + ' (Copy)', active: false }, true); }
+    catch { setToastMessage('Workflow duplication failed.'); }
   };
-
-  const saveEditedWorkflow = (updatedWf: WorkflowItem) => {
-    setWorkflows(wfs => wfs.map(wf => wf.id === updatedWf.id ? updatedWf : wf));
-    setEditingId(null);
+  const saveEditedWorkflow = async (wf: WorkflowItem) => {
+    try { await saveWorkflow(wf); setEditingId(null); }
+    catch { setToastMessage('Workflow update failed.'); }
   };
 
   const filteredWorkflows = workflows.filter(wf => {

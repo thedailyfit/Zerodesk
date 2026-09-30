@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -49,7 +50,7 @@ const DEFAULT_VOICES_LIBRARY: VoicePersona[] = [
     language: 'hi-IN',
     accent: 'Indian English & Hinglish',
     sampleText: 'Namaste! Welcome to our desk. How may I assist you with scheduling your appointment today?',
-    tags: ['Best for OPDs', 'Warm & Empathetic', 'Bilingual Hinglish'],
+    tags: ['Warm & Clear', 'Warm & Empathetic', 'Bilingual Hinglish'],
     isDefault: true,
   },
   {
@@ -89,12 +90,12 @@ const DEFAULT_VOICES_LIBRARY: VoicePersona[] = [
     id: 'v_5',
     voiceId: 'onwK4e9ZLuTAKqWW03F9',
     tierBadge: 'Natural Flow',
-    name: 'Daniel (Medical Specialist)',
+    name: 'Daniel (Operations Specialist)',
     gender: 'Male',
     language: 'en-IN',
     accent: 'Indian English (Calm & Precise)',
-    sampleText: 'Greetings. I am here to assist you with specialist consultations, diagnostic follow-ups, and clinic schedules.',
-    tags: ['Hospitals', 'Diagnostics', 'Specialists'],
+    sampleText: 'Greetings. I am here to assist you with inquiries, scheduling, and service consultations.',
+    tags: ['Operations', 'Support', 'Specialists'],
   },
   {
     id: 'v_6',
@@ -279,11 +280,11 @@ export default function VoiceAgentLibraryPage() {
     } else if (lower.includes('timing') || lower.includes('hours') || lower.includes('open')) {
       return `We are open Monday through Saturday from 9:00 AM to 8:00 PM. Would you like me to book a slot for you today or later this week?`;
     } else if (lower.includes('price') || lower.includes('cost') || lower.includes('charge') || lower.includes('fee')) {
-      return `Our consultation fees and package pricing are fully transparent. Standard consultation starts from ₹500, and our specialized services vary based on consultation. May I know which treatment you are interested in?`;
+      return `Our pricing and service packages are fully transparent. Pricing varies depending on the specific service or package you select. May I know which offering you are interested in?`;
     } else if (lower.includes('book') || lower.includes('appointment') || lower.includes('schedule') || lower.includes('visit')) {
       return `I would be happy to book an ${apptWord} for you! We have available openings today at 3:30 PM and 5:00 PM. Which one works better for you?`;
     } else if (lower.includes('doctor') || lower.includes('specialist') || lower.includes('expert')) {
-      return `Our senior specialists are on duty today. May I have your name so I can check their exact open chair slots and reserve your consultation?`;
+      return `Our specialists are on schedule today. May I have your name so I can check availability and reserve your slot?`;
     } else {
       return `Thank you for sharing that. I've noted your request for ${serviceName}. Would you like me to confirm this and send a WhatsApp confirmation directly to your phone?`;
     }
@@ -337,9 +338,9 @@ export default function VoiceAgentLibraryPage() {
     };
 
     try {
-      const existing = JSON.parse(localStorage.getItem('zerodesk_voice_test_log') || '[]');
+      const existing = JSON.parse(tenantStorage.getItem('zerodesk_voice_test_log') || '[]');
       existing.unshift(logItem);
-      localStorage.setItem('zerodesk_voice_test_log', JSON.stringify(existing.slice(0, 20)));
+      tenantStorage.setItem('zerodesk_voice_test_log', JSON.stringify(existing.slice(0, 20)));
     } catch {}
 
     // Send to SuperAdmin telephony API if reachable

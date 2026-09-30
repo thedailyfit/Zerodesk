@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -68,12 +68,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async setNx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
-    if (!this.isConnected) return true; // Allow operation if Redis offline
+    if (!this.isConnected) throw new ServiceUnavailableException('Coordination storage unavailable');
     try {
       const res = await this.client.set(key, value, 'EX', ttlSeconds, 'NX');
       return res === 'OK';
     } catch {
-      return true;
+      throw new ServiceUnavailableException('Coordination storage unavailable');
     }
   }
 
@@ -93,5 +93,21 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     } catch {
       return 'error';
     }
+  }
+
+  async consumeOtp(key: string, candidateHash: string): Promise<boolean> {
+    if (!this.isConnected) return false;
+    try {
+      return await this.client.eval(`
+        local value = redis.call('GET', KEYS[1])
+        if not value then return 0 end
+        local attempts = redis.call('INCR', KEYS[2])
+        if attempts == 1 then redis.call('EXPIRE', KEYS[2], 300) end
+        if attempts > 5 then redis.call('DEL', KEYS[1]); return 0 end
+        if value ~= ARGV[1] then return 0 end
+        redis.call('DEL', KEYS[1], KEYS[2])
+        return 1
+      `, 2, key, key + ':attempts', candidateHash) === 1;
+    } catch { return false; }
   }
 }

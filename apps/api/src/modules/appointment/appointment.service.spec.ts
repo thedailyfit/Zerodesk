@@ -6,7 +6,13 @@ describe('AppointmentService', () => {
   let mockPrisma: any;
 
   beforeEach(() => {
+    jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-09-01T00:00:00Z').getTime());
     mockPrisma = {
+      tenant: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'tenant-1', timezone: 'Asia/Kolkata' }),
+        findFirst: jest.fn().mockResolvedValue({ id: 'tenant-1', timezone: 'Asia/Kolkata' }),
+      },
+      $executeRaw: jest.fn().mockResolvedValue(1),
       appointment: {
         findMany: jest.fn().mockResolvedValue([]),
         findFirst: jest.fn().mockResolvedValue(null),
@@ -26,6 +32,14 @@ describe('AppointmentService', () => {
       $transaction: jest.fn().mockImplementation((cb: (tx: any) => any) => cb(mockPrisma)),
     };
     service = new AppointmentService(mockPrisma);
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  it('rejects missing or invalid booking times without creating a customer', async () => {
+    for (const dateTime of [undefined, 'not-a-date', '2026-01-01T00:00:00Z']) {
+      await expect(service.bookFromVoice('tenant-1', { customerName: 'Test Customer', customerPhone: '+919876543210', dateTime })).rejects.toThrow();
+    }
+    expect(mockPrisma.customer.create).not.toHaveBeenCalled();
   });
 
   it('should book an appointment from voice agent successfully with transaction', async () => {
@@ -53,11 +67,13 @@ describe('AppointmentService', () => {
 
     expect(result.id).toBe('apt-1');
     expect(mockPrisma.$transaction).toHaveBeenCalled();
+    expect(mockPrisma.$executeRaw).toHaveBeenCalled();
     expect(mockPrisma.appointment.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           tenantId: 'tenant-1',
           source: 'VOICE_AI',
+          scheduledAt: new Date('2026-09-10T04:30:00Z'),
         }),
       }),
     );
@@ -107,7 +123,7 @@ describe('AppointmentService', () => {
     expect(result.requestedDoctor).toBe('Dr. Sharma');
     expect(result.alternativeDoctor).toBeDefined();
     expect(result.alternativeDoctor.name).toBe('Dr. Ananya');
-    expect(result.alternativeSlots.length).toBeGreaterThan(0);
+    expect(result.alternativeSlots).toEqual([]);
     expect(result.requiresConsent).toBe(true);
   });
 
@@ -165,5 +181,24 @@ describe('AppointmentService', () => {
       where: { id: 'apt-1' },
       data: { status: 'CANCELLED' },
     });
+  });
+
+  it('fails closed when the authoritative database lock fails', async () => {
+    mockPrisma.customer.findFirst.mockResolvedValue({ id: 'cust-1' });
+    mockPrisma.$executeRaw.mockRejectedValue(new Error('database lock unavailable'));
+    await expect(service.book('tenant-1', { customerId: 'cust-1', scheduledAt: '2026-10-10T10:00' })).rejects.toThrow('database lock unavailable');
+    expect(mockPrisma.appointment.create).not.toHaveBeenCalled();
+  });
+
+  it('requires OTP service and verification for public booking', async () => {
+    await expect(service.bookFromPublic({ slug: 'test', customerName: 'Test', customerPhone: '+919876543210', otp: '123456' })).rejects.toThrow('OTP verification is required');
+    await expect(service.sendPublicBookingOtp('test', '+919876543210')).rejects.toThrow('OTP service is unavailable');
+    expect(mockPrisma.customer.create).not.toHaveBeenCalled();
+  });
+
+  it('treats an unassigned appointment as occupying a named staff resource', async () => {
+    mockPrisma.appointment.findMany.mockResolvedValue([{ scheduledAt: new Date('2026-10-10T04:30Z'), durationMins: 60 }]);
+    await expect(service.checkIntervalConflict(mockPrisma, 'tenant-1', 'staff-1', new Date('2026-10-10T05:00Z'), new Date('2026-10-10T05:30Z'))).rejects.toThrow(ConflictException);
+    expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ OR: [{ staffId: 'staff-1' }, { staffId: null }] }) }));
   });
 });

@@ -232,8 +232,9 @@ export default function BookAppointmentPage() {
     let customerPhone = selectedCustomer?.phone || '';
     let finalCustomerId = selectedCustomer?.id || '';
 
+    try {
     if (isNewCustomer) {
-      const newPatient = addPatient({
+      const newPatient = await addPatient({
         name: newName,
         phone: newPhone,
         email: newEmail,
@@ -247,8 +248,9 @@ export default function BookAppointmentPage() {
       finalCustomerId = newPatient.id;
     }
 
-    const tokenNo = Math.floor(100 + Math.random() * 900);
-    const bookingId = `BK-${Date.now().toString().slice(-5)}`;
+    } catch (error) { alert(error instanceof Error ? error.message : 'Customer could not be saved.'); return; }
+    const tokenNo = '';
+    const bookingId = '';
     const finalTime = useCustomTime ? formatCustomTime(customTime) : selectedSlot;
 
     const newBooking = {
@@ -266,7 +268,7 @@ export default function BookAppointmentPage() {
     };
 
     try {
-      await api.post('/appointments', {
+      const saved = await api.post<any>('/appointments', {
         customerId: finalCustomerId,
         customerName,
         phone: customerPhone,
@@ -277,16 +279,16 @@ export default function BookAppointmentPage() {
         date: bookingDate,
         time: finalTime,
         totalAmount: totalPayable,
-        tokenNumber: tokenNo,
         status: 'SCHEDULED',
       });
 
-      setConfirmedBooking(newBooking);
+      if (!saved?.id) throw new Error('Appointment was not saved.');
+      setConfirmedBooking({ ...newBooking, bookingId: saved.id, tokenNumber: saved.tokenNumber || 'Not assigned' });
 
       // Add to recent walk-ins list
       setRecentBookings(prev => [
         {
-          token: `T-${tokenNo}`,
+          token: saved.tokenNumber ? `T-${saved.tokenNumber}` : saved.id,
           name: customerName,
           service: selectedService?.name || (nicheConfig.terminology?.consultation || 'Session'),
           doctor: selectedStaff,

@@ -6,6 +6,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { TypeSafeService } from '../typesafe/typesafe.service';
 import { ActiveNiche } from '../typesafe/typesafe.constants';
+import { Cron } from '@nestjs/schedule';
+import { createHash } from 'crypto';
+
+export const INDEX_PENDING = 'INDEX_PENDING';
 
 export interface SearchResult {
   chunkId: string;
@@ -43,12 +47,35 @@ export class RagService implements OnModuleInit {
    * Enqueue document indexing into background queue (non-blocking).
    */
   async enqueueIndexDocument(tenantId: string, documentId: string) {
+    const doc = await this.prisma.knowledgeDocument.findFirst({ where: { id: documentId, tenantId } });
+    if (!doc) throw new Error('Document not found');
     const job = await this.ragQueue.add('index-doc', { tenantId, documentId }, {
+      jobId: `${documentId}-${createHash('sha256').update(doc.content).digest('hex')}`,
       attempts: 3,
       backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: true,
+      removeOnFail: true,
     });
     this.logger.log(`Enqueued document ${documentId} for indexing (Job ID: ${job.id})`);
     return { jobId: job.id, status: 'enqueued' };
+  }
+
+  // The database marker is written with the content, before Redis delivery. Recover
+  // interrupted delivery and exhausted queue attempts without hiding the active version.
+  @Cron('*/1 * * * *')
+  async recoverPendingIndexing() {
+    const docs = await this.prisma.knowledgeDocument.findMany({
+      where: { errorMessage: INDEX_PENDING, isActive: true },
+      select: { id: true, tenantId: true },
+      orderBy: { updatedAt: 'asc' },
+    });
+    for (const doc of docs) {
+      try {
+        await this.enqueueIndexDocument(doc.tenantId, doc.id);
+      } catch (error: any) {
+        this.logger.warn(`Index delivery pending for ${doc.id}: ${error.message}`);
+      }
+    }
   }
 
   /**
@@ -145,7 +172,7 @@ export class RagService implements OnModuleInit {
       const reranked = this.rerank(query, candidateList, 12);
 
       // Stage 3: TypeSafe Jev Passage Shield (Parallel 70ms screening)
-      if (this.typeSafeService && !options?.bypassShield) {
+      if (this.typeSafeService && (!options?.bypassShield || process.env.NODE_ENV === 'production')) {
         try {
           const screened = await this.typeSafeService.screenRagChunksParallel(
             query,
@@ -162,11 +189,11 @@ export class RagService implements OnModuleInit {
           return filtered.slice(0, topK);
         } catch (shieldErr: any) {
           this.logger.warn(`TypeSafe Jev passage shield bypassed: ${shieldErr?.message}`);
-          return reranked.slice(0, topK);
+          return process.env.NODE_ENV === 'production' ? [] : reranked.slice(0, topK);
         }
       }
 
-      return reranked.slice(0, topK);
+      return process.env.NODE_ENV === 'production' ? [] : reranked.slice(0, topK);
     } catch (error) {
       this.logger.error(`RAG search failed: ${error}`, (error as Error).stack);
       return [];
@@ -243,86 +270,45 @@ export class RagService implements OnModuleInit {
 
     if (!doc) throw new Error('Document not found');
 
-    const currentVersion = doc.version || 1;
-    const targetVersion = currentVersion + 1;
-
-    // 1. Mark document as INDEXING while keeping currentVersion chunks active
-    await this.prisma.knowledgeDocument.update({
-      where: { id: documentId },
-      data: { status: 'INDEXING' },
-    });
-
-    // 2. Split content into table-aware semantic chunks (~500 chars with overlap)
+    if (!doc.isActive) return 0;
     const chunks = this.splitIntoChunks(doc.content, 500, 50);
+    if (!chunks.length || !doc.content.trim()) throw new Error('Document has no indexable content');
 
-    // 3. Generate embeddings and insert new chunks with targetVersion
-    let indexed = 0;
-    const batchSize = 5;
-
-    try {
-      for (let i = 0; i < chunks.length; i += batchSize) {
-        const batch = chunks.slice(i, i + batchSize);
-        await Promise.all(
-          batch.map(async (chunkText, batchIdx) => {
-            const chunkIdx = i + batchIdx;
-            try {
-              const embedding = await this.embeddingService.createEmbedding(chunkText);
-              const embeddingStr = `[${embedding.join(',')}]`;
-
-              await this.prisma.$executeRaw`
-                INSERT INTO knowledge_chunks (id, tenant_id, document_id, version, chunk_text, chunk_index, embedding, created_at)
-                VALUES (gen_random_uuid(), ${tenantId}::uuid, ${documentId}::uuid, ${targetVersion}, ${chunkText}, ${chunkIdx}, ${embeddingStr}::vector, NOW())
-              `;
-              indexed++;
-            } catch (error: any) {
-              this.logger.warn(`Failed to index chunk ${chunkIdx} of document ${documentId}: ${error?.message || error}`);
-            }
-          }),
-        );
+    // Expensive provider work happens outside a database transaction. No staged
+    // chunks are visible or need destructive cleanup if any embedding fails.
+    const embeddings: number[][] = [];
+    for (let i = 0; i < chunks.length; i += 5) {
+      const batch = await Promise.all(chunks.slice(i, i + 5).map(text => this.embeddingService.createEmbedding(text)));
+      for (const embedding of batch) {
+        if (embedding.length !== 1536 || !embedding.every(Number.isFinite) || !embedding.some(value => value !== 0)) {
+          throw new Error('Invalid embedding');
+        }
+        embeddings.push(embedding);
       }
-
-      // 3b. Verify 100% chunk completion before promoting version
-      if (indexed < chunks.length) {
-        throw new Error(
-          `Atomic indexing incomplete: only ${indexed} of ${chunks.length} chunks successfully generated embeddings. Aborting to preserve previous active corpus.`,
-        );
-      }
-
-      // 4. Atomic pointer switch: Activate targetVersion and purge stale chunks
-      await this.prisma.$transaction([
-        this.prisma.knowledgeDocument.update({
-          where: { id: documentId },
-          data: {
-            version: targetVersion,
-            status: 'ACTIVE',
-            errorMessage: null,
-          },
-        }),
-        this.prisma.knowledgeChunk.deleteMany({
-          where: {
-            documentId,
-            version: { lt: targetVersion },
-          },
-        }),
-      ]);
-
-      this.logger.log(`Atomically activated version ${targetVersion} (${indexed}/${chunks.length} chunks) for document ${documentId}`);
-      return indexed;
-    } catch (err: any) {
-      this.logger.error(`Indexing failed for document ${documentId}: ${err.message}`, err.stack);
-      await this.prisma.knowledgeDocument.update({
-        where: { id: documentId },
-        data: {
-          status: currentVersion > 1 ? 'ACTIVE' : 'FAILED',
-          errorMessage: err.message,
-        },
-      });
-      // Purge incomplete targetVersion chunks so no partial state remains
-      await this.prisma.knowledgeChunk.deleteMany({
-        where: { documentId, version: targetVersion },
-      });
-      throw err;
     }
+
+    return this.prisma.$transaction(async tx => {
+      // Serialize publication with updates/deletion of this document. A worker
+      // that embedded stale content cannot publish or delete a newer generation.
+      await tx.$queryRaw`SELECT id FROM knowledge_documents WHERE id = ${documentId}::uuid AND tenant_id = ${tenantId}::uuid FOR UPDATE`;
+      const latest = await tx.knowledgeDocument.findFirst({ where: { id: documentId, tenantId } });
+      if (!latest || !latest.isActive) return 0;
+      if (latest.content !== doc.content || latest.version !== doc.version) return 0;
+      const targetVersion = latest.version + 1;
+      for (let index = 0; index < chunks.length; index++) {
+        const vector = `[${embeddings[index].join(',')}]`;
+        await tx.$executeRaw`
+          INSERT INTO knowledge_chunks (id, tenant_id, document_id, version, chunk_text, chunk_index, embedding, created_at)
+          VALUES (gen_random_uuid(), ${tenantId}::uuid, ${documentId}::uuid, ${targetVersion}, ${chunks[index]}, ${index}, ${vector}::vector, NOW())`;
+      }
+      await tx.knowledgeDocument.update({
+        where: { id: documentId, tenantId },
+        data: { version: targetVersion, status: 'ACTIVE', errorMessage: null },
+      });
+      // Preserve one complete previous generation for bounded rollback.
+      await tx.knowledgeChunk.deleteMany({ where: { documentId, tenantId, version: { lt: latest.version } } });
+      return chunks.length;
+    }, { timeout: 30000 });
   }
 
   /**

@@ -106,11 +106,12 @@ export default function ProfilesPage() {
 
   const canUpload = isManager || isAdmin || isSuperAdmin;
 
-  const handleAddGuestSubmit = (e: React.FormEvent) => {
+  const handleAddGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestForm.name.trim() || !guestForm.phone.trim()) return;
 
-    const newGuest = addPatient({
+    try {
+    const newGuest = await addPatient({
       name: guestForm.name.trim(),
       phone: guestForm.phone.trim(),
       email: guestForm.email.trim() || undefined,
@@ -133,6 +134,7 @@ export default function ProfilesPage() {
     });
     setToastMessage(`${customerSingular} profile "${newGuest.name}" added successfully!`);
     setTimeout(() => setToastMessage(null), 4000);
+    } catch (error) { alert(error instanceof Error ? error.message : 'Customer could not be saved.'); }
   };
 
   const filtered = patients.filter(p => 
@@ -148,46 +150,26 @@ export default function ProfilesPage() {
     const patient = patients.find(p => p.id === selectedPatientId);
     if (!patient) return;
 
-    const newFile: UploadedFile = {
-      id: `file-${Date.now()}`,
-      fileName: uploadedFile.name,
-      category: fileCategory,
-      fileSize: `${(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB`,
-      uploadDate: new Date().toISOString().split('T')[0],
-      uploadedBy: 'Frontdesk AI & Staff'
-    };
+    setToastMessage('Document storage is not configured. No file was uploaded.');
 
-    const updatedFiles = [...(patient.uploadedFiles || []), newFile];
-    updatePatient(patient.id, { uploadedFiles: updatedFiles });
-
-    if (selected && selected.id === patient.id) {
-      setSelected({ ...patient, uploadedFiles: updatedFiles });
-    }
-
-    setUploadSuccess(true);
-    setTimeout(() => {
-      setUploadSuccess(false);
-      setIsUploadOpen(false);
-      setUploadedFile(null);
-      setSelectedPatientId('');
-    }, 1200);
   };
 
-  const handlePrescriptionSubmit = (e: React.FormEvent) => {
+  const handlePrescriptionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
 
     const newPrescription: PrescriptionRecord = {
       id: `rx-${Date.now()}`,
       date: prescriptionForm.date,
-      doctorName: prescriptionForm.doctorName || 'Senior Specialist',
+      doctorName: prescriptionForm.doctorName,
       diagnosis: prescriptionForm.diagnosis,
       medications: prescriptionForm.medications,
       notes: prescriptionForm.notes
     };
 
     const updatedPrescriptions = [...(selected.prescriptions || []), newPrescription];
-    updatePatient(selected.id, { prescriptions: updatedPrescriptions });
+    try { await updatePatient(selected.id, { prescriptions: updatedPrescriptions }); }
+    catch (error) { setToastMessage(error instanceof Error ? error.message : 'Prescription could not be saved.'); return; }
     setSelected({ ...selected, prescriptions: updatedPrescriptions });
 
     setIsPrescriptionOpen(false);
@@ -774,7 +756,7 @@ export default function ProfilesPage() {
                     <label className="text-xs font-semibold text-[var(--color-text)]">{nicheConfig.terminology?.staff || 'Specialist'} Name</label>
                     <input
                       type="text"
-                      placeholder={`e.g. ${nicheConfig.id === 'spa' ? 'Therapist Sarah' : 'Dr. Rajesh'}`}
+                      placeholder={`e.g. ${nicheConfig.id === 'spa' ? 'Therapist Sarah' : (nicheConfig.id === 'skin' || nicheConfig.id === 'dental' ? 'Dr. Rajesh' : 'Lead Specialist')}`}
                       value={prescriptionForm.doctorName}
                       onChange={(e) => setPrescriptionForm({ ...prescriptionForm, doctorName: e.target.value })}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:outline-none focus:border-blue-500"

@@ -33,6 +33,12 @@ export class CustomerController {
   async getConversations(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.customerService.getConversations(tenantId, id);
   }
+
+  @Delete(':id')
+  async delete(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.customerService.softDelete(tenantId, id);
+  }
+
   
   @Get(':id/timeline')
   async getTimeline(@TenantId() tenantId: string, @Param('id') id: string) {

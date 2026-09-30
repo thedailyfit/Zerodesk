@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -110,8 +111,8 @@ export default function CreateTemplatePage() {
     } catch {}
 
     const key = `zerodesk_custom_templates_${currentNiche}`;
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    localStorage.setItem(key, JSON.stringify([newTemplate, ...existing]));
+    const existing = JSON.parse(tenantStorage.getItem(key) || '[]');
+    tenantStorage.setItem(key, JSON.stringify([newTemplate, ...existing]));
 
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3500);

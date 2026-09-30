@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Phone, 
@@ -141,12 +142,12 @@ export default function PhoneNumbersPage() {
             {copiedId === 'banner_copy' ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
             <span>{copiedId === 'banner_copy' ? 'Copied!' : 'Copy Number'}</span>
           </button>
-          <a
+          <Link
             href="/"
             className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white rounded-xl transition-all shadow-md shadow-blue-500/20"
           >
             Dashboard →
-          </a>
+          </Link>
         </div>
       </div>
 

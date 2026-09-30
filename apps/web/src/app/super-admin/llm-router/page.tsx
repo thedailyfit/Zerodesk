@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import { 
   Cpu, 
@@ -28,6 +29,17 @@ export default function SuperAdminLlmRouterPage() {
     toggleLlmStatus 
   } = useSuperAdminStore();
 
+  useEffect(() => {
+    apiClient<any[]>('/admin/llms').then(models => {
+      useSuperAdminStore.setState({ llmModels: Array.isArray(models) ? models : [] });
+    }).catch(() => { useSuperAdminStore.setState({ llmModels: [] }); toast.error('Unable to load model registry'); });
+  }, []);
+  const saveModelStatus = async (model: any) => {
+    try {
+      await apiClient(`/admin/llms/${model.id}`, { method: 'PUT', body: JSON.stringify({ isActive: !model.isActive }) });
+      toggleLlmStatus(model.id);
+    } catch { toast.error('Model status was not saved'); }
+  };
   const fallbackModel = llmModels.find((m: any) => m.id === fallbackModelId);
 
   return (
@@ -47,8 +59,7 @@ export default function SuperAdminLlmRouterPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              toggleGlobalFailover();
-              toast.success(`Global failover is now ${!globalFailoverEnabled ? 'ENABLED' : 'DISABLED'}`);
+              toast.error('Global failover control is not connected to the runtime');
             }}
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all',
@@ -73,7 +84,7 @@ export default function SuperAdminLlmRouterPage() {
             </div>
             <h3 className="text-lg font-bold text-white">Sub-Second Dynamic Voice Routing Rule</h3>
             <p className="text-xs text-slate-400 max-w-2xl">
-              If any flagship model (e.g. OpenAI GPT-4o) encounters a rate limit (HTTP 429) or latency exceeds 1,200ms, LiveKit audio sessions seamlessly divert to the chosen fallback model without call drops.
+              Runtime failover has not been connected to these controls. Registry availability does not confirm provider readiness or uninterrupted calls.
             </p>
           </div>
 
@@ -82,8 +93,7 @@ export default function SuperAdminLlmRouterPage() {
             <select
               value={fallbackModelId}
               onChange={(e) => {
-                setFallbackModel(e.target.value);
-                toast.success('Fallback model updated');
+                toast.error('Fallback routing is not connected to the runtime');
               }}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-rose-500"
             >
@@ -157,7 +167,7 @@ export default function SuperAdminLlmRouterPage() {
               </span>
 
               <button
-                onClick={() => toggleLlmStatus(model.id)}
+                onClick={() => saveModelStatus(model)}
                 className={cn(
                   'px-3 py-1.5 rounded-lg font-semibold text-xs border transition-all',
                   model.isActive 

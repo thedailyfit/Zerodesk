@@ -186,7 +186,7 @@ export class WhatsappService {
     }
 
     const config = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
-    if (!config?.accessToken || !config?.phoneNumberId) {
+    if (!config?.isActive || !config?.accessToken || !config?.phoneNumberId) {
       throw new Error('WhatsApp not configured for this tenant');
     }
 
@@ -212,15 +212,6 @@ export class WhatsappService {
 
     const result = await response.json();
     if (!response.ok || result.error) {
-      if (result.error && (result.error.code === 131047 || result.error.code === 131026)) {
-        this.logger.warn(`[META 24H WINDOW] Outside 24h session window for ${to}. Falling back to pre-approved utility template.`);
-        try {
-          return await this.sendTemplate(tenantId, to, 'appointment_reminder', 'en', []);
-        } catch (tmplErr: any) {
-          this.logger.error(`Utility template fallback failed: ${tmplErr.message}`);
-          throw tmplErr;
-        }
-      }
       this.logger.error(`Meta Graph API error for ${to}: ${JSON.stringify(result.error || result)}`);
       throw new Error(`WhatsApp send failed: ${result.error?.message || 'Meta API HTTP error'}`);
     }
@@ -248,8 +239,13 @@ export class WhatsappService {
     languageCode = 'en',
     components: any[] = [],
   ): Promise<any> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { tenantId, phone: normalizePhoneNumber(to) },
+    });
+    if (customer?.dndStatus) return { success: false, reason: 'DND_ACTIVE', skipped: true };
+
     const config = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
-    if (!config?.accessToken || !config?.phoneNumberId) {
+    if (!config?.isActive || !config?.accessToken || !config?.phoneNumberId) {
       throw new Error('WhatsApp not configured for this tenant');
     }
 
@@ -294,8 +290,13 @@ export class WhatsappService {
     bodyText: string,
     buttons: { id: string; title: string }[],
   ): Promise<any> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { tenantId, phone: normalizePhoneNumber(to) },
+    });
+    if (customer?.dndStatus) return { success: false, reason: 'DND_ACTIVE', skipped: true };
+
     const config = await this.prisma.whatsappConfig.findUnique({ where: { tenantId } });
-    if (!config?.accessToken || !config?.phoneNumberId) {
+    if (!config?.isActive || !config?.accessToken || !config?.phoneNumberId) {
       throw new Error('WhatsApp not configured');
     }
 
@@ -338,9 +339,8 @@ export class WhatsappService {
 
   private async persistAndMeterOutboundMessage(tenantId: string, to: string, content: string, waMessageId?: string) {
     try {
-      const cleanPhone = to.replace(/[^0-9+]/g, '');
       const customer = await this.prisma.customer.findFirst({
-        where: { tenantId, phone: { contains: cleanPhone.slice(-10) } },
+        where: { tenantId, phone: normalizePhoneNumber(to) },
       });
 
       if (customer) {

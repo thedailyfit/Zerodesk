@@ -35,6 +35,8 @@ from livekit.agents import (
     inference,
 )
 from livekit.plugins import openai, sarvam, elevenlabs, silero
+from livekit.agents import llm
+from runtime_config import build_llm
 
 try:
     from livekit.plugins import groq
@@ -58,7 +60,7 @@ logger = logging.getLogger("voice-agent")
 
 ZERODESK_API = os.getenv("ZERODESK_API_URL", "http://localhost:4000")
 VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "90ipbRoKi4CpHXvKVtl0")
-INTERNAL_VOICE_SECRET = os.getenv("INTERNAL_VOICE_SECRET", "zerodesk-internal-voice-key-2026").strip()
+INTERNAL_VOICE_SECRET = os.getenv("INTERNAL_VOICE_SECRET", "").strip()
 
 
 # ==========================================
@@ -206,7 +208,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
     async def book_appointment(
         customer_name: Annotated[str, "Patient's or caller's full name"],
         service_name: Annotated[str, "Treatment, procedure, or service requested"],
-        preferred_date: Annotated[str, "Date in YYYY-MM-DD format (or 'tomorrow')"],
+        preferred_date: Annotated[str, "Date in YYYY-MM-DD format in the business timezone; resolve relative dates before calling"],
         preferred_time: Annotated[str, "Time in HH:MM format (e.g. '14:00' or '10:30')"],
         doctor_name: Annotated[str, "Optional preferred doctor or physician name (e.g. 'Dr. Sharma')"] = "",
         allow_alternative_doctor: Annotated[bool, "True if the patient agrees/consents to book with an alternative available doctor if preferred doctor is busy"] = False,
@@ -250,7 +252,7 @@ def create_call_tools(call_ctx: CallContext) -> list:
                         
                         doc_booked = data.get("staff", {}).get("name") if isinstance(data.get("staff"), dict) else None
                         doc_phrase = f" with Dr. {doc_booked}" if doc_booked else ""
-                        return f"Appointment booked successfully for {customer_name}{doc_phrase} on {preferred_date} at {preferred_time}! A confirmation WhatsApp message has been sent to your phone."
+                        return f"Appointment booked successfully for {customer_name}{doc_phrase} on {preferred_date} at {preferred_time}! Confirmation delivery is handled separately."
                     return "I could not confirm that specific slot right now. Let me connect you with our frontdesk team."
         except Exception as e:
             logger.error(f"book_appointment error: {e}")
@@ -480,7 +482,7 @@ async def entrypoint(ctx: JobContext):
     # 1. Thread-safe call context extraction
     call_ctx = extract_call_context(ctx)
     logger.info(
-        f"New call connected - Room: {call_ctx.room_name}, Tenant: {call_ctx.tenant_id}, Phone: {call_ctx.caller_phone}"
+        f"New call connected - Room: {call_ctx.room_name}, Tenant: {call_ctx.tenant_id}"
     )
 
     # 2. Pre-call returning patient recognition
@@ -498,12 +500,13 @@ async def entrypoint(ctx: JobContext):
                 ) as resp:
                     if resp.status == 200:
                         customer_info = await resp.json()
-                        logger.info(f"Pre-call lookup recognized customer: {customer_info.get('name')}")
+                        logger.info("Pre-call customer lookup completed")
         except Exception as e:
             logger.debug(f"Pre-call customer lookup skipped: {e}")
 
     # 3. Dynamic system prompt scoped to clinic
     system_prompt = None
+    runtime_config = None
     try:
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(
@@ -517,11 +520,15 @@ async def entrypoint(ctx: JobContext):
                 if resp.status == 200:
                     data = await resp.json()
                     system_prompt = data.get("systemPrompt")
+                    runtime_config = data.get("runtime")
                     preferred_language = data.get("language") or data.get("preferredLanguage") or os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN")
                     if data.get("clinicName"):
                         call_ctx.clinic_name = data.get("clinicName")
     except Exception as e:
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
+
+    if not system_prompt or not runtime_config:
+        raise RuntimeError("Verified tenant voice configuration unavailable; refusing default AI execution")
 
     preferred_language = locals().get("preferred_language", os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN"))
 
@@ -634,30 +641,8 @@ Acknowledge returning caller warmly by name and reference their appointment when
         except Exception as e:
             selected_tts = inference.TTS(model="deepgram/aura-2")
 
-    # 7. LLM Provider Selection (Groq LPU with Qwen 3.8 27B for <250ms latency and pure human dialogue)
-    selected_llm = None
-    groq_key = os.getenv("GROQ_API_KEY", "")
-    groq_model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
-
-    if groq and groq_key and not groq_key.startswith("gsk_xxx") and len(groq_key) > 8:
-        try:
-            selected_llm = groq.LLM(model=groq_model, api_key=groq_key)
-            logger.info(f"Using Groq LPU LLM ({groq_model})")
-        except Exception as e:
-            logger.warning(f"Groq LLM init failed ({e}), falling back...")
-
-    if not selected_llm:
-        openai_key = os.getenv("OPENAI_API_KEY", "")
-        if openai_key and not openai_key.startswith("sk-xxx") and len(openai_key) > 8:
-            try:
-                selected_llm = openai.LLM(model="gpt-4o-mini", api_key=openai_key)
-                logger.info("Using direct OpenAI LLM (gpt-4o-mini)")
-            except Exception as e:
-                logger.warning(f"Direct OpenAI LLM failed: {e}")
-
-    if not selected_llm:
-        logger.info("Using LiveKit Cloud native LLM inference (openai/gpt-4o-mini)")
-        selected_llm = inference.LLM(model="openai/gpt-4o-mini")
+    # Tenant routing settings are loaded for each new call.
+    selected_llm = build_llm(runtime_config, openai.LLM, llm.FallbackAdapter)
 
     # 8. AgentSession configured with telephony echo and background static protection
     session = AgentSession(

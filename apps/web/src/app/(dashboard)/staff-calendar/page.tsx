@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRole } from '@/components/providers/role-provider';
@@ -155,11 +156,14 @@ export default function StaffCalendarPage() {
   // Persistent staff list state
   const [staffList, setStaffList] = useState<StaffMember[]>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(`zerodesk_staff_calendar_${currentNiche}`);
+      const stored = tenantStorage.getItem(`zerodesk_staff_calendar_${currentNiche}`);
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const valid = parsed.filter((s: any) => !/^st-(skin|dental|spa|salon|realestate|hotel)-\d+$/.test(s.id));
+            return valid;
+          }
         } catch {}
       }
     }
@@ -170,12 +174,13 @@ export default function StaffCalendarPage() {
   useEffect(() => {
     let initialList = DEFAULT_STAFF_BY_NICHE[currentNiche] || DEFAULT_STAFF_BY_NICHE.skin;
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(`zerodesk_staff_calendar_${currentNiche}`);
+      const stored = tenantStorage.getItem(`zerodesk_staff_calendar_${currentNiche}`);
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            initialList = parsed;
+            const valid = parsed.filter((s: any) => !/^st-(skin|dental|spa|salon|realestate|hotel)-\d+$/.test(s.id));
+            initialList = valid;
           }
         } catch {}
       }
@@ -188,7 +193,7 @@ export default function StaffCalendarPage() {
   const persistStaffList = (newList: StaffMember[]) => {
     setStaffList(newList);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`zerodesk_staff_calendar_${currentNiche}`, JSON.stringify(newList));
+      tenantStorage.setItem(`zerodesk_staff_calendar_${currentNiche}`, JSON.stringify(newList));
     }
   };
 

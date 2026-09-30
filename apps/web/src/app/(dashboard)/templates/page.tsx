@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -42,7 +43,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     category: 'Booking Confirmation',
     channel: 'EMAIL',
     subject: 'Confirmed: Your {{service}} session at {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-Treatment Instructions:\n1. Avoid direct sun exposure or harsh treatments 48h prior.\n2. Discontinue active retinoids and chemical exfoliants 3 days before.\n3. Arrive with clean skin free of makeup or heavy oils.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Clinical Team',
+    content: 'Dear {{customer_name}},\n\nYour appointment for {{service}} is confirmed for {{appointment_time}} with {{staff_name}} at {{business_name}}.\n\nPre-Treatment Instructions:\n1. Avoid direct sun exposure or harsh treatments 48h prior.\n2. Discontinue active retinoids and chemical exfoliants 3 days before.\n3. Arrive with clean skin free of makeup or heavy oils.\n\nNeed to reschedule? Reply directly or call {{phone}}.\n\nWarm regards,\n{{business_name}} Team',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name', 'phone']
@@ -53,7 +54,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     category: 'Billing & Receipt',
     channel: 'EMAIL',
     subject: 'Receipt & Invoice #{{invoice_no}} from {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nThank you for visiting {{business_name}} today for your {{service}} session!\n\nAttached is your official treatment receipt #{{invoice_no}} detailing your procedure breakdown and doctor fee.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your post-care recovery or next session, feel free to reply.',
+    content: 'Dear {{customer_name}},\n\nThank you for visiting {{business_name}} today for your {{service}} session!\n\nAttached is your official treatment receipt #{{invoice_no}} detailing your procedure breakdown and service fee.\n\nTotal Paid: {{amount}}\nDate: {{date}}\n\nIf you have any questions regarding your post-care recovery or next session, feel free to reply.',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'invoice_no', 'service', 'amount', 'date', 'business_name']
@@ -75,7 +76,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     category: 'Consultation Follow-up',
     channel: 'EMAIL',
     subject: 'Your Analysis Report & Treatment Plan - {{business_name}}',
-    content: 'Dear {{customer_name}},\n\nThank you for undergoing a comprehensive consultation with Dr. {{staff_name}} at {{business_name}}.\n\nBased on your assessment, here is your recommended treatment roadmap:\n\nRecommended Procedures:\n- Primary Treatment: {{service}} (Recommended 4-6 sessions)\n- Maintenance: Monthly follow-ups & routine care\n\nAttached is your full PDF Diagnostic Report. Reply or call {{phone}} to schedule session #1!',
+    content: 'Dear {{customer_name}},\n\nThank you for undergoing a comprehensive consultation with {{staff_name}} at {{business_name}}.\n\nBased on your assessment, here is your recommended treatment roadmap:\n\nRecommended Procedures:\n- Primary Treatment: {{service}} (Recommended 4-6 sessions)\n- Maintenance: Monthly follow-ups & routine care\n\nAttached is your full PDF Diagnostic Report. Reply or call {{phone}} to schedule session #1!',
     mediaAttachment: 'PDF',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'staff_name', 'business_name', 'phone']
@@ -85,7 +86,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     title: 'WhatsApp Appointment & Pre-Care Reminder (24h Prior)',
     category: 'Reminders',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! 👋 Reminder: Your {{service}} session is tomorrow at {{appointment_time}} with Dr. {{staff_name}} at {{business_name}}.\n\nPre-care check: Arrive 10 minutes early.\n\nReply 1 to Confirm or 2 to Reschedule.',
+    content: 'Hi {{customer_name}}! 👋 Reminder: Your {{service}} session is tomorrow at {{appointment_time}} with {{staff_name}} at {{business_name}}.\n\nPre-care check: Arrive 10 minutes early.\n\nReply 1 to Confirm or 2 to Reschedule.',
     mediaAttachment: 'IMAGE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'appointment_time', 'staff_name', 'business_name']
@@ -95,7 +96,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     title: 'WhatsApp Post-Visit Care Check & Review Request',
     category: 'Customer Feedback',
     channel: 'WHATSAPP',
-    content: 'Hi {{customer_name}}! Hope you feel great after your {{service}} session today with Dr. {{staff_name}} at {{business_name}}. 🌟\n\nPlease follow all aftercare guidelines given.\n\nCould you take 30 seconds to rate your experience? {{review_link}}',
+    content: 'Hi {{customer_name}}! Hope you feel great after your {{service}} session today with {{staff_name}} at {{business_name}}. 🌟\n\nPlease follow all aftercare guidelines given.\n\nCould you take 30 seconds to rate your experience? {{review_link}}',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'service', 'staff_name', 'business_name', 'review_link']
@@ -115,7 +116,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     title: 'Voice AI Missed Call Auto-Responder',
     category: 'Auto-Trigger DM',
     channel: 'WHATSAPP',
-    content: 'Hello {{customer_name}}! 🙏 We noticed you just called {{business_name}}. Our AI assistant missed your call while assisting another caller.\n\nHow can we help you right now?\n1️⃣ Book Appointment / Check Services\n2️⃣ Doctor Timings & Pricing\n3️⃣ Reschedule Booking\n\nReply with 1, 2, or 3 to chat instantly!',
+    content: 'Hello {{customer_name}}! 🙏 We noticed you just called {{business_name}}. Our AI assistant missed your call while assisting another caller.\n\nHow can we help you right now?\n1️⃣ Book Appointment / Check Services\n2️⃣ Service Timings & Pricing\n3️⃣ Reschedule Booking\n\nReply with 1, 2, or 3 to chat instantly!',
     mediaAttachment: 'NONE',
     isPreinstalled: true,
     variables: ['customer_name', 'business_name']
@@ -134,7 +135,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
     title: 'Voice AI Outbound Appointment Confirmation Call Script',
     category: 'Outbound Reminder',
     channel: 'VOICE',
-    content: 'Hello {{customer_name}}, this is {{business_name}} calling regarding your appointment scheduled for {{appointment_time}} with Dr. {{staff_name}}. Can you confirm if you will be attending?',
+    content: 'Hello {{customer_name}}, this is {{business_name}} calling regarding your appointment scheduled for {{appointment_time}} with {{staff_name}}. Can you confirm if you will be attending?',
     isPreinstalled: true,
     variables: ['customer_name', 'appointment_time', 'staff_name', 'business_name']
   }
@@ -189,7 +190,7 @@ export default function TemplatesPage() {
   const [mediaAttachment, setMediaAttachment] = useState<'PDF' | 'IMAGE' | 'VIDEO' | 'NONE'>('NONE');
 
   useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_templates_${currentNiche}`);
+    const saved = tenantStorage.getItem(`zerodesk_templates_${currentNiche}`);
     if (saved) {
       try {
         setTemplates(JSON.parse(saved));
@@ -208,7 +209,7 @@ export default function TemplatesPage() {
 
   const saveToStorage = (updated: TemplateItem[]) => {
     setTemplates(updated);
-    localStorage.setItem(`zerodesk_templates_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zerodesk_templates_${currentNiche}`, JSON.stringify(updated));
   };
 
   const handleResetDefaults = () => {

@@ -64,11 +64,12 @@ export default function CustomersPage() {
     });
   }, [patients, search, filterPriority]);
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPatient.name || !newPatient.phone) return;
 
-    const added = addPatient({
+    try {
+    const added = await addPatient({
       name: newPatient.name,
       phone: newPatient.phone,
       email: newPatient.email,
@@ -111,6 +112,7 @@ export default function CustomersPage() {
     });
     setSendToBilling(true);
     setBillingReasonId('DEFAULT_FEE');
+    } catch (error) { alert(error instanceof Error ? error.message : 'Customer could not be saved.'); }
   };
 
   return (

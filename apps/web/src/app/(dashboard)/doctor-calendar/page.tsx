@@ -112,7 +112,7 @@ export default function DoctorCalendarPage() {
 
     const newDoc: DoctorProfile = {
       id: `doc-${Date.now()}`,
-      name: docName.startsWith('Dr.') ? docName : `Dr. ${docName}`,
+      name: docName.startsWith('Dr.') ? docName : (currentNiche === 'skin' || currentNiche === 'dental' ? `Dr. ${docName}` : docName),
       specialty: docSpecialty,
       avatar: initials,
       phone: docPhone || 'N/A',
@@ -145,7 +145,7 @@ export default function DoctorCalendarPage() {
   const [isEditShiftModalOpen, setIsEditShiftModalOpen] = useState(false);
   const [editShiftStart, setEditShiftStart] = useState('09:00 AM');
   const [editShiftEnd, setEditShiftEnd] = useState('05:00 PM');
-  const [editClinicalRoom, setEditClinicalRoom] = useState('Consult OT 1');
+  const [editClinicalRoom, setEditClinicalRoom] = useState('Room 1');
 
   const handleOpenEditShift = () => {
     const parts = (selectedDoctor?.hours || '09:00 AM - 05:00 PM').split(' - ');
@@ -304,7 +304,7 @@ export default function DoctorCalendarPage() {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
                 <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Today&apos;s Load</span>
-                <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor?.todayAppointments || 0} Patients</span>
+                <span className="text-xl font-extrabold font-mono text-[var(--color-text)]">{selectedDoctor?.todayAppointments || 0} {nicheConfig.terminology?.customers || 'Guests'}</span>
               </div>
 
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] flex flex-col justify-between">
@@ -321,8 +321,8 @@ export default function DoctorCalendarPage() {
               </div>
 
               <div className="p-3.5 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
-                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">Clinical Room</span>
-                <span className="text-sm font-bold text-emerald-400 mt-1 block">Consult OT 1</span>
+                <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block">{nicheConfig.id === 'spa' ? 'Therapy Suite' : 'Service Room'}</span>
+                <span className="text-sm font-bold text-emerald-400 mt-1 block">Room 1</span>
               </div>
             </div>
 
@@ -336,7 +336,7 @@ export default function DoctorCalendarPage() {
                 <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                    <span className="font-bold text-[var(--color-text)]">Morning Consultations Block</span>
+                    <span className="font-bold text-[var(--color-text)]">Morning Session Block</span>
                   </div>
                   <span className="font-mono text-[var(--color-text-muted)] font-semibold">09:00 AM - 01:00 PM</span>
                 </div>
@@ -344,7 +344,7 @@ export default function DoctorCalendarPage() {
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Coffee size={14} className="text-amber-400" />
-                    <span className="font-bold text-[var(--color-text)]">Lunch & Charting Break</span>
+                    <span className="font-bold text-[var(--color-text)]">Lunch & Break</span>
                   </div>
                   <span className="font-mono text-[var(--color-text-muted)] font-semibold">01:00 PM - 02:00 PM</span>
                 </div>
@@ -352,7 +352,7 @@ export default function DoctorCalendarPage() {
                 <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-                    <span className="font-bold text-[var(--color-text)]">Procedures & Follow-ups</span>
+                    <span className="font-bold text-[var(--color-text)]">Afternoon Sessions & Follow-ups</span>
                   </div>
                   <span className="font-mono text-[var(--color-text-muted)] font-semibold">02:00 PM - 05:00 PM</span>
                 </div>
@@ -375,7 +375,7 @@ export default function DoctorCalendarPage() {
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                 <h3 className="font-bold text-base text-[var(--color-text)] flex items-center gap-2">
                   <Plus size={18} className="text-blue-400" />
-                  Add New Doctor / Specialist
+                  Add New {staffTerm}
                 </h3>
                 <button onClick={() => setIsAddModalOpen(false)} className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                   <X size={18} />
@@ -384,11 +384,11 @@ export default function DoctorCalendarPage() {
 
               <form onSubmit={handleAddDoctor} className="space-y-3 text-xs">
                 <div>
-                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Doctor Name *</label>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">{staffTerm} Name *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Dr. Rajesh Khanna"
+                    placeholder="e.g. Alex Morgan"
                     value={docName}
                     onChange={(e) => setDocName(e.target.value)}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -396,11 +396,11 @@ export default function DoctorCalendarPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Medical Specialty / Department *</label>
+                  <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Specialty / Department *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Trichology & Hair Transplant"
+                    placeholder="e.g. Lead Specialist"
                     value={docSpecialty}
                     onChange={(e) => setDocSpecialty(e.target.value)}
                     className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -423,7 +423,7 @@ export default function DoctorCalendarPage() {
                     <label className="block font-semibold text-[var(--color-text-muted)] mb-1">Email</label>
                     <input
                       type="email"
-                      placeholder="dr@clinic.com"
+                      placeholder="staff@zerodesk.app"
                       value={docEmail}
                       onChange={(e) => setDocEmail(e.target.value)}
                       className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-text)] focus:ring-2 focus:ring-blue-500 focus:outline-none"

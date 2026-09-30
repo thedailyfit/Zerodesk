@@ -40,6 +40,12 @@ export class TenantController {
     return this.tenantService.getLlmSettings(req.tenantId);
   }
 
+  @Get('me/llm-models')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getLlmModels() {
+    return this.tenantService.getLlmModels();
+  }
+
   @Put('me/llm-settings')
   @UseGuards(AuthGuard, TenantGuard, RolesGuard)
   @Roles('SUPER_ADMIN', 'ORG_ADMIN')

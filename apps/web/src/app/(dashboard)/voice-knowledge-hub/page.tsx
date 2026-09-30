@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -58,11 +59,11 @@ const DEFAULT_TONES = [
 
 // Pre-configured Policy Rules
 const DEFAULT_RULES = [
-  { id: '1', title: 'Medical / Treatment Prescription Safety', rule: 'STRICT: Never prescribe medical drugs, dosages, or irreversible procedures over the phone. Direct callers to mandatory in-person specialist consultation.', category: 'Safety' },
-  { id: '2', title: 'Pre-Session Assessment Requirement', rule: 'For procedure inquiries, remind the caller that an initial diagnostic assessment is recommended prior to scheduling treatment.', category: 'Clinical SOP' },
+  { id: '1', title: 'Advisory & Scope Boundaries', rule: 'STRICT: Do not provide unverified legal, financial, or medical promises over the phone. Direct callers to scheduled in-person sessions with certified staff.', category: 'Safety' },
+  { id: '2', title: 'Pre-Session Needs Assessment', rule: 'For customized package inquiries, recommend an initial consultation or intake review prior to scheduling long-term sessions.', category: 'Operational SOP' },
   { id: '3', title: 'Slot Booking Urgency & Conversion', rule: 'Always offer 2 open time slots (e.g. "Tomorrow at 11 AM or Friday at 4 PM") to increase immediate booking conversion.', category: 'Sales' },
-  { id: '4', title: 'Transparent Pricing Disclosure', rule: 'State pricing clearly in INR. Mention that multi-session packages include a 20% bundle discount.', category: 'Pricing' },
-  { id: '5', title: 'Multi-Lingual Handling', rule: 'If caller speaks Telugu, Hindi, or mixed phrases, maintain courteous, clear bilingual communication.', category: 'Language' },
+  { id: '4', title: 'Transparent Pricing Disclosure', rule: 'State pricing clearly in INR. Mention that multi-session packages include a bundle discount.', category: 'Pricing' },
+  { id: '5', title: 'Multi-Lingual Handling', rule: 'If caller speaks regional languages or mixed phrases, maintain courteous, clear bilingual communication.', category: 'Language' },
 ];
 
 interface InputVar {
@@ -131,18 +132,18 @@ export default function VoiceKnowledgeHubPage() {
 
   // Niche change reload & local storage
   useEffect(() => {
-    const savedPrompt = localStorage.getItem(`zerodesk_prompt_${currentNiche}`);
+    const savedPrompt = tenantStorage.getItem(`zerodesk_prompt_${currentNiche}`);
     if (savedPrompt) setGoldenPrompt(savedPrompt);
     else setGoldenPrompt(getInitialPrompt());
 
-    const savedRules = localStorage.getItem(`zerodesk_rules_${currentNiche}`);
+    const savedRules = tenantStorage.getItem(`zerodesk_rules_${currentNiche}`);
     if (savedRules) {
       try { setRules(JSON.parse(savedRules)); } catch (e) {}
     } else {
       setRules(getInitialRules());
     }
 
-    const savedVars = localStorage.getItem(`zerodesk_vars_${currentNiche}`);
+    const savedVars = tenantStorage.getItem(`zerodesk_vars_${currentNiche}`);
     if (savedVars) {
       try { setInputVariables(JSON.parse(savedVars)); } catch (e) {}
     } else {
@@ -158,9 +159,9 @@ export default function VoiceKnowledgeHubPage() {
   };
 
   const handleSaveAll = async () => {
-    localStorage.setItem(`zerodesk_prompt_${currentNiche}`, goldenPrompt);
-    localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(rules));
-    localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(inputVariables));
+    tenantStorage.setItem(`zerodesk_prompt_${currentNiche}`, goldenPrompt);
+    tenantStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(rules));
+    tenantStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(inputVariables));
     
     try {
       const { apiClient } = await import('@/lib/api-client');
@@ -184,7 +185,7 @@ export default function VoiceKnowledgeHubPage() {
   const handleResetPrompt = () => {
     const def = getInitialPrompt();
     setGoldenPrompt(def);
-    localStorage.setItem(`zerodesk_prompt_${currentNiche}`, def);
+    tenantStorage.setItem(`zerodesk_prompt_${currentNiche}`, def);
     showToast('Prompt reset to default');
   };
 
@@ -223,7 +224,7 @@ export default function VoiceKnowledgeHubPage() {
     if (editingRuleId) {
       const updated = rules.map(r => r.id === editingRuleId ? { ...r, title: ruleTitle, rule: ruleContent, category: ruleCategory } : r);
       setRules(updated);
-      localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+      tenantStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
       showToast('AI Rule updated!');
     } else {
       const created = {
@@ -234,7 +235,7 @@ export default function VoiceKnowledgeHubPage() {
       };
       const updated = [...rules, created];
       setRules(updated);
-      localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+      tenantStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
       showToast('New AI Rule added!');
     }
     setIsRuleModalOpen(false);
@@ -243,7 +244,7 @@ export default function VoiceKnowledgeHubPage() {
   const handleDeleteRule = (id: string) => {
     const updated = rules.filter(r => r.id !== id);
     setRules(updated);
-    localStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zerodesk_rules_${currentNiche}`, JSON.stringify(updated));
     showToast('Rule removed');
   };
 
@@ -273,7 +274,7 @@ export default function VoiceKnowledgeHubPage() {
     if (editingVarToken) {
       const updated = inputVariables.map(v => v.token === editingVarToken ? { ...v, token: cleanedToken, label: varLabel, fallback: varFallback } : v);
       setInputVariables(updated);
-      localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+      tenantStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
       showToast('Variable updated!');
     } else {
       const created: InputVar = {
@@ -284,7 +285,7 @@ export default function VoiceKnowledgeHubPage() {
       };
       const updated = [...inputVariables, created];
       setInputVariables(updated);
-      localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+      tenantStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
       showToast('New variable token added!');
     }
     setIsVarModalOpen(false);
@@ -293,7 +294,7 @@ export default function VoiceKnowledgeHubPage() {
   const handleDeleteVar = (token: string) => {
     const updated = inputVariables.filter(v => v.token !== token);
     setInputVariables(updated);
-    localStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zerodesk_vars_${currentNiche}`, JSON.stringify(updated));
     showToast('Variable removed');
   };
 

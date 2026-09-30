@@ -3,6 +3,7 @@
  * Connects frontend dashboard components to @zerodesk/api NestJS backend.
  */
 
+import { getStorageGeneration } from './tenant-storage';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 
 export type TokenProvider = () => Promise<string | null>;
@@ -20,7 +21,6 @@ let globalTenantIdProvider: TenantIdProvider = () => {
   // Use Clerk organization or persisted tenant (no client-side impersonation)
   return (
     (window as any).Clerk?.organization?.id ||
-    localStorage.getItem('zerodesk_tenant_id') ||
     null
   );
 };
@@ -43,6 +43,10 @@ export async function apiClient<T = any>(
   endpoint: string,
   options: ApiClientOptions = {},
 ): Promise<T> {
+  const requestScope = getStorageGeneration();
+  const assertScope = () => {
+    if (requestScope !== getStorageGeneration()) throw new Error('Workspace changed. Please retry.');
+  };
   const { token: manualToken, tenantId: manualTenantId, skipAuth, headers = {}, ...rest } = options;
 
   const requestHeaders: Record<string, string> = {
@@ -64,6 +68,7 @@ export async function apiClient<T = any>(
 
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${cleanEndpoint}`;
+  assertScope();
 
   let response = await fetch(url, {
     ...rest,
@@ -73,7 +78,9 @@ export async function apiClient<T = any>(
   // Handle 401: Attempt single token refresh if available
   if (response.status === 401 && !skipAuth && typeof window !== 'undefined' && (window as any).Clerk?.session) {
     try {
+      assertScope();
       const refreshedToken = await (window as any).Clerk.session.getToken({ skipCache: true });
+      assertScope();
       if (refreshedToken) {
         requestHeaders['Authorization'] = `Bearer ${refreshedToken}`;
         response = await fetch(url, { ...rest, headers: requestHeaders });
@@ -94,7 +101,9 @@ export async function apiClient<T = any>(
     throw new Error(errorMessage);
   }
 
-  return response.json();
+  const data = response.status === 204 ? undefined : await response.json();
+  assertScope();
+  return data as T;
 }
 
 export const api = {

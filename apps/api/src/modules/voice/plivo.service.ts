@@ -5,7 +5,7 @@ export interface PlivoNumberInfo {
   phoneNumber: string;
   type: string;
   country: string;
-  monthlyCostInr: number;
+  monthlyCostInr: number | null;
   provider: string;
 }
 
@@ -29,13 +29,7 @@ export class PlivoService {
    */
   async searchNumbers(country = 'IN', type = 'local'): Promise<PlivoNumberInfo[]> {
     if (!this.authId || !this.authToken || this.authId.startsWith('MAYxxx')) {
-      // Deterministic fallback list for development & testing
-      return [
-        { phoneNumber: '+918047361920', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 799, provider: 'Plivo' },
-        { phoneNumber: '+918047361921', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 799, provider: 'Plivo' },
-        { phoneNumber: '+914048927110', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 899, provider: 'Plivo' },
-        { phoneNumber: '+9118002081990', type: 'TOLL_FREE', country: 'IN', monthlyCostInr: 1499, provider: 'Plivo' },
-      ];
+      throw new Error('Plivo is not configured');
     }
 
     try {
@@ -47,8 +41,7 @@ export class PlivoService {
       });
 
       if (!res.ok) {
-        this.logger.warn(`Plivo number search returned ${res.status}. Using fallback pool.`);
-        return this.getFallbackNumbers();
+        throw new Error(`Plivo number search failed: ${res.status}`);
       }
 
       const data = await res.json();
@@ -57,12 +50,12 @@ export class PlivoService {
         phoneNumber: obj.number.startsWith('+') ? obj.number : `+${obj.number}`,
         type: obj.type || 'LOCAL',
         country: obj.country || country,
-        monthlyCostInr: Math.round((parseFloat(obj.monthly_rental_rate || '10') * 85)),
+        monthlyCostInr: null,
         provider: 'Plivo',
       }));
     } catch (err: any) {
       this.logger.error(`Plivo search error: ${err.message}`);
-      return this.getFallbackNumbers();
+      throw err;
     }
   }
 
@@ -71,8 +64,7 @@ export class PlivoService {
    */
   async purchaseNumber(phoneNumber: string): Promise<{ success: boolean; message: string }> {
     if (!this.authId || !this.authToken || this.authId.startsWith('MAYxxx')) {
-      this.logger.log(`[DEV MOCK] Simulated Plivo number purchase for ${phoneNumber}`);
-      return { success: true, message: `Number ${phoneNumber} provisioned via Plivo (Sandbox)` };
+      throw new Error('Plivo is not configured');
     }
 
     try {
@@ -112,7 +104,7 @@ export class PlivoService {
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Dial timeout="15" action="${fallbackAction}" method="POST">
+    <Dial timeout="15" action="${fallbackAction.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" method="POST">
         <Sip>${sipUri}</Sip>
     </Dial>
 </Response>`.trim();
@@ -148,12 +140,4 @@ export class PlivoService {
 </Response>`.trim();
   }
 
-  private getFallbackNumbers(): PlivoNumberInfo[] {
-    return [
-      { phoneNumber: '+918047361920', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 799, provider: 'Plivo' },
-      { phoneNumber: '+918047361921', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 799, provider: 'Plivo' },
-      { phoneNumber: '+914048927110', type: 'LOCAL_VMN', country: 'IN', monthlyCostInr: 899, provider: 'Plivo' },
-      { phoneNumber: '+9118002081990', type: 'TOLL_FREE', country: 'IN', monthlyCostInr: 1499, provider: 'Plivo' },
-    ];
-  }
 }

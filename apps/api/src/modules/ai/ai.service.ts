@@ -7,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import OpenAI, { toFile } from 'openai';
 import { ConfigService } from '@nestjs/config';
 import { PromptGuardService } from '../../common/security/prompt-guard.service';
+import { resolveRuntimeSettings } from './runtime-settings';
 
 export interface AiResponse {
   response: string;
@@ -117,8 +118,7 @@ export class AiService {
       return response.data[0].embedding;
     } catch (error) {
       this.logger.error(`Embedding generation failed: ${error}`);
-      // Fallback empty 1536-dim vector if offline / testing
-      return new Array(1536).fill(0);
+      throw new Error('Embedding provider unavailable');
     }
   }
 
@@ -143,6 +143,7 @@ export class AiService {
         throw new HttpException('LLM Token Quota Exceeded. Please upgrade your plan.', HttpStatus.PAYMENT_REQUIRED);
       }
 
+      const runtimeSettings = await resolveRuntimeSettings(this.prisma, tenant, channel);
       // 1. Sanitize user input against prompt injection attacks
       let safeMessage = message;
       if (this.promptGuardService) {
@@ -178,7 +179,7 @@ export class AiService {
           ...conversationHistory,
           { role: 'user', content: safeMessage },
         ],
-        { responseFormat: 'json', temperature: 0.7, maxTokens: 1024 },
+        { ...runtimeSettings, responseFormat: 'json', maxTokens: 1024 },
       );
 
       // 2. Token Metering

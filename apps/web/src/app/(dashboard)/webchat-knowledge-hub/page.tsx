@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -62,11 +63,11 @@ const DEFAULT_TONES = [
 
 // Pre-configured Policy Rules
 const DEFAULT_RULES = [
-  { id: '1', title: 'Medical / Treatment Prescription Safety', rule: 'STRICT: Never prescribe medical drugs, dosages, or irreversible procedures via chat. Direct users to mandatory in-person specialist consultation.', category: 'Safety' },
-  { id: '2', title: 'Pre-Session Assessment Requirement', rule: 'For procedure inquiries, remind the user that an initial diagnostic assessment is recommended prior to scheduling treatment.', category: 'Clinical SOP' },
+  { id: '1', title: 'Advisory & Scope Boundaries', rule: 'STRICT: Do not provide unverified legal, financial, or medical promises via chat. Direct users to scheduled in-person sessions with certified staff.', category: 'Safety' },
+  { id: '2', title: 'Pre-Session Needs Assessment', rule: 'For customized package inquiries, recommend an initial consultation or intake review prior to scheduling long-term sessions.', category: 'Operational SOP' },
   { id: '3', title: 'Slot Booking Urgency & Conversion', rule: 'Always offer 2 open time slots (e.g. "Tomorrow at 11 AM or Friday at 4 PM") to increase immediate booking conversion.', category: 'Sales' },
-  { id: '4', title: 'Transparent Pricing Disclosure', rule: 'State pricing clearly in INR. Mention that multi-session packages include a 20% bundle discount.', category: 'Pricing' },
-  { id: '5', title: 'Multi-Lingual Handling', rule: 'If user speaks Telugu, Hindi, or mixed phrases, maintain courteous, clear bilingual communication.', category: 'Language' },
+  { id: '4', title: 'Transparent Pricing Disclosure', rule: 'State pricing clearly in INR. Mention that multi-session packages include a bundle discount.', category: 'Pricing' },
+  { id: '5', title: 'Multi-Lingual Handling', rule: 'If user speaks regional languages or mixed phrases, maintain courteous, clear bilingual communication.', category: 'Language' },
 ];
 
 interface InputVar {
@@ -144,25 +145,25 @@ export default function WebChatKnowledgeHubPage() {
 
   // Niche change reload & local storage
   useEffect(() => {
-    const savedPrompt = localStorage.getItem(`zerodesk_webchat_prompt_${currentNiche}`);
+    const savedPrompt = tenantStorage.getItem(`zerodesk_webchat_prompt_${currentNiche}`);
     if (savedPrompt) setGoldenPrompt(savedPrompt);
     else setGoldenPrompt(getInitialPrompt());
 
-    const savedRules = localStorage.getItem(`zerodesk_webchat_rules_${currentNiche}`);
+    const savedRules = tenantStorage.getItem(`zerodesk_webchat_rules_${currentNiche}`);
     if (savedRules) {
       try { setRules(JSON.parse(savedRules)); } catch (e) {}
     } else {
       setRules(getInitialRules());
     }
 
-    const savedVars = localStorage.getItem(`zerodesk_webchat_vars_${currentNiche}`);
+    const savedVars = tenantStorage.getItem(`zerodesk_webchat_vars_${currentNiche}`);
     if (savedVars) {
       try { setInputVariables(JSON.parse(savedVars)); } catch (e) {}
     } else {
       setInputVariables(getInitialVariables());
     }
 
-    const savedWebChatSettings = localStorage.getItem(`zerodesk_webchat_settings_${currentNiche}`);
+    const savedWebChatSettings = tenantStorage.getItem(`zerodesk_webchat_settings_${currentNiche}`);
     if (savedWebChatSettings) {
       try {
         const settings = JSON.parse(savedWebChatSettings);
@@ -185,10 +186,10 @@ export default function WebChatKnowledgeHubPage() {
   };
 
   const handleSaveAll = () => {
-    localStorage.setItem(`zerodesk_webchat_prompt_${currentNiche}`, goldenPrompt);
-    localStorage.setItem(`zerodesk_webchat_rules_${currentNiche}`, JSON.stringify(rules));
-    localStorage.setItem(`zerodesk_webchat_vars_${currentNiche}`, JSON.stringify(inputVariables));
-    localStorage.setItem(`zerodesk_webchat_settings_${currentNiche}`, JSON.stringify({
+    tenantStorage.setItem(`zerodesk_webchat_prompt_${currentNiche}`, goldenPrompt);
+    tenantStorage.setItem(`zerodesk_webchat_rules_${currentNiche}`, JSON.stringify(rules));
+    tenantStorage.setItem(`zerodesk_webchat_vars_${currentNiche}`, JSON.stringify(inputVariables));
+    tenantStorage.setItem(`zerodesk_webchat_settings_${currentNiche}`, JSON.stringify({
       welcomeMessage,
       typingDelay,
       proactiveGreeting,
@@ -203,7 +204,7 @@ export default function WebChatKnowledgeHubPage() {
   const handleResetPrompt = () => {
     const def = getInitialPrompt();
     setGoldenPrompt(def);
-    localStorage.setItem(`zerodesk_webchat_prompt_${currentNiche}`, def);
+    tenantStorage.setItem(`zerodesk_webchat_prompt_${currentNiche}`, def);
     showToast('Prompt reset to default');
   };
 

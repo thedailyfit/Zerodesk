@@ -60,6 +60,7 @@ describe('TenantPrismaService — Multi-Tenant Isolation & Query Scoping', () =>
         where: {
           phone: '+919876543210',
           tenantId: TENANT_A,
+          deletedAt: null,
         },
       });
     });
@@ -72,6 +73,7 @@ describe('TenantPrismaService — Multi-Tenant Isolation & Query Scoping', () =>
         where: {
           email: 'patient@example.com',
           tenantId: TENANT_A,
+          deletedAt: null,
         },
       });
     });
@@ -117,6 +119,7 @@ describe('TenantPrismaService — Multi-Tenant Isolation & Query Scoping', () =>
       expect(mockPrisma.customer.count).toHaveBeenCalledWith({
         where: {
           tenantId: TENANT_A,
+          deletedAt: null,
         },
       });
     });

@@ -1,86 +1,37 @@
-import { Injectable, Logger, BadRequestException, Optional } from '@nestjs/common';
+import { Injectable, BadRequestException, ServiceUnavailableException, Optional } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { RedisService } from '../redis/redis.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class OtpService {
-  private readonly logger = new Logger(OtpService.name);
-  private memoryOtpStore = new Map<string, { code: string; expiresAt: number }>();
-
-  constructor(
-    private redis: RedisService,
-    @Optional() private whatsappService?: WhatsappService,
-  ) {}
-
-  /**
-   * Generate 6-digit cryptographic OTP, persist in Redis with 5-min TTL,
-   * and dispatch via WhatsApp (or SMS).
-   */
-  async generateAndSendOtp(tenantId: string, phone: string, clinicName: string): Promise<{ success: boolean; message: string }> {
-    const cleanPhone = phone.replace(/[^0-9+]/g, '');
-    if (cleanPhone.length < 10) {
-      throw new BadRequestException('Invalid phone number format');
-    }
-
-    // 1. Generate secure 6-digit OTP
-    const code = crypto.randomInt(100000, 999999).toString();
-    const redisKey = `otp:booking:${tenantId}:${cleanPhone}`;
-
-    // 2. Persist with 5-minute TTL (300 seconds)
-    const stored = await this.redis.set(redisKey, code, 300);
-    if (!stored) {
-      // Memory fallback if Redis offline
-      this.memoryOtpStore.set(redisKey, { code, expiresAt: Date.now() + 300000 });
-    }
-
-    // 3. Dispatch via WhatsApp Cloud API
-    const message = `🔐 *${code}* is your verification code to confirm your appointment at *${clinicName}*. Valid for 5 minutes. Do not share this code with anyone.`;
-    
-    let sent = false;
-    if (this.whatsappService) {
-      try {
-        await this.whatsappService.sendMessage(tenantId, cleanPhone, message);
-        sent = true;
-        this.logger.log(`Dispatched WhatsApp OTP to ${cleanPhone} for tenant ${tenantId}`);
-      } catch (err: any) {
-        this.logger.warn(`Failed to dispatch WhatsApp OTP: ${err.message}. Code generated: ${code}`);
-      }
-    }
-
-    return {
-      success: true,
-      message: sent ? 'Verification code sent to your WhatsApp' : 'Verification code dispatched',
-    };
+  constructor(private redis: RedisService, @Optional() private whatsappService?: WhatsappService) {}
+  private phone(value: string) {
+    const phone = String(value || '').replace(/[^0-9+]/g, '');
+    if (!/^\+?[1-9]\d{9,14}$/.test(phone)) throw new BadRequestException('Invalid phone number');
+    return phone.replace(/^\+/, '');
   }
+  private hash(value: string) { return crypto.createHash('sha256').update(value).digest('hex'); }
+  private key(tenantId: string, phone: string) { return `otp:booking:${tenantId}:${this.hash(phone)}`; }
 
-  /**
-   * Verify the 6-digit OTP and consume it immediately to prevent replay attacks.
-   */
-  async verifyOtp(tenantId: string, phone: string, candidateCode: string): Promise<boolean> {
-    const cleanPhone = phone.replace(/[^0-9+]/g, '');
-    const redisKey = `otp:booking:${tenantId}:${cleanPhone}`;
-
-    let storedCode = await this.redis.get(redisKey);
-    if (!storedCode) {
-      const memoryEntry = this.memoryOtpStore.get(redisKey);
-      if (memoryEntry && memoryEntry.expiresAt > Date.now()) {
-        storedCode = memoryEntry.code;
-      }
+  async generateAndSendOtp(tenantId: string, phone: string, businessName: string) {
+    const recipient = this.phone(phone);
+    const key = this.key(tenantId, recipient);
+    if (!this.whatsappService || !await this.redis.setNx(key + ':cooldown', '1', 60)) throw new ServiceUnavailableException('Code delivery unavailable or recently requested. Retry later.');
+    const code = crypto.randomInt(100000, 1000000).toString();
+    if (!await this.redis.set(key, this.hash(code), 300)) throw new ServiceUnavailableException('Verification storage unavailable');
+    await this.redis.del(key + ':attempts');
+    try {
+      const result = await this.whatsappService.sendMessage(tenantId, recipient, `${code} is your verification code for ${businessName}. Valid for 5 minutes. Do not share it.`);
+      if (!result?.messages?.[0]?.id) throw new Error('Provider did not accept delivery');
+    } catch {
+      await this.redis.del(key);
+      throw new ServiceUnavailableException('Verification code could not be sent. Please try again later.');
     }
-
-    if (!storedCode) {
-      throw new BadRequestException('Verification code has expired or was not requested. Please request a new code.');
-    }
-
-    if (storedCode.trim() !== candidateCode.trim()) {
-      throw new BadRequestException('Incorrect verification code. Please check and try again.');
-    }
-
-    // Consume OTP immediately (one-time use)
-    await this.redis.del(redisKey);
-    this.memoryOtpStore.delete(redisKey);
-
+    return { success: true, message: 'Verification code accepted by WhatsApp for delivery' };
+  }
+  async verifyOtp(tenantId: string, phone: string, code: string): Promise<boolean> {
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code) || !await this.redis.consumeOtp(this.key(tenantId, this.phone(phone)), this.hash(code))) throw new BadRequestException('Invalid or expired verification code');
     return true;
   }
 }

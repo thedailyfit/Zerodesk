@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -36,84 +37,6 @@ interface LLMOption {
   badgeColor: string;
 }
 
-const PRIMARY_LLM_OPTIONS: LLMOption[] = [
-  {
-    id: 'gpt-4o',
-    name: 'OpenAI GPT-4o',
-    provider: 'OpenAI',
-    description: 'Flagship multimodal engine. Balanced reasoning, natural conversational flow, and 128k context.',
-    speed: 'Fast',
-    avgLatency: '320ms',
-    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  },
-  {
-    id: 'claude-3-5-sonnet',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    description: 'Industry-leading clinical reasoning, nuanced patient tone, and robust tool-calling accuracy.',
-    speed: 'Balanced',
-    avgLatency: '410ms',
-    badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/25',
-  },
-  {
-    id: 'gemini-1-5-pro',
-    name: 'Gemini 1.5 Pro',
-    provider: 'Google',
-    description: 'Massive 2M token context window. Ideal for querying extensive PDF protocols and full EMR histories.',
-    speed: 'Balanced',
-    avgLatency: '450ms',
-    badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/25',
-  },
-  {
-    id: 'groq-llama-3-3-70b',
-    name: 'Groq Llama 3.3 70B',
-    provider: 'Groq',
-    description: 'LPU hardware accelerated open-weights model. Extreme time-to-first-token speed for telephony.',
-    speed: 'Ultra Fast',
-    avgLatency: '130ms',
-    badgeColor: 'bg-orange-500/10 text-orange-400 border-orange-500/25',
-  },
-];
-
-const FALLBACK_LLM_OPTIONS: LLMOption[] = [
-  {
-    id: 'gpt-4o-mini',
-    name: 'OpenAI GPT-4o-mini',
-    provider: 'OpenAI',
-    description: 'Lightweight, cost-efficient failover. Sub-150ms execution with high conversational consistency.',
-    speed: 'Ultra Fast',
-    avgLatency: '140ms',
-    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  },
-  {
-    id: 'claude-3-5-haiku',
-    name: 'Claude 3.5 Haiku',
-    provider: 'Anthropic',
-    description: 'Rapid inference with Anthropic safety standards. Quick triage without losing empathy.',
-    speed: 'Ultra Fast',
-    avgLatency: '180ms',
-    badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/25',
-  },
-  {
-    id: 'gemini-1-5-flash',
-    name: 'Gemini 1.5 Flash',
-    provider: 'Google',
-    description: 'High throughput, low-latency engine. Exceptional availability and high RPM ceiling.',
-    speed: 'Ultra Fast',
-    avgLatency: '150ms',
-    badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/25',
-  },
-  {
-    id: 'groq-llama-3-1-8b',
-    name: 'Groq Llama 3.1 8B',
-    provider: 'Groq',
-    description: 'Sub-90ms lightning fast responses. Perfect for immediate interruption handling on voice calls.',
-    speed: 'Ultra Fast',
-    avgLatency: '85ms',
-    badgeColor: 'bg-orange-500/10 text-orange-400 border-orange-500/25',
-  },
-];
-
 export interface LLMSettingsState {
   primaryModel: string;
   fallbackModel: string;
@@ -128,50 +51,41 @@ export interface LLMSettingsState {
 }
 
 const DEFAULT_SETTINGS: LLMSettingsState = {
-  primaryModel: 'gpt-4o',
-  fallbackModel: 'groq-llama-3-3-70b',
+  primaryModel: '',
+  fallbackModel: '',
   fallbackLatencyThresholdMs: 800,
-  voiceAiEnabled: true,
+  voiceAiEnabled: false,
   voiceAiTemperature: 0.3,
-  whatsappAiEnabled: true,
+  whatsappAiEnabled: false,
   whatsappAiTemperature: 0.7,
-  websiteAiEnabled: true,
+  websiteAiEnabled: false,
   websiteAiTemperature: 0.5,
-  autoFailoverAlert: true,
+  autoFailoverAlert: false,
 };
 
 export default function LLMSettingsPage() {
+  const [models, setModels] = useState<LLMOption[]>([]);
+  const PRIMARY_LLM_OPTIONS = models;
+  const FALLBACK_LLM_OPTIONS = models;
   const [settings, setSettings] = useState<LLMSettingsState>(DEFAULT_SETTINGS);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isTestingLatency, setIsTestingLatency] = useState(false);
   const [latencyResults, setLatencyResults] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('zerodesk_llm_settings');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setSettings(prev => ({ ...prev, ...parsed }));
-        } catch {}
-      }
-    }
-
+    apiClient<any[]>('/tenants/me/llm-models').then(rows => setModels(rows.map(m => ({ id: m.modelId, name: m.name, provider: m.provider, description: m.description || 'Configured model', speed: 'Balanced', avgLatency: 'Not measured', badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/25' })))).catch(() => toast.error('Unable to load model registry'));
     // Fetch from real tenant API
     apiClient<any>('/tenants/me/llm-settings')
       .then((res) => {
-        if (res && res.primaryModel) {
+        if (res) {
           setSettings(prev => ({ ...prev, ...res }));
         }
       })
-      .catch(() => {});
+      .catch(() => toast.error('Unable to load AI settings'));
   }, []);
 
   const handleSave = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('zerodesk_llm_settings', JSON.stringify(settings));
-      }
       await apiClient('/tenants/me/llm-settings', {
         method: 'PUT',
         body: JSON.stringify(settings),
@@ -186,22 +100,9 @@ export default function LLMSettingsPage() {
   };
 
   const handleTestLatency = () => {
-    setIsTestingLatency(true);
-    // Cloud provider published p50 TTFT (Time To First Token) benchmark baselines
-    setTimeout(() => {
-      setLatencyResults({
-        'gpt-4o': 310,
-        'claude-3-5-sonnet': 360,
-        'gemini-1-5-pro': 290,
-        'groq-llama-3-3-70b': 85,
-        'gpt-4o-mini': 175,
-        'claude-3-5-haiku': 190,
-        'gemini-1-5-flash': 140,
-        'groq-llama-3-1-8b': 65,
-      });
-      setIsTestingLatency(false);
-      toast.info('Loaded industry standard provider p50 TTFT latency baselines');
-    }, 400);
+    setLatencyResults(null);
+    setIsTestingLatency(false);
+    toast.info('No live model benchmark is configured. Use recorded trace latency in AI observability.');
   };
 
   return (
@@ -248,11 +149,11 @@ export default function LLMSettingsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[var(--color-text)]">Active Router Status: 100% Operational</span>
+              <span className="text-xs font-bold text-[var(--color-text)]">Runtime status: verify in AI observability</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-              ZeroDesk automatically failovers to Secondary LLM if response time exceeds <span className="font-mono text-purple-400 font-bold">{settings.fallbackLatencyThresholdMs}ms</span> or provider error occurs.
+              Chat requests try the configured secondary model if the primary request timeout exceeds <span className="font-mono text-purple-400 font-bold">{settings.fallbackLatencyThresholdMs}ms</span> or a provider error occurs. Voice routing applies on the next call.
             </p>
           </div>
         </div>
@@ -315,7 +216,7 @@ export default function LLMSettingsPage() {
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
-                          ~{model.avgLatency}
+                          {model.avgLatency}
                         </span>
                       )}
 
@@ -384,7 +285,7 @@ export default function LLMSettingsPage() {
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
-                          ~{model.avgLatency}
+                          {model.avgLatency}
                         </span>
                       )}
 

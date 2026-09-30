@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -84,10 +85,12 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     // 1. Initial cached render
-    const cached = typeof window !== 'undefined' ? localStorage.getItem(`zerodesk_appointments_${currentNiche}`) : null;
+    const cached = typeof window !== 'undefined' ? tenantStorage.getItem(`zerodesk_appointments_${currentNiche}`) : null;
     if (cached) {
       try {
-        setAppointments(JSON.parse(cached));
+        const parsed = JSON.parse(cached);
+        const valid = Array.isArray(parsed) ? parsed.filter((a: any) => !/^(apt|skin|dental|spa|salon|realestate|hotel)-(mock-)?\d+$/.test(a.id) && !a.id?.startsWith('mock_')) : [];
+        setAppointments(valid);
       } catch {
         setAppointments(DEFAULT_APPOINTMENTS_BY_NICHE[currentNiche] || DEFAULT_APPOINTMENTS_BY_NICHE.skin);
       }
@@ -116,7 +119,7 @@ export default function AppointmentsPage() {
         }));
         setAppointments(mapped);
         if (typeof window !== 'undefined') {
-          localStorage.setItem(`zerodesk_appointments_${currentNiche}`, JSON.stringify(mapped));
+          tenantStorage.setItem(`zerodesk_appointments_${currentNiche}`, JSON.stringify(mapped));
         }
       }
     }).catch(() => {

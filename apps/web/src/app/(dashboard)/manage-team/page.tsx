@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { tenantStorage } from '@/lib/tenant-storage';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -17,6 +18,8 @@ import {
   Key,
   CheckCircle2
 } from 'lucide-react';
+import { useOrganization } from '@clerk/nextjs';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export interface TeamMemberAccess {
@@ -28,56 +31,37 @@ export interface TeamMemberAccess {
   status: 'Active' | 'Invited';
 }
 
-const STORAGE_KEY = 'zerodesk_team_members';
-
-const INITIAL_MEMBERS: TeamMemberAccess[] = [
-  {
-    id: 'm-1',
-    name: 'Arogya (Owner)',
-    email: 'theakhileshreddy07@gmail.com',
-    role: 'ADMIN',
-    joinedDate: '8 days ago',
-    status: 'Active'
-  },
-  {
-    id: 'm-2',
-    name: 'Pooja (Frontdesk Lead)',
-    email: 'frontdesk@zerodesk.in',
-    role: 'STAFF',
-    joinedDate: '3 days ago',
-    status: 'Active'
-  }
-];
-
 export default function ManageTeamPage() {
   const [activeTab, setActiveTab] = useState<'members' | 'pending' | 'roles'>('members');
-  const [members, setMembers] = useState<TeamMemberAccess[]>(INITIAL_MEMBERS);
+  const [members, setMembers] = useState<TeamMemberAccess[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMemberAccess | null>(null);
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMembers(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load team members', e);
+  const { organization } = useOrganization();
+  const invitations = useRef<any[]>([]);
+  const pending = useRef(false);
+  const roleName = (role: string): TeamMemberAccess['role'] => role === 'org:admin' ? 'ADMIN' : role === 'org:manager' ? 'MANAGER' : 'STAFF';
+  const roleKey = (role: TeamMemberAccess['role']) => role === 'ADMIN' ? 'org:admin' : role === 'MANAGER' ? 'org:manager' : 'org:member';
+  const loadMembers = useCallback(async () => {
+    if (!organization) { setMembers([]); return; }
+    const memberRows: any[] = [], inviteRows: any[] = [];
+    for (let initialPage = 1; ; initialPage++) {
+      const page = await organization.getMemberships({ initialPage, pageSize: 100 });
+      memberRows.push(...page.data);
+      if (memberRows.length >= page.total_count || page.data.length === 0) break;
     }
-  }, []);
-
-  const saveMembers = (newMembers: TeamMemberAccess[]) => {
-    setMembers(newMembers);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newMembers));
-    } catch (e) {
-      console.error('Failed to save team members', e);
+    for (let initialPage = 1; ; initialPage++) {
+      const page = await organization.getInvitations({ initialPage, pageSize: 100, status: ['pending'] });
+      inviteRows.push(...page.data);
+      if (inviteRows.length >= page.total_count || page.data.length === 0) break;
     }
-  };
+    invitations.current = inviteRows;
+    setMembers([
+      ...memberRows.map(m => ({ id: m.publicUserData.userId, name: [m.publicUserData.firstName, m.publicUserData.lastName].filter(Boolean).join(' ') || m.publicUserData.identifier, email: m.publicUserData.identifier, role: roleName(m.role), joinedDate: new Date(m.createdAt).toLocaleDateString(), status: 'Active' as const })),
+      ...inviteRows.map(m => ({ id: m.id, name: m.emailAddress, email: m.emailAddress, role: roleName(m.role), joinedDate: new Date(m.createdAt).toLocaleDateString(), status: 'Invited' as const })),
+    ]);
+  }, [organization]);
+  useEffect(() => { void loadMembers().catch(() => { setMembers([]); toast.error('Unable to load organization members. Administrator access is required.'); }); }, [loadMembers]);
 
   // Invite Form
   const [inviteEmail, setInviteEmail] = useState('');
@@ -85,36 +69,39 @@ export default function ManageTeamPage() {
   const [inviteRole, setInviteRole] = useState<'ADMIN' | 'MANAGER' | 'STAFF'>('STAFF');
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
-  const handleSendInvite = (e: React.FormEvent) => {
+  const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail) return;
-
-    const newMember: TeamMemberAccess = {
-      id: `m-${Date.now()}`,
-      name: inviteName || inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: inviteRole,
-      joinedDate: 'Just now',
-      status: 'Invited'
-    };
-
-    saveMembers([newMember, ...members]);
-    setInviteSuccess(true);
-    setTimeout(() => {
-      setInviteSuccess(false);
-      setIsAddModalOpen(false);
-      setInviteEmail('');
-      setInviteName('');
-    }, 1200);
+    if (pending.current || !inviteEmail.trim()) return;
+    if (!organization) { toast.error('Select an organization before inviting a member.'); return; }
+    pending.current = true;
+    try {
+      await organization.inviteMember({ emailAddress: inviteEmail.trim(), role: roleKey(inviteRole) });
+      setInviteSuccess(true);
+      await loadMembers();
+    } catch (error: any) { toast.error(error?.errors?.[0]?.longMessage || 'Invitation failed. Check administrator access and configured organization roles.'); }
+    finally { pending.current = false; }
   };
-
-  const handleDeleteMember = (id: string) => {
-    saveMembers(members.filter(m => m.id !== id));
+  const handleDeleteMember = async (id: string) => {
+    if (!organization || pending.current) return;
+    pending.current = true;
+    try {
+      const invite = invitations.current.find(i => i.id === id);
+      if (invite) await invite.revoke();
+      else await organization.removeMember(id);
+      await loadMembers();
+    } catch { toast.error('Member removal failed. No access change was confirmed.'); }
+    finally { pending.current = false; }
   };
-
-  const handleUpdateRole = (id: string, newRole: 'ADMIN' | 'MANAGER' | 'STAFF') => {
-    saveMembers(members.map(m => m.id === id ? { ...m, role: newRole } : m));
-    setEditingMember(null);
+  const handleUpdateRole = async (id: string, role: TeamMemberAccess['role']) => {
+    if (!organization || pending.current) return;
+    if (invitations.current.some(i => i.id === id)) { toast.error('Revoke and resend the invitation to change its role.'); return; }
+    pending.current = true;
+    try {
+      await organization.updateMember({ userId: id, role: roleKey(role) });
+      await loadMembers();
+      setEditingMember(null);
+    } catch { toast.error('Role update failed. Check administrator access and configured organization roles.'); }
+    finally { pending.current = false; }
   };
 
   const getRoleBadge = (role: TeamMemberAccess['role']) => {
@@ -205,7 +192,7 @@ export default function ManageTeamPage() {
             Write seats: {members.length}/10
           </span>
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => { setInviteSuccess(false); setIsAddModalOpen(true); }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/25"
           >
             <UserPlus size={14} />

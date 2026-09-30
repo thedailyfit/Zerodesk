@@ -134,6 +134,12 @@ export class VoiceController {
     return this.voiceService.createRetellAgent(tenantId);
   }
 
+  @Get('outbound/jobs/:jobId')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getOutboundJob(@TenantId() tenantId: string, @Param('jobId') jobId: string) {
+    return this.voiceService.getOutboundJob(tenantId, jobId);
+  }
+
   @Get('calls')
   @UseGuards(AuthGuard, TenantGuard)
   async getCalls(

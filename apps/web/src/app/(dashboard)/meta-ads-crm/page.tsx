@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -54,7 +55,7 @@ export default function MetaAdsCrmPage() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(`zerodesk_meta_ads_leads_${currentNiche}`);
+      const saved = tenantStorage.getItem(`zerodesk_meta_ads_leads_${currentNiche}`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -73,7 +74,7 @@ export default function MetaAdsCrmPage() {
   const saveLeads = (updated: AdLead[]) => {
     setLeads(updated);
     try {
-      localStorage.setItem(`zerodesk_meta_ads_leads_${currentNiche}`, JSON.stringify(updated));
+      tenantStorage.setItem(`zerodesk_meta_ads_leads_${currentNiche}`, JSON.stringify(updated));
     } catch (e) {
       console.error('Failed to save ad leads to localStorage', e);
     }

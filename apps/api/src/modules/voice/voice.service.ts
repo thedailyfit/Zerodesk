@@ -1,3 +1,4 @@
+import { voiceInstructions, validateVoiceInstructions } from '../ai/voice-instructions';
 import { Injectable, Logger, UnauthorizedException, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -71,6 +72,7 @@ export class VoiceService {
    * Create or update voice config.
    */
   async updateConfig(tenantId: string, data: any) {
+    validateVoiceInstructions(data?.settings);
     const updateData: Record<string, any> = {};
 
     // 1. Direct schema scalar fields
@@ -363,7 +365,7 @@ export class VoiceService {
     if (durationSeconds > 0 && phoneNumber) {
       const tenant = await this.findTenantByPhone(phoneNumber, 'vapi');
       if (tenant?.id) {
-        const sessionId = report.call?.id || `vapi_${phoneNumber}_${Date.now()}`;
+        const sessionId = report.call?.id;
         await this.recordIdempotentUsage(tenant.id, sessionId, durationSeconds, 0);
       }
     }
@@ -414,7 +416,7 @@ export class VoiceService {
         if (durationSec > 0 && fromNumber) {
           const tenant = await this.findTenantByPhone(fromNumber, 'retell');
           if (tenant?.id) {
-            const sessionId = payload.call?.call_id || `retell_${fromNumber}_${Date.now()}`;
+            const sessionId = payload.call?.call_id;
             await this.recordIdempotentUsage(tenant.id, sessionId, durationSec, 0);
           }
         }
@@ -603,16 +605,24 @@ export class VoiceService {
    * Enqueue an outbound call via BullMQ to enforce TCPA calling hours.
    */
   async initiateOutboundCall(tenantId: string, phoneNumber: string, purpose?: string) {
+    if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber || '')) throw new BadRequestException('Use a valid international phone number');
     this.logger.log(`Enqueuing TCPA-compliant outbound call: ${tenantId} → ${phoneNumber}`);
     const job = await this.outboundQueue.add('dispatch-call', {
       tenantId,
       phoneNumber,
       purpose,
     }, {
-      attempts: 3,
+      attempts: 1,
       backoff: { type: 'exponential', delay: 5000 },
     });
     return { status: 'queued', jobId: job.id };
+  }
+
+  async getOutboundJob(tenantId: string, jobId: string) {
+    const job = await this.outboundQueue.getJob(jobId);
+    if (!job || job.data.tenantId !== tenantId) throw new NotFoundException('Outbound job not found');
+    const state = await job.getState();
+    return { jobId: job.id, state, status: state === 'completed' ? 'dispatch_finished' : state, callCompletionVerified: false };
   }
 
   /**
@@ -802,7 +812,7 @@ RULES:
 - If the caller is angry or distressed, remain calm and empathetic
 - Speak naturally, use short sentences for voice clarity`;
 
-    return this.promptGuard.wrapSystemPromptWithGuardrails(tenant?.name || 'ZeroDesk Client', corePrompt);
+    return this.promptGuard.wrapSystemPromptWithGuardrails(tenant?.name || 'ZeroDesk Client', corePrompt + voiceInstructions(voiceConfig?.settings));
   }
 
   private getVoiceFunctions() {
@@ -1154,8 +1164,9 @@ RULES:
       });
 
       const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-      const tokensUsed = Number(metadata?.tokensUsed) || Math.max(150, Math.ceil(durationSeconds * 25));
-      const sessionId = roomName || metadata?.callSid || metadata?.callId || `call_${normalizedPhone}_${Date.now()}`;
+      // Only authoritative cumulative usage may be billed; elapsed time is not a token count.
+      const tokensUsed = Number(metadata?.tokensUsed) || 0;
+      const sessionId = metadata?.roomName || roomName || metadata?.callSid || metadata?.callId;
 
       // Idempotently meter voice minutes and LLM tokens in UsageLedger
       await this.recordIdempotentUsage(tenantId, sessionId, durationSeconds, tokensUsed);
@@ -1186,62 +1197,49 @@ RULES:
     durationSeconds: number,
     tokensUsed: number = 0,
   ): Promise<void> {
-    if (!tenantId || !sessionId || durationSeconds <= 0) return;
-    const billedMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-
-    const existingLedger = await this.prisma.usageLedger.findUnique({
-      where: {
-        tenantId_sessionId_resourceType: {
-          tenantId,
-          sessionId,
-          resourceType: 'VOICE_MINUTES',
-        },
-      },
-    });
-
-    if (existingLedger) {
-      this.logger.log(`Call session ${sessionId} already metered in UsageLedger for tenant ${tenantId}. Skipping duplicate billing.`);
-      return;
+    if (!tenantId || !sessionId) throw new Error('A stable call identifier is required for usage accounting');
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 0 || !Number.isSafeInteger(tokensUsed) || tokensUsed < 0) {
+      throw new Error('Invalid call usage totals');
     }
-
+    const billedMinutes = Math.ceil(durationSeconds / 60);
     await this.prisma.$transaction(async (tx) => {
-      await tx.usageLedger.create({
-        data: {
-          tenantId,
-          sessionId,
-          resourceType: 'VOICE_MINUTES',
-          amount: billedMinutes,
-        },
-      });
-
-      if (tokensUsed > 0) {
-        await tx.usageLedger.create({
-          data: {
-            tenantId,
-            sessionId,
-            resourceType: 'LLM_TOKENS',
-            amount: tokensUsed,
-          },
+      // Serialize retries and late resource totals, not just identical inserts.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`${tenantId}:voice:${sessionId}`}, 0))`;
+      let minutesDelta = 0;
+      let tokensDelta = 0;
+      for (const [resourceType, amount] of [['VOICE_MINUTES', billedMinutes], ['LLM_TOKENS', tokensUsed]] as const) {
+        if (amount <= 0) continue;
+        const where = { tenantId_sessionId_resourceType: { tenantId, sessionId, resourceType } };
+        const previous = await tx.usageLedger.findUnique({ where });
+        // Reports are cumulative. Ignore stale/out-of-order smaller totals.
+        const delta = Math.max(0, amount - (previous?.amount || 0));
+        if (!delta) continue;
+        await tx.usageLedger.upsert({
+          where,
+          create: { tenantId, sessionId, resourceType, amount },
+          update: { amount },
         });
+        if (resourceType === 'VOICE_MINUTES') minutesDelta = delta;
+        else tokensDelta = delta;
       }
-
+      if (!minutesDelta && !tokensDelta) return;
       const existingSub = await tx.subscription.findUnique({ where: { tenantId } });
       if (existingSub) {
         await tx.subscription.update({
           where: { tenantId },
           data: {
-            voiceMinutesUsed: { increment: billedMinutes },
-            llmTokensUsed: { increment: tokensUsed },
+            voiceMinutesUsed: { increment: minutesDelta },
+            llmTokensUsed: { increment: tokensDelta },
           },
         });
 
-        if (existingSub.voiceMinutesUsed + billedMinutes >= existingSub.voiceMinutesLimit) {
+        if (minutesDelta > 0 && existingSub.voiceMinutesUsed + minutesDelta >= existingSub.voiceMinutesLimit) {
           this.logger.warn(`Tenant ${tenantId} reached or exceeded monthly voice minutes quota (${existingSub.voiceMinutesUsed + billedMinutes}/${existingSub.voiceMinutesLimit})`);
           this.eventEmitter.emit('subscription.quota_exceeded', {
             tenantId,
             resource: 'voiceMinutes',
             limit: existingSub.voiceMinutesLimit,
-            used: existingSub.voiceMinutesUsed + billedMinutes,
+            used: existingSub.voiceMinutesUsed + minutesDelta,
           });
         }
       } else {
@@ -1250,9 +1248,9 @@ RULES:
             tenantId,
             plan: 'starter',
             voiceMinutesLimit: 100,
-            voiceMinutesUsed: billedMinutes,
+            voiceMinutesUsed: minutesDelta,
             llmTokensLimit: 1000000,
-            llmTokensUsed: tokensUsed,
+            llmTokensUsed: tokensDelta,
             whatsappMessagesLimit: 500,
             whatsappMessagesUsed: 0,
             status: 'active',
@@ -1281,7 +1279,7 @@ RULES:
       event.tenantId,
       event.phoneNumber || 'Unknown',
       duration,
-      event.callId,
+      event.provider === 'livekit' ? event.metadata?.roomName || event.callId : event.callId,
       {
         status: event.status || 'COMPLETED',
         summary: event.metadata?.summary || event.transcript,

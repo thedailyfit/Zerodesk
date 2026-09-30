@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TenantPrismaService } from '../../prisma/tenant-prisma.service';
 import { normalizePhoneNumber } from '../../common/utils/phone.util';
 
@@ -7,6 +7,7 @@ export class CustomerService {
   constructor(private tenantPrisma: TenantPrismaService) {}
 
   async findAll(tenantId: string, page: number, limit: number) {
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 500) throw new BadRequestException('Invalid pagination');
     const db = this.tenantPrisma.forTenant(tenantId);
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
@@ -57,6 +58,16 @@ export class CustomerService {
     const safeData = this.sanitizeCustomerData(data);
     const phone = safeData.phone ? normalizePhoneNumber(safeData.phone) : undefined;
     try {
+      if (safeData.metadata !== undefined) {
+        if (!safeData.metadata || typeof safeData.metadata !== 'object' || Array.isArray(safeData.metadata) || JSON.stringify(safeData.metadata).length > 1000000) throw new BadRequestException('Invalid customer metadata');
+        const metadata = JSON.stringify(safeData.metadata);
+        delete safeData.metadata;
+        return await this.tenantPrisma.executeInTenantContext(tenantId, async tx => {
+          const changed = await tx.$executeRaw`UPDATE customers SET metadata = COALESCE(metadata, '{}'::jsonb) || ${metadata}::jsonb WHERE id = ${id}::uuid AND tenant_id = ${tenantId}::uuid AND deleted_at IS NULL`;
+          if (!changed) throw new NotFoundException('Customer not found');
+          return tx.customer.update({ where: { id, tenantId, deletedAt: null }, data: { ...safeData, ...(phone ? { phone } : {}) } });
+        });
+      }
       return await db.customers.update({
         where: { id, tenantId },
         data: {
@@ -70,6 +81,11 @@ export class CustomerService {
       }
       throw error;
     }
+  }
+
+  async softDelete(tenantId: string, id: string) {
+    await this.findById(tenantId, id);
+    return this.tenantPrisma.forTenant(tenantId).customers.update({ where: { id, tenantId }, data: { deletedAt: new Date() } });
   }
 
   async findOrCreateByPhone(tenantId: string, rawPhone: string, name?: string) {

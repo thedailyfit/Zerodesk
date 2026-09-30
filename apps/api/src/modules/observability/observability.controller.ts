@@ -7,7 +7,7 @@ import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ObservabilityService } from './observability.service';
 
-@Controller('v1/observability')
+@Controller('observability')
 @UseGuards(AuthGuard, TenantGuard, RolesGuard)
 export class ObservabilityController {
   constructor(private readonly observabilityService: ObservabilityService) {}

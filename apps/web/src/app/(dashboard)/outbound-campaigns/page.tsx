@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { tenantStorage } from '@/lib/tenant-storage';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId, ActiveNicheId } from '@/config/niches/types';
@@ -32,13 +33,15 @@ import {
   Activity,
   UserCheck
 } from 'lucide-react';
+import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 // --- Types ---
 interface CampaignStat {
-  sent: number;
-  delivered: number;
-  replied: number;
+  sent: number | null;
+  delivered: number | null;
+  replied: number | null;
 }
 
 interface CampaignItem {
@@ -60,218 +63,6 @@ interface WizardStep {
   config: Record<string, any>;
 }
 
-const PREINSTALLED_CAMPAIGNS_BY_NICHE: Record<ActiveNicheId, CampaignItem[]> = {
-  skin: [
-    {
-      id: 'skin_camp_1',
-      name: 'HydraFacial Glow Recall',
-      goal: 'Win-back Dormant Clients',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 145,
-      status: 'ACTIVE',
-      createdDate: '2026-03-01',
-      stats: { sent: 145, delivered: 142, replied: 38 }
-    },
-    {
-      id: 'skin_camp_2',
-      name: 'Botox & Dermal Filler Touch-Up',
-      goal: 'Post-Treatment Follow-up',
-      channels: ['WhatsApp'],
-      audienceSize: 42,
-      status: 'ACTIVE',
-      createdDate: '2026-03-04',
-      stats: { sent: 42, delivered: 42, replied: 19 }
-    },
-    {
-      id: 'skin_camp_3',
-      name: 'Monsoon Peel Flash Drop',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 320,
-      status: 'PAUSED',
-      createdDate: '2026-03-08',
-      stats: { sent: 180, delivered: 174, replied: 41 }
-    },
-    {
-      id: 'skin_camp_4',
-      name: 'Laser Hair Package Completion',
-      goal: 'Win-back Dormant Clients',
-      channels: ['Voice AI'],
-      audienceSize: 88,
-      status: 'ACTIVE',
-      createdDate: '2026-03-10',
-      stats: { sent: 88, delivered: 85, replied: 24 }
-    }
-  ],
-  dental: [
-    {
-      id: 'dental_camp_1',
-      name: '6-Month Scaling & Polish Recall',
-      goal: 'Win-back Dormant Clients',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 185,
-      status: 'ACTIVE',
-      createdDate: '2026-03-01',
-      stats: { sent: 185, delivered: 181, replied: 52 }
-    },
-    {
-      id: 'dental_camp_2',
-      name: 'Clear Aligner Smile Scan Invite',
-      goal: 'Promotional Offer',
-      channels: ['Voice AI'],
-      audienceSize: 72,
-      status: 'ACTIVE',
-      createdDate: '2026-03-05',
-      stats: { sent: 72, delivered: 70, replied: 18 }
-    },
-    {
-      id: 'dental_camp_3',
-      name: 'Teeth Whitening Festive Glow',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp'],
-      audienceSize: 260,
-      status: 'PAUSED',
-      createdDate: '2026-03-07',
-      stats: { sent: 120, delivered: 118, replied: 31 }
-    },
-    {
-      id: 'dental_camp_4',
-      name: 'Implant Quote VIP Follow-Up',
-      goal: 'Post-Treatment Follow-up',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 34,
-      status: 'ACTIVE',
-      createdDate: '2026-03-09',
-      stats: { sent: 34, delivered: 34, replied: 15 }
-    }
-  ],
-  spa: [
-    {
-      id: 'spa_camp_1',
-      name: 'Midweek Stress Relief Drop',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp'],
-      audienceSize: 215,
-      status: 'ACTIVE',
-      createdDate: '2026-03-02',
-      stats: { sent: 215, delivered: 210, replied: 49 }
-    },
-    {
-      id: 'spa_camp_2',
-      name: 'Couples Ayurvedic Sanctuary Recall',
-      goal: 'Win-back Dormant Clients',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 95,
-      status: 'ACTIVE',
-      createdDate: '2026-03-06',
-      stats: { sent: 95, delivered: 93, replied: 28 }
-    },
-    {
-      id: 'spa_camp_3',
-      name: 'Annual Wellness Club Renewal',
-      goal: 'Post-Treatment Follow-up',
-      channels: ['Voice AI'],
-      audienceSize: 48,
-      status: 'ACTIVE',
-      createdDate: '2026-03-08',
-      stats: { sent: 48, delivered: 47, replied: 22 }
-    },
-    {
-      id: 'spa_camp_4',
-      name: 'Seasonal Panchakarma Detox Blast',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 160,
-      status: 'PAUSED',
-      createdDate: '2026-03-10',
-      stats: { sent: 80, delivered: 78, replied: 19 }
-    }
-  ],
-  realestate: [
-    {
-      id: 're_camp_1',
-      name: 'Pre-Launch VIP Price Lock',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 420,
-      status: 'ACTIVE',
-      createdDate: '2026-03-01',
-      stats: { sent: 420, delivered: 408, replied: 86 }
-    },
-    {
-      id: 're_camp_2',
-      name: 'Chauffeured Luxury Cab Site Visit',
-      goal: 'Win-back Dormant Clients',
-      channels: ['WhatsApp'],
-      audienceSize: 175,
-      status: 'ACTIVE',
-      createdDate: '2026-03-05',
-      stats: { sent: 175, delivered: 172, replied: 43 }
-    },
-    {
-      id: 're_camp_3',
-      name: 'NRI Virtual 3D Walkthrough',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 85,
-      status: 'ACTIVE',
-      createdDate: '2026-03-07',
-      stats: { sent: 85, delivered: 83, replied: 29 }
-    },
-    {
-      id: 're_camp_4',
-      name: '90-Day Cold Buyer Reactivation',
-      goal: 'Win-back Dormant Clients',
-      channels: ['Voice AI'],
-      audienceSize: 290,
-      status: 'PAUSED',
-      createdDate: '2026-03-09',
-      stats: { sent: 140, delivered: 135, replied: 31 }
-    }
-  ],
-  hotel: [
-    {
-      id: 'hotel_camp_1',
-      name: 'Long Weekend Suite Privileges',
-      goal: 'Promotional Offer',
-      channels: ['WhatsApp', 'Voice AI'],
-      audienceSize: 360,
-      status: 'ACTIVE',
-      createdDate: '2026-03-01',
-      stats: { sent: 360, delivered: 352, replied: 74 }
-    },
-    {
-      id: 'hotel_camp_2',
-      name: 'Return Guest Anniversary Upgrade',
-      goal: 'Win-back Dormant Clients',
-      channels: ['WhatsApp'],
-      audienceSize: 68,
-      status: 'ACTIVE',
-      createdDate: '2026-03-04',
-      stats: { sent: 68, delivered: 67, replied: 26 }
-    },
-    {
-      id: 'hotel_camp_3',
-      name: 'Airport Chauffeur Pre-Arrival Concierge',
-      goal: 'Post-Treatment Follow-up',
-      channels: ['WhatsApp'],
-      audienceSize: 52,
-      status: 'ACTIVE',
-      createdDate: '2026-03-07',
-      stats: { sent: 52, delivered: 52, replied: 34 }
-    },
-    {
-      id: 'hotel_camp_4',
-      name: 'Banquet & Wedding Fair Registration',
-      goal: 'Promotional Offer',
-      channels: ['Voice AI'],
-      audienceSize: 110,
-      status: 'PAUSED',
-      createdDate: '2026-03-10',
-      stats: { sent: 60, delivered: 58, replied: 17 }
-    }
-  ]
-};
 
 const GOAL_OPTIONS = [
   { id: 'winback', title: 'Win-back Dormant Clients', desc: 'Re-engage customers who have not visited in 3+ months', icon: UserCheck },
@@ -296,84 +87,38 @@ const DEFAULT_SEQUENCE: WizardStep[] = [
 ];
 
 export default function OutboundCampaignsPage() {
+  const dispatchIds = useRef<Record<string, string>>({});
   const { currentNiche, nicheConfig } = useNiche();
     const [campaigns, setCampaigns] = useState<CampaignItem[]>([]);
   const [testRunningCampId, setTestRunningCampId] = useState<string | null>(null);
   const [testSuccessMessage, setTestSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const key = `zd_outbound_campaigns_${currentNiche}`;
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const isLegacyMock = Array.isArray(parsed) && parsed.some((c: any) => 
-          c.id?.startsWith('skin_camp_') || c.id?.startsWith('dental_camp_') || c.id?.startsWith('spa_camp_') || c.id?.startsWith('re_camp_') || c.id?.startsWith('hotel_camp_')
-        );
-        if (!isLegacyMock) {
-          setCampaigns(parsed);
-          return;
-        }
-      } catch (e) {
-        console.error('Failed to parse campaigns', e);
-      }
-    }
-    setCampaigns([]);
-    localStorage.setItem(key, JSON.stringify([]));
-  }, [currentNiche]);
-
-  const updateCampaigns = (newCampaigns: CampaignItem[]) => {
-    setCampaigns(newCampaigns);
-    localStorage.setItem(`zd_outbound_campaigns_${currentNiche}`, JSON.stringify(newCampaigns));
+  const loadCampaigns = async () => {
+    const rows = await api.get<any[]>('/automations');
+    setCampaigns(rows.filter(r => r.definition?.kind === 'campaign' && r.definition?.niche === currentNiche).map(r => ({ ...r.definition.campaign, id: r.id, status: r.isActive ? 'ACTIVE' : 'DRAFT', stats: { sent: null, delivered: null, replied: null } })));
   };
-
-  const toggleCampaignStatus = (id: string) => {
-    const updated = campaigns.map(c => {
-      if (c.id === id) {
-        const nextStatus = c.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        return { ...c, status: nextStatus as CampaignItem['status'] };
-      }
-      return c;
-    });
-    updateCampaigns(updated);
+  useEffect(() => { void loadCampaigns().catch(() => toast.error('Campaigns could not be loaded.')); }, [currentNiche]);
+  const toggleCampaignStatus = async (id: string) => {
+    const campaign = campaigns.find(c => c.id === id);
+    if (!campaign) return;
+    try { await api.patch(`/automations/${id}`, { isActive: campaign.status !== 'ACTIVE' }); await loadCampaigns(); }
+    catch (err: any) { toast.error(err.message || 'Campaign activation failed.'); }
   };
-
-  const deleteCampaign = (id: string) => {
-    const updated = campaigns.filter(c => c.id !== id);
-    updateCampaigns(updated);
+  const deleteCampaign = async (id: string) => {
+    try { await api.delete(`/automations/${id}`); await loadCampaigns(); }
+    catch { toast.error('Campaign deletion failed.'); }
   };
-
-  const resetToDefaults = () => {
-    const defaults = PREINSTALLED_CAMPAIGNS_BY_NICHE[currentNiche] || PREINSTALLED_CAMPAIGNS_BY_NICHE.skin;
-    updateCampaigns(defaults);
-    setTestSuccessMessage(`Reset to default 4 campaigns for ${nicheConfig.label}.`);
-    setTimeout(() => setTestSuccessMessage(null), 4000);
-  };
-
+  const resetToDefaults = () => { void loadCampaigns().catch(() => toast.error('Campaign refresh failed.')); };
   const simulateTestOutreach = async (camp: CampaignItem) => {
     setTestRunningCampId(camp.id);
     try {
-      await new Promise(r => setTimeout(r, 800));
-      const updated = campaigns.map(c => {
-        if (c.id === camp.id) {
-          return {
-            ...c,
-            stats: {
-              ...c.stats,
-              sent: c.stats.sent + 1,
-              delivered: c.stats.delivered + 1,
-              replied: c.stats.replied + 1
-            }
-          };
-        }
-        return c;
-      });
-      updateCampaigns(updated);
-      setTestSuccessMessage(`Test lead outreach simulated for "${camp.name}" via ${camp.channels.join(' & ')}.`);
-      setTimeout(() => setTestSuccessMessage(null), 5000);
-    } finally {
-      setTestRunningCampId(null);
-    }
+      const requestId = dispatchIds.current[camp.id] ||= crypto.randomUUID();
+      const result = await api.post<any>('/automations/trigger', { workflowId: camp.id, requestId, payload: { test: true } });
+      if (!result?.success) throw new Error(result?.reason || 'The server did not accept execution.');
+      delete dispatchIds.current[camp.id];
+      setTestSuccessMessage(`Run ${result.runId} accepted by the execution adapter. Delivery is not confirmed.`);
+    } catch (err: any) { toast.error(err.message || 'Test outreach was not accepted.'); }
+    finally { setTestRunningCampId(null); }
   };
 
   const [search, setSearch] = useState('');
@@ -402,23 +147,20 @@ export default function OutboundCampaignsPage() {
     c.goal.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleLaunch = (status: 'DRAFT' | 'ACTIVE') => {
-    const campaign: CampaignItem = {
-      id: `camp_\${Date.now()}`,
-      name: newCampaign.name || 'Untitled Campaign',
-      goal: GOAL_OPTIONS.find(g => g.id === newCampaign.goalId)?.title || 'Custom Campaign',
-      channels: newCampaign.channelId === 'omni' ? ['WhatsApp', 'Voice AI'] : [newCampaign.channelId === 'voice' ? 'Voice AI' : 'WhatsApp'],
-      audienceSize: 0,
-      status,
-      createdDate: new Date().toISOString().split('T')[0],
-      stats: { sent: 0, delivered: 0, replied: 0 }
-    };
-    updateCampaigns([campaign, ...campaigns]);
-    setIsWizardOpen(false);
-    setWizardStep(1);
-    setNewCampaign({
-      name: '', goalId: '', channelId: '', sequence: [...DEFAULT_SEQUENCE], schedule: { date: '', time: '', traiHours: 'day' }
-    });
+  const handleLaunch = async (status: 'DRAFT' | 'ACTIVE') => {
+    try {
+      const campaign = {
+        name: newCampaign.name || 'Untitled Campaign', goal: GOAL_OPTIONS.find(g => g.id === newCampaign.goalId)?.title || 'Custom Campaign',
+        channels: newCampaign.channelId === 'omni' ? ['WhatsApp', 'Voice AI'] : [newCampaign.channelId === 'voice' ? 'Voice AI' : 'WhatsApp'],
+        audienceSize: 0, status: 'DRAFT', createdDate: new Date().toISOString().split('T')[0], stats: { sent: 0, delivered: 0, replied: 0 },
+        sequence: newCampaign.sequence, schedule: newCampaign.schedule,
+      };
+      await api.post('/automations', { name: campaign.name, category: 'Campaign', triggerType: 'MANUAL', definition: { kind: 'campaign', niche: currentNiche, campaign } });
+      await loadCampaigns();
+      setIsWizardOpen(false); setWizardStep(1);
+      setNewCampaign({ name: '', goalId: '', channelId: '', sequence: [...DEFAULT_SEQUENCE], schedule: { date: '', time: '', traiHours: 'day' } });
+      toast.success(status === 'ACTIVE' ? 'Campaign saved as draft. Configure an audience and execution adapter before activation.' : 'Campaign draft saved.');
+    } catch (err: any) { toast.error(err.message || 'Campaign could not be saved.'); }
   };
 
   const renderWizardStep = () => {
@@ -877,15 +619,15 @@ export default function OutboundCampaignsPage() {
 
                 <div className="flex items-center gap-8 md:border-l md:border-[var(--color-border)] md:pl-8">
                   <div className="text-center">
-                    <p className="text-xl font-bold text-[var(--color-text)]">{camp.stats.sent}</p>
+                    <p className="text-xl font-bold text-[var(--color-text)]">{camp.stats.sent ?? '—'}</p>
                     <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Sent</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-bold text-emerald-400">{camp.stats.delivered}</p>
+                    <p className="text-xl font-bold text-emerald-400">{camp.stats.delivered ?? '—'}</p>
                     <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Delivered</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-bold text-blue-400">{camp.stats.replied}</p>
+                    <p className="text-xl font-bold text-blue-400">{camp.stats.replied ?? '—'}</p>
                     <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Replied</p>
                   </div>
                 </div>

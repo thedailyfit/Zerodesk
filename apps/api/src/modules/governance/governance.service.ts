@@ -25,96 +25,13 @@ export class GovernanceService {
 
   /**
    * Retrieves the complete Agent Estate Board & Failure Register for the tenant.
-   * Automatically seeds the 4 standard practice agents if this is the first retrieval.
+   * Reading the board never creates owners, policies or operational history.
    */
   async getEstate(tenantId: string) {
     let estates = await this.prisma.agentEstate.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'asc' },
     });
-
-    if (estates.length === 0) {
-      this.logger.log(`Seeding default Agent Estate Board for tenant ${tenantId}`);
-      const defaults = [
-        {
-          agentKey: 'VOICE_RECEPTIONIST',
-          name: 'Kavya - Spoken Voice AI Receptionist',
-          humanOwnerName: 'Dr. Ananya Rao',
-          humanOwnerRole: 'HEAD_DOCTOR',
-          allowedTools: [
-            'book_appointment',
-            'get_pricing',
-            'transfer_to_human',
-            'send_whatsapp_info',
-            'query_knowledge_base',
-          ],
-          touchedSystems: ['PostgreSQL_Appointments', 'LiveKit_SIP', 'Sarvam_Bulbul_TTS'],
-          hardLimits: { maxBookingDaysAhead: 30, maxDiscountAllowedPct: 0, maxCallsPerHour: 50 },
-          goalIntegrityOwner: 'Dr. Ananya Rao',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Clinic Operations Lead',
-        },
-        {
-          agentKey: 'WHATSAPP_AI',
-          name: 'WhatsApp Practice Concierge',
-          humanOwnerName: 'Priya Sharma',
-          humanOwnerRole: 'CLINIC_COORDINATOR',
-          allowedTools: [
-            'book_appointment',
-            'get_pricing',
-            'lookup_faq',
-            'cancel_reschedule',
-            'query_knowledge_base',
-          ],
-          touchedSystems: ['PostgreSQL_Appointments', 'Meta_WhatsApp_Cloud'],
-          hardLimits: { maxBookingDaysAhead: 30, maxDiscountAllowedPct: 0, maxMessagesPerHour: 100 },
-          goalIntegrityOwner: 'Priya Sharma',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Priya Sharma',
-        },
-        {
-          agentKey: 'OUTBOUND_CAMPAIGNER',
-          name: 'Autonomous Recall & Follow-up Agent',
-          humanOwnerName: 'Rahul Verma',
-          humanOwnerRole: 'PRACTICE_MANAGER',
-          allowedTools: ['dispatch_reminder', 'send_feedback_link'],
-          touchedSystems: ['PostgreSQL_Customers', 'Meta_WhatsApp_Cloud', 'Plivo_SMS'],
-          hardLimits: { maxMessagesPerDay: 200, enforceTraiDnd: true },
-          goalIntegrityOwner: 'Rahul Verma',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Rahul Verma',
-        },
-        {
-          agentKey: 'TRIAGE_AGENT',
-          name: 'Receptionist Handoff & Triage Agent',
-          humanOwnerName: 'Frontdesk Team',
-          humanOwnerRole: 'LEAD_RECEPTIONIST',
-          allowedTools: ['escalate_to_human', 'flag_bad_answer'],
-          touchedSystems: ['Unified_Inbox', 'PostgreSQL_AuditLog'],
-          hardLimits: { maxHandoffsPerHour: 20 },
-          goalIntegrityOwner: 'Frontdesk Team',
-          authorityOwner: 'Dr. Ananya Rao',
-          supplyChainOwner: 'Technical Admin',
-          blastRadiusOwner: 'Frontdesk Team',
-        },
-      ];
-
-      await Promise.all(
-        defaults.map((d) =>
-          this.prisma.agentEstate.create({
-            data: { tenantId, ...d },
-          }),
-        ),
-      );
-
-      estates = await this.prisma.agentEstate.findMany({
-        where: { tenantId },
-        orderBy: { createdAt: 'asc' },
-      });
-    }
 
     return estates;
   }
@@ -217,66 +134,34 @@ export class GovernanceService {
    * Aggregates real-time health across the Healthcare Frontier Agent Trilogy.
    */
   async getFrontierHealth(tenantId: string) {
-    const subscription = await this.prisma.subscription.findUnique({
-      where: { tenantId },
-    });
-
-    const voiceUsed = subscription?.voiceMinutesUsed ?? 14;
-    const voiceLimit = subscription?.voiceMinutesLimit ?? 100;
-    const waUsed = subscription?.whatsappMessagesUsed ?? 82;
-    const waLimit = subscription?.whatsappMessagesLimit ?? 500;
-
-    const [recentActions, failedActions] = await Promise.all([
-      this.prisma.actionTrace.count({
-        where: {
-          tenantId,
-          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-        },
-      }),
-      this.prisma.actionTrace.count({
-        where: {
-          tenantId,
-          executionStatus: 'FAILED',
-          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-        },
-      }),
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const where = { tenantId, createdAt: { gte: since } };
+    const [subscription, totalActions, failedActions, committedActions, activeAgents] = await Promise.all([
+      this.prisma.subscription.findUnique({ where: { tenantId } }),
+      this.prisma.actionTrace.count({ where }),
+      this.prisma.actionTrace.count({ where: { ...where, executionStatus: 'FAILED' } }),
+      this.prisma.actionTrace.count({ where: { ...where, executionStatus: 'COMMITTED' } }),
+      this.prisma.agentEstate.count({ where: { tenantId, isActive: true } }),
     ]);
-
-    const successRate = recentActions > 0 ? ((recentActions - failedActions) / recentActions) * 100 : 99.4;
-
+    const voiceUsed = subscription?.voiceMinutesUsed ?? null;
+    const voiceLimit = subscription?.voiceMinutesLimit ?? null;
+    const waUsed = subscription?.whatsappMessagesUsed ?? null;
+    const waLimit = subscription?.whatsappMessagesLimit ?? null;
     return {
+      measuredAt: new Date().toISOString(),
       trilogy: {
-        devops: {
-          status: 'HEALTHY',
-          telephonyCarrier: 'Plivo India SIP - Operational (<180ms latency)',
-          livekitCluster: 'Mumbai Region - Connected',
-          queuesActive: ['rag-embedding', 'ai-evaluation-queue'],
-          queueLagMs: 45,
-        },
+        devops: { status: 'UNKNOWN', telephonyCarrier: 'Not measured', livekitCluster: 'Not measured', queuesActive: [], queueLagMs: null },
         finops: {
-          status: voiceUsed > voiceLimit * 0.9 ? 'WARNING' : 'HEALTHY',
-          voiceMinutesUsed: voiceUsed,
-          voiceMinutesLimit: voiceLimit,
-          voiceMinutesPercent: Number(((voiceUsed / voiceLimit) * 100).toFixed(1)),
-          whatsappMessagesUsed: waUsed,
-          whatsappMessagesLimit: waLimit,
-          whatsappMessagesPercent: Number(((waUsed / waLimit) * 100).toFixed(1)),
-          projectedOverage: false,
+          status: voiceUsed === null || !voiceLimit ? 'UNKNOWN' : voiceUsed > voiceLimit * 0.9 ? 'WARNING' : 'WITHIN_LIMIT',
+          voiceMinutesUsed: voiceUsed, voiceMinutesLimit: voiceLimit,
+          voiceMinutesPercent: voiceUsed !== null && voiceLimit && voiceLimit > 0 ? Number((voiceUsed / voiceLimit * 100).toFixed(1)) : null,
+          whatsappMessagesUsed: waUsed, whatsappMessagesLimit: waLimit,
+          whatsappMessagesPercent: waUsed !== null && waLimit && waLimit > 0 ? Number((waUsed / waLimit * 100).toFixed(1)) : null,
+          projectedOverage: null,
         },
-        appsec: {
-          status: 'ENFORCED',
-          piiRedactionActive: true,
-          dpdpConsentEnforced: true,
-          audioRecordingsPresigned: true,
-          unredactedLogLeaks: 0,
-        },
+        appsec: { status: 'UNKNOWN', piiRedactionActive: null, dpdpConsentEnforced: null, audioRecordingsPresigned: null, unredactedLogLeaks: null },
       },
-      metrics24h: {
-        totalActions: recentActions || 42,
-        failedActions: failedActions || 0,
-        successRate: Number(successRate.toFixed(1)),
-        activeAgents: 4,
-      },
+      metrics24h: { totalActions, failedActions, successRate: totalActions > 0 ? Number((committedActions / totalActions * 100).toFixed(1)) : null, activeAgents },
     };
   }
 }

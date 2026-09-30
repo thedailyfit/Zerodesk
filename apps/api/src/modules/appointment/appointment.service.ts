@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException, 
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { RedisService } from '../redis/redis.service';
+import { bookingTime } from './booking-time';
 import { OtpService } from '../auth/otp.service';
 
 @Injectable()
@@ -14,6 +15,12 @@ export class AppointmentService {
     @Optional() private whatsappService?: WhatsappService,
     @Optional() private otpService?: OtpService,
   ) {}
+
+  private async parseTime(tenantId: string, data: any): Promise<Date> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { timezone: true } });
+    if (!tenant) throw new NotFoundException('Tenant not found');
+    return bookingTime(data.scheduledAt || data.dateTime || (data.date && data.time ? `${data.date}T${data.time}` : ''), tenant.timezone);
+  }
 
   async findAll(tenantId: string) {
     return this.prisma.appointment.findMany({
@@ -54,6 +61,7 @@ export class AppointmentService {
     } else if (preferredDoctorName) {
       requestedDoctor = activeStaff.find((s) => s.name.toLowerCase().includes(preferredDoctorName.toLowerCase())) || null;
     }
+    if ((preferredDoctorId || preferredDoctorName) && !requestedDoctor) throw new BadRequestException('Requested staff member is not active in this tenant');
 
     if (requestedDoctor) {
       // Check if requested doctor is free
@@ -85,13 +93,6 @@ export class AppointmentService {
         (s) => s.id !== requestedDoctor.id && !bookedStaffIds.includes(s.id),
       );
 
-      // Next available slots for the requested doctor
-      const alternativeSlot1 = new Date(scheduledAt.getTime() + 2 * 60 * 60 * 1000);
-      const alternativeSlot2 = new Date(scheduledAt.getTime() + 3 * 60 * 60 * 1000);
-
-      const formatSlot = (d: Date) =>
-        d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-
       return {
         conflict: true,
         status: 'REQUESTED_DOCTOR_UNAVAILABLE',
@@ -99,7 +100,7 @@ export class AppointmentService {
         alternativeDoctor: alternativeDoctor
           ? { id: alternativeDoctor.id, name: alternativeDoctor.name, specialization: alternativeDoctor.specialization || 'Physician' }
           : null,
-        alternativeSlots: [formatSlot(alternativeSlot1), formatSlot(alternativeSlot2)],
+        alternativeSlots: [],
         requiresConsent: true,
       };
     }
@@ -162,7 +163,7 @@ export class AppointmentService {
       scheduledAt: { gte: dayStart, lt: newEnd },
     };
     if (staffId) {
-      whereClause.staffId = staffId;
+      whereClause.OR = [{ staffId }, { staffId: null }];
     }
 
     // 1. Check all non-cancelled appointments within a 24-hour window
@@ -193,7 +194,7 @@ export class AppointmentService {
       const singleConflict = await tx.appointment.findFirst({
         where: {
           tenantId,
-          ...(staffId ? { staffId } : {}),
+          ...(staffId ? { OR: [{ staffId }, { staffId: null }] } : {}),
           status: { notIn: ['CANCELLED', 'NO_SHOW'] },
           deletedAt: null,
           id: excludeAppointmentId ? { not: excludeAppointmentId } : undefined,
@@ -219,6 +220,10 @@ export class AppointmentService {
   }
 
   async book(tenantId: string, data: any) {
+    const scheduledAt = await this.parseTime(tenantId, data);
+    if (scheduledAt.getTime() < Date.now()) throw new BadRequestException('Booking time must be in the future');
+    const durationMins = Number(data.durationMins ?? data.durationMinutes ?? 30);
+    if (!Number.isInteger(durationMins) || durationMins < 5 || durationMins > 1440) throw new BadRequestException('Appointment duration must be between 5 and 1440 minutes');
     // 1. Resolve or auto-provision Customer if customerId not explicitly provided
     let customerId = data.customerId;
     if (customerId) {
@@ -229,7 +234,9 @@ export class AppointmentService {
         throw new BadRequestException('Customer does not belong to this tenant');
       }
     } else {
-      const phone = (data.customerPhone || data.phone || '+919999999999').replace(/[^0-9+]/g, '');
+      const rawPhone = data.customerPhone || data.phone || '';
+      if (!/^\+?[1-9][\d ()-]{7,20}$/.test(rawPhone)) throw new BadRequestException('A real customer phone number is required');
+      const phone = rawPhone.replace(/[^0-9+]/g, '');
       const name = data.customerName || data.name || 'Frontdesk Guest';
       let customer = await this.prisma.customer.findFirst({
         where: { tenantId, phone },
@@ -246,27 +253,6 @@ export class AppointmentService {
         });
       }
       customerId = customer.id;
-    }
-
-    // 2. Parse scheduled date and time
-    let scheduledAt: Date;
-    if (data.scheduledAt) {
-      scheduledAt = new Date(data.scheduledAt);
-    } else if (data.date && data.time) {
-      scheduledAt = new Date(`${data.date}T${data.time}:00`);
-    } else {
-      scheduledAt = new Date();
-    }
-    if (isNaN(scheduledAt.getTime())) {
-      throw new BadRequestException('Invalid scheduledAt timestamp');
-    }
-    if (!data.allowPast && scheduledAt.getTime() < Date.now() - 5 * 60 * 1000) {
-      throw new BadRequestException('Cannot schedule an appointment in the past');
-    }
-
-    const durationMins = Number(data.durationMins || data.durationMinutes || 30);
-    if (isNaN(durationMins) || durationMins < 5 || durationMins > 1440) {
-      throw new BadRequestException('Appointment duration must be between 5 and 1440 minutes');
     }
 
     let staffId = data.staffId || null;
@@ -315,22 +301,13 @@ export class AppointmentService {
     }
 
     // 3. Serialize on DOCTOR / STAFF RESOURCE, not on start minute!
-    const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
-    const lockKey = `slot_lock:${resourceKey}`;
-
-    if (this.redisService) {
-      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
-      if (!acquired) {
-        throw new ConflictException('Doctor schedule is currently being modified. Please try again.');
-      }
-    }
+    // ponytail: tenant-wide serialization; partition only after defining unassigned resource capacity.
+    const resourceKey = `appointments_${tenantId}`;
 
     try {
       return await this.prisma.$transaction(async (tx) => {
         // Tier 2: PostgreSQL Transactional Advisory Lock on Doctor Resource
-        if (typeof (tx as any).$executeRaw === 'function') {
-          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
-        }
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
 
         const newStart = scheduledAt;
         const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
@@ -359,10 +336,6 @@ export class AppointmentService {
         throw new ConflictException('This time slot was just confirmed by another patient. Please choose another time.');
       }
       throw err;
-    } finally {
-      if (this.redisService) {
-        await this.redisService.del(lockKey);
-      }
     }
   }
 
@@ -375,7 +348,7 @@ export class AppointmentService {
       throw new NotFoundException(`Clinic with slug '${slug}' not found`);
     }
     if (!this.otpService) {
-      return { success: true, message: 'OTP dispatch skipped (service offline)' };
+      throw new BadRequestException('OTP service is unavailable');
     }
     return this.otpService.generateAndSendOtp(tenant.id, phone, tenant.name);
   }
@@ -402,9 +375,8 @@ export class AppointmentService {
     }
 
     // Verify cryptographic OTP before booking
-    if (this.otpService && data.otp) {
-      await this.otpService.verifyOtp(tenant.id, data.customerPhone, data.otp);
-    }
+    if (!this.otpService || !data.otp) throw new BadRequestException('OTP verification is required');
+    await this.otpService.verifyOtp(tenant.id, data.customerPhone, data.otp);
 
     return this.bookFromVoice(tenant.id, {
       ...data,
@@ -432,7 +404,7 @@ export class AppointmentService {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantIdentifier);
     if (!isUuid && this.prisma.tenant) {
       const resolvedTenant = await this.prisma.tenant.findFirst({
-        where: { OR: [{ slug: tenantIdentifier }, { id: tenantIdentifier }] },
+        where: { slug: tenantIdentifier },
       });
       if (resolvedTenant) {
         tenantId = resolvedTenant.id;
@@ -441,7 +413,12 @@ export class AppointmentService {
       }
     }
 
-    const rawPhone = data.customerPhone || 'unknown-caller';
+    const scheduledAt = await this.parseTime(tenantId, data);
+    if (!scheduledAt || !Number.isFinite(scheduledAt.getTime())) throw new BadRequestException('An explicit valid booking date and time are required');
+    if (scheduledAt.getTime() <= Date.now()) throw new BadRequestException('Booking time must be in the future');
+
+    const rawPhone = data.customerPhone || '';
+    if (!/^\+?[1-9][\d ()-]{7,20}$/.test(rawPhone)) throw new BadRequestException('A real customer phone number is required');
     const phone = rawPhone.replace(/[^0-9+]/g, '');
 
     let customer = await this.prisma.customer.findFirst({
@@ -456,7 +433,7 @@ export class AppointmentService {
         data: {
           tenantId,
           name: data.customerName || 'Voice Caller',
-          phone: phone && phone !== 'unknown-caller' ? phone : '+919999999999',
+          phone,
           tags: ['VOICE_AI'],
         },
       });
@@ -473,19 +450,6 @@ export class AppointmentService {
       if (matchedService) {
         serviceId = matchedService.id;
       }
-    }
-
-    let scheduledAt: Date;
-    if (data.dateTime) {
-      scheduledAt = new Date(data.dateTime);
-    } else if (data.date && data.time) {
-      scheduledAt = new Date(`${data.date}T${data.time}:00`);
-    } else {
-      scheduledAt = new Date(Date.now() + 24 * 3600 * 1000);
-    }
-
-    if (isNaN(scheduledAt.getTime())) {
-      scheduledAt = new Date(Date.now() + 24 * 3600 * 1000);
     }
 
     const durationMins = 30;
@@ -512,36 +476,27 @@ export class AppointmentService {
           alternativeDoctor: slotCheck.alternativeDoctor,
           alternativeSlots: slotCheck.alternativeSlots,
           requiresConsent: true,
-          message: `Dr. ${slotCheck.requestedDoctor} is fully booked at this time. However, Dr. ${slotCheck.alternativeDoctor?.name || 'another physician'} is available at this time, or Dr. ${slotCheck.requestedDoctor} has openings at ${slotCheck.alternativeSlots.join(', ')}. Would you like to book with Dr. ${slotCheck.alternativeDoctor?.name}? `,
+          message: slotCheck.alternativeDoctor ? `${slotCheck.requestedDoctor} is unavailable. Would you like to request ${slotCheck.alternativeDoctor.name} instead? Availability is checked again on confirmation.` : `${slotCheck.requestedDoctor} is unavailable. Please choose another time.`,
         };
       } else if (slotCheck.alternativeDoctor) {
         // Patient consented to alternative doctor
         staffId = slotCheck.alternativeDoctor.id;
         this.logger.log(`Patient consented to alternative doctor: ${slotCheck.alternativeDoctor.name} (${staffId})`);
+      } else {
+        throw new ConflictException('No alternative staff member is available; choose another time');
       }
     } else if (!slotCheck.conflict && slotCheck.assignedStaffId) {
       staffId = slotCheck.assignedStaffId;
     }
 
-    const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
-    const lockKey = `slot_lock:${resourceKey}`;
-
-    if (this.redisService) {
-      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
-      if (!acquired) {
-        throw new ConflictException(
-          `This time slot (${scheduledAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}) is currently being modified. Please choose another time.`,
-        );
-      }
-    }
+    // ponytail: tenant-wide serialization; partition only after defining unassigned resource capacity.
+    const resourceKey = `appointments_${tenantId}`;
 
     let createdAppt: any;
     try {
       createdAppt = await this.prisma.$transaction(async (tx) => {
         // Tier 2: PostgreSQL Transactional Advisory Lock on Doctor Resource
-        if (typeof (tx as any).$executeRaw === 'function') {
-          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
-        }
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
 
         const newStart = scheduledAt;
         const newEnd = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
@@ -575,24 +530,22 @@ export class AppointmentService {
         );
       }
       throw err;
-    } finally {
-      if (this.redisService) {
-        await this.redisService.del(lockKey);
-      }
     }
 
     // Automated WhatsApp Appointment Confirmation
     if (this.whatsappService && customer.phone && customer.phone !== '+919999999999') {
       try {
         const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
-        const clinicName = tenant?.name || 'ZeroDesk Clinic';
+        const clinicName = tenant?.name || 'ZeroDesk';
         const formattedDate = scheduledAt.toLocaleDateString('en-IN', {
+          timeZone: tenant?.timezone,
           weekday: 'short',
           month: 'short',
           day: 'numeric',
           year: 'numeric',
         });
         const formattedTime = scheduledAt.toLocaleTimeString('en-IN', {
+          timeZone: tenant?.timezone,
           hour: '2-digit',
           minute: '2-digit',
         });
@@ -657,19 +610,19 @@ export class AppointmentService {
     }
 
     if (data.scheduledAt) {
-      const parsed = new Date(data.scheduledAt);
+      const parsed = await this.parseTime(tenantId, data);
       if (isNaN(parsed.getTime())) {
         throw new BadRequestException('Invalid scheduledAt timestamp');
       }
     }
-    if (data.durationMins || data.durationMinutes) {
-      const dur = Number(data.durationMins || data.durationMinutes);
-      if (isNaN(dur) || dur < 5 || dur > 1440) {
+    if (data.durationMins !== undefined || data.durationMinutes !== undefined) {
+      const dur = Number(data.durationMins ?? data.durationMinutes);
+      if (!Number.isInteger(dur) || dur < 5 || dur > 1440) {
         throw new BadRequestException('Appointment duration must be between 5 and 1440 minutes');
       }
     }
 
-    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : appt.scheduledAt;
+    const scheduledAt = data.scheduledAt ? await this.parseTime(tenantId, data) : appt.scheduledAt;
     const durationMins = Number(data.durationMins || data.durationMinutes || appt.durationMins);
     const staffId = data.staffId !== undefined ? (data.staffId || null) : appt.staffId;
     const serviceId = data.serviceId !== undefined ? (data.serviceId || null) : appt.serviceId;
@@ -687,21 +640,12 @@ export class AppointmentService {
     );
     const requiresConflictCheck = isTargetActive && (timingChanged || isActivating);
 
-    const resourceKey = staffId ? `staff_${tenantId}_${staffId}` : `tenant_${tenantId}_general`;
-    const lockKey = `slot_lock:${resourceKey}`;
-
-    if (requiresConflictCheck && this.redisService) {
-      const acquired = await this.redisService.setNx(lockKey, 'locked', 10);
-      if (!acquired) {
-        throw new ConflictException('Schedule is currently being modified. Please try again.');
-      }
-    }
+    // ponytail: tenant-wide serialization; partition only after defining unassigned resource capacity.
+    const resourceKey = `appointments_${tenantId}`;
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        if (requiresConflictCheck && typeof (tx as any).$executeRaw === 'function') {
-          await (tx as any).$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
-        }
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${resourceKey}))`;
 
         // Re-read row under transaction lock to prevent stale merge on concurrent PATCH
         const currentAppt = await tx.appointment.findUnique({ where: { id: appt.id } });
@@ -711,7 +655,7 @@ export class AppointmentService {
         const effectiveDuration = (data.durationMins || data.durationMinutes) ? durationMins : currentAppt.durationMins;
         const effectiveStaffId = data.staffId !== undefined ? staffId : currentAppt.staffId;
 
-        if (requiresConflictCheck) {
+        if (!['CANCELLED', 'NO_SHOW'].includes(data.status || currentAppt.status)) {
           const newStart = effectiveStart;
           const newEnd = new Date(effectiveStart.getTime() + effectiveDuration * 60 * 1000);
           await this.checkIntervalConflict(tx, tenantId, effectiveStaffId, newStart, newEnd, appt.id);
@@ -748,10 +692,6 @@ export class AppointmentService {
         throw new ConflictException('This time slot was just confirmed by another guest. Please choose another time.');
       }
       throw err;
-    } finally {
-      if (requiresConflictCheck && this.redisService) {
-        await this.redisService.del(lockKey);
-      }
     }
   }
 

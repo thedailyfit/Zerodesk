@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -51,7 +52,7 @@ export default function PreinstalledTemplatesPage() {
   const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_preinstalled_${currentNiche}`);
+    const saved = tenantStorage.getItem(`zerodesk_preinstalled_${currentNiche}`);
     if (saved) {
       try {
         setTemplates(JSON.parse(saved));
@@ -70,7 +71,7 @@ export default function PreinstalledTemplatesPage() {
 
   const saveTemplates = (updated: any[]) => {
     setTemplates(updated);
-    localStorage.setItem(`zerodesk_preinstalled_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zerodesk_preinstalled_${currentNiche}`, JSON.stringify(updated));
   };
 
   const handleToggleUseIt = (id: string) => {

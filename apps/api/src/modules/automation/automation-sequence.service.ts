@@ -1,299 +1,102 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional, ForbiddenException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
-import { RedisService } from '../redis/redis.service';
+
+type Sequence = 'REMINDER' | 'FEEDBACK' | 'MISSED_CALL' | 'REENGAGEMENT';
+type Outcome = { key: string; status: string; reason?: string };
 
 @Injectable()
 export class AutomationSequenceService {
   private readonly logger = new Logger(AutomationSequenceService.name);
+  constructor(private readonly prisma: PrismaService, @Optional() private readonly whatsappService?: WhatsappService) {}
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
-    @Optional() private readonly whatsappService?: WhatsappService,
-  ) {}
-
-  /**
-   * Automated cron executing every 15 minutes across all active tenants.
-   * Uses Redis distributed lock to ensure only one instance executes in multi-container setups.
-   */
   @Cron('*/15 * * * *')
   async runAutomatedSequences() {
-    const lockKey = 'lock:cron:automated-sequences';
-    const lockTtlSeconds = 840; // 14 minutes
-    const acquired = await this.redis.setNx(lockKey, 'locked', lockTtlSeconds);
-
-    if (!acquired) {
-      this.logger.log('Another cluster instance is executing the automated sequence cron. Skipping.');
-      return;
-    }
-
-    this.logger.log('Acquired distributed lock. Starting automated WhatsApp sequence runner...');
-    try {
-      await Promise.allSettled([
-        this.runAppointmentReminders(),
-        this.runPostConsultationFeedback(),
-        this.runMissedCallRecovery(),
-        this.runThirtyDayReEngagement(),
-      ]);
-    } catch (err: any) {
-      this.logger.error(`Automated sequences runner encountered an error: ${err.message}`);
-    } finally {
-      await this.redis.del(lockKey);
-      this.logger.log('Automated WhatsApp sequence runner finished. Released distributed lock.');
+    const workflows = await this.prisma.automationWorkflow.findMany({ where: { isActive: true, triggerType: 'SCHEDULED' }, select: { tenantId: true }, distinct: ['tenantId'] });
+    for (const { tenantId } of workflows) {
+      try { await this.runForTenant(tenantId); }
+      catch (error) { this.logger.error(`Sequence tenant ${tenantId} failed: ${(error as Error).message}`); }
     }
   }
 
-  /**
-   * Sequence 1: 24-Hour & 2-Hour Appointment Reminders
-   */
-  async runAppointmentReminders() {
-    if (!this.whatsappService) return;
+  async runForTenant(tenantId: string) {
+    const subscription = await this.prisma.subscription.findUnique({ where: { tenantId } });
+    if (!subscription || !['active', 'trialing'].includes(subscription.status.toLowerCase())) throw new ForbiddenException('Active subscription required');
+    if (!this.whatsappService) return { status: 'unavailable', outcomes: [] };
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) throw new ForbiddenException('Tenant unavailable');
+    const workflows = await this.prisma.automationWorkflow.findMany({ where: { tenantId, isActive: true, triggerType: 'SCHEDULED' } });
+    const enabled = new Set<Sequence>();
+    for (const workflow of workflows) {
+      const type = (workflow.definition as any)?.sequenceType;
+      if (['REMINDER', 'FEEDBACK', 'MISSED_CALL', 'REENGAGEMENT'].includes(type)) enabled.add(type);
+    }
+    const outcomes: Outcome[] = [];
+    for (const type of enabled) {
+      try { outcomes.push(...await this.runSequence(tenant, type)); }
+      catch (error) { outcomes.push({ key: type, status: 'failed', reason: (error as Error).message }); }
+    }
+    return { status: outcomes.some(o => ['failed', 'uncertain', 'pending'].includes(o.status)) ? 'attention_required' : 'completed', outcomes };
+  }
 
+  private async runSequence(tenant: any, type: Sequence): Promise<Outcome[]> {
     const now = new Date();
-    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-    const pendingAppointments = await this.prisma.appointment.findMany({
-      where: {
-        status: 'SCHEDULED',
-        reminderSent: false,
-        scheduledAt: {
-          gte: now,
-          lte: next24Hours,
-        },
-      },
-      include: {
-        customer: true,
-        service: true,
-        staff: true,
-        tenant: true,
-      },
-      take: 50,
-    });
-
-    for (const appt of pendingAppointments) {
-      const phone = appt.customer?.phone;
-      if (!phone || phone === '+919999999999') continue;
-
-      const clinicName = appt.tenant?.name || 'ZeroDesk Clinic';
-      const docName = appt.staff?.name ? ` with Dr. ${appt.staff.name}` : '';
-      const formattedTime = appt.scheduledAt.toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      });
-      const formattedDate = appt.scheduledAt.toLocaleDateString('en-IN', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      });
-
-      const reminderText =
-        `⏰ Reminder: You have an upcoming appointment at ${clinicName}!
-
-` +
-        `👤 Patient: ${appt.customer.name || 'Valued Patient'}
-` +
-        `🩺 Service: ${appt.service?.name || 'Consultation'}${docName}
-` +
-        `📅 Date: ${formattedDate}
-` +
-        `⏰ Time: ${formattedTime}
-
-` +
-        `Please reply "1" to Confirm or "2" if you need to Reschedule.`;
-
-      try {
-        await this.whatsappService.sendMessage(appt.tenantId, phone, reminderText);
-        await this.prisma.appointment.update({
-          where: { id: appt.id },
-          data: { reminderSent: true },
-        });
-        this.logger.log(`Sent 24h/2h appointment reminder to ${phone} for appointment ${appt.id}`);
-      } catch (err: any) {
-        this.logger.warn(`Failed to send appointment reminder for ${appt.id}: ${err.message}`);
+    const day = 86400000;
+    const where: any = { tenantId: tenant.id };
+    if (type === 'MISSED_CALL') Object.assign(where, { channel: 'VOICE', status: { in: ['MISSED', 'NO_ANSWER', 'FAILED'] }, createdAt: { gte: new Date(+now - day) } });
+    else Object.assign(where, { deletedAt: null, status: type === 'REMINDER' ? 'SCHEDULED' : 'COMPLETED', scheduledAt: type === 'REMINDER' ? { gte: now, lte: new Date(+now + day) } : type === 'FEEDBACK' ? { gte: new Date(+now - 7 * day), lte: new Date(+now - 7200000) } : { gte: new Date(+now - 31 * day), lte: new Date(+now - 29 * day) } });
+    const outcomes: Outcome[] = [];
+    let cursor: string | undefined;
+    let rows: any[];
+    do {
+      const query = { where, include: { customer: true }, orderBy: { id: 'asc' as const }, take: 100, ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}) };
+      rows = type === 'MISSED_CALL' ? await this.prisma.conversation.findMany(query) : await this.prisma.appointment.findMany(query);
+      for (const row of rows) {
+        if (type === 'REENGAGEMENT' && await this.prisma.appointment.findFirst({ where: { tenantId: tenant.id, customerId: row.customerId, deletedAt: null, status: { notIn: ['CANCELLED', 'NO_SHOW'] }, scheduledAt: { gt: row.scheduledAt } } })) continue;
+        const time = row.scheduledAt ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: tenant.timezone || 'Asia/Kolkata' }).format(row.scheduledAt) : '';
+        const reviewUrl = (tenant.settings as any)?.reviewUrl;
+        const safeReviewUrl = typeof reviewUrl === 'string' && /^https:\/\//.test(reviewUrl) ? reviewUrl : '';
+        const messages: Record<Sequence, string> = {
+          REMINDER: `Reminder from ${tenant.name}: your booking is scheduled for ${time}. Reply if you need assistance or a change.`,
+          FEEDBACK: `Thank you for visiting ${tenant.name}. We welcome your feedback.${safeReviewUrl ? ` Share your experience: ${safeReviewUrl}` : ' Reply to share your experience.'}`,
+          MISSED_CALL: `Hello from ${tenant.name}. We missed your call. Please reply if you would like assistance.`,
+          REENGAGEMENT: `Hello from ${tenant.name}. Would you like to arrange another visit? Reply if you would like assistance.`,
+        };
+        outcomes.push(await this.deliver(tenant.id, `${type}:${row.id}`, row.customer, messages[type], type === 'REMINDER' ? row.id : undefined));
       }
-    }
+      cursor = rows.length ? rows[rows.length - 1].id : undefined;
+    } while (rows.length === 100);
+    return outcomes;
   }
 
-  /**
-   * Sequence 2: Post-Consultation Google Review & Feedback (2h after appointment completion)
-   */
-  async runPostConsultationFeedback() {
-    if (!this.whatsappService) return;
-
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
-
-    const completedAppts = await this.prisma.appointment.findMany({
-      where: {
-        status: 'COMPLETED',
-        scheduledAt: {
-          gte: sixHoursAgo,
-          lte: twoHoursAgo,
-        },
-      },
-      include: {
-        customer: true,
-        staff: true,
-        tenant: true,
-      },
-      take: 50,
-    });
-
-    for (const appt of completedAppts) {
-      const phone = appt.customer?.phone;
-      if (!phone || phone === '+919999999999') continue;
-
-      // Check if feedback message was already sent in this conversation
-      const existingFeedbackMsg = await this.prisma.message.findFirst({
-        where: {
-          tenantId: appt.tenantId,
-          content: { contains: '[Feedback Request]' },
-          createdAt: { gte: sixHoursAgo },
-        },
+  private async deliver(tenantId: string, businessKey: string, customer: any, message: string, appointmentId?: string): Promise<Outcome> {
+    // Claim before I/O. PENDING after a crash requires reconciliation, never an automatic duplicate send.
+    let receipt: any;
+    try { receipt = await this.prisma.automationDelivery.create({ data: { tenantId, businessKey } }); }
+    catch (error: any) {
+      if (error.code !== 'P2002') throw error;
+      const previous = await this.prisma.automationDelivery.findUnique({ where: { tenantId_businessKey: { tenantId, businessKey } } });
+      return { key: businessKey, status: (previous?.status || 'PENDING').toLowerCase() };
+    }
+    const finish = async (status: string, reason?: string, providerMessageId?: string) => {
+      await this.prisma.automationDelivery.update({ where: { id: receipt.id }, data: { status, reason, providerMessageId } });
+      return { key: businessKey, status: status.toLowerCase(), ...(reason ? { reason } : {}) };
+    };
+    const latest = customer ? await this.prisma.customer.findFirst({ where: { id: customer.id, tenantId, deletedAt: null } }) : null;
+    if (!latest?.phone || latest.dndStatus || latest.anonymizedAt || latest.phone === '+919999999999') return finish('SKIPPED', 'Recipient unavailable or opted out');
+    const consent = await this.prisma.patientConsent.findFirst({ where: { tenantId, customerId: latest.id, consentType: 'WHATSAPP_COMMUNICATION' }, orderBy: { grantedAt: 'desc' } });
+    if (consent?.status !== 'GRANTED') return finish('SKIPPED', 'WhatsApp consent required');
+    try {
+      const result = await this.whatsappService!.sendMessage(tenantId, latest.phone, message);
+      if (result?.skipped || result?.success === false) return finish('SKIPPED', result.reason || 'Send skipped');
+      const providerId = result?.messages?.[0]?.id;
+      if (!providerId) return finish('UNCERTAIN', 'No provider receipt');
+      await this.prisma.$transaction(async tx => {
+        await tx.automationDelivery.update({ where: { id: receipt.id }, data: { status: 'SENT', providerMessageId: providerId } });
+        if (appointmentId) await tx.appointment.updateMany({ where: { id: appointmentId, tenantId }, data: { reminderSent: true } });
       });
-
-      if (existingFeedbackMsg) continue;
-
-      const clinicName = appt.tenant?.name || 'ZeroDesk Clinic';
-      const docName = appt.staff?.name ? `Dr. ${appt.staff.name}` : 'our medical team';
-
-      const feedbackText =
-        `[Feedback Request]
-` +
-        `⭐ Thank you for visiting ${clinicName} today!
-
-` +
-        `We hope your consultation with ${docName} was wonderful. Your health and comfort are our highest priorities.
-
-` +
-        `Could you take 30 seconds to rate your experience or leave us a Google review? It helps other patients find quality care:
-` +
-        `👉 https://g.page/r/review/${appt.tenant.slug}
-
-` +
-        `Have post-visit questions? Reply directly to this message!`;
-
-      try {
-        await this.whatsappService.sendMessage(appt.tenantId, phone, feedbackText);
-        this.logger.log(`Dispatched Google review sequence to ${phone} for tenant ${appt.tenantId}`);
-      } catch (err: any) {
-        this.logger.warn(`Failed to send review request to ${phone}: ${err.message}`);
-      }
-    }
-  }
-
-  /**
-   * Sequence 3: Missed Call Recovery (within 15 minutes of missed/failed voice call)
-   */
-  async runMissedCallRecovery() {
-    if (!this.whatsappService) return;
-
-    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
-
-    const missedConversations = await this.prisma.conversation.findMany({
-      where: {
-        channel: 'VOICE',
-        status: { in: ['MISSED', 'NO_ANSWER', 'FAILED'] },
-        createdAt: { gte: fifteenMinsAgo },
-      },
-      include: {
-        customer: true,
-        tenant: true,
-      },
-      take: 30,
-    });
-
-    for (const conv of missedConversations) {
-      const phone = conv.customer?.phone;
-      if (!phone || phone === '+919999999999') continue;
-
-      const clinicName = conv.tenant?.name || 'our clinic';
-      const bookingUrl = `https://zerodesk.in/book/${conv.tenant?.slug}`;
-
-      const missedCallText =
-        `📞 Hello from ${clinicName}! We noticed we just missed your call.
-
-` +
-        `Our lines were busy assisting other patients, but we are here to help you right now.
-
-` +
-        `📅 Book an appointment online in 30 seconds: ${bookingUrl}
-` +
-        `💬 Or simply reply to this WhatsApp message and our AI assistant will assist you immediately.`;
-
-      try {
-        await this.whatsappService.sendMessage(conv.tenantId, phone, missedCallText);
-        // Mark conversation status as RECOVERED to prevent repeat sends
-        await this.prisma.conversation.update({
-          where: { id: conv.id },
-          data: { status: 'RECOVERED' },
-        });
-        this.logger.log(`Dispatched missed call recovery sequence to ${phone}`);
-      } catch (err: any) {
-        this.logger.warn(`Failed missed call recovery for ${phone}: ${err.message}`);
-      }
-    }
-  }
-
-  /**
-   * Sequence 4: 30-Day Routine Re-Engagement
-   */
-  async runThirtyDayReEngagement() {
-    if (!this.whatsappService) return;
-
-    const thirtyDaysAgoStart = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-    const thirtyDaysAgoEnd = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
-
-    const pastAppts = await this.prisma.appointment.findMany({
-      where: {
-        status: 'COMPLETED',
-        scheduledAt: {
-          gte: thirtyDaysAgoStart,
-          lte: thirtyDaysAgoEnd,
-        },
-      },
-      include: {
-        customer: true,
-        tenant: true,
-        service: true,
-      },
-      take: 50,
-    });
-
-    for (const appt of pastAppts) {
-      const phone = appt.customer?.phone;
-      if (!phone || phone === '+919999999999') continue;
-
-      // Ensure customer has no newer appointment booked
-      const newerAppt = await this.prisma.appointment.findFirst({
-        where: {
-          tenantId: appt.tenantId,
-          customerId: appt.customerId,
-          scheduledAt: { gte: thirtyDaysAgoEnd },
-        },
-      });
-
-      if (newerAppt) continue;
-
-      const clinicName = appt.tenant?.name || 'ZeroDesk Clinic';
-      const reEngageText =
-        `🌿 Hello ${appt.customer.name || 'there'}! It has been 30 days since your last ${appt.service?.name || 'consultation'} at ${clinicName}.
-
-` +
-        `Consistent care and routine checkups are the secret to lasting health and glowing results.
-
-` +
-        `Would you like to schedule your follow-up appointment this week? Reply "YES" and we'll find the perfect slot for you!`;
-
-      try {
-        await this.whatsappService.sendMessage(appt.tenantId, phone, reEngageText);
-        this.logger.log(`Dispatched 30-day re-engagement sequence to ${phone}`);
-      } catch (err: any) {
-        this.logger.warn(`Failed 30-day re-engagement for ${phone}: ${err.message}`);
-      }
-    }
+      return { key: businessKey, status: 'sent' };
+    } catch { return finish('UNCERTAIN', 'Send outcome requires reconciliation; retry suppressed'); }
   }
 }

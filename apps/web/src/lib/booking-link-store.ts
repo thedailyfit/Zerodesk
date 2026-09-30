@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 
 export interface BookingLinkConfig {
@@ -45,7 +46,7 @@ export function useBookingLink() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('zerodesk_booking_link_config');
+      const saved = tenantStorage.getItem('zerodesk_booking_link_config');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
@@ -70,7 +71,7 @@ export function useBookingLink() {
         : (prev.slug?.trim() || 'sanctuary-booking');
       const next = { ...prev, ...updates, slug: effectiveSlug };
       try {
-        localStorage.setItem('zerodesk_booking_link_config', JSON.stringify(next));
+        tenantStorage.setItem('zerodesk_booking_link_config', JSON.stringify(next));
       } catch (e) {
         console.error('Failed to save booking link config', e);
       }

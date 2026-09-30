@@ -3,10 +3,9 @@ import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [PrismaModule, ConfigModule, RedisModule],
+  imports: [PrismaModule, ConfigModule],
   controllers: [BillingController],
   providers: [BillingService],
   exports: [BillingService],

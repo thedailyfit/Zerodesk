@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,8 @@ import {
   Database, Globe, AlertCircle, ChevronDown, Check, X,
   Sparkles, ArrowRight, Stethoscope, Sparkle, Home, Hotel, ShieldCheck
 } from 'lucide-react';
+import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useNiche } from '@/components/providers/niche-provider';
 import { NICHE_WORKFLOWS, WorkflowItem } from '@/config/niches/workflows';
@@ -125,92 +128,32 @@ export default function BuildSequencePage() {
     ...(NICHE_SPECIFIC_TRIGGERS[currentNiche] || [])
   ], [currentNiche]);
 
+  const [serverIds, setServerIds] = useState<Record<string, string>>({});
   useEffect(() => {
-    const saved = localStorage.getItem('zerodesk_build_sequences');
-    if (saved) {
-      try {
-        setSequences(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse sequences', e);
-      }
-    }
-  }, []);
-
-  const saveSequences = (newSequences: BuildSequence[]) => {
-    setSequences(newSequences);
-    localStorage.setItem('zerodesk_build_sequences', JSON.stringify(newSequences));
+    let cancelled = false;
+    api.get<any[]>('/automations').then(rows => {
+      if (cancelled) return;
+      const saved = rows.filter(r => r.definition?.kind === 'sequence' && r.definition?.niche === currentNiche);
+      setSequences(saved.map(r => ({ ...r.definition.sequence, id: r.id, isActive: r.isActive, status: r.isActive ? 'active' : 'draft', apiKeys: {} })));
+      setServerIds(Object.fromEntries(saved.map(r => [r.id, r.id])));
+    }).catch(() => toast.error('Sequences could not be loaded.'));
+    return () => { cancelled = true; };
+  }, [currentNiche]);
+  const saveSequences = (rows: BuildSequence[]) => { setSequences(rows); };
+  const persistSequence = async (seq: BuildSequence) => {
+    const definition = { kind: 'sequence', niche: currentNiche, sequence: { ...seq, isActive: false, status: 'draft', apiKeys: {} } };
+    const body = { name: seq.name, category: 'General', triggerType: seq.nodes.find(n => n.type === 'trigger')?.triggerType || 'MANUAL', definition };
+    const id = serverIds[seq.id];
+    const row = id ? await api.patch<any>(`/automations/${id}`, body) : await api.post<any>('/automations', body);
+    setServerIds(prev => ({ ...prev, [seq.id]: row.id }));
+    return row;
   };
-
-  const publishToSmartActions = () => {
+  const publishToSmartActions = async () => {
     if (!activeSequence) return;
-    saveCurrentSequence();
-
-    const triggerNode = activeSequence.nodes.find(n => n.type === 'trigger');
-    const triggerLabel = triggerNode?.label || (triggerNode?.triggerType ? allTriggers.find(t => t.id === triggerNode.triggerType)?.label : 'Custom Trigger') || 'Custom Trigger';
-
-    const stepTypeMap: Record<string, 'whatsapp' | 'call' | 'sms' | 'email' | 'wait' | 'task' | 'crm_update' | 'invoice'> = {
-      send_whatsapp: 'whatsapp',
-      voice_ai_call: 'call',
-      send_sms: 'sms',
-      send_email: 'email',
-      create_task: 'task',
-      update_crm: 'crm_update',
-      add_note: 'task',
-      webhook_post: 'crm_update',
-    };
-
-    const steps = activeSequence.nodes.map((node, i) => {
-      let type: 'trigger' | 'whatsapp' | 'sms' | 'email' | 'wait' | 'task' | 'crm_update' | 'call' | 'survey' | 'invoice' = 'whatsapp';
-      let label = node.label || 'Step';
-      let details: string | undefined = undefined;
-
-      if (node.type === 'trigger') {
-        type = 'trigger';
-        label = triggerLabel;
-      } else if (node.type === 'delay') {
-        type = 'wait';
-        label = `Wait ${node.config.duration || 1} ${node.config.unit || 'hours'}`;
-      } else if (node.type === 'action') {
-        type = stepTypeMap[node.actionType || ''] || 'whatsapp';
-        label = node.label || 'Action Step';
-        details = node.config.message || node.config.subject;
-      } else if (node.type === 'condition') {
-        type = 'task';
-        label = `Check ${node.conditionField || 'Condition'}`;
-      }
-      return { id: `step_${i + 1}`, type, label, details };
-    });
-
-    const newWorkflow: WorkflowItem = {
-      id: `custom_${Date.now()}`,
-      name: activeSequence.name || 'Custom Workflow',
-      category: 'General',
-      active: activeSequence.isActive,
-      steps: steps.length > 0 ? steps : [{ id: 's1', type: 'whatsapp', label: 'Automated WhatsApp' }],
-      lastRun: 'Just now',
-      runCount24h: 0,
-      successRate: 100,
-    };
-
-    const storageKey = `zd_automations_v4_${currentNiche}`;
-    let existingList: WorkflowItem[] = [];
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        existingList = JSON.parse(saved);
-      } catch (e) {
-        existingList = [...(NICHE_WORKFLOWS[currentNiche] || NICHE_WORKFLOWS.skin)];
-      }
-    } else {
-      existingList = [...(NICHE_WORKFLOWS[currentNiche] || NICHE_WORKFLOWS.skin)];
-    }
-
-    // Prepend new custom workflow
-    const updatedList = [newWorkflow, ...existingList.filter(w => w.id !== newWorkflow.id)];
-    localStorage.setItem(storageKey, JSON.stringify(updatedList));
-
-    setPublishSuccess(`Published "${activeSequence.name}" to 1-Click Smart Actions!`);
-    setTimeout(() => setPublishSuccess(null), 6000);
+    try {
+      await persistSequence(activeSequence);
+      setPublishSuccess('Sequence saved to the server as a draft. Configure an execution adapter before activation.');
+    } catch (err: any) { toast.error(err.message || 'Sequence could not be saved.'); }
   };
 
   const createSequence = () => {
@@ -239,9 +182,11 @@ export default function BuildSequencePage() {
     setSelectedNodeId(newSeq.nodes[0].id);
   };
 
-  const deleteSequence = (id: string) => {
-    const updated = sequences.filter(s => s.id !== id);
-    saveSequences(updated);
+  const deleteSequence = async (id: string) => {
+    try {
+      if (serverIds[id]) await api.delete(`/automations/${serverIds[id]}`);
+      saveSequences(sequences.filter(s => s.id !== id));
+    } catch { toast.error('Sequence deletion failed.'); }
   };
 
   const duplicateSequence = (seq: BuildSequence) => {
@@ -249,6 +194,10 @@ export default function BuildSequencePage() {
       ...seq,
       id: crypto.randomUUID(),
       name: seq.name + ' (Copy)',
+      isActive: false,
+      status: 'draft',
+      runCount: 0,
+      lastRun: undefined,
       createdAt: new Date().toISOString(),
       nodes: seq.nodes.map(n => ({ ...n, id: crypto.randomUUID() })),
     };
@@ -260,6 +209,15 @@ export default function BuildSequencePage() {
     if (!activeSequence) return;
     const updated = { ...activeSequence, ...updates };
     setActiveSequence(updated);
+  };
+
+  const changeSequenceStatus = async (active: boolean) => {
+    if (!activeSequence) return;
+    try {
+      const row = await persistSequence(activeSequence);
+      await api.patch(`/automations/${row.id}`, { isActive: active });
+      updateActiveSequence({ isActive: active, status: active ? 'active' : 'paused' });
+    } catch (err: any) { toast.error(err.message || 'Sequence activation was not accepted.'); }
   };
 
   const updateNode = (nodeId: string, updates: Partial<SequenceNode>) => {
@@ -298,15 +256,17 @@ export default function BuildSequencePage() {
     }
   };
 
-  const saveCurrentSequence = () => {
+  const saveCurrentSequence = async () => {
     if (!activeSequence) return;
-    const updated = sequences.map(s => s.id === activeSequence.id ? activeSequence : s);
-    saveSequences(updated);
+    try {
+      await persistSequence(activeSequence);
+      saveSequences(sequences.map(s => s.id === activeSequence.id ? { ...activeSequence, isActive: false, status: 'draft' } : s));
+      toast.success('Sequence draft saved.');
+    } catch (err: any) { toast.error(err.message || 'Sequence save failed.'); }
   };
 
   const runTest = async () => {
     if (!activeSequence) return;
-    saveCurrentSequence();
     setIsTestRunning(true);
     setTestResults([]);
 
@@ -316,16 +276,16 @@ export default function BuildSequencePage() {
       results.push({ nodeId: node.id, status: 'running' });
       setTestResults([...results]);
       
-      await new Promise(r => setTimeout(r, 500));
+
       
-      // Simulate success/fail
-      const isMissingConfig = !node.triggerType && node.type === 'trigger' || !node.actionType && node.type === 'action';
+      // Configuration validation only; no provider side effects.
+      const isMissingConfig = (!node.triggerType && node.type === 'trigger') || (!node.actionType && node.type === 'action') || (node.type === 'condition' && (!node.conditionField || !node.conditionOperator || !node.conditionValue)) || (node.type === 'delay' && !(Number(node.config.duration) > 0));
       const status = isMissingConfig ? 'failed' : 'passed';
       
       results[results.length - 1] = { 
         nodeId: node.id, 
         status, 
-        log: status === 'passed' ? 'Step executed successfully.' : 'Missing configuration.' 
+        log: status === 'passed' ? 'Configuration checked only. No action was executed.' : 'Missing configuration.'
       };
       setTestResults([...results]);
 
@@ -448,7 +408,7 @@ export default function BuildSequencePage() {
             <span className={cn("w-2 h-2 rounded-full", activeSequence.isActive ? "bg-emerald-500" : "bg-amber-500")} />
             <select 
               value={activeSequence.isActive ? 'active' : 'paused'}
-              onChange={(e) => updateActiveSequence({ isActive: e.target.value === 'active', status: e.target.value === 'active' ? 'active' : 'paused' })}
+              onChange={(e) => void changeSequenceStatus(e.target.value === 'active')}
               className="bg-transparent text-sm text-sm border-none focus:outline-none text-[var(--color-text)] cursor-pointer"
             >
               <option value="active">Active</option>

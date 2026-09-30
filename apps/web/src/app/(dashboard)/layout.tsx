@@ -1,5 +1,7 @@
 'use client';
 
+import { TenantBoundary } from '@/components/providers/tenant-boundary';
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -210,7 +212,7 @@ function SidebarNavItemRow({
   );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -247,8 +249,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedRecord = localStorage.getItem('zerodesk_kyc_record');
-      const storedStatus = localStorage.getItem('zerodesk_kyc_status');
+      const storedRecord = tenantStorage.getItem('zerodesk_kyc_record');
+      const storedStatus = tenantStorage.getItem('zerodesk_kyc_status');
       if (storedStatus === 'VERIFIED') {
         setKycStatus('VERIFIED');
       } else if (storedRecord || storedStatus === 'PENDING') {
@@ -292,8 +294,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     try {
-      localStorage.setItem('zerodesk_kyc_record', JSON.stringify(record));
-      localStorage.setItem('zerodesk_kyc_status', 'PENDING');
+      tenantStorage.setItem('zerodesk_kyc_record', JSON.stringify(record));
+      tenantStorage.setItem('zerodesk_kyc_status', 'PENDING');
       import('@/lib/api-client').then(({ apiClient }) => {
         apiClient('/tenants/me/kyc', {
           method: 'POST',
@@ -335,7 +337,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
-      <ApiAuthSync />
+
       {/* Sidebar */}
       <motion.aside
         initial={{ width: 256 }}
@@ -1034,4 +1036,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <CommandPalette open={isCmdkOpen} onOpenChange={setIsCmdkOpen} />
     </div>
   );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <TenantBoundary><DashboardContent>{children}</DashboardContent></TenantBoundary>;
 }

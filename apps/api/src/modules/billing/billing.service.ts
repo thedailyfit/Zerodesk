@@ -1,7 +1,7 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RedisService } from '../redis/redis.service';
+import { Prisma } from '@prisma/client';
 import { PLANS_REGISTRY, getPlanConfig } from '@zerodesk/shared';
 import Stripe from 'stripe';
 
@@ -30,7 +30,6 @@ export class BillingService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
-    private redisService: RedisService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -126,8 +125,7 @@ export class BillingService {
     const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
 
     if (!this.stripe || !webhookSecret) {
-      this.logger.warn('Stripe or STRIPE_WEBHOOK_SECRET not configured. Skipping signature verification.');
-      return { received: true };
+      throw new ServiceUnavailableException('Stripe webhook is not configured');
     }
 
     let event: Stripe.Event;
@@ -140,14 +138,14 @@ export class BillingService {
 
     this.logger.log(`Received verified Stripe webhook event: ${event.type} (${event.id})`);
 
-    // Event-level deduplication: block duplicate deliveries / replays within 3 days
-    if (event.id) {
-      const isNewEvent = await this.redisService.setNx(`stripe:event:${event.id}`, '1', 86400 * 3);
-      if (!isNewEvent) {
-        this.logger.log(`Ignoring duplicate/replayed Stripe webhook event: ${event.id}`);
+    if (!event.id) throw new BadRequestException('Stripe event ID is required');
+
+    // The receipt and all effects commit together. A failure rolls the receipt
+    // back too, so a provider retry can recover instead of being acknowledged away.
+    return this.prisma.$transaction(async (tx) => {
+      if (!(await this.claimEvent(tx, `event:${event.id}`))) {
         return { received: true, deduplicated: true };
       }
-    }
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -158,7 +156,7 @@ export class BillingService {
         const custId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
 
         if (tenantId) {
-          await this.activateSubscription(tenantId, plan, subId || null, custId || null);
+          await this.activateSubscription(tenantId, plan, subId || null, custId || null, tx);
         }
         break;
       }
@@ -168,21 +166,8 @@ export class BillingService {
         const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
         const invoiceId = invoice.id;
 
-        // Invoice-level deduplication: ensure single execution per invoice ID within 30 days
-        if (invoiceId) {
-          const isNewInvoice = await this.redisService.setNx(`stripe:invoice:${invoiceId}`, '1', 86400 * 30);
-          if (!isNewInvoice) {
-            this.logger.log(`Ignoring already-processed renewal invoice: ${invoiceId}`);
-            break;
-          }
-        }
-
         // Only reset usage on recurring billing cycle renewal, avoiding mid-cycle resets on one-off adjustments
         if (subId && invoice.billing_reason === 'subscription_cycle') {
-          const sub = await this.prisma.subscription.findFirst({
-            where: { stripeSubId: subId },
-          });
-
           const periodStart = invoice.lines?.data?.[0]?.period?.start
             ? new Date(invoice.lines.data[0].period.start * 1000)
             : null;
@@ -190,21 +175,27 @@ export class BillingService {
             ? new Date(invoice.lines.data[0].period.end * 1000)
             : null;
 
-          if (sub && periodStart && sub.currentPeriodStart && periodStart.getTime() <= sub.currentPeriodStart.getTime()) {
-            this.logger.log(`Ignoring replay of already-processed billing cycle invoice ${invoiceId} for sub ${subId}`);
-            break;
+          if (!invoiceId || !periodStart || !periodEnd || !Number.isFinite(periodStart.getTime()) ||
+              !Number.isFinite(periodEnd.getTime()) || periodEnd <= periodStart) {
+            throw new BadRequestException('Renewal requires invoice ID and valid billing period');
           }
+          if (!(await this.claimEvent(tx, `invoice:${invoiceId}`))) break;
+          const sub = await tx.subscription.findFirst({ where: { stripeSubId: subId } });
+          if (!sub) throw new ServiceUnavailableException('Subscription is not available yet; retry renewal');
 
           // Reset usage counters for new billing period
-          await this.prisma.subscription.updateMany({
-            where: { stripeSubId: subId },
+          await tx.subscription.updateMany({
+            // Conditional update is atomic: concurrent/older renewals cannot
+            // reset an already advanced period, even with different event IDs.
+            where: { stripeSubId: subId, OR: [
+              { currentPeriodStart: null }, { currentPeriodStart: { lt: periodStart } },
+            ] },
             data: {
               voiceMinutesUsed: 0,
               whatsappMessagesUsed: 0,
               llmTokensUsed: 0,
-              status: 'active',
-              currentPeriodStart: periodStart || new Date(),
-              currentPeriodEnd: periodEnd || undefined,
+              currentPeriodStart: periodStart,
+              currentPeriodEnd: periodEnd,
               updatedAt: new Date(),
             },
           });
@@ -215,7 +206,7 @@ export class BillingService {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
-        await this.prisma.subscription.updateMany({
+        await tx.subscription.updateMany({
           where: { stripeSubId: sub.id },
           data: { status: 'canceled', updatedAt: new Date() },
         });
@@ -228,6 +219,15 @@ export class BillingService {
     }
 
     return { received: true };
+    });
+  }
+
+  private async claimEvent(tx: Prisma.TransactionClient, key: string): Promise<boolean> {
+    const rows = await tx.$queryRaw<Array<{ key: string }>>`
+      INSERT INTO billing_webhook_events (key, processed_at)
+      VALUES (${key}, NOW()) ON CONFLICT (key) DO NOTHING RETURNING key
+    `;
+    return rows.length > 0;
   }
 
   /**
@@ -238,10 +238,11 @@ export class BillingService {
     plan: string,
     stripeSubId: string | null,
     stripeCustId: string | null,
+    tx: Prisma.TransactionClient,
   ) {
     const limits = getBillingPlanLimits(plan);
 
-    await this.prisma.subscription.upsert({
+    await tx.subscription.upsert({
       where: { tenantId },
       update: {
         plan,
@@ -267,7 +268,7 @@ export class BillingService {
       },
     });
 
-    await this.prisma.tenant.update({
+    await tx.tenant.update({
       where: { id: tenantId },
       data: {
         subscriptionTier: plan,

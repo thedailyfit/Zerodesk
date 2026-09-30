@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect, useCallback } from 'react';
 
 export interface ParkedBill {
@@ -21,7 +22,7 @@ export function useParkedBills() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('zerodesk_parked_bills');
+      const saved = tenantStorage.getItem('zerodesk_parked_bills');
       if (saved) {
         const parsed = JSON.parse(saved);
         const filtered = Array.isArray(parsed) 
@@ -29,7 +30,7 @@ export function useParkedBills() {
           : [];
         setParkedBillsState(filtered);
       } else {
-        localStorage.setItem('zerodesk_parked_bills', JSON.stringify([]));
+        tenantStorage.setItem('zerodesk_parked_bills', JSON.stringify([]));
       }
     } catch (e) {
       console.error('Failed to load parked bills', e);
@@ -46,7 +47,7 @@ export function useParkedBills() {
     
     const handleCustomEvent = () => {
       try {
-        const saved = localStorage.getItem('zerodesk_parked_bills');
+        const saved = tenantStorage.getItem('zerodesk_parked_bills');
         if (saved) {
             const parsed = JSON.parse(saved);
             setParkedBillsState(Array.isArray(parsed) ? parsed : []);
@@ -65,7 +66,7 @@ export function useParkedBills() {
 
   const saveBills = useCallback((newBills: ParkedBill[]) => {
     try {
-      localStorage.setItem('zerodesk_parked_bills', JSON.stringify(newBills));
+      tenantStorage.setItem('zerodesk_parked_bills', JSON.stringify(newBills));
       setParkedBillsState(newBills);
       window.dispatchEvent(new Event('zerodesk_parked_bills_changed'));
     } catch (e) {
@@ -82,7 +83,7 @@ export function useParkedBills() {
     setParkedBillsState(prev => {
       const updated = [newBill, ...prev];
       try {
-        localStorage.setItem('zerodesk_parked_bills', JSON.stringify(updated));
+        tenantStorage.setItem('zerodesk_parked_bills', JSON.stringify(updated));
         window.dispatchEvent(new Event('zerodesk_parked_bills_changed'));
       } catch {}
       return updated;
@@ -94,7 +95,7 @@ export function useParkedBills() {
     setParkedBillsState(prev => {
       const updated = prev.filter(b => b.id !== id);
       try {
-        localStorage.setItem('zerodesk_parked_bills', JSON.stringify(updated));
+        tenantStorage.setItem('zerodesk_parked_bills', JSON.stringify(updated));
         window.dispatchEvent(new Event('zerodesk_parked_bills_changed'));
       } catch {}
       return updated;

@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -203,7 +204,7 @@ export default function SettingsPage() {
   // Restore persistent settings on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('zerodesk_tenant_settings');
+      const stored = tenantStorage.getItem('zerodesk_tenant_settings');
       if (stored) {
         const data = JSON.parse(stored);
         if (data.businessName) setBusinessName(data.businessName);
@@ -247,7 +248,7 @@ export default function SettingsPage() {
     };
 
     try {
-      localStorage.setItem('zerodesk_tenant_settings', JSON.stringify(settingsPayload));
+      tenantStorage.setItem('zerodesk_tenant_settings', JSON.stringify(settingsPayload));
       api.put('/tenants/me', {
         name: businessName,
         industry,

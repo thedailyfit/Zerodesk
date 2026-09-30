@@ -1,5 +1,6 @@
 "use client";
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -51,7 +52,7 @@ export default function MonthlySalesPage() {
   // Load saved monthly target from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('zerodesk_monthly_target');
+      const saved = tenantStorage.getItem('zerodesk_monthly_target');
       if (saved) {
         const val = parseInt(saved, 10);
         if (!isNaN(val) && val > 0) {
@@ -78,7 +79,7 @@ export default function MonthlySalesPage() {
         // Merge cached invoices from Quick Bill
         if (typeof window !== 'undefined') {
           try {
-            const raw = localStorage.getItem('zerodesk_invoices_cache');
+            const raw = tenantStorage.getItem('zerodesk_invoices_cache');
             if (raw) {
               const cached = JSON.parse(raw);
               if (Array.isArray(cached) && cached.length > 0) {
@@ -188,7 +189,7 @@ export default function MonthlySalesPage() {
       setMonthlyTarget(val);
       setWeeklyTarget(Math.round(val / 4));
       if (typeof window !== 'undefined') {
-        localStorage.setItem('zerodesk_monthly_target', String(val));
+        tenantStorage.setItem('zerodesk_monthly_target', String(val));
       }
       setIsEditModalOpen(false);
     }

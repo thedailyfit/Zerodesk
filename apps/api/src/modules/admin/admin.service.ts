@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PlivoService } from '../voice/plivo.service';
 import { PLANS_REGISTRY } from '@zerodesk/shared';
@@ -192,7 +192,8 @@ export class AdminService {
     }
 
     // Purchase via Plivo API
-    await this.plivoService.purchaseNumber(assignedNumber);
+    const purchase = await this.plivoService.purchaseNumber(assignedNumber);
+    if (!purchase.success) throw new BadRequestException('Phone number was not purchased');
 
     // Bind to VoiceConfig
     const config = await this.prisma.voiceConfig.upsert({

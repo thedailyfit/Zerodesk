@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId } from '@/config/niches/types';
@@ -43,7 +44,7 @@ export interface InvoiceRecord {
 }
 
 export const getInvoicesStorageKey = (tenantId?: string | null) => {
-  const tid = tenantId || (typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') : null) || 'default';
+  const tid = tenantId || (typeof window !== 'undefined' ? tenantStorage.getItem('zerodesk_tenant_id') : null) || 'default';
   return `zerodesk_invoices_${tid}`;
 };
 
@@ -54,32 +55,17 @@ export function useInvoices() {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const activeTenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') : null;
+  const activeTenantId = typeof window !== 'undefined' ? tenantStorage.getItem('zerodesk_tenant_id') : null;
   const storageKey = getInvoicesStorageKey(activeTenantId);
 
   const loadInvoices = useCallback(async () => {
     setIsLoading(true);
 
     // 1. Immediately read cached invoices from localStorage
-    let cached: InvoiceRecord[] = [];
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem(storageKey) || localStorage.getItem(INVOICES_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            cached = parsed;
-            setInvoices(cached);
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to parse cached invoices:', e);
-      }
-    }
-
+    setInvoices([]);
     try {
       const data = await api.get<any[]>('/invoices');
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped: InvoiceRecord[] = data.map((inv) => {
           const grandTotal = Number(inv.grandTotal || inv.totalAmount || 0);
           const isPaid = inv.paymentStatus === 'PAID' || inv.status === 'PAID';
@@ -112,15 +98,16 @@ export function useInvoices() {
             id: inv.id,
             invoiceNo: inv.invoiceNumber || `INV-${inv.id.slice(0, 8).toUpperCase()}`,
             nicheId: currentNiche,
+            patientId: inv.customerId || undefined,
             customerName: inv.customerName || inv.customer?.name || 'Customer',
-            phone: inv.customer?.phone || '',
-            email: inv.customer?.email || undefined,
+            phone: inv.customerPhone || inv.phone || inv.customer?.phone || '',
+            email: inv.customerEmail || inv.email || inv.customer?.email || undefined,
             lineItems: items,
             subtotal: inv.subtotal !== undefined && inv.subtotal !== null ? Number(inv.subtotal) : grandTotal,
-            totalGst: inv.taxAmount !== undefined && inv.taxAmount !== null ? Number(inv.taxAmount) : Math.round(grandTotal * 0.18),
-            discountType: 'amount',
-            discountValue: 0,
-            discountAmount: 0,
+            totalGst: inv.taxAmount !== undefined && inv.taxAmount !== null ? Number(inv.taxAmount) : 0,
+            discountType: inv.discountType || 'amount',
+            discountValue: Number(inv.discountValue || 0),
+            discountAmount: Number(inv.discountAmount || 0),
             grandTotal,
             paymentMethod: (inv.paymentMethod?.toLowerCase() as any) || 'upi',
             paymentStatus: (inv.paymentStatus || inv.status || 'PENDING').toUpperCase() as any,
@@ -134,28 +121,11 @@ export function useInvoices() {
           };
         });
 
-        // Merge: keep locally cached invoices not yet returned by backend
-        const backendKeys = new Set(mapped.map((b) => b.id));
-        const backendNumbers = new Set(mapped.map((b) => b.invoiceNo));
-        const localOnly = cached.filter((c) => !backendKeys.has(c.id) && !backendNumbers.has(c.invoiceNo));
-        const merged = [...localOnly, ...mapped];
-
-        setInvoices(merged);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(storageKey, JSON.stringify(merged));
-        }
-      } else if (cached.length > 0) {
-        setInvoices(cached);
-      } else {
-        setInvoices([]);
-      }
+        setInvoices(mapped);
+      } else { setInvoices([]); }
     } catch (e) {
-      console.warn('Could not fetch real invoices, using cache or empty state:', e);
-      if (cached.length > 0) {
-        setInvoices(cached);
-      } else {
-        setInvoices([]);
-      }
+      console.error('Invoices could not be loaded:', e);
+      setInvoices([]);
     } finally {
       setIsLoading(false);
     }
@@ -167,21 +137,7 @@ export function useInvoices() {
 
   // Synchronize across components and tabs
   useEffect(() => {
-    const handleSync = () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem(storageKey) || localStorage.getItem(INVOICES_STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              setInvoices(parsed);
-            }
-          }
-        } catch (e) {
-          console.warn('Failed to parse invoices on sync event:', e);
-        }
-      }
-    };
+    const handleSync = () => { void loadInvoices(); };
 
     window.addEventListener('zerodesk:invoices-updated', handleSync);
     window.addEventListener('storage', handleSync);
@@ -189,102 +145,38 @@ export function useInvoices() {
       window.removeEventListener('zerodesk:invoices-updated', handleSync);
       window.removeEventListener('storage', handleSync);
     };
-  }, [storageKey]);
+  }, [loadInvoices]);
 
-  const addInvoice = useCallback(
-    async (invoiceData: Omit<InvoiceRecord, 'id' | 'invoiceNo'>) => {
-      const currentYear = new Date().getFullYear().toString();
-      const invoiceNo = `INV-${currentYear}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      const createdDate = invoiceData.createdDate
-        ? (invoiceData.createdDate.includes('T') ? invoiceData.createdDate.split('T')[0] : invoiceData.createdDate)
-        : new Date().toISOString().split('T')[0];
-
-      const dueDate = invoiceData.dueDate
-        ? (invoiceData.dueDate.includes('T') ? invoiceData.dueDate.split('T')[0] : invoiceData.dueDate)
-        : new Date().toISOString().split('T')[0];
-
-      const newInvoice: InvoiceRecord = {
-        ...invoiceData,
-        createdDate,
-        dueDate,
-        id: crypto.randomUUID(),
-        invoiceNo,
-      };
-
-      // 1. Immediately prepend to localStorage cache
-      let updated: InvoiceRecord[] = [newInvoice];
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem(storageKey) || localStorage.getItem(INVOICES_STORAGE_KEY);
-          const existing = raw ? JSON.parse(raw) : [];
-          if (Array.isArray(existing)) {
-            updated = [newInvoice, ...existing.filter((i: any) => i.id !== newInvoice.id)];
-          }
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-          window.dispatchEvent(new Event('zerodesk:invoices-updated'));
-        } catch (err) {
-          console.error('Failed to update invoices cache in addInvoice:', err);
-        }
-      }
-
-      setInvoices((prev) => [newInvoice, ...prev.filter((i) => i.id !== newInvoice.id)]);
-
-      try {
-        await api.post('/invoices', {
-          invoiceNumber: newInvoice.invoiceNo,
-          customerName: newInvoice.customerName,
-          subtotal: newInvoice.subtotal,
-          taxAmount: newInvoice.totalGst,
-          totalAmount: newInvoice.grandTotal,
-          paidAmount: newInvoice.paidAmount,
-          status: newInvoice.paymentStatus,
-          paymentMethod: newInvoice.paymentMethod.toUpperCase(),
-          notes: newInvoice.notes,
-          dueDate: newInvoice.dueDate,
-          items: newInvoice.lineItems.map((li) => ({
-            description: li.serviceName,
-            quantity: li.quantity,
-            unitPrice: li.unitPrice,
-            totalPrice: li.totalPrice,
-          })),
-        });
-      } catch (err) {
-        console.error('Failed to create invoice on backend:', err);
-      }
-    },
-    [storageKey]
-  );
-
-  const updateInvoice = useCallback((id: string, updates: Partial<InvoiceRecord>) => {
-    setInvoices((prev) => {
-      const updated = prev.map((inv) => (inv.id === id ? { ...inv, ...updates } : inv));
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-          window.dispatchEvent(new Event('zerodesk:invoices-updated'));
-        } catch (e) {
-          console.warn('Failed to update invoices cache on update:', e);
-        }
-      }
-      return updated;
+  const addInvoice = useCallback(async (data: Omit<InvoiceRecord, 'id' | 'invoiceNo'>) => {
+    const created = await api.post<any>('/invoices', {
+      customerId: data.patientId, customerName: data.customerName, phone: data.phone, email: data.email,
+      subtotal: data.subtotal, taxAmount: data.totalGst, totalAmount: data.grandTotal,
+      paidAmount: data.paidAmount, discountType: data.discountType,
+      discountValue: data.discountValue, discountAmount: data.discountAmount,
+      status: data.paymentStatus, paymentMethod: data.paymentMethod.toUpperCase(),
+      notes: data.notes, dueDate: data.dueDate.split('T')[0],
+      items: data.lineItems.map(li => ({ ...li, description: li.serviceName })),
     });
-  }, [storageKey]);
+    if (!created?.id) throw new Error('Invoice was not saved. Please retry.');
+    await loadInvoices();
+    window.dispatchEvent(new Event('zerodesk:invoices-updated'));
+    return created;
+  }, [loadInvoices]);
 
-  const deleteInvoice = useCallback((id: string) => {
-    setInvoices((prev) => {
-      const updated = prev.filter((inv) => inv.id !== id);
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-          window.dispatchEvent(new Event('zerodesk:invoices-updated'));
-        } catch (e) {
-          console.warn('Failed to update invoices cache on delete:', e);
-        }
-      }
-      return updated;
+  const updateInvoice = useCallback(async (id: string, updates: Partial<InvoiceRecord>) => {
+    await api.put(`/invoices/${id}`, {
+      status: updates.paymentStatus, paidAmount: updates.paidAmount,
+      paymentMethod: updates.paymentMethod?.toUpperCase(), notes: updates.notes,
     });
-  }, [storageKey]);
+    await loadInvoices();
+    window.dispatchEvent(new Event('zerodesk:invoices-updated'));
+  }, [loadInvoices]);
+
+  const deleteInvoice = useCallback(async (id: string) => {
+    await api.delete(`/invoices/${id}`);
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+    window.dispatchEvent(new Event('zerodesk:invoices-updated'));
+  }, []);
 
   const getInvoicesByPatientId = useCallback(
     (patientId: string) => {
@@ -313,7 +205,7 @@ export function useInvoices() {
 
   const totalInvoiced = useMemo(() => invoices.reduce((sum, inv) => sum + inv.grandTotal, 0), [invoices]);
   const totalCollected = useMemo(
-    () => invoices.filter((inv) => inv.paymentStatus === 'PAID').reduce((sum, inv) => sum + inv.paidAmount, 0),
+    () => invoices.reduce((sum, inv) => sum + inv.paidAmount, 0),
     [invoices]
   );
   const totalPending = useMemo(

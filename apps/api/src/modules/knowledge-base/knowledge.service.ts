@@ -1,7 +1,7 @@
 import { Injectable, Logger, Inject, forwardRef, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
-import { RagService } from './rag.service';
+import { RagService, INDEX_PENDING } from './rag.service';
 
 const { PDFParse } = require('pdf-parse');
 const mammoth = require('mammoth');
@@ -41,6 +41,7 @@ export class KnowledgeService {
   }
 
   async updateDocument(tenantId: string, id: string, data: { title?: string; content?: string; category?: string }) {
+    if (data.content !== undefined && (typeof data.content !== 'string' || !data.content.trim() || Buffer.byteLength(data.content, 'utf8') > 2 * 1024 * 1024)) throw new BadRequestException('Document content must contain 1 byte to 2 MB of text');
     const doc = await this.prisma.knowledgeDocument.findFirst({
       where: { id, tenantId },
     });
@@ -52,12 +53,13 @@ export class KnowledgeService {
         title: data.title !== undefined ? data.title : doc.title,
         content: data.content !== undefined ? data.content : doc.content,
         category: data.category !== undefined ? data.category : doc.category,
+        ...(data.content !== undefined && data.content !== doc.content ? { errorMessage: INDEX_PENDING } : {}),
       },
     });
 
     if (data.content && data.content !== doc.content) {
       this.logger.log(`Document ${id} content updated. Triggering versioned atomic re-indexing...`);
-      this.ragService.indexDocument(tenantId, id).catch((err) => {
+      await this.ragService.enqueueIndexDocument(tenantId, id).catch((err) => {
         this.logger.error(`Failed to re-index document ${id}: ${err.message}`);
       });
     }
@@ -94,6 +96,10 @@ export class KnowledgeService {
     }
 
     const filename = file.originalname || 'document.txt';
+      if (file.buffer.length > 10 * 1024 * 1024) throw new BadRequestException('Document exceeds 10 MB');
+      if (!/\.(pdf|docx|txt|md|csv)$/i.test(filename)) throw new BadRequestException('Supported documents: PDF, DOCX, TXT, Markdown and CSV');
+      if (/\.pdf$/i.test(filename) && file.buffer.subarray(0, 5).toString() !== '%PDF-') throw new BadRequestException('Invalid PDF header');
+      if (/\.docx$/i.test(filename) && file.buffer.subarray(0, 2).toString() !== 'PK') throw new BadRequestException('Invalid DOCX archive');
     const cleanTitle = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
     const title = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
     let extractedText = '';
@@ -134,6 +140,8 @@ export class KnowledgeService {
    * High-performance document processing with table-aware RAG chunk embedding.
    */
   async processAndEmbedDocument(tenantId: string, title: string, content: string, category = 'GENERAL') {
+      if (typeof content !== 'string' || !content.trim()) throw new BadRequestException('Document content cannot be empty');
+      if (Buffer.byteLength(content, 'utf8') > 2 * 1024 * 1024) throw new BadRequestException('Extracted document exceeds 2 MB of text');
     this.logger.log(`Starting knowledge document processing for tenant ${tenantId}: "${title}"`);
 
     const doc = await this.prisma.knowledgeDocument.create({
@@ -143,11 +151,13 @@ export class KnowledgeService {
         category,
         content,
         sourceType: 'MANUAL',
+        status: 'PENDING',
+        errorMessage: INDEX_PENDING,
       },
     });
 
     // Delegate indexing to table-aware RagService
-    this.ragService.indexDocument(tenantId, doc.id).catch((err) => {
+    await this.ragService.enqueueIndexDocument(tenantId, doc.id).catch((err) => {
       this.logger.error(`Failed to process document ${doc.id}: ${err.message}`, err.stack);
     });
 
@@ -155,7 +165,7 @@ export class KnowledgeService {
       id: doc.id,
       title: doc.title,
       category: doc.category,
-      message: 'Document uploaded. Table-aware chunking and pgvector embedding started.',
+      message: 'Document saved. Indexing is pending background processing.',
     };
   }
 }

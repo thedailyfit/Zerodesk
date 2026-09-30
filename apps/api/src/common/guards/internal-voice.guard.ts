@@ -22,13 +22,13 @@ export class InternalVoiceGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid internal voice worker credentials');
     }
 
-    let tenantId = request.headers['x-tenant-id'] || request.body?.tenantId || request.query?.tenantId;
-    if (!tenantId) {
+    const supplied = [request.headers['x-tenant-id'], request.body?.tenantId, request.query?.tenantId].filter(value => value !== undefined);
+    if (!supplied.length || supplied.some(value => typeof value !== 'string' || !value.trim() || ['default', 'default_business'].includes(value.trim()))) {
       throw new UnauthorizedException('Missing x-tenant-id header or tenantId parameter for voice operation');
     }
-
-    if (tenantId === 'default_business' || tenantId === 'default') {
-      tenantId = '08f1fadd-59eb-4d07-9ee3-65a2d9a321e3';
+    const tenantId = supplied[0].trim();
+    if (supplied.some(value => value.trim() !== tenantId)) {
+      throw new UnauthorizedException('Conflicting tenant identifiers');
     }
 
     request.tenantId = tenantId;

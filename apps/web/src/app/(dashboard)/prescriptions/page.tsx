@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -92,13 +93,7 @@ export default function PrescriptionsPage() {
   const [patientAge, setPatientAge] = useState('');
   const [patientGender, setPatientGender] = useState<'Female' | 'Male' | 'Other'>('Female');
   const [patientPhone, setPatientPhone] = useState('');
-  const [diagnosis, setDiagnosis] = useState(
-    currentNiche === 'dental' 
-      ? 'Acute Irreversible Pulpitis' 
-      : currentNiche === 'spa'
-        ? 'Muscle Tension & Fatigue Relief'
-        : 'Acne Vulgaris (Grade 2)'
-  );
+  const [diagnosis, setDiagnosis] = useState('');
   const [advice, setAdvice] = useState(
     currentNiche === 'dental' 
       ? 'Avoid hard or chewing food on the affected side. Warm saline gargle 3 times a day starting 24h post procedure.'
@@ -116,12 +111,12 @@ export default function PrescriptionsPage() {
 
   // Load from localStorage
   useEffect(() => {
-    const savedTemplate = localStorage.getItem(`zd_rx_template_${currentNiche}`);
+    const savedTemplate = tenantStorage.getItem(`zd_rx_template_${currentNiche}`);
     if (savedTemplate) {
       try {
         const parsed = JSON.parse(savedTemplate);
         if (parsed?.phone === '+91 98765 43210' || (parsed?.address || '').includes('Indiranagar 100ft Road')) {
-          localStorage.removeItem(`zd_rx_template_${currentNiche}`);
+          tenantStorage.removeItem(`zd_rx_template_${currentNiche}`);
         } else {
           setLetterhead(parsed);
         }
@@ -130,7 +125,7 @@ export default function PrescriptionsPage() {
       }
     }
 
-    const savedHistory = localStorage.getItem(`zd_prescriptions_${currentNiche}`);
+    const savedHistory = tenantStorage.getItem(`zd_prescriptions_${currentNiche}`);
     if (savedHistory) {
       try {
         setPastPrescriptions(JSON.parse(savedHistory));
@@ -141,7 +136,7 @@ export default function PrescriptionsPage() {
   }, [currentNiche]);
 
   const saveLetterheadConfig = () => {
-    localStorage.setItem(`zd_rx_template_${currentNiche}`, JSON.stringify(letterhead));
+    tenantStorage.setItem(`zd_rx_template_${currentNiche}`, JSON.stringify(letterhead));
     setToastMessage('Prescription Letterhead & Clinic Template saved successfully!');
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -194,7 +189,7 @@ export default function PrescriptionsPage() {
 
     const updated = [newRx, ...pastPrescriptions];
     setPastPrescriptions(updated);
-    localStorage.setItem(`zd_prescriptions_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zd_prescriptions_${currentNiche}`, JSON.stringify(updated));
     setToastMessage(`${nicheConfig.id === 'spa' ? 'Care Plan' : 'Prescription'} ${rxNumber} saved to ${nicheConfig.terminology?.customer || 'Guest'} archive!`);
     setTimeout(() => setToastMessage(null), 4000);
   };

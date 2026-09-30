@@ -47,9 +47,9 @@ export class TenantPrismaService {
       client: this.getExtendedClient(tenantId),
       customers: {
         findMany: (args: any = {}) =>
-          this.prisma.customer.findMany({ ...args, where: { ...args.where, tenantId } }),
+          this.prisma.customer.findMany({ ...args, where: { ...args.where, tenantId, deletedAt: null } }),
         findFirst: (args: any = {}) =>
-          this.prisma.customer.findFirst({ ...args, where: { ...args.where, tenantId } }),
+          this.prisma.customer.findFirst({ ...args, where: { ...args.where, tenantId, deletedAt: null } }),
         create: (args: any) =>
           this.prisma.customer.create({ ...args, data: { ...args.data, tenantId } }),
         update: (args: any) =>
@@ -58,7 +58,7 @@ export class TenantPrismaService {
             where: { ...args.where, tenantId },
           }),
         count: (args: any = {}) =>
-          this.prisma.customer.count({ ...args, where: { ...args.where, tenantId } }),
+          this.prisma.customer.count({ ...args, where: { ...args.where, tenantId, deletedAt: null } }),
       },
     };
   }

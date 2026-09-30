@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -59,7 +60,7 @@ export default function ToneCheckPage() {
   const [isSimulating, setIsSimulating] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_tone_check_${currentNiche}`);
+    const saved = tenantStorage.getItem(`zerodesk_tone_check_${currentNiche}`);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -85,7 +86,7 @@ export default function ToneCheckPage() {
       deescalationPrompt,
       negativeKeywords
     };
-    localStorage.setItem(`zerodesk_tone_check_${currentNiche}`, JSON.stringify(payload));
+    tenantStorage.setItem(`zerodesk_tone_check_${currentNiche}`, JSON.stringify(payload));
     showToast('Negative Tone Analysis engine & empathy prompts successfully updated!');
   };
 

@@ -37,6 +37,9 @@ async function bootstrap() {
   // CORS Configuration
   const rawOrigins = process.env.CORS_ORIGINS || 'http://localhost:3000';
   const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+  if (process.env.NODE_ENV === 'production' && (!process.env.CORS_ORIGINS || allowedOrigins.includes('*'))) {
+    throw new Error('Production requires explicit CORS_ORIGINS without wildcards');
+  }
 
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -71,8 +74,10 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
 
   const port = process.env.PORT || process.env.API_PORT || 4000;
   await app.listen(port, '0.0.0.0');

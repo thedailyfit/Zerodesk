@@ -2,12 +2,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
+import { useNiche } from '@/components/providers/niche-provider';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { Calendar, Clock, CheckCircle2, AlertCircle, Plus, FileText, ArrowUpRight } from 'lucide-react';
 
 export default function StaffDashboardPage() {
   const { user } = useUser();
+  const { nicheConfig } = useNiche();
+  const customerTerm = nicheConfig?.terminology?.customer || 'Client';
+  const staffTerm = nicheConfig?.terminology?.staff || 'Staff';
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<any[]>([]);
 
@@ -24,8 +28,8 @@ export default function StaffDashboardPage() {
               const dateObj = new Date(a.scheduledAt || a.date);
               return {
                 id: a.id,
-                patient: a.customer?.name || 'Inquiry Patient',
-                service: a.service?.name || 'Clinic Consultation',
+                patient: a.customer?.name || `Inquiry ${customerTerm}`,
+                service: a.service?.name || 'General Session',
                 time: isNaN(dateObj.getTime()) ? '10:00 AM' : dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
                 status: a.status === 'COMPLETED' ? 'COMPLETED' : a.status === 'IN_PROGRESS' ? 'IN PROGRESS' : 'UPCOMING',
                 rawDate: dateObj,
@@ -43,7 +47,9 @@ export default function StaffDashboardPage() {
     loadStaffData();
   }, []);
 
-  const staffName = user?.firstName ? `Dr. ${user.firstName}` : 'Practitioner';
+  const isMedicalNiche = nicheConfig?.id === 'skin' || nicheConfig?.id === 'dental';
+  const staffPrefix = isMedicalNiche ? 'Dr. ' : '';
+  const staffName = user?.firstName ? `${staffPrefix}${user.firstName}` : staffTerm;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -81,16 +87,16 @@ export default function StaffDashboardPage() {
         style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}
       >
         <motion.div variants={itemVariants}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>My Practice Dashboard</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>My Daily Schedule</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '1.2rem' }}>Welcome, {staffName} 👋</p>
         </motion.div>
 
         {/* KPIs */}
         <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
           {[
-            { label: 'Appointments Today', value: String(appointments.length), highlight: true },
-            { label: 'Patients Seen', value: String(completedCount) },
-            { label: 'Next Patient In', value: nextAppt ? `${nextAppt.time}` : 'None pending' },
+            { label: `${nicheConfig?.terminology?.appointments || 'Appointments'} Today`, value: String(appointments.length), highlight: true },
+            { label: `${nicheConfig?.terminology?.customers || 'Clients'} Seen`, value: String(completedCount) },
+            { label: `Next ${customerTerm} In`, value: nextAppt ? `${nextAppt.time}` : 'None pending' },
             { label: 'Avg Session Time', value: '30 min' }
           ].map((kpi, idx) => (
             <motion.div

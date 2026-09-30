@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
@@ -100,7 +101,7 @@ export default function HumanHandoffPromptsPage() {
   ]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`zerodesk_handoff_prompts_${currentNiche}`);
+    const saved = tenantStorage.getItem(`zerodesk_handoff_prompts_${currentNiche}`);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -131,7 +132,7 @@ export default function HumanHandoffPromptsPage() {
       staffPhone,
       triggers
     };
-    localStorage.setItem(`zerodesk_handoff_prompts_${currentNiche}`, JSON.stringify(payload));
+    tenantStorage.setItem(`zerodesk_handoff_prompts_${currentNiche}`, JSON.stringify(payload));
     showToast('Human Hand-off configuration & transition prompts successfully saved!');
   };
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -103,7 +104,7 @@ export default function WhatsappPage() {
   // Load niche templates with persistent localStorage
   useEffect(() => {
     const key = `zd_wa_templates_${currentNiche}`;
-    const saved = localStorage.getItem(key);
+    const saved = tenantStorage.getItem(key);
     if (saved) {
       try {
         setTemplates(JSON.parse(saved));
@@ -114,7 +115,7 @@ export default function WhatsappPage() {
     }
     const defaultTemplates = NICHE_SEQUENCE_TEMPLATES[currentNiche] || NICHE_SEQUENCE_TEMPLATES.skin;
     setTemplates(defaultTemplates);
-    localStorage.setItem(key, JSON.stringify(defaultTemplates));
+    tenantStorage.setItem(key, JSON.stringify(defaultTemplates));
   }, [currentNiche]);
 
   const toggleTemplate = (id: string) => {
@@ -131,7 +132,7 @@ export default function WhatsappPage() {
       return t;
     });
     setTemplates(updated);
-    localStorage.setItem(`zd_wa_templates_${currentNiche}`, JSON.stringify(updated));
+    tenantStorage.setItem(`zd_wa_templates_${currentNiche}`, JSON.stringify(updated));
   };
 
   useEffect(() => {

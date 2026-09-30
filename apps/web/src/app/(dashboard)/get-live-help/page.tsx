@@ -1,5 +1,6 @@
 'use client';
 
+import { tenantStorage } from '@/lib/tenant-storage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -30,6 +31,7 @@ interface SupportTicket {
   priority: 'High' | 'Medium' | 'Low';
   status: 'Open' | 'In Progress' | 'Resolved';
   createdAt: string;
+  resolutionNote?: string;
 }
 
 const DEFAULT_TICKETS_BY_NICHE: Record<NicheId, SupportTicket[]> = {
@@ -42,60 +44,30 @@ export default function GetLiveHelpPage() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoBooked, setVideoBooked] = useState(false);
 
-  const tenantId = typeof window !== 'undefined' ? localStorage.getItem('zerodesk_tenant_id') || 'default' : 'default';
-  const storageKey = `zerodesk_support_tickets_${tenantId}_${currentNiche}`;
-
-  // Load from server and merge with localStorage cache
+  const mapTicket = (t: any): SupportTicket => ({
+    id: t.id, ticketNumber: `ZD-${t.id.slice(0, 6).toUpperCase()}`, subject: t.subject,
+    category: t.category || 'Technical Issue', priority: t.priority === 'HIGH' ? 'High' : t.priority === 'LOW' ? 'Low' : 'Medium',
+    status: t.status === 'RESOLVED' ? 'Resolved' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Open',
+    createdAt: new Date(t.createdAt).toLocaleDateString(), resolutionNote: t.metadata?.resolutionNote,
+  });
   useEffect(() => {
-    let cached: SupportTicket[] = [];
+    let cancelled = false;
+    const load = () => api.get<any[]>('/support/tickets').then(data => {
+      if (!cancelled) setTickets(data.map(mapTicket));
+    }).catch(() => { if (!cancelled) { setTickets([]); toast.error('Support tickets could not be loaded.'); } });
+    void load();
+    window.addEventListener('focus', load);
+    return () => { cancelled = true; window.removeEventListener('focus', load); };
+  }, [currentNiche]);
+  const requestVideoSession = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          cached = parsed;
-          setTickets(cached);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load cached support tickets', e);
-    }
-
-    api.get<any[]>('/support/tickets')
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: SupportTicket[] = data.map((t) => ({
-            id: t.id,
-            ticketNumber: `ZD-${t.id.slice(0, 6).toUpperCase()}`,
-            subject: t.subject,
-            category: t.category || 'Technical Issue',
-            priority: (t.priority === 'HIGH' ? 'High' : t.priority === 'LOW' ? 'Low' : 'Medium') as any,
-            status: (t.status === 'RESOLVED' ? 'Resolved' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Open') as any,
-            createdAt: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : 'Recent',
-          }));
-
-          const serverIds = new Set(mapped.map((m) => m.id));
-          const localOnly = cached.filter((c) => !serverIds.has(c.id));
-          const merged = [...mapped, ...localOnly];
-
-          setTickets(merged);
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(merged));
-          } catch (err) {}
-        }
-      })
-      .catch((err) => {
-        console.warn('Could not fetch server tickets, relying on cache:', err);
-      });
-  }, [currentNiche, storageKey]);
-
-  const saveTickets = (newTickets: SupportTicket[]) => {
-    setTickets(newTickets);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(newTickets));
-    } catch (e) {
-      console.error('Failed to save support tickets', e);
-    }
+      const ticket = await api.post<any>('/support/tickets', { subject: 'Video onboarding request', description: 'Please contact me to arrange a video onboarding session. No meeting time has been confirmed.', category: 'Onboarding', priority: 'MEDIUM' });
+      setTickets(prev => [mapTicket(ticket), ...prev]);
+      setVideoBooked(true);
+    } catch { toast.error('The onboarding request could not be submitted. Please retry.'); }
+    finally { setIsSubmitting(false); }
   };
   
   // Ticket Form
@@ -119,33 +91,8 @@ export default function GetLiveHelpPage() {
         priority: priority.toUpperCase(),
       });
 
-      const newTicket: SupportTicket = {
-        id: serverTicket?.id || `t-${crypto.randomUUID()}`,
-        ticketNumber: serverTicket?.id ? `ZD-${serverTicket.id.slice(0, 6).toUpperCase()}` : `ZD-2026-${String(Math.floor(100 + Math.random() * 900))}`,
-        subject: subject.trim(),
-        category,
-        priority,
-        status: 'Open',
-        createdAt: 'Just now'
-      };
-
-      saveTickets([newTicket, ...tickets]);
-
-      try {
-        const businessName = typeof window !== 'undefined' ? localStorage.getItem('zerodesk-business-name') || (currentNiche === 'spa' ? 'Serenity Wellness Spa' : 'ZeroDesk Workspace') : 'ZeroDesk Workspace';
-        const globalKey = 'zerodesk_global_support_tickets';
-        const existingGlobal = JSON.parse(localStorage.getItem(globalKey) || '[]');
-        const globalTicket = {
-          ...newTicket,
-          tenantName: businessName,
-          niche: currentNiche,
-          description: description.trim()
-        };
-        localStorage.setItem(globalKey, JSON.stringify([globalTicket, ...existingGlobal]));
-        window.dispatchEvent(new Event('zerodesk:support-ticket-created'));
-      } catch (err) {
-        console.warn('Could not sync to global support queue', err);
-      }
+      if (!serverTicket?.id) throw new Error('Ticket ID missing');
+      setTickets(prev => [mapTicket(serverTicket), ...prev]);
 
       setSubmitSuccess(true);
       toast.success('Support ticket submitted successfully!');
@@ -179,7 +126,7 @@ export default function GetLiveHelpPage() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Support Engineers Online
+            Support Ticket Service
           </span>
         </div>
       </div>
@@ -200,7 +147,7 @@ export default function GetLiveHelpPage() {
           {submitSuccess && (
             <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
               <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
-              <span>Ticket submitted successfully! ZeroDesk operations team will respond within 2-4 hours.</span>
+              <span>Ticket submitted successfully! Your request is recorded for the operations team.</span>
             </div>
           )}
 
@@ -297,7 +244,7 @@ export default function GetLiveHelpPage() {
 
             <div className="space-y-2.5">
               <a
-                href="https://wa.me/919876543210"
+                href="mailto:support@zerodesk.in"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs font-bold group"
@@ -369,7 +316,7 @@ export default function GetLiveHelpPage() {
                         {t.status}
                       </span>
                     </div>
-                    <p className="font-semibold text-[var(--color-text)] line-clamp-1">{t.subject}</p>
+                    <p className="font-semibold text-[var(--color-text)] line-clamp-1">{t.subject}{t.resolutionNote ? ` — ${t.resolutionNote}` : ''}</p>
                     <div className="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] pt-1">
                       <span>{t.category}</span>
                       <span>{t.createdAt}</span>
@@ -412,9 +359,9 @@ export default function GetLiveHelpPage() {
               {videoBooked ? (
                 <div className="py-6 text-center space-y-2">
                   <CheckCircle2 size={44} className="text-emerald-400 mx-auto animate-bounce" />
-                  <h4 className="font-bold text-sm text-[var(--color-text)]">Walkthrough Session Reserved!</h4>
+                  <h4 className="font-bold text-sm text-[var(--color-text)]">Onboarding Request Submitted!</h4>
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    A Google Meet link and calendar invite have been sent to your registered account email.
+                    Support will confirm a time and meeting link separately. No calendar invitation has been sent yet.
                   </p>
                 </div>
               ) : (
@@ -426,7 +373,7 @@ export default function GetLiveHelpPage() {
                   <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-1 text-xs">
                     <div className="flex items-center gap-2 text-blue-400 font-bold">
                       <Calendar size={14} />
-                      <span>Next Available: Today at 04:00 PM IST</span>
+                      <span>Availability: awaiting support confirmation</span>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)]">Duration: 30 minutes • Google Meet</p>
                   </div>
@@ -441,16 +388,11 @@ export default function GetLiveHelpPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setVideoBooked(true);
-                        setTimeout(() => {
-                          setIsVideoModalOpen(false);
-                          setVideoBooked(false);
-                        }, 2500);
-                      }}
+                      onClick={requestVideoSession}
+                      disabled={isSubmitting}
                       className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all"
                     >
-                      Confirm Session
+                      Request Session
                     </button>
                   </div>
                 </div>
