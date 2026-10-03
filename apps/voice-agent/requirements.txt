@@ -1,9 +1,7 @@
-livekit-agents
-livekit-plugins-openai
-livekit-plugins-sarvam
-livekit-plugins-elevenlabs
-livekit-plugins-silero
-livekit-plugins-deepgram
-livekit-plugins-cartesia
-python-dotenv
-aiohttp
+livekit-agents==1.7.1
+livekit-plugins-openai==1.7.1
+livekit-plugins-sarvam==1.7.1
+livekit-plugins-elevenlabs==1.7.1
+livekit-plugins-silero==1.7.1
+python-dotenv==1.2.2
+aiohttp==3.14.3

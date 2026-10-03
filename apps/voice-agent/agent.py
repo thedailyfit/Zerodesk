@@ -38,21 +38,6 @@ from livekit.plugins import openai, sarvam, elevenlabs, silero
 from livekit.agents import llm
 from runtime_config import build_llm
 
-try:
-    from livekit.plugins import groq
-except ImportError:
-    groq = None
-
-try:
-    from livekit.plugins import deepgram
-except ImportError:
-    deepgram = None
-
-try:
-    from livekit.plugins import cartesia
-except ImportError:
-    cartesia = None
-
 # Load .env variables
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -137,10 +122,14 @@ def extract_call_context(ctx: JobContext) -> CallContext:
     maps_url = ""
     participant_identity = ""
 
+    # The dispatch snapshot is available before joining the room.
+    room_snapshot = getattr(getattr(ctx, "job", None), "room", None)
+    room_metadata = ctx.room.metadata or getattr(room_snapshot, "metadata", "")
+    room_name = ctx.room.name or getattr(room_snapshot, "name", "")
     # 1. Parse Room Metadata
-    if ctx.room and ctx.room.metadata:
+    if room_metadata:
         try:
-            meta = json.loads(ctx.room.metadata)
+            meta = json.loads(room_metadata)
             tenant_id = meta.get("tenant_id") or meta.get("tenantId", "")
             caller_phone = meta.get("caller_phone") or meta.get("phoneNumber", "")
             clinic_name = meta.get("business_name") or meta.get("businessName") or meta.get("clinic_name") or meta.get("clinicName", clinic_name)
@@ -175,12 +164,11 @@ def extract_call_context(ctx: JobContext) -> CallContext:
                     caller_phone = clean_id
 
     # 4. Fallback: Parse Room Name (tenant_<tenantId>_...)
-    if not tenant_id and ctx.room and ctx.room.name:
-        match = re.match(r"^tenant_([^_]+)", ctx.room.name)
+    if not tenant_id and room_name:
+        match = re.match(r"^tenant_([^_]+)", room_name)
         if match:
             tenant_id = match.group(1)
 
-    tenant_id = tenant_id or os.getenv("DEFAULT_TENANT_ID", "")
     if not tenant_id or tenant_id == "default_business" or tenant_id == "default":
         logger.warning(f"Could not resolve tenant_id from room {ctx.room.name if ctx.room else 'unknown'}")
         tenant_id = None
@@ -192,7 +180,7 @@ def extract_call_context(ctx: JobContext) -> CallContext:
         clinic_address=clinic_address,
         booking_url=booking_url,
         maps_url=maps_url,
-        room_name=ctx.room.name if ctx.room else "",
+        room_name=room_name,
         participant_identity=participant_identity,
     )
 
@@ -477,10 +465,11 @@ async def notify_call_completion(call_ctx: CallContext, status: str = "COMPLETED
 
 async def entrypoint(ctx: JobContext):
     """Triggered on every incoming call dispatched by LiveKit."""
-    await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
-
     # 1. Thread-safe call context extraction
     call_ctx = extract_call_context(ctx)
+    if not call_ctx.tenant_id or not INTERNAL_VOICE_SECRET:
+        logger.error("Voice startup refused: tenant routing or internal API credential missing")
+        raise RuntimeError("Verified tenant routing and internal API credential required")
     logger.info(
         f"New call connected - Room: {call_ctx.room_name}, Tenant: {call_ctx.tenant_id}"
     )
@@ -528,33 +517,20 @@ async def entrypoint(ctx: JobContext):
         logger.debug(f"Dynamic voice prompt fetch skipped: {e}")
 
     if not system_prompt or not runtime_config:
+        logger.error("Voice startup refused: active tenant configuration unavailable")
         raise RuntimeError("Verified tenant voice configuration unavailable; refusing default AI execution")
 
+    try:
+        selected_llm = build_llm(runtime_config, openai.LLM, llm.FallbackAdapter)
+    except ValueError as exc:
+        logger.error("Voice startup refused: %s", exc)
+        raise
+    cloud_speech_configured = all(os.getenv(key, "").strip() for key in ("LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"))
+    if not os.getenv("SARVAM_API_KEY", "").strip() and not cloud_speech_configured:
+        logger.error("Voice startup refused: speech provider credentials missing")
+        raise RuntimeError("Speech provider credentials required")
+
     preferred_language = locals().get("preferred_language", os.getenv("DEFAULT_VOICE_LANGUAGE", "en-IN"))
-
-    if not system_prompt:
-        system_prompt = f"""You are the warm, natural, highly professional AI front desk receptionist for {call_ctx.clinic_name}.
-You assist callers with scheduling appointments, providing clinic/business information, and answering service queries using the tools available to you.
-
-GENERAL GUIDELINES:
-- When asked about prices, treatments, or doctor schedules, use your available tools (get_pricing, query_knowledge_base) or offer to connect with our staff. Never invent fees, practitioner names, or treatments.
-- Offer to send booking links or details to the caller's WhatsApp when helpful.
-
-CRITICAL SPOKEN VOICE RULES (ABSOLUTE REQUIREMENT FOR NATURAL HUMAN SPEECH):
-- This is a live voice phone call speaking directly into the caller's ear.
-- NEVER, under any circumstance, say or output words like "Response:", "Action:", "Thought:", "Observation:", "Assistant:", or "Doctor:".
-- NEVER say what internal step you are performing (e.g. do NOT say "I will look that up in the database" or "Calling function"). Speak directly to the caller.
-- NEVER output markdown formatting (**bold**, *italics*, bullet points, asterisks, hashtags, or numbered lists). Speak in smooth, natural sentences.
-- Keep every response short, conversational, and direct: 1 to 2 sentences maximum. Phone callers want quick, clear answers.
-
-MANDATORY MULTI-LINGUAL LANGUAGE PROTOCOL:
-- If the caller speaks Telugu or Telinglish, reply in polite conversational Telinglish.
-- If the caller speaks Hindi or Hinglish, reply in polite conversational Hinglish.
-- If the caller speaks English, reply in a warm, polite professional tone.
-
-EMERGENCY PROTOCOL:
-- If caller reports acute pain, severe trauma, bleeding, or life-threatening distress, advise immediate emergency hospital visit or calling 108/112, and offer to notify human staff immediately.
-"""
 
     if customer_info and isinstance(customer_info, dict):
         cust_name = customer_info.get("name", "")
@@ -598,7 +574,7 @@ Acknowledge returning caller warmly by name and reference their appointment when
         except Exception as e:
             logger.warning(f"Sarvam Saaras STT init failed: {e}")
 
-    if not selected_stt:
+    if not selected_stt and cloud_speech_configured:
         try:
             selected_stt = inference.STT(model="deepgram/nova-2")
             logger.info("Falling back to LiveKit Cloud Deepgram Nova-2 STT")
@@ -634,7 +610,7 @@ Acknowledge returning caller warmly by name and reference their appointment when
         except Exception as e:
             logger.warning(f"ElevenLabs TTS check failed ({e})")
 
-    if not selected_tts:
+    if not selected_tts and cloud_speech_configured:
         try:
             selected_tts = inference.TTS(model="cartesia/sonic")
             logger.info("Using LiveKit Cloud native TTS inference (cartesia/sonic)")
@@ -642,7 +618,15 @@ Acknowledge returning caller warmly by name and reference their appointment when
             selected_tts = inference.TTS(model="deepgram/aura-2")
 
     # Tenant routing settings are loaded for each new call.
-    selected_llm = build_llm(runtime_config, openai.LLM, llm.FallbackAdapter)
+    if selected_stt is None or selected_tts is None:
+        logger.error("Voice startup refused: configured speech providers failed initialization")
+        raise RuntimeError("Configured speech providers unavailable")
+    await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
+    connected_context = extract_call_context(ctx)
+    if connected_context.tenant_id != call_ctx.tenant_id:
+        raise RuntimeError("Tenant routing changed after room connection")
+    call_ctx.caller_phone = call_ctx.caller_phone or connected_context.caller_phone
+    call_ctx.participant_identity = connected_context.participant_identity
 
     # 8. AgentSession configured with telephony echo and background static protection
     session = AgentSession(

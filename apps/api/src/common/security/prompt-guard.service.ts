@@ -30,7 +30,7 @@ export class PromptGuardService {
     for (const pattern of this.dangerousPatterns) {
       if (pattern.test(sanitized)) {
         isInjected = true;
-        this.logger.warn(`[SECURITY ALERT] Prompt injection detected: "${sanitized.substring(0, 100)}..."`);
+        this.logger.warn("[SECURITY ALERT] Prompt injection detected: \"[redacted]...\"");
         sanitized = sanitized.replace(pattern, '[Redacted query]');
       }
     }

@@ -46,7 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             client.data.tenantId = user.tenantId;
             client.data.userId = user.id;
             client.join(`tenant:${user.tenantId}`);
-            this.logger.log(`Authenticated client ${client.id} joined room tenant:${user.tenantId}`);
+            this.logger.log("Authenticated client [redacted] joined room tenant:[redacted]");
             return;
           }
         }
@@ -63,28 +63,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           client.data.tenantId = tenant.id;
           client.data.sessionId = client.id;
           client.join(`visitor:${client.id}`);
-          this.logger.log(`Visitor ${client.id} joined session for tenant ${tenant.slug}`);
+          this.logger.log("Visitor [redacted] joined session for tenant [redacted]");
           return;
         }
       }
 
-      this.logger.warn(`Client ${client.id} connected without verified tenant credentials — disconnecting`);
+      this.logger.warn("Client [redacted] connected without verified tenant credentials — disconnecting");
       client.disconnect(true);
       return;
     } catch (err: any) {
-      this.logger.warn(`Failed socket authentication for ${client.id}: ${err.message}`);
+      this.logger.warn("Failed socket authentication for [redacted]: [redacted]");
       client.disconnect(true);
     }
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client ${client.id} disconnected`);
+    this.logger.log("Client [redacted] disconnected");
   }
 
   @SubscribeMessage('joinTenant')
   handleJoinTenant(@MessageBody() data: { tenantId: string }, @ConnectedSocket() client: Socket) {
     if (!client.data.tenantId || client.data.tenantId !== data.tenantId || client.data.isVisitor) {
-      this.logger.warn(`Unauthorized attempt by ${client.id} to join tenant ${data.tenantId}`);
+      this.logger.warn("Unauthorized attempt by [redacted] to join tenant [redacted]");
       return { status: 'error', message: 'Unauthorized to join this tenant room' };
     }
     client.join(`tenant:${data.tenantId}`);

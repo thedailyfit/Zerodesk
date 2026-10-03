@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+import { validPlivoSignature, plivoFollowUpStatus } from './plivo-callback';
 import { voiceInstructions, validateVoiceInstructions } from '../ai/voice-instructions';
 import { Injectable, Logger, UnauthorizedException, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +13,13 @@ import { PromptGuardService } from '../../common/security/prompt-guard.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { PlivoService } from './plivo.service';
 import { StorageService } from '../storage/storage.service';
+
+function callerPhoneOrEmpty(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const digits = value.replace(/\D/g, '');
+  const phone = !value.startsWith('+') && digits.length === 10 ? `+91${digits}` : `+${digits}`;
+  return /^\+[1-9]\d{7,14}$/.test(phone) ? phone : '';
+}
 
 export type VoiceProvider = 'vapi' | 'retell' | 'livekit';
 
@@ -147,7 +156,7 @@ export class VoiceService {
    */
   async handleVapiWebhook(payload: any): Promise<any> {
     const eventType = payload.message?.type || payload.type;
-    this.logger.log(`Vapi webhook: ${eventType}`);
+    this.logger.log("Vapi webhook: [redacted]");
 
     switch (eventType) {
       case 'assistant-request':
@@ -160,7 +169,7 @@ export class VoiceService {
         return this.handleVapiCallEnd(payload);
 
       case 'status-update':
-        this.logger.log(`Call status: ${payload.message?.status}`);
+        this.logger.log("Call status: [redacted]");
         return { status: 'ok' };
 
       case 'transcript': {
@@ -187,7 +196,7 @@ export class VoiceService {
           const isAngry = angryKeywords.some((kw) => lowerText.includes(kw));
 
           if (isAngry) {
-            this.logger.warn(`Aggressive sentiment / Interrupt keyword detected on call ${callId}. Triggering auto-transfer!`);
+            this.logger.warn("Aggressive sentiment / Interrupt keyword detected on call [redacted]. Triggering auto-transfer!");
             this.eventEmitter.emit('voice.transfer', {
               callId,
               reason: 'Aggressive sentiment / Customer requested human transfer',
@@ -204,7 +213,7 @@ export class VoiceService {
       }
 
       default:
-        this.logger.warn(`Unhandled Vapi event: ${eventType}`);
+        this.logger.warn("Unhandled Vapi event: [redacted]");
         return { status: 'ok' };
     }
   }
@@ -242,7 +251,7 @@ export class VoiceService {
 
     // Quota Enforcement: Check if tenant has exceeded allocated monthly voice minutes
     if (subscription && subscription.voiceMinutesUsed >= subscription.voiceMinutesLimit) {
-      this.logger.warn(`Tenant ${tenant.name} exceeded voice minutes quota: ${subscription.voiceMinutesUsed}/${subscription.voiceMinutesLimit}`);
+      this.logger.warn("Tenant [redacted] exceeded voice minutes quota: [redacted]/[redacted]");
       return {
         assistant: {
           firstMessage: `Thank you for calling ${tenant.name}. Our voice assistant is temporarily at capacity for this billing cycle. Please message us on WhatsApp for instant assistance. Have a wonderful day!`,
@@ -313,7 +322,7 @@ export class VoiceService {
     const functionCall = payload.message?.functionCall;
     const callId = payload.message?.call?.id;
 
-    this.logger.log(`Vapi function call: ${functionCall?.name}`);
+    this.logger.log("Vapi function call: [redacted]");
 
     switch (functionCall?.name) {
       case 'bookAppointment':
@@ -325,7 +334,7 @@ export class VoiceService {
         return { result: 'Appointment has been booked successfully. I will send a confirmation via WhatsApp.' };
 
       case 'checkAvailability':
-        return { result: 'We have slots available at 10 AM, 2 PM, and 4 PM today, and 11 AM tomorrow.' };
+        return { result: 'Availability has not been verified. Please use the booking page or contact the front desk to confirm a slot.' };
 
       case 'getPricing':
         return { result: 'I can share our treatment pricing. What specific service are you interested in?' };
@@ -335,7 +344,8 @@ export class VoiceService {
         const config = callerNumber ? await this.prisma.voiceConfig.findFirst({
           where: { OR: [{ plivoPhoneNumber: callerNumber }, { retellPhoneNumber: callerNumber }] },
         }) : null;
-        const transferTarget = config?.transferNumber || this.configService.get('DEFAULT_TRANSFER_NUMBER', '+918000000000');
+        const transferTarget = callerPhoneOrEmpty(config?.transferNumber);
+        if (!transferTarget) return { result: 'A front desk transfer number is not configured. I cannot connect this call.' };
 
         this.eventEmitter.emit('voice.transfer', { callId, reason: functionCall.parameters?.reason, transferTarget });
         return {
@@ -398,7 +408,7 @@ export class VoiceService {
    */
   async handleRetellWebhook(payload: any): Promise<any> {
     const eventType = payload.event;
-    this.logger.log(`Retell webhook: ${eventType}`);
+    this.logger.log("Retell webhook: [redacted]");
 
     switch (eventType) {
       case 'call_started':
@@ -439,11 +449,11 @@ export class VoiceService {
         return { status: 'ok' };
 
       case 'call_analyzed':
-        this.logger.log(`Call analysis: ${JSON.stringify(payload.call?.call_analysis)}`);
+        this.logger.log("Call analysis: [redacted]");
         return { status: 'ok' };
 
       default:
-        this.logger.warn(`Unhandled Retell event: ${eventType}`);
+        this.logger.warn("Unhandled Retell event: [redacted]");
         return { status: 'ok' };
     }
   }
@@ -492,13 +502,12 @@ export class VoiceService {
         await dispatchClient.createDispatch(roomName, 'zerodesk-receptionist', {
           metadata: JSON.stringify({
             tenant_id: tenantId,
-            business_name: 'Aura Skin & Aesthetic Clinic',
-            caller_phone: participantIdentity.startsWith('+') ? participantIdentity : '+918919205848',
+            ...(participantIdentity.startsWith('+') && callerPhoneOrEmpty(participantIdentity) ? { caller_phone: callerPhoneOrEmpty(participantIdentity) } : {}),
           }),
         });
-        this.logger.log(`LiveKit AgentDispatch created: room=${roomName} -> agent=zerodesk-receptionist`);
+        this.logger.log("LiveKit AgentDispatch created: room=[redacted] -> agent=zerodesk-receptionist");
       } catch (err: any) {
-        this.logger.warn(`Could not create AgentDispatch for ${roomName}: ${err.message}`);
+        this.logger.warn("Could not create AgentDispatch for [redacted]: [redacted]");
       }
     }
 
@@ -530,7 +539,7 @@ export class VoiceService {
       try {
         event = await this.livekitReceiver.receive(rawBody, authHeader);
       } catch (err) {
-        this.logger.error(`LiveKit Webhook HMAC Signature Verification Failed: ${err}`);
+        this.logger.error("LiveKit Webhook HMAC Signature Verification Failed: [redacted]");
         throw new UnauthorizedException('Invalid LiveKit webhook signature');
       }
     } else {
@@ -544,7 +553,7 @@ export class VoiceService {
       }
     }
 
-    this.logger.log(`LiveKit Webhook Event Received: ${event.event} for room: ${event.room?.name}`);
+    this.logger.log("LiveKit Webhook Event Received: [redacted] for room: [redacted]");
 
     if (event.event === 'room_finished') {
       const durationSec = Number(event.room?.duration || 0);
@@ -604,109 +613,101 @@ export class VoiceService {
   /**
    * Enqueue an outbound call via BullMQ to enforce TCPA calling hours.
    */
-  async initiateOutboundCall(tenantId: string, phoneNumber: string, purpose?: string) {
+  async initiateOutboundCall(tenantId: string, phoneNumber: string, purpose?: string, appointmentId?: string, requestId: string = randomUUID()) {
     if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber || '')) throw new BadRequestException('Use a valid international phone number');
-    this.logger.log(`Enqueuing TCPA-compliant outbound call: ${tenantId} → ${phoneNumber}`);
-    const job = await this.outboundQueue.add('dispatch-call', {
-      tenantId,
-      phoneNumber,
-      purpose,
-    }, {
-      attempts: 1,
-      backoff: { type: 'exponential', delay: 5000 },
+    if (typeof purpose !== 'undefined' && (typeof purpose !== 'string' || purpose.length > 500)) throw new BadRequestException('Invalid purpose');
+    if (typeof requestId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(requestId)) throw new BadRequestException('Invalid request ID');
+    if (appointmentId && !await this.prisma.appointment.findFirst({ where: { id: appointmentId, tenantId } })) throw new NotFoundException('Appointment not found');
+    const record = await this.prisma.outboundFollowUp.upsert({
+      where: { tenantId_requestId: { tenantId, requestId } },
+      create: { tenantId, requestId, phoneNumber, purpose, appointmentId }, update: {},
     });
-    return { status: 'queued', jobId: job.id };
+    if (record.phoneNumber !== phoneNumber || record.appointmentId !== (appointmentId || null) || record.purpose !== (purpose || null)) throw new BadRequestException('Request ID already used');
+    if (!record.dispatchStartedAt && record.status === 'PENDING') {
+      await this.outboundQueue.add('dispatch-call', { tenantId, phoneNumber, purpose, followUpId: record.id }, { jobId: record.id, attempts: 1 });
+    }
+    return { ...record, jobId: record.id };
+  }
+
+  async getFollowUps(tenantId: string) {
+    return this.prisma.outboundFollowUp.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' }, take: 500 });
   }
 
   async getOutboundJob(tenantId: string, jobId: string) {
-    const job = await this.outboundQueue.getJob(jobId);
-    if (!job || job.data.tenantId !== tenantId) throw new NotFoundException('Outbound job not found');
-    const state = await job.getState();
-    return { jobId: job.id, state, status: state === 'completed' ? 'dispatch_finished' : state, callCompletionVerified: false };
+    const record = await this.prisma.outboundFollowUp.findFirst({ where: { id: jobId, tenantId } });
+    if (!record) throw new NotFoundException('Outbound job not found');
+    return { ...record, jobId: record.id, state: record.status, callCompletionVerified: record.status === 'COMPLETED' };
   }
 
-  /**
-   * Execute actual outbound call via Vapi or Retell after TCPA validation.
-   */
-  async executeOutboundCall(tenantId: string, phoneNumber: string, purpose?: string) {
-    const rawDigits = (phoneNumber || '').replace(/[^0-9]/g, '');
-    const last10 = rawDigits.slice(-10);
+  private plivoCallbackUrl(id: string, answer = false) {
+    const base = this.configService.get<string>('API_URL');
+    if (!base || !/^https:\/\//.test(base)) throw new BadRequestException('Public HTTPS API_URL is required');
+    return `${base.replace(/\/$/, '')}/v1/voice/${answer ? 'plivo-answer' : 'webhook/plivo-status'}?followUpId=${id}`;
+  }
 
-    // 1. Verify TRAI DND / Opt-Out Status
-    const customer = await this.prisma.customer.findFirst({
-      where: { tenantId, phone: { contains: last10 } },
-    });
-
-    if (customer?.dndStatus) {
-      this.logger.warn(`Outbound call to ${phoneNumber} blocked: Patient opted out of automated calls (DND active)`);
-      throw new BadRequestException('Patient has opted out of automated communications (DND active).');
+  async executeOutboundCall(tenantId: string, phoneNumber: string, purpose?: string, followUpId?: string) {
+    if (!followUpId) throw new BadRequestException('Durable follow-up ID required');
+    const record = await this.prisma.outboundFollowUp.findFirst({ where: { id: followUpId, tenantId, phoneNumber } });
+    if (!record) throw new NotFoundException('Follow-up not found');
+    if (record.dispatchStartedAt || record.status !== 'PENDING') return record;
+    const customer = await this.prisma.customer.findFirst({ where: { tenantId, phone: { contains: phoneNumber.replace(/\D/g, '').slice(-10) } } });
+    const config = await this.getConfig(tenantId);
+    const authId = this.configService.get<string>('PLIVO_AUTH_ID');
+    const token = this.configService.get<string>('PLIVO_AUTH_TOKEN');
+    const callerId = config?.plivoPhoneNumber;
+    if (customer?.dndStatus || !authId || !token || !callerId || !config?.isActive) {
+      await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, tenantId, status: 'PENDING', dispatchStartedAt: null }, data: { status: 'FAILED' } });
+      throw new BadRequestException('Outbound calling disabled, opted out, or provider configuration incomplete');
     }
-
-    const voiceConfig = await this.getConfig(tenantId);
-    const provider = voiceConfig?.settings
-      ? (voiceConfig.settings as any).provider || 'livekit'
-      : 'livekit';
-
-    this.logger.log(`Executing ${provider} outbound call: ${tenantId} → ${phoneNumber}`);
-
-    if (provider === 'retell') {
-      const retellApiKey = this.configService.get('RETELL_API_KEY');
-      const response = await fetch('https://api.retellai.com/v2/create-phone-call', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${retellApiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from_number: voiceConfig?.plivoPhoneNumber || voiceConfig?.retellPhoneNumber,
-          to_number: phoneNumber,
-          agent_id: (voiceConfig?.settings as any)?.retellAgentId,
-        }),
+    let answerUrl: string;
+    let statusUrl: string;
+    try {
+      answerUrl = this.plivoCallbackUrl(record.id, true);
+      statusUrl = this.plivoCallbackUrl(record.id);
+    } catch (error) {
+      await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, tenantId, status: 'PENDING', dispatchStartedAt: null }, data: { status: 'FAILED' } });
+      throw error;
+    }
+    // Claim before I/O: a stalled queue retry must never place a second customer call.
+    const claim = await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, tenantId, dispatchStartedAt: null, status: 'PENDING' }, data: { dispatchStartedAt: new Date() } });
+    if (!claim.count) return this.getOutboundJob(tenantId, record.id);
+    try {
+      const response = await fetch(`https://api.plivo.com/v1/Account/${encodeURIComponent(authId)}/Call/`, {
+        method: 'POST', headers: { Authorization: `Basic ${Buffer.from(`${authId}:${token}`).toString('base64')}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: callerId, to: phoneNumber, answer_url: answerUrl, answer_method: 'POST', hangup_url: statusUrl, hangup_method: 'POST', ring_url: statusUrl, ring_method: 'POST' }),
+        signal: AbortSignal.timeout(15000),
       });
-      return response.json();
-    } else {
-      // Real LiveKit / Plivo outbound dispatch
-      const plivoAuthId = this.configService.get('PLIVO_AUTH_ID');
-      const plivoAuthToken = this.configService.get('PLIVO_AUTH_TOKEN');
-      const callerId = voiceConfig?.plivoPhoneNumber || this.configService.get('PLIVO_PHONE_NUMBER') || '+918000000000';
-
-      if (plivoAuthId && plivoAuthToken) {
-        try {
-          const auth = Buffer.from(`${plivoAuthId}:${plivoAuthToken}`).toString('base64');
-          const resp = await fetch(`https://api.plivo.com/v1/Account/${plivoAuthId}/Call/`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Basic ${auth}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: callerId,
-              to: phoneNumber,
-              answer_url: `${this.configService.get('API_URL') || 'https://api.zerodesk.ai'}/v1/voice/plivo-answer?tenantId=${tenantId}&purpose=${encodeURIComponent(purpose || 'outbound')}`,
-              hangup_url: `${this.configService.get('API_URL') || 'https://api.zerodesk.ai'}/v1/voice/plivo-hangup?tenantId=${tenantId}`,
-              answer_method: 'POST',
-            }),
-          });
-          const plivoData: any = await resp.json();
-          this.logger.log(`Plivo outbound call dispatched: ${JSON.stringify(plivoData)}`);
-          return {
-            success: true,
-            provider: 'plivo',
-            callUuid: plivoData.request_uuid || plivoData.call_uuid || `req_${Date.now()}`,
-            status: 'DIALING',
-          };
-        } catch (plivoErr: any) {
-          this.logger.error(`Plivo API call failed: ${plivoErr.message}`);
-        }
+      if (!response.ok) {
+        await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, status: 'PENDING' }, data: { status: 'FAILED' } });
+        throw new BadRequestException('Plivo rejected outbound request');
       }
-
-      // LiveKit SIP Outbound Room dispatch
-      const roomName = `outbound_${tenantId}_${Date.now()}`;
-      return {
-        success: true,
-        provider: 'livekit',
-        roomName,
-        status: 'DISPATCHED',
-        dispatchedAt: new Date().toISOString(),
-      };
+      const result = await response.json() as { request_uuid?: string; call_uuid?: string };
+      if (![result.request_uuid, result.call_uuid].some(value => typeof value === 'string' && value.length > 0)) throw new Error('Provider receipt absent');
+      // A callback can finish the call before the REST response reaches us. Save its
+      // request receipt independently without downgrading terminal state or CallUUID.
+      if (typeof result.request_uuid === 'string') await this.prisma.outboundFollowUp.update({ where: { id: record.id }, data: { providerRequestId: result.request_uuid } });
+      if (typeof result.call_uuid === 'string') await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, callUuid: null }, data: { callUuid: result.call_uuid } });
+      await this.prisma.outboundFollowUp.updateMany({ where: { id: record.id, status: 'PENDING' }, data: { status: 'DISPATCHED' } });
+      return this.getOutboundJob(tenantId, record.id);
+    } catch {
+      // Unknown delivery stays PENDING with a dispatch claim; reconcile instead of retrying.
+      this.logger.error('Plivo dispatch did not return a verified receipt; reconciliation required');
+      throw new InternalServerErrorException('Outbound dispatch needs reconciliation; do not repeat');
     }
+  }
+
+  async handlePlivoStatus(id: string, body: Record<string, string>, nonce: string, signature: string, answer = false) {
+    if (!validPlivoSignature(this.plivoCallbackUrl(id, answer), body, nonce, signature, this.configService.get<string>('PLIVO_AUTH_TOKEN') || '')) throw new UnauthorizedException('Invalid Plivo signature');
+    const record = await this.prisma.outboundFollowUp.findUnique({ where: { id } });
+    if (!record || !record.dispatchStartedAt || !body.CallUUID || (record.callUuid && record.callUuid !== body.CallUUID)) throw new BadRequestException('Unknown call');
+    const status = answer ? 'DISPATCHED' : plivoFollowUpStatus(body);
+    if (status) await this.prisma.outboundFollowUp.updateMany({ where: { id, status: { in: ['PENDING', 'DISPATCHED'] }, OR: [{ callUuid: null }, { callUuid: body.CallUUID }] }, data: { status, callUuid: body.CallUUID } });
+    if (answer) {
+      const config = await this.getConfig(record.tenantId);
+      if (!config?.plivoPhoneNumber) throw new BadRequestException('Voice route unavailable');
+      return this.plivoService.generateInboundXml(config.plivoPhoneNumber, record.tenantId, this.configService.get<string>('API_URL')!);
+    }
+    return { received: true };
   }
 
   /**
@@ -757,7 +758,7 @@ export class VoiceService {
         const presigned = await this.storageService.getPresignedDownloadUrl(tenantId, recordingKey);
         return { audioUrl: presigned };
       } catch (err: any) {
-        this.logger.warn(`Failed to sign URL for recording key ${recordingKey}: ${err.message}`);
+        this.logger.warn("Failed to sign URL for recording key [redacted]: [redacted]");
       }
     }
 
@@ -769,7 +770,7 @@ export class VoiceService {
         const presigned = await this.storageService.getPresignedDownloadUrl(tenantId, recordingUrl);
         return { audioUrl: presigned };
       } catch (err: any) {
-        this.logger.warn(`Failed to sign URL for recordingUrl path ${recordingUrl}: ${err.message}`);
+        this.logger.warn("Failed to sign URL for recordingUrl path [redacted]: [redacted]");
       }
     }
 
@@ -910,7 +911,7 @@ RULES:
     try {
       return await this.whatsappService.sendMessage(tenantId, to, text);
     } catch (err: any) {
-      this.logger.warn(`Could not dispatch during-call WhatsApp: ${err.message}`);
+      this.logger.warn("Could not dispatch during-call WhatsApp: [redacted]");
       return { status: 'failed', error: err.message };
     }
   }
@@ -925,17 +926,13 @@ RULES:
     const cleanCalledDigits = (rawCalled || '').replace(/[^0-9]/g, '');
     const cleanCallerDigits = (rawCaller || '').replace(/[^0-9]/g, '');
 
-    const callerFormatted = cleanCallerDigits.length === 10
-      ? `+91${cleanCallerDigits}`
-      : cleanCallerDigits.length === 12 && cleanCallerDigits.startsWith('91')
-        ? `+${cleanCallerDigits}`
-        : (rawCaller || '').startsWith('+') ? rawCaller : `+${cleanCallerDigits || '0000000000'}`;
+    const callerFormatted = callerPhoneOrEmpty(rawCaller);
 
     const last10Called = cleanCalledDigits.slice(-10);
 
     // Guard: refuse to query with empty or too-short called number (would wildcard-match all records)
     if (last10Called.length < 7) {
-      this.logger.warn(`Called number too short for DID lookup: "${rawCalled}" → "${last10Called}". Aborting match.`);
+      this.logger.warn("Called number too short for DID lookup: \"[redacted]\" → \"[redacted]\". Aborting match.");
       const triageRoom = `triage_call_${cleanCallerDigits || 'caller'}_${Date.now()}`;
       return {
         room_name: triageRoom,
@@ -962,7 +959,7 @@ RULES:
     });
 
     if (!config) {
-      this.logger.warn(`Unregistered inbound telephony number ${rawCalled} (${last10Called}). Routing to triage room.`);
+      this.logger.warn("Unregistered inbound telephony number [redacted] ([redacted]). Routing to triage room.");
       const triageRoom = `triage_call_${cleanCallerDigits || 'caller'}_${Date.now()}`;
       return {
         room_name: triageRoom,
@@ -992,7 +989,7 @@ RULES:
       source: 'SIP_INBOUND',
     });
 
-    this.logger.log(`LiveKit SIP dispatch mapped called number ${rawCalled} to tenant ${tenantId} (${clinicName}, niche: ${niche})`);
+    this.logger.log("LiveKit SIP dispatch mapped called number [redacted] to tenant [redacted] ([redacted], niche: [redacted])");
 
     return {
       room_name: roomName,
@@ -1028,7 +1025,7 @@ RULES:
       });
     }
 
-    this.logger.warn(`[HUMAN_HANDOFF] Tenant: ${tenantId}, Caller: ${payload.callerPhone}, ForwardTo: ${forwardingNumber}, Reason: ${payload.reason}`);
+    this.logger.warn("[HUMAN_HANDOFF] Tenant: [redacted], Caller: [redacted], ForwardTo: [redacted], Reason: [redacted]");
 
     let transferInitiated = false;
     let participantId = payload.participantIdentity;
@@ -1042,14 +1039,14 @@ RULES:
           participantId = sipP.identity;
         }
       } catch (err: any) {
-        this.logger.error(`Failed to list room participants for SIP transfer: ${err.message}`);
+        this.logger.error("Failed to list room participants for SIP transfer: [redacted]");
       }
     }
 
     if (forwardingNumber && this.sipClient && payload.roomName && participantId) {
       try {
         const destination = forwardingNumber.startsWith('+') ? forwardingNumber : `+91${forwardingNumber}`;
-        this.logger.log(`Executing LiveKit transferSipParticipant: room=${payload.roomName}, identity=${participantId}, dest=${destination}`);
+        this.logger.log("Executing LiveKit transferSipParticipant: room=[redacted], identity=[redacted], dest=[redacted]");
         await this.sipClient.transferSipParticipant(
           payload.roomName,
           participantId,
@@ -1058,7 +1055,7 @@ RULES:
         );
         transferInitiated = true;
       } catch (sipErr: any) {
-        this.logger.error(`LiveKit SIP REFER failed: ${sipErr.message}`, sipErr.stack);
+        this.logger.error("LiveKit SIP REFER failed: [redacted]", "[redacted]");
       }
     }
 
@@ -1086,21 +1083,19 @@ RULES:
   ) {
     try {
       const rawDigits = (callerPhone || '').replace(/[^0-9]/g, '');
-      let normalizedPhone: string;
-      if (rawDigits.length === 10) {
-        normalizedPhone = `+91${rawDigits}`;
-      } else if (rawDigits.length === 12 && rawDigits.startsWith('91')) {
-        normalizedPhone = `+${rawDigits}`;
-      } else if (callerPhone?.startsWith('+')) {
-        normalizedPhone = callerPhone;
-      } else {
-        normalizedPhone = `+${rawDigits || '910000000000'}`;
+      const normalizedPhone = callerPhoneOrEmpty(callerPhone);
+      if (!normalizedPhone) {
+        // Anonymous calls still incur verified usage, but cannot be attached to a
+        // shared invented customer identity under the required customer FK.
+        const sessionId = metadata?.roomName || roomName || metadata?.callSid || metadata?.callId;
+        await this.recordIdempotentUsage(tenantId, sessionId, durationSeconds, Number(metadata?.tokensUsed) || 0);
+        return { status: 'metered', conversationId: null, reason: 'Caller identity unavailable' };
       }
 
       let customer = await this.prisma.customer.findFirst({
         where: {
           tenantId,
-          phone: { contains: rawDigits.slice(-10) || '0000000000' },
+          phone: normalizedPhone,
         },
       });
 
@@ -1119,7 +1114,7 @@ RULES:
           // P2002 = unique constraint violation (concurrent call from same number)
           if (createErr?.code === 'P2002') {
             customer = await this.prisma.customer.findFirst({
-              where: { tenantId, phone: { contains: rawDigits.slice(-10) || '0000000000' } },
+              where: { tenantId, phone: normalizedPhone },
             });
             if (!customer) {
               throw new Error('Customer creation race: P2002 thrown but re-query returned null');
@@ -1179,10 +1174,10 @@ RULES:
         timestamp: new Date(),
       });
 
-      this.logger.log(`Recorded call completion for tenant ${tenantId}, customer ${customer.id}, room ${roomName} (${durationSeconds}s)`);
+      this.logger.log("Recorded call completion for tenant [redacted], customer [redacted], room [redacted] ([redacted]s)");
       return { status: 'recorded', conversationId: conversation.id, billedMinutes };
     } catch (err: any) {
-      this.logger.error(`Failed to record call completion: ${err.message}`, err.stack);
+      this.logger.error("Failed to record call completion: [redacted]", "[redacted]");
       return { status: 'error', error: err.message };
     }
   }
@@ -1234,7 +1229,7 @@ RULES:
         });
 
         if (minutesDelta > 0 && existingSub.voiceMinutesUsed + minutesDelta >= existingSub.voiceMinutesLimit) {
-          this.logger.warn(`Tenant ${tenantId} reached or exceeded monthly voice minutes quota (${existingSub.voiceMinutesUsed + billedMinutes}/${existingSub.voiceMinutesLimit})`);
+          this.logger.warn("Tenant [redacted] reached or exceeded monthly voice minutes quota ([redacted]/[redacted])");
           this.eventEmitter.emit('subscription.quota_exceeded', {
             tenantId,
             resource: 'voiceMinutes',
@@ -1259,7 +1254,7 @@ RULES:
       }
     });
 
-    this.logger.log(`[METERING] Idempotently billed ${billedMinutes} voice minute(s) to tenant ${tenantId} for session ${sessionId}`);
+    this.logger.log("[METERING] Idempotently billed [redacted] voice minute(s) to tenant [redacted] for session [redacted]");
   }
 
   /**
@@ -1272,7 +1267,7 @@ RULES:
     }
     const duration = event.duration !== undefined && event.duration !== null ? Number(event.duration) : 0;
     if (duration <= 0) {
-      this.logger.log(`Skipping call usage ledger for non-billable or zero duration call: ${event.callId}`);
+      this.logger.log("Skipping call usage ledger for non-billable or zero duration call: [redacted]");
       return;
     }
     await this.recordCallCompletion(
@@ -1328,7 +1323,7 @@ RULES:
       },
     });
 
-    this.logger.log(`Provisioned Plivo DID ${phoneNumber} for tenant ${tenantId}`);
+    this.logger.log("Provisioned Plivo DID [redacted] for tenant [redacted]");
     return {
       success: true,
       phoneNumber: updated.plivoPhoneNumber,
@@ -1353,7 +1348,7 @@ RULES:
    * Plivo triggers this webhook to route the call to Retell AI or clinic backup.
    */
   async handlePlivoFallback(called: string, tenantId?: string) {
-    this.logger.warn(`LiveKit unattended for ${called} (tenant ${tenantId}). Failing over to Retell AI...`);
+    this.logger.warn("LiveKit unattended for [redacted] (tenant [redacted]). Failing over to Retell AI...");
     const voiceConfig = await this.prisma.voiceConfig.findFirst({
       where: {
         OR: [{ plivoPhoneNumber: called }, ...(tenantId ? [{ tenantId }] : [])],
@@ -1385,7 +1380,7 @@ RULES:
       }
       return await response.json();
     } catch (err: any) {
-      this.logger.error(`Sarvam STT proxy error: ${err.message}`);
+      this.logger.error("Sarvam STT proxy error: [redacted]");
       throw new InternalServerErrorException(err.message);
     }
   }

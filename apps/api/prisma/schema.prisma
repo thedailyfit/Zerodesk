@@ -66,8 +66,28 @@ model Tenant {
   agentEstates       AgentEstate[]
   actionTraces       ActionTrace[]
   supportTickets     SupportTicket[]
+  outboundFollowUps  OutboundFollowUp[]
 
   @@map("tenants")
+}
+
+model OutboundFollowUp {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  requestId String @map("request_id")
+  appointmentId String? @map("appointment_id") @db.Uuid
+  phoneNumber String @map("phone_number")
+  purpose String?
+  status String @default("PENDING")
+  dispatchStartedAt DateTime? @map("dispatch_started_at") @db.Timestamptz
+  providerRequestId String? @map("provider_request_id")
+  callUuid String? @unique @map("call_uuid")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  @@unique([tenantId, requestId])
+  @@index([tenantId, createdAt])
+  @@map("outbound_follow_ups")
 }
 
 model TenantKyc {
@@ -611,7 +631,11 @@ model Invoice {
   customerName  String?       @map("customer_name")
   customerPhone String?       @map("customer_phone")
   customerEmail String?       @map("customer_email")
-  status        String        @default("PAID") // "DRAFT" | "PENDING" | "PAID" | "CANCELLED"
+  status        String        @default("PENDING") // Includes PAYMENT_REVIEW for unverified historical payments.
+  manualCashReceiptId String? @map("manual_cash_receipt_id")
+  paymentVerifiedBy String? @map("payment_verified_by")
+  paymentVerifiedAt DateTime? @map("payment_verified_at") @db.Timestamptz
+  legacyPaidAmount Decimal? @map("legacy_paid_amount") @db.Decimal(12, 2)
   paymentMethod String?       @map("payment_method") // "UPI" | "CARD" | "CASH" | "INSURANCE"
   notes         String?
   dueDate       DateTime?     @map("due_date") @db.Timestamptz
@@ -625,6 +649,7 @@ model Invoice {
 
   @@unique([id, tenantId])
   @@unique([tenantId, invoiceNumber])
+  @@unique([tenantId, manualCashReceiptId])
   @@index([tenantId, customerId])
   @@map("invoices")
 }

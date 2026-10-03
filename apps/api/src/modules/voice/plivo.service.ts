@@ -54,7 +54,7 @@ export class PlivoService {
         provider: 'Plivo',
       }));
     } catch (err: any) {
-      this.logger.error(`Plivo search error: ${err.message}`);
+      this.logger.error("Plivo search error: [redacted]");
       throw err;
     }
   }
@@ -88,7 +88,7 @@ export class PlivoService {
 
       return { success: true, message: `Successfully provisioned ${phoneNumber} via Plivo` };
     } catch (err: any) {
-      this.logger.error(`Plivo purchase error: ${err.message}`);
+      this.logger.error("Plivo purchase error: [redacted]");
       throw err;
     }
   }

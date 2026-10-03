@@ -14,4 +14,16 @@ describe('invoice authoritative arithmetic', () => {
   it('does not infer payment from a status label', () => {
     expect(service.calculate({ items: [{ description: 'Service', unitPrice: 10 }], status: 'PAID' })).toMatchObject({ paidAmount: 0, status: 'PENDING' });
   });
+  it('rejects paid amounts without verified receipt evidence before writing', async () => {
+    await expect(service.create('tenant', { items: [{ description: 'Service', unitPrice: 10 }], paidAmount: 10 })).rejects.toThrow('receipt');
+    await expect(service.create('tenant', { items: [{ description: 'Service', unitPrice: 10 }], paidAmount: 10, stripePaymentId: 'pi_unverified' }, 'manager')).rejects.toThrow('receipt');
+  });
+  it('persists manager-attested cash receipt and ignores forged verification metadata', async () => {
+    const create = jest.fn().mockImplementation(async ({ data }) => data);
+    const invoices = new InvoiceService({ invoice: { create } } as any);
+    const result = await invoices.create('tenant', { items: [{ description: 'Service', unitPrice: 10 }], paidAmount: 10,
+      paymentMethod: 'CASH', manualCashReceiptId: 'CASH-001', paymentVerifiedBy: 'forged' }, 'manager');
+    expect(result).toMatchObject({ status: 'PAID', manualCashReceiptId: 'CASH-001', paymentVerifiedBy: 'manager' });
+    expect(result.paymentVerifiedAt).toBeInstanceOf(Date);
+  });
 });

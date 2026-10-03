@@ -37,7 +37,8 @@
       "deepmerge-ts@7": "8.0.0",
       "js-yaml@<5.4.1": "5.4.1",
       "brace-expansion@5": "5.0.12",
-      "engine.io@6": "6.6.11"
+      "engine.io@6": "6.6.11",
+      "dompurify@3": "3.4.16"
     }
   }
 }

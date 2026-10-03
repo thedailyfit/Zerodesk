@@ -32,7 +32,7 @@ export class N8nService {
     if (this.configService.get('NODE_ENV') === 'production' && (!this.baseUrl.startsWith('https://') || !this.apiKey)) throw new BadRequestException('Production workflow adapter requires HTTPS and authentication');
     try {
       const url = `${this.baseUrl}/webhook/${webhookSlug}`;
-      this.logger.log(`Triggering n8n workflow [${webhookSlug}] for tenant ${tenantId}`);
+      this.logger.log("Triggering n8n workflow [[redacted]] for tenant [redacted]");
 
       const response = await fetch(url, {
         method: 'POST',
@@ -45,12 +45,12 @@ export class N8nService {
       });
 
       if (!response.ok) {
-        this.logger.warn(`n8n webhook ${webhookSlug} returned status ${response.status}`);
+        this.logger.warn("n8n webhook [redacted] returned status [redacted]");
       }
 
       return { success: response.ok, status: response.status };
     } catch (error) {
-      this.logger.error(`Failed to trigger n8n workflow ${webhookSlug}: ${error}`);
+      this.logger.error("Failed to trigger n8n workflow [redacted]: [redacted]");
       return { success: false, error: String(error) };
     }
   }

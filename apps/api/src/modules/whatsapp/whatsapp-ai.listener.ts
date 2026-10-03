@@ -57,7 +57,7 @@ export class WhatsappAiListener {
 
       // Handle WhatsApp Voice Notes (audio/ogg)
       if (messageType === 'audio' && mediaUrl && accessToken) {
-        this.logger.log(`Processing WhatsApp voice note for tenant ${tenantId} from ${from} (Media ID: ${mediaUrl})`);
+        this.logger.log("Processing WhatsApp voice note for tenant [redacted] from [redacted] (Media ID: [redacted])");
         try {
           const media = await this.whatsappService.downloadMedia(mediaUrl, accessToken);
           const transcription = await this.aiService.transcribeAudio(media.buffer, media.mimeType);
@@ -66,7 +66,7 @@ export class WhatsappAiListener {
 
             const { sanitized, isInjected } = this.promptGuard.sanitizeUserInput(transcription);
             if (isInjected) {
-              this.logger.warn(`[SECURITY ALERT] Audio note prompt injection detected for tenant ${tenantId} from customer ${customerId}`);
+              this.logger.warn("[SECURITY ALERT] Audio note prompt injection detected for tenant [redacted] from customer [redacted]");
             }
             effectiveMessage = sanitized;
 
@@ -80,11 +80,11 @@ export class WhatsappAiListener {
               });
             }
           } else {
-            this.logger.warn(`Could not transcribe voice note for media ${mediaUrl}`);
+            this.logger.warn("Could not transcribe voice note for media [redacted]");
             return;
           }
         } catch (mediaErr: any) {
-          this.logger.error(`Failed to download/transcribe WhatsApp voice note: ${mediaErr.message}`);
+          this.logger.error("Failed to download/transcribe WhatsApp voice note: [redacted]");
           return;
         }
       } else if (messageType !== 'text' || !effectiveMessage) {
@@ -109,7 +109,7 @@ export class WhatsappAiListener {
           'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
           { isSystemConfirmation: true },
         );
-        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (TRAI statutory DND enabled).`);
+        this.logger.log("Customer [redacted] opted out of WhatsApp notifications (TRAI statutory DND enabled).");
         return;
       }
 
@@ -128,7 +128,7 @@ export class WhatsappAiListener {
           'You have been re-subscribed to notifications. How can we help you today?',
           { isSystemConfirmation: true },
         );
-        this.logger.log(`Customer ${customerId} opted back into WhatsApp notifications.`);
+        this.logger.log("Customer [redacted] opted back into WhatsApp notifications.");
         return;
       }
 
@@ -143,7 +143,7 @@ export class WhatsappAiListener {
 
       const meta = (conversation.metadata as any) || {};
       if (meta.assignedTo || conversation.status === 'HANDOFF' || conversation.status === 'WAITING') {
-        this.logger.log(`Conversation ${conversationId} in human handoff/assigned mode. Skipping AI auto-reply.`);
+        this.logger.log("Conversation [redacted] in human handoff/assigned mode. Skipping AI auto-reply.");
         return;
       }
 
@@ -165,7 +165,7 @@ export class WhatsappAiListener {
             }
           }
         } catch (triageErr: any) {
-          this.logger.warn(`TypeSafe front-door triage bypassed: ${triageErr?.message}`);
+          this.logger.warn("TypeSafe front-door triage bypassed: [redacted]");
         }
       }
 
@@ -181,7 +181,7 @@ export class WhatsappAiListener {
           from,
           'You have been unsubscribed from automated notifications in compliance with TRAI regulations. Reply "START" at any time to resume communication.',
         );
-        this.logger.log(`Customer ${customerId} opted out of WhatsApp notifications (DND enabled via AI triage).`);
+        this.logger.log("Customer [redacted] opted out of WhatsApp notifications (DND enabled via AI triage).");
         return;
       }
 
@@ -203,7 +203,7 @@ export class WhatsappAiListener {
           from,
           'I am escalating your request directly to our support team. A team member will assist you shortly.',
         );
-        this.logger.log(`Conversation ${conversationId} fast-tracked to human staff: ${handoffReason}`);
+        this.logger.log("Conversation [redacted] fast-tracked to human staff: [redacted]");
         return;
       }
 
@@ -213,7 +213,7 @@ export class WhatsappAiListener {
       });
 
       if (subscription && subscription.whatsappMessagesUsed >= subscription.whatsappMessagesLimit) {
-        this.logger.warn(`Tenant ${tenantId} WhatsApp quota exhausted (${subscription.whatsappMessagesUsed}/${subscription.whatsappMessagesLimit}). Skipping AI reply.`);
+        this.logger.warn("Tenant [redacted] WhatsApp quota exhausted ([redacted]/[redacted]). Skipping AI reply.");
         return;
       }
 
@@ -254,7 +254,7 @@ export class WhatsappAiListener {
           policyPermitted = policyCheck.allowed;
           if (!policyCheck.allowed) {
             policyPermitted = false;
-            this.logger.warn(`ActionPolicyGuard blocked WhatsApp booking for tenant ${tenantId}: ${policyCheck.reason}`);
+            this.logger.warn("ActionPolicyGuard blocked WhatsApp booking for tenant [redacted]: [redacted]");
             replyText = `I apologize, but that appointment request cannot be scheduled: ${policyCheck.reason} Would you like to select an alternative date or time?`;
 
             if (this.governance) {
@@ -299,7 +299,7 @@ export class WhatsappAiListener {
             });
 
             if (bookingResult && bookingResult.id) {
-              this.logger.log(`Successfully executed appointment ${bookingResult.id} from WhatsApp for customer ${customerId}`);
+              this.logger.log("Successfully executed appointment [redacted] from WhatsApp for customer [redacted]");
               const doctorName = bookingResult.staff?.name ? `Dr. ${bookingResult.staff.name}` : 'Assigned Specialist';
               const serviceName = bookingResult.service?.name || bookAction.params.serviceName || 'Consultation';
               const scheduledDate = new Date(bookingResult.scheduledAt).toLocaleDateString('en-IN', { timeZone: tenant?.timezone || 'Asia/Kolkata' });
@@ -331,7 +331,7 @@ export class WhatsappAiListener {
               }
             }
           } catch (bookingError: any) {
-            this.logger.error(`Failed to execute appointment booking from WhatsApp AI: ${bookingError.message}`, bookingError.stack);
+            this.logger.error("Failed to execute appointment booking from WhatsApp AI: [redacted]", "[redacted]");
             // AI explicitly admits failure to book slot and suggests alternatives
             replyText = `I apologize, but that specific slot is no longer available or couldn't be reserved. ` +
               `Would you like to book for an alternative time today or tomorrow? Please let me know your preferred time.`;
@@ -358,7 +358,7 @@ export class WhatsappAiListener {
       // 5. Send AI reply back to WhatsApp user
       const delivery = await this.whatsappService.sendMessage(tenantId, from, replyText);
       if (!delivery?.messages?.[0]?.id) return;
-      this.logger.log(`Auto-replied to WhatsApp user ${from} for tenant ${tenantId}`);
+      this.logger.log("Auto-replied to WhatsApp user [redacted] for tenant [redacted]");
 
       // 5b. Ingest trace into BullMQ 3-tier evaluation engine
       if (this.observability) {
@@ -375,7 +375,7 @@ export class WhatsappAiListener {
           sessionGoal: bookAction ? 'BOOK_APPOINTMENT' : 'GENERAL_QUERY',
           goalAchieved: bookAction ? !!bookingResult?.id : undefined,
         }).catch((traceErr: any) => {
-          this.logger.warn(`Failed to record WhatsApp AI trace: ${traceErr.message}`);
+          this.logger.warn("Failed to record WhatsApp AI trace: [redacted]");
         });
       }
 
@@ -385,10 +385,10 @@ export class WhatsappAiListener {
           where: { id: conversationId, tenantId },
           data: { status: 'WAITING' },
         });
-        this.logger.log(`Conversation ${conversationId} flagged for human escalation`);
+        this.logger.log("Conversation [redacted] flagged for human escalation");
       }
     } catch (error: any) {
-      this.logger.error(`Error in WhatsApp AI auto-reply: ${error?.message || error}`, error?.stack);
+      this.logger.error("Error in WhatsApp AI auto-reply: [redacted]", "[redacted]");
     }
   }
 }

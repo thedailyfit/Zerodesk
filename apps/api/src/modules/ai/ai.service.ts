@@ -69,7 +69,7 @@ export class AiService {
           return response.text.trim();
         }
       } catch (err: any) {
-        this.logger.warn(`OpenAI Whisper transcription error: ${err.message}. Trying Sarvam fallback...`);
+        this.logger.warn("OpenAI Whisper transcription error: [redacted]. Trying Sarvam fallback...");
       }
     }
 
@@ -98,7 +98,7 @@ export class AiService {
           }
         }
       } catch (sErr: any) {
-        this.logger.warn(`Sarvam AI STT error: ${sErr.message}`);
+        this.logger.warn("Sarvam AI STT error: [redacted]");
       }
     }
 
@@ -117,7 +117,7 @@ export class AiService {
       });
       return response.data[0].embedding;
     } catch (error) {
-      this.logger.error(`Embedding generation failed: ${error}`);
+      this.logger.error("Embedding generation failed: [redacted]");
       throw new Error('Embedding provider unavailable');
     }
   }
@@ -139,7 +139,7 @@ export class AiService {
         this.prisma.tenant.findUnique({ where: { id: tenantId } }),
       ]);
       if (subscription && subscription.llmTokensUsed >= subscription.llmTokensLimit) {
-        this.logger.warn(`[AI QUOTA] Tenant ${tenantId} exceeded LLM token limit (${subscription.llmTokensUsed}/${subscription.llmTokensLimit})`);
+        this.logger.warn("[AI QUOTA] Tenant [redacted] exceeded LLM token limit ([redacted]/[redacted])");
         throw new HttpException('LLM Token Quota Exceeded. Please upgrade your plan.', HttpStatus.PAYMENT_REQUIRED);
       }
 
@@ -150,7 +150,7 @@ export class AiService {
         const { sanitized, isInjected } = this.promptGuardService.sanitizeUserInput(message);
         safeMessage = sanitized;
         if (isInjected) {
-          this.logger.warn(`[AI SECURITY] Blocked injection payload from customer ${customerId}`);
+          this.logger.warn("[AI SECURITY] Blocked injection payload from customer [redacted]");
         }
       }
 
@@ -190,7 +190,7 @@ export class AiService {
             where: { tenantId },
             data: { llmTokensUsed: { increment: totalTokens } },
           })
-          .catch((err) => this.logger.error(`Failed to meter tokens: ${err.message}`));
+          .catch((err) => this.logger.error("Failed to meter tokens: [redacted]"));
       }
 
       const raw = completion.content || '{}';
@@ -198,7 +198,7 @@ export class AiService {
       try {
         parsed = JSON.parse(raw);
       } catch (pErr) {
-        this.logger.warn(`AI output was not valid JSON, using fallback: ${pErr}`);
+        this.logger.warn("AI output was not valid JSON, using fallback: [redacted]");
         parsed = { response: raw, intent: 'GENERAL_QUERY', actions: [] };
       }
 
@@ -213,7 +213,7 @@ export class AiService {
             params: typeof act.params === 'object' && act.params !== null ? act.params : {},
           });
         } else {
-          this.logger.warn(`[AI SECURITY] Rejected invalid AI action schema: ${JSON.stringify(act)}`);
+          this.logger.warn("[AI SECURITY] Rejected invalid AI action schema: [redacted]");
         }
       }
 
@@ -242,7 +242,7 @@ export class AiService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`AI response generation failed: ${error}`, (error as Error).stack);
+      this.logger.error("AI response generation failed: [redacted]", "[redacted]");
       return {
         response: 'I apologize for the inconvenience. Let me connect you with a team member who can help.',
         intent: 'ERROR',

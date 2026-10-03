@@ -7,7 +7,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   constructor() {
     super({
-      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      // Prisma validation errors can include customer fields and SQL parameters.
+      log: [],
     });
   }
 

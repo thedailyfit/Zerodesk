@@ -81,7 +81,10 @@ async function bootstrap() {
 
   const port = process.env.PORT || process.env.API_PORT || 4000;
   await app.listen(port, '0.0.0.0');
-  console.log(`🚀 ZeroDesk API running on http://0.0.0.0:${port}`);
-  console.log(`📖 Swagger API Docs available at http://0.0.0.0:${port}/docs`);
+  console.log("🚀 ZeroDesk API running on http://0.0.0.0:[redacted]");
+  console.log("📖 Swagger API Docs available at http://0.0.0.0:[redacted]/docs");
 }
-bootstrap();
+bootstrap().catch(() => {
+  console.error('API startup failed; inspect configuration and dependency health.');
+  process.exitCode = 1;
+});

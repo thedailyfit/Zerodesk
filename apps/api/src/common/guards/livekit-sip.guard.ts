@@ -28,7 +28,7 @@ export class LiveKitSipGuard implements CanActivate {
         await this.receiver.receive(rawBody, authHeader);
         return true;
       } catch (err) {
-        this.logger.debug(`LiveKit HMAC verification failed, testing alternative credentials: ${err}`);
+        this.logger.debug("LiveKit HMAC verification failed, testing alternative credentials: [redacted]");
       }
     }
 

@@ -13,7 +13,7 @@ export class AuthService {
 
   async processWebhook(payload: any) {
     const { type, data } = payload;
-    this.logger.log(`Processing Clerk webhook event: ${type}`);
+    this.logger.log("Processing Clerk webhook event: [redacted]");
 
     try {
       switch (type) {
@@ -32,7 +32,7 @@ export class AuthService {
       }
       return { success: true };
     } catch (error) {
-      this.logger.error(`Error processing webhook event ${type}:`, error);
+      this.logger.error("Error processing webhook event [redacted]:", "[redacted]");
       throw error;
     }
   }
@@ -54,7 +54,7 @@ export class AuthService {
         logoUrl: data.image_url || data.logo_url,
       },
     });
-    this.logger.log(`Synced tenant organization: ${data.name} (${data.id})`);
+    this.logger.log("Synced tenant organization: [redacted] ([redacted])");
   }
 
   private async syncUser(data: any) {
@@ -75,7 +75,7 @@ export class AuthService {
           avatarUrl: data.image_url,
         },
       });
-      this.logger.log(`Updated user: ${primaryEmail} (${data.id})`);
+      this.logger.log("Updated user: [redacted] ([redacted])");
       return;
     }
 
@@ -96,7 +96,7 @@ export class AuthService {
           industry: 'general',
         },
       });
-      this.logger.log(`Created isolated personal tenant for new user ${primaryEmail}: ${targetTenant.slug}`);
+      this.logger.log("Created isolated personal tenant for new user [redacted]: [redacted]");
     }
 
     const superAdminEmails = (this.configService.get<string>('SUPER_ADMIN_EMAILS') || '')
@@ -116,7 +116,7 @@ export class AuthService {
         avatarUrl: data.image_url,
       },
     });
-    this.logger.log(`Synced user: ${primaryEmail} (${data.id}) to tenant ${targetTenant.id}`);
+    this.logger.log("Synced user: [redacted] ([redacted]) to tenant [redacted]");
   }
 
   private async syncOrgMembership(data: any) {
@@ -137,7 +137,7 @@ export class AuthService {
           role: assignedRole,
         },
       });
-      this.logger.log(`Assigned user ${clerkUserId} to tenant ${tenant.name} with role ${assignedRole}`);
+      this.logger.log("Assigned user [redacted] to tenant [redacted] with role [redacted]");
     }
   }
 }

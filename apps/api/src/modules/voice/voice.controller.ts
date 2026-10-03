@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req, Param, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Headers, UnauthorizedException, Req, Param, HttpCode, Header } from '@nestjs/common';
 import { VoiceService } from './voice.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -122,9 +122,25 @@ export class VoiceController {
   @Roles('STAFF')
   async initiateOutboundCall(
     @TenantId() tenantId: string,
-    @Body() data: { phoneNumber: string; purpose?: string },
+    @Body() data: { phoneNumber: string; purpose?: string; appointmentId?: string; requestId?: string },
   ) {
-    return this.voiceService.initiateOutboundCall(tenantId, data.phoneNumber, data.purpose);
+    return this.voiceService.initiateOutboundCall(tenantId, data.phoneNumber, data.purpose, data.appointmentId, data.requestId);
+  }
+
+  @Get('follow-ups')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getFollowUps(@TenantId() tenantId: string) { return this.voiceService.getFollowUps(tenantId); }
+
+  @Post('webhook/plivo-status')
+  @HttpCode(200)
+  async plivoStatus(@Query('followUpId') id: string, @Body() body: Record<string, string>, @Headers('x-plivo-signature-v3-nonce') nonce: string, @Headers('x-plivo-signature-v3') signature: string) {
+    return this.voiceService.handlePlivoStatus(id, body, nonce, signature);
+  }
+
+  @Post('plivo-answer')
+  @Header('Content-Type', 'application/xml')
+  async plivoAnswer(@Query('followUpId') id: string, @Body() body: Record<string, string>, @Headers('x-plivo-signature-v3-nonce') nonce: string, @Headers('x-plivo-signature-v3') signature: string) {
+    return this.voiceService.handlePlivoStatus(id, body, nonce, signature, true);
   }
 
   @Post('retell/agent')

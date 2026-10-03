@@ -26,7 +26,7 @@ export class CalendarSyncService {
     serviceName?: string;
     staffName?: string;
   }) {
-    this.logger.log(`Syncing appointment ${appointment.id} to Google Calendar for tenant ${tenantId}`);
+    this.logger.log("Syncing appointment [redacted] to Google Calendar for tenant [redacted]");
 
     const startTime = new Date(appointment.scheduledAt);
     const endTime = new Date(startTime.getTime() + (appointment.durationMins || 30) * 60 * 1000);
@@ -43,9 +43,9 @@ export class CalendarSyncService {
     if (googleApiKey) {
       try {
         // Post to Google Calendar API (or internal webhook)
-        this.logger.log(`Dispatched Google Calendar Event: ${JSON.stringify(eventPayload.summary)}`);
+        this.logger.log("Dispatched Google Calendar Event: [redacted]");
       } catch (err: any) {
-        this.logger.warn(`Google Calendar push warning: ${err.message}`);
+        this.logger.warn("Google Calendar push warning: [redacted]");
       }
     }
 

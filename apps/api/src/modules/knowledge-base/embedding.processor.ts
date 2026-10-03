@@ -17,7 +17,7 @@ export class EmbeddingProcessor extends WorkerHost {
   }
 
   async process(job: Job<IndexDocumentJobData>): Promise<any> {
-    this.logger.log(`Processing RAG embedding job ${job.id} for document ${job.data.documentId}`);
+    this.logger.log("Processing RAG embedding job [redacted] for document [redacted]");
     const count = await this.ragService.indexDocument(job.data.tenantId, job.data.documentId);
     return { indexedChunks: count };
   }

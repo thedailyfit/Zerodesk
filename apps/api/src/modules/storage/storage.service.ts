@@ -50,14 +50,14 @@ export class StorageService {
       });
 
       await this.s3Client.send(command);
-      this.logger.log(`Successfully uploaded file to R2: ${key}`);
+      this.logger.log("Successfully uploaded file to R2: [redacted]");
 
       return {
         key,
         url: `${process.env.R2_ENDPOINT}/${this.bucketName}/${key}`,
       };
     } catch (error: any) {
-      this.logger.error(`Failed to upload file to R2: ${error?.message || error}`, error?.stack);
+      this.logger.error("Failed to upload file to R2: [redacted]", "[redacted]");
       throw new InternalServerErrorException('Failed to upload file to storage.');
     }
   }
@@ -77,7 +77,7 @@ export class StorageService {
       const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 900 });
       return { uploadUrl, key };
     } catch (error: any) {
-      this.logger.error(`Failed to generate presigned URL: ${error?.message || error}`, error?.stack);
+      this.logger.error("Failed to generate presigned URL: [redacted]", "[redacted]");
       throw new InternalServerErrorException('Failed to generate upload URL.');
     }
   }
@@ -95,7 +95,7 @@ export class StorageService {
 
       return await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
     } catch (error: any) {
-      this.logger.error(`Failed to generate presigned download URL for key ${key}: ${error?.message || error}`, error?.stack);
+      this.logger.error("Failed to generate presigned download URL for key [redacted]: [redacted]", "[redacted]");
       throw new InternalServerErrorException(error?.message || 'Failed to generate download URL.');
     }
   }
@@ -108,9 +108,9 @@ export class StorageService {
       });
 
       await this.s3Client.send(command);
-      this.logger.log(`Successfully deleted file from R2: ${key}`);
+      this.logger.log("Successfully deleted file from R2: [redacted]");
     } catch (error: any) {
-      this.logger.error(`Failed to delete file from R2 (key: ${key}): ${error?.message || error}`, error?.stack);
+      this.logger.error("Failed to delete file from R2 (key: [redacted]): [redacted]", "[redacted]");
       throw new InternalServerErrorException('Failed to delete file from storage.');
     }
   }

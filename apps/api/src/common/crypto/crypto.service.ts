@@ -41,7 +41,7 @@ export class CryptoService {
       const authTag = cipher.getAuthTag().toString('hex');
       return `${iv.toString('hex')}:${authTag}:${ciphertext}`;
     } catch (error) {
-      this.logger.error(`Encryption failed: ${error}`);
+      this.logger.error("Encryption failed: [redacted]");
       throw new Error('Failed to encrypt sensitive data');
     }
   }
@@ -69,7 +69,7 @@ export class CryptoService {
       decrypted += decipher.final('utf8');
       return decrypted;
     } catch (error) {
-      this.logger.error(`Decryption verification failed (potential tampering): ${error}`);
+      this.logger.error("Decryption verification failed (potential tampering): [redacted]");
       throw new Error('Data integrity check failed or corrupted ciphertext');
     }
   }

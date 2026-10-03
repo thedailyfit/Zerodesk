@@ -1,0 +1,29 @@
+name: Voice Runtime Contracts
+
+on:
+  push:
+    branches: [main, master, develop, 'codex/**']
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  python-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            apps/voice-agent/requirements.txt
+            apps/voice-agent/requirements-test.txt
+      - name: Install pinned voice runtime and test tools
+        run: python -m pip install -r apps/voice-agent/requirements-test.txt
+      - name: Validate dependency compatibility
+        run: python -m pip check
+      - name: Verify constructors, fallback and tenant startup contracts
+        run: python -m pytest apps/voice-agent/tests/ -q

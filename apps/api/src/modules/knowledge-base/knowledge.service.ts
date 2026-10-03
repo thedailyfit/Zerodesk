@@ -58,9 +58,9 @@ export class KnowledgeService {
     });
 
     if (data.content && data.content !== doc.content) {
-      this.logger.log(`Document ${id} content updated. Triggering versioned atomic re-indexing...`);
+      this.logger.log("Document [redacted] content updated. Triggering versioned atomic re-indexing...");
       await this.ragService.enqueueIndexDocument(tenantId, id).catch((err) => {
-        this.logger.error(`Failed to re-index document ${id}: ${err.message}`);
+        this.logger.error("Failed to re-index document [redacted]: [redacted]");
       });
     }
 
@@ -83,7 +83,7 @@ export class KnowledgeService {
       }),
     ]);
 
-    this.logger.log(`Atomically deleted knowledge document ${id} and ${deletedChunks.count} vector chunks for tenant ${tenantId}`);
+    this.logger.log("Atomically deleted knowledge document [redacted] and [redacted] vector chunks for tenant [redacted]");
     return { success: true, message: `Document and ${deletedChunks.count} vector chunks permanently deleted` };
   }
 
@@ -125,7 +125,7 @@ export class KnowledgeService {
         extractedText = file.buffer.toString('utf-8');
       }
     } catch (err: any) {
-      this.logger.error(`Error parsing uploaded file ${filename}: ${err.message}`, err.stack);
+      this.logger.error("Error parsing uploaded file [redacted]: [redacted]", "[redacted]");
       throw new BadRequestException(`Could not extract text from ${filename}: ${err.message}`);
     }
 
@@ -142,7 +142,7 @@ export class KnowledgeService {
   async processAndEmbedDocument(tenantId: string, title: string, content: string, category = 'GENERAL') {
       if (typeof content !== 'string' || !content.trim()) throw new BadRequestException('Document content cannot be empty');
       if (Buffer.byteLength(content, 'utf8') > 2 * 1024 * 1024) throw new BadRequestException('Extracted document exceeds 2 MB of text');
-    this.logger.log(`Starting knowledge document processing for tenant ${tenantId}: "${title}"`);
+    this.logger.log("Starting knowledge document processing for tenant [redacted]: \"[redacted]\"");
 
     const doc = await this.prisma.knowledgeDocument.create({
       data: {
@@ -158,7 +158,7 @@ export class KnowledgeService {
 
     // Delegate indexing to table-aware RagService
     await this.ragService.enqueueIndexDocument(tenantId, doc.id).catch((err) => {
-      this.logger.error(`Failed to process document ${doc.id}: ${err.message}`, err.stack);
+      this.logger.error("Failed to process document [redacted]: [redacted]", "[redacted]");
     });
 
     return {

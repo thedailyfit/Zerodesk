@@ -163,7 +163,7 @@ export class ActionPolicyGuard {
           };
         }
       } catch (err: any) {
-        this.logger.warn(`TypeSafe tool policy guard check skipped due to error: ${err.message}`);
+        this.logger.warn("TypeSafe tool policy guard check skipped due to error: [redacted]");
         if (process.env.NODE_ENV === 'production') return { allowed: false, ruleId: 'DENY_POLICY_UNAVAILABLE', reason: 'Semantic policy verification unavailable' };
       }
     } else if (process.env.NODE_ENV === 'production') {

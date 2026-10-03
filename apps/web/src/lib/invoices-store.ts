@@ -34,6 +34,7 @@ export interface InvoiceRecord {
   paymentMethod: 'cash' | 'card' | 'upi' | 'insurance' | 'partial';
   paymentStatus: 'PAID' | 'PENDING' | 'OVERDUE' | 'PARTIAL';
   paidAmount: number;
+  manualCashReceiptId?: string;
   remainingBalance: number;
   dueDate: string;
   createdDate: string;
@@ -112,6 +113,7 @@ export function useInvoices() {
             paymentMethod: (inv.paymentMethod?.toLowerCase() as any) || 'upi',
             paymentStatus: (inv.paymentStatus || inv.status || 'PENDING').toUpperCase() as any,
             paidAmount: paid,
+            manualCashReceiptId: inv.manualCashReceiptId || undefined,
             remainingBalance: remaining,
             dueDate: inv.dueDate ? new Date(inv.dueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             createdDate: inv.createdAt ? new Date(inv.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -152,6 +154,7 @@ export function useInvoices() {
       customerId: data.patientId, customerName: data.customerName, phone: data.phone, email: data.email,
       subtotal: data.subtotal, taxAmount: data.totalGst, totalAmount: data.grandTotal,
       paidAmount: data.paidAmount, discountType: data.discountType,
+      manualCashReceiptId: data.manualCashReceiptId?.trim(),
       discountValue: data.discountValue, discountAmount: data.discountAmount,
       status: data.paymentStatus, paymentMethod: data.paymentMethod.toUpperCase(),
       notes: data.notes, dueDate: data.dueDate.split('T')[0],
@@ -166,6 +169,7 @@ export function useInvoices() {
   const updateInvoice = useCallback(async (id: string, updates: Partial<InvoiceRecord>) => {
     await api.put(`/invoices/${id}`, {
       status: updates.paymentStatus, paidAmount: updates.paidAmount,
+      manualCashReceiptId: updates.manualCashReceiptId?.trim(),
       paymentMethod: updates.paymentMethod?.toUpperCase(), notes: updates.notes,
     });
     await loadInvoices();

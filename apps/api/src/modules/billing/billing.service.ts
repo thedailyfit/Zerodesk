@@ -68,11 +68,11 @@ export class BillingService {
     if (!this.stripe) {
       const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
       if (isProduction) {
-        this.logger.error(`Stripe checkout attempted without STRIPE_SECRET_KEY in production for tenant ${tenantId}`);
+        this.logger.error("Stripe checkout attempted without STRIPE_SECRET_KEY in production for tenant [redacted]");
         throw new BadRequestException('Payment gateway is not currently configured. Please contact support.');
       }
       
-      this.logger.warn(`STRIPE_SECRET_KEY missing in development. Returning sandbox simulation URL for tenant ${tenantId}.`);
+      this.logger.warn("STRIPE_SECRET_KEY missing in development. Returning sandbox simulation URL for tenant [redacted].");
       return {
         url: finalSuccessUrl.replace('{CHECKOUT_SESSION_ID}', 'sandbox_simulated_session'),
         sessionId: 'sandbox_session',
@@ -113,7 +113,7 @@ export class BillingService {
         mode: 'stripe',
       };
     } catch (err: any) {
-      this.logger.error(`Stripe checkout session creation failed: ${err.message}`);
+      this.logger.error("Stripe checkout session creation failed: [redacted]");
       throw new BadRequestException(`Failed to create billing session: ${err.message}`);
     }
   }
@@ -132,11 +132,11 @@ export class BillingService {
     try {
       event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     } catch (err: any) {
-      this.logger.error(`Stripe webhook signature verification failed: ${err.message}`);
+      this.logger.error("Stripe webhook signature verification failed: [redacted]");
       throw new BadRequestException(`Webhook Error: ${err.message}`);
     }
 
-    this.logger.log(`Received verified Stripe webhook event: ${event.type} (${event.id})`);
+    this.logger.log("Received verified Stripe webhook event: [redacted] ([redacted])");
 
     if (!event.id) throw new BadRequestException('Stripe event ID is required');
 
@@ -199,7 +199,7 @@ export class BillingService {
               updatedAt: new Date(),
             },
           });
-          this.logger.log(`Reset usage metrics for renewed subscription cycle ${subId} (invoice: ${invoiceId})`);
+          this.logger.log("Reset usage metrics for renewed subscription cycle [redacted] (invoice: [redacted])");
         }
         break;
       }
@@ -210,12 +210,12 @@ export class BillingService {
           where: { stripeSubId: sub.id },
           data: { status: 'canceled', updatedAt: new Date() },
         });
-        this.logger.warn(`Marked subscription ${sub.id} as canceled`);
+        this.logger.warn("Marked subscription [redacted] as canceled");
         break;
       }
 
       default:
-        this.logger.debug(`Unhandled Stripe event type: ${event.type}`);
+        this.logger.debug("Unhandled Stripe event type: [redacted]");
     }
 
     return { received: true };
@@ -277,7 +277,7 @@ export class BillingService {
       },
     });
 
-    this.logger.log(`Activated ${plan} plan for tenant ${tenantId}`);
+    this.logger.log("Activated [redacted] plan for tenant [redacted]");
   }
 
   /**

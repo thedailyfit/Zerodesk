@@ -28,7 +28,7 @@ export class InvoiceService {
     return invoice;
   }
 
-  async create(tenantId: string, data: any) {
+  async create(tenantId: string, data: any, verifiedBy?: string) {
     if (data.customerId) {
       const customer = await this.prisma.customer.findFirst({
         where: { id: data.customerId, tenantId, deletedAt: null },
@@ -39,12 +39,13 @@ export class InvoiceService {
     }
 
     const accounting = this.calculate(data);
+    const paymentEvidence = this.paymentEvidence(data, accounting.paidAmount, verifiedBy);
     const invoiceNumber = data.invoiceNumber || `INV-${crypto.randomUUID()}`;
     return this.prisma.invoice.create({
       data: {
         tenantId, customerId: data.customerId || null, invoiceNumber,
         customerName: data.customerName, customerPhone: data.phone, customerEmail: data.email,
-        ...accounting, paymentMethod: data.paymentMethod || null, notes: data.notes,
+        ...accounting, ...paymentEvidence, paymentMethod: data.paymentMethod || null, notes: data.notes,
         dueDate: data.dueDate ? this.date(data.dueDate) : undefined,
         items: { create: accounting.items.map((item: any) => ({ ...item, tenantId })) },
       }, include: { customer: true, items: true },
@@ -89,18 +90,28 @@ export class InvoiceService {
     const taxAmount = round(items.reduce((sum: number, item: any) => sum + item.gstAmount, 0));
     const totalAmount = round(subtotal - discountAmount + taxAmount);
     const paidAmount = round(this.number(data.paidAmount ?? 0, 'paid amount', totalAmount));
-    const status = paidAmount >= totalAmount ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'PENDING';
+    const status = paidAmount > 0 && paidAmount >= totalAmount ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'PENDING';
     return { subtotal, taxAmount, totalAmount, discountType, discountValue, discountAmount, paidAmount, status, items };
   }
 
-  async update(tenantId: string, id: string, data: any) {
+  private paymentEvidence(data: any, paidAmount: number, verifiedBy?: string) {
+    if (!paidAmount) return {};
+    if (data.paymentMethod !== 'CASH' || typeof data.manualCashReceiptId !== 'string' ||
+        !/^[A-Za-z0-9][A-Za-z0-9._/-]{2,99}$/.test(data.manualCashReceiptId) || !verifiedBy) {
+      throw new BadRequestException('A manager-verified cash receipt is required; online payment references must be verified by the payment provider');
+    }
+    return { manualCashReceiptId: data.manualCashReceiptId, paymentVerifiedBy: verifiedBy, paymentVerifiedAt: new Date() };
+  }
+
+  async update(tenantId: string, id: string, data: any, verifiedBy?: string) {
     const invoice = await this.findById(tenantId, id);
     const paidAmount = data.paidAmount === undefined ? Number(invoice.paidAmount) : this.number(data.paidAmount, 'paid amount', Number(invoice.totalAmount));
-    const status = paidAmount >= Number(invoice.totalAmount) ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : (data.status === 'OVERDUE' ? 'OVERDUE' : 'PENDING');
+    const status = paidAmount > 0 && paidAmount >= Number(invoice.totalAmount) ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : (data.status === 'OVERDUE' ? 'OVERDUE' : 'PENDING');
     if (data.status === 'PAID' && status !== 'PAID') throw new BadRequestException('Record the paid amount before marking paid');
+    const paymentEvidence = this.paymentEvidence({ ...invoice, ...data }, paidAmount, verifiedBy);
     return this.prisma.invoice.update({
       where: { id, tenantId, deletedAt: null },
-      data: { status, paidAmount, paymentMethod: data.paymentMethod, notes: data.notes },
+      data: { status, paidAmount, ...paymentEvidence, paymentMethod: data.paymentMethod, notes: data.notes },
       include: { customer: true, items: true },
     });
   }

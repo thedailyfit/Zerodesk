@@ -1,6 +1,27 @@
 import { VoiceService } from './voice.service';
 
 describe('voice cumulative resource accounting', () => {
+  it('meters anonymous calls without creating or merging invented customer records', async () => {
+    const service: any = Object.create(VoiceService.prototype);
+    service.recordIdempotentUsage = jest.fn();
+    service.prisma = { customer: { findFirst: jest.fn(), create: jest.fn() } };
+    const result = await service.recordCallCompletion('tenant', '', 61, 'room-1', { tokensUsed: 12 });
+    expect(result).toMatchObject({ status: 'metered', conversationId: null });
+    expect(service.recordIdempotentUsage).toHaveBeenCalledWith('tenant', 'room-1', 61, 12);
+    expect(service.prisma.customer.findFirst).not.toHaveBeenCalled();
+    expect(service.prisma.customer.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses transfer without a tenant-owned destination and never fabricates availability', async () => {
+    const service: any = Object.create(VoiceService.prototype);
+    service.logger = { log: jest.fn() };
+    service.eventEmitter = { emit: jest.fn() };
+    const result = await service.handleVapiFunctionCall({ message: { functionCall: { name: 'transferToHuman' } } });
+    expect(result.forwardingPhoneNumber).toBeUndefined();
+    expect(service.eventEmitter.emit).not.toHaveBeenCalled();
+    const slots = await service.handleVapiFunctionCall({ message: { functionCall: { name: 'checkAvailability' } } });
+    expect(slots.result).toContain('not been verified');
+  });
   function setup() {
     const ledger = new Map<string, { amount: number }>();
     const subscription = { voiceMinutesUsed: 0, llmTokensUsed: 0, voiceMinutesLimit: 100 };
@@ -51,8 +72,8 @@ describe('voice cumulative resource accounting', () => {
 
   it('hides jobs from other tenants and never equates dispatch with call completion', async () => {
     const service: any = Object.create(VoiceService.prototype);
-    service.outboundQueue = { getJob: jest.fn(async () => ({ id: 'job', data: { tenantId: 'a' }, getState: async () => 'completed' })) };
+    service.prisma = { outboundFollowUp: { findFirst: jest.fn(async ({ where }) => where.tenantId === 'a' ? { id: 'job', tenantId: 'a', status: 'DISPATCHED', callUuid: 'provider-call' } : null) } };
     await expect(service.getOutboundJob('b', 'job')).rejects.toThrow('Outbound job not found');
-    expect(await service.getOutboundJob('a', 'job')).toMatchObject({ status: 'dispatch_finished', callCompletionVerified: false });
+    expect(await service.getOutboundJob('a', 'job')).toMatchObject({ status: 'DISPATCHED', callUuid: 'provider-call', callCompletionVerified: false });
   });
 });

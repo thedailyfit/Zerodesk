@@ -469,7 +469,7 @@ export class AppointmentService {
     if (slotCheck.conflict && slotCheck.requiresConsent) {
       if (!data.allowAlternativeDoctor) {
         // Patient consent required
-        this.logger.log(`Requested doctor ${slotCheck.requestedDoctor} unavailable. Returning alternative offer to caller.`);
+        this.logger.log("Requested doctor [redacted] unavailable. Returning alternative offer to caller.");
         return {
           status: 'REQUESTED_DOCTOR_UNAVAILABLE',
           requestedDoctor: slotCheck.requestedDoctor,
@@ -481,7 +481,7 @@ export class AppointmentService {
       } else if (slotCheck.alternativeDoctor) {
         // Patient consented to alternative doctor
         staffId = slotCheck.alternativeDoctor.id;
-        this.logger.log(`Patient consented to alternative doctor: ${slotCheck.alternativeDoctor.name} (${staffId})`);
+        this.logger.log("Patient consented to alternative doctor: [redacted] ([redacted])");
       } else {
         throw new ConflictException('No alternative staff member is available; choose another time');
       }
@@ -562,9 +562,9 @@ export class AppointmentService {
           `Need to reschedule or have questions? Reply directly to this message or call our 24/7 front desk.`;
 
         await this.whatsappService.sendMessage(tenantId, customer.phone, text);
-        this.logger.log(`Dispatched WhatsApp confirmation to ${customer.phone} for appointment ${createdAppt.id}`);
+        this.logger.log("Dispatched WhatsApp confirmation to [redacted] for appointment [redacted]");
       } catch (err: any) {
-        this.logger.warn(`Could not dispatch WhatsApp appointment confirmation: ${err.message}`);
+        this.logger.warn("Could not dispatch WhatsApp appointment confirmation: [redacted]");
       }
     }
 

@@ -181,7 +181,7 @@ export class ConsentService {
       return anonymized;
     });
 
-    this.logger.log(`DPDP erasure completed for customer ${customerId} in tenant ${tenantId}`);
+    this.logger.log("DPDP erasure completed for customer [redacted] in tenant [redacted]");
     return {
       success: true,
       message: 'Patient personal data erased and anonymized under DPDP Act 2023 statutory guidelines',

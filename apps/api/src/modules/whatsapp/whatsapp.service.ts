@@ -87,7 +87,7 @@ export class WhatsappService {
             const lockKey = `whatsapp:msg_lock:${msg.id}`;
             const acquired = await this.redisService.setNx(lockKey, 'locked', 600);
             if (!acquired) {
-              this.logger.warn(`Duplicate WhatsApp message skipped (Idempotency Lock): ${msg.id}`);
+              this.logger.warn("Duplicate WhatsApp message skipped (Idempotency Lock): [redacted]");
               continue;
             }
 
@@ -101,7 +101,7 @@ export class WhatsappService {
             });
 
             if (!tenantConfig) {
-              this.logger.warn(`No tenant config found for phone_number_id: ${phoneNumberId}`);
+              this.logger.warn("No tenant config found for phone_number_id: [redacted]");
               continue;
             }
 
@@ -162,7 +162,7 @@ export class WhatsappService {
 
       return { status: 'ok' };
     } catch (error) {
-      this.logger.error(`WhatsApp webhook error: ${error}`, (error as Error).stack);
+      this.logger.error("WhatsApp webhook error: [redacted]", "[redacted]");
       return { status: 'error' };
     }
   }
@@ -181,7 +181,7 @@ export class WhatsappService {
       where: { tenantId, phone: normalizedTo },
     });
     if (customer?.dndStatus && !options?.isSystemConfirmation) {
-      this.logger.warn(`Skipping WhatsApp outbound message to ${to}: Customer has opted out (DND active)`);
+      this.logger.warn("Skipping WhatsApp outbound message to [redacted]: Customer has opted out (DND active)");
       return { success: false, reason: 'DND_ACTIVE', skipped: true };
     }
 
@@ -212,17 +212,17 @@ export class WhatsappService {
 
     const result = await response.json();
     if (!response.ok || result.error) {
-      this.logger.error(`Meta Graph API error for ${to}: ${JSON.stringify(result.error || result)}`);
+      this.logger.error("Meta Graph API error for [redacted]: [redacted]");
       throw new Error(`WhatsApp send failed: ${result.error?.message || 'Meta API HTTP error'}`);
     }
 
     const waMessageId = result.messages?.[0]?.id;
     if (!waMessageId) {
-      this.logger.error(`Meta Graph API returned success but missing message ID for ${to}: ${JSON.stringify(result)}`);
+      this.logger.error("Meta Graph API returned success but missing message ID for [redacted]: [redacted]");
       throw new Error('WhatsApp send failed: Missing message ID from Meta');
     }
 
-    this.logger.log(`WhatsApp message sent to ${to}: ${waMessageId}`);
+    this.logger.log("WhatsApp message sent to [redacted]: [redacted]");
 
     // Persist outbound message and meter quota ONLY on verified send
     await this.persistAndMeterOutboundMessage(tenantId, to, message, waMessageId);
@@ -274,7 +274,7 @@ export class WhatsappService {
 
     const result = await response.json();
     if (!response.ok || result.error || !result.messages?.[0]?.id) {
-      this.logger.error(`Meta Graph API template error for ${to}: ${JSON.stringify(result.error || result)}`);
+      this.logger.error("Meta Graph API template error for [redacted]: [redacted]");
       throw new Error(`WhatsApp template send failed: ${result.error?.message || 'Meta API HTTP error'}`);
     }
     await this.persistAndMeterOutboundMessage(tenantId, to, `[Template: ${templateName}]`, result.messages?.[0]?.id);
@@ -330,7 +330,7 @@ export class WhatsappService {
 
     const result = await response.json();
     if (!response.ok || result.error || !result.messages?.[0]?.id) {
-      this.logger.error(`Meta Graph API interactive buttons error for ${to}: ${JSON.stringify(result.error || result)}`);
+      this.logger.error("Meta Graph API interactive buttons error for [redacted]: [redacted]");
       throw new Error(`WhatsApp interactive buttons send failed: ${result.error?.message || 'Meta API HTTP error'}`);
     }
     await this.persistAndMeterOutboundMessage(tenantId, to, bodyText, result.messages?.[0]?.id);
@@ -382,7 +382,7 @@ export class WhatsappService {
         data: { whatsappMessagesUsed: { increment: 1 } },
       });
     } catch (err: any) {
-      this.logger.warn(`Failed to meter/store outbound message: ${err.message}`);
+      this.logger.warn("Failed to meter/store outbound message: [redacted]");
     }
   }
 
@@ -425,7 +425,7 @@ export class WhatsappService {
         mimeType,
       };
     } catch (err: any) {
-      this.logger.error(`Media download failed for ID ${mediaId}: ${err.message}`);
+      this.logger.error("Media download failed for ID [redacted]: [redacted]");
       throw err;
     }
   }
@@ -540,7 +540,7 @@ export class WhatsappService {
           accessToken = tokenData.access_token || accessToken;
         }
       } catch (err: any) {
-        this.logger.warn(`Failed to exchange Meta OAuth code: ${err.message}`);
+        this.logger.warn("Failed to exchange Meta OAuth code: [redacted]");
       }
     }
 
@@ -569,7 +569,7 @@ export class WhatsappService {
       },
     });
 
-    this.logger.log(`Successfully completed Meta Embedded Signup for tenant ${tenantId} (Phone: ${phoneNumberId})`);
+    this.logger.log("Successfully completed Meta Embedded Signup for tenant [redacted] (Phone: [redacted])");
 
     return {
       success: true,
@@ -631,7 +631,7 @@ export class WhatsappService {
             language: 'en',
           },
         });
-        this.logger.log(`New WhatsApp customer created: ${normalizedPhone}`);
+        this.logger.log("New WhatsApp customer created: [redacted]");
       } catch (error: any) {
         // Handle P0-01 race condition explicitly if unique constraint fails
         if (error.code === 'P2002') {
@@ -702,7 +702,7 @@ export class WhatsappService {
         }),
       });
     } catch (error) {
-      this.logger.warn(`Failed to mark message as read: ${error}`);
+      this.logger.warn("Failed to mark message as read: [redacted]");
     }
   }
 }

@@ -130,7 +130,7 @@ export class ContextService {
           : '',
       };
     } catch (error) {
-      this.logger.error(`Failed to assemble context: ${error}`);
+      this.logger.error("Failed to assemble context: [redacted]");
       return {
         customer: null,
         recentInteractions: [],

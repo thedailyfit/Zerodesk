@@ -17,7 +17,7 @@ export class WhatsappStatusListener {
   }) {
     try {
       const { messageId, status, timestamp } = payload;
-      this.logger.log(`Received WhatsApp status update: ${messageId} -> ${status}`);
+      this.logger.log("Received WhatsApp status update: [redacted] -> [redacted]");
 
       // Search for message with matching waMessageId in metadata
       const message = await this.prisma.message.findFirst({
@@ -42,10 +42,10 @@ export class WhatsappStatusListener {
           data: { metadata: updatedMeta },
         });
 
-        this.logger.log(`Updated message ${message.id} status to ${status}`);
+        this.logger.log("Updated message [redacted] status to [redacted]");
       }
     } catch (error: any) {
-      this.logger.error(`Failed to update message status: ${error.message}`);
+      this.logger.error("Failed to update message status: [redacted]");
     }
   }
 }

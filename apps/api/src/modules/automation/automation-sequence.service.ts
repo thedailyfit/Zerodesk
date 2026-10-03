@@ -16,7 +16,7 @@ export class AutomationSequenceService {
     const workflows = await this.prisma.automationWorkflow.findMany({ where: { isActive: true, triggerType: 'SCHEDULED' }, select: { tenantId: true }, distinct: ['tenantId'] });
     for (const { tenantId } of workflows) {
       try { await this.runForTenant(tenantId); }
-      catch (error) { this.logger.error(`Sequence tenant ${tenantId} failed: ${(error as Error).message}`); }
+      catch (error) { this.logger.error("Sequence tenant [redacted] failed: [redacted]"); }
     }
   }
 

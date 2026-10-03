@@ -39,7 +39,7 @@ export class RagService implements OnModuleInit {
       `);
       this.logger.log('Verified HNSW vector index on knowledge_chunks');
     } catch (e: any) {
-      this.logger.warn(`Could not verify HNSW index automatically: ${e.message}`);
+      this.logger.warn("Could not verify HNSW index automatically: [redacted]");
     }
   }
 
@@ -56,7 +56,7 @@ export class RagService implements OnModuleInit {
       removeOnComplete: true,
       removeOnFail: true,
     });
-    this.logger.log(`Enqueued document ${documentId} for indexing (Job ID: ${job.id})`);
+    this.logger.log("Enqueued document [redacted] for indexing (Job ID: [redacted])");
     return { jobId: job.id, status: 'enqueued' };
   }
 
@@ -73,7 +73,7 @@ export class RagService implements OnModuleInit {
       try {
         await this.enqueueIndexDocument(doc.tenantId, doc.id);
       } catch (error: any) {
-        this.logger.warn(`Index delivery pending for ${doc.id}: ${error.message}`);
+        this.logger.warn("Index delivery pending for [redacted]: [redacted]");
       }
     }
   }
@@ -117,7 +117,7 @@ export class RagService implements OnModuleInit {
           LIMIT 15
         `;
       } catch (embErr: any) {
-        this.logger.warn(`Vector search unavailable, falling back to keyword search: ${embErr.message}`);
+        this.logger.warn("Vector search unavailable, falling back to keyword search: [redacted]");
       }
 
       // 2. Stage 1B: Multi-token keyword search for exact clinical, service, and pricing terms
@@ -188,14 +188,14 @@ export class RagService implements OnModuleInit {
           // If all chunks failed screening, return empty array to prevent prompt injection / harmful leakage.
           return filtered.slice(0, topK);
         } catch (shieldErr: any) {
-          this.logger.warn(`TypeSafe Jev passage shield bypassed: ${shieldErr?.message}`);
+          this.logger.warn("TypeSafe Jev passage shield bypassed: [redacted]");
           return process.env.NODE_ENV === 'production' ? [] : reranked.slice(0, topK);
         }
       }
 
       return process.env.NODE_ENV === 'production' ? [] : reranked.slice(0, topK);
     } catch (error) {
-      this.logger.error(`RAG search failed: ${error}`, (error as Error).stack);
+      this.logger.error("RAG search failed: [redacted]", "[redacted]");
       return [];
     }
   }

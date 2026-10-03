@@ -47,6 +47,7 @@ export default function BillingPage() {
   const [discountMode, setDiscountMode] = useState<'amount' | 'percent'>('percent');
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [method, setMethod] = useState<'cash' | 'card' | 'upi' | 'insurance'>('card');
+  const [manualCashReceiptId, setManualCashReceiptId] = useState('');
 
   // Partial Payment
   const [partialPaymentMode, setPartialPaymentMode] = useState<'FULL' | 'PER_SESSION' | 'CUSTOM'>('FULL');
@@ -179,6 +180,12 @@ export default function BillingPage() {
     });
     
     try {
+    if (amountToPay > 0) {
+      if (method !== 'cash') throw new Error('Online payment verification is not available here. Create an unpaid invoice from Invoices, or record a verified cash receipt.');
+      if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{2,99}$/.test(manualCashReceiptId.trim())) {
+        throw new Error('Enter the verified cash receipt ID (3–100 letters, numbers, dots, slashes, underscores or hyphens).');
+      }
+    }
     await addInvoice({
       nicheId: currentNiche,
       patientId: selectedPatient.id,
@@ -195,6 +202,7 @@ export default function BillingPage() {
       paymentMethod: method,
       paymentStatus: amountToPay < grandTotal ? 'PARTIAL' : 'PAID',
       paidAmount: amountToPay,
+      manualCashReceiptId: amountToPay > 0 && method === 'cash' ? manualCashReceiptId.trim() : undefined,
       remainingBalance: Math.max(0, grandTotal - amountToPay),
       dueDate: new Date().toISOString(),
       createdDate: new Date().toISOString(),
@@ -532,6 +540,21 @@ export default function BillingPage() {
                 ))}
               </div>
             </div>
+
+            {method === 'cash' && amountToPay > 0 && (
+              <div>
+                <label htmlFor="cash-receipt-id" className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 block">Verified Cash Receipt ID</label>
+                <input
+                  id="cash-receipt-id"
+                  value={manualCashReceiptId}
+                  onChange={(e) => setManualCashReceiptId(e.target.value)}
+                  maxLength={100}
+                  required
+                  placeholder="Enter the receipt ID after verifying payment"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs font-mono text-[var(--color-text)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
 
             {hasPackage && (
               <div className="mt-4 pt-4 border-t border-[var(--color-border)]">

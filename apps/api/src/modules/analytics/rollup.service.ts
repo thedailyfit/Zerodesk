@@ -29,7 +29,7 @@ export class RollupService {
       await this.prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW tenant_daily_analytics;`);
       this.logger.log('Materialized View tenant_daily_analytics refreshed successfully.');
     } catch (error) {
-      this.logger.warn(`Materialized View refresh notice: ${error}`);
+      this.logger.warn("Materialized View refresh notice: [redacted]");
     }
   }
 }

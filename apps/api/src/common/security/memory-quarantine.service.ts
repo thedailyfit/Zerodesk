@@ -75,7 +75,7 @@ export class MemoryQuarantineService {
     const quarantined = violations.length > 0;
     if (quarantined) {
       this.logger.warn(
-        `[MEMORY_POISONING_PREVENTED] Detected and neutralized ${violations.length} injection pattern(s): ${violations.join(', ')}`,
+        "[MEMORY_POISONING_PREVENTED] Detected and neutralized [redacted] injection pattern(s): [redacted]",
       );
     }
 

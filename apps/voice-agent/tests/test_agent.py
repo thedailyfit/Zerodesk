@@ -56,9 +56,14 @@ async def test_transfer_to_human_tool():
     tools = create_call_tools(ctx)
     transfer_fn = next(t for t in tools if t.__name__ == "transfer_to_human")
 
-    result = await transfer_fn(reason="Severe pain")
-    assert "human frontdesk team" in result
-    assert "Severe pain" in result
+    with patch("aiohttp.ClientSession.post") as mock_post:
+        response = AsyncMock()
+        response.status = 200
+        response.json = AsyncMock(return_value={"forwardingNumber": "+919999900000"})
+        mock_post.return_value.__aenter__.return_value = response
+        result = await transfer_fn(reason="Severe pain")
+        assert "Transferring your call" in result
+        assert mock_post.call_args.kwargs["json"]["reason"] == "Severe pain"
 
 
 @pytest.mark.asyncio

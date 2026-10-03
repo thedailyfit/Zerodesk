@@ -26,7 +26,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     this.client.on('error', (err) => {
       this.isConnected = false;
-      this.logger.warn(`Redis connection unavailable (${err.message}). Fallback active.`);
+      this.logger.warn("Redis connection unavailable ([redacted]). Fallback active.");
     });
 
     this.client.on('connect', () => {
@@ -36,7 +36,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     // Attempt non-blocking initial connection
     this.client.connect().catch((err) => {
-      this.logger.warn(`Redis initial connect failed: ${err.message}. Operating in fallback mode.`);
+      this.logger.warn("Redis initial connect failed: [redacted]. Operating in fallback mode.");
     });
   }
 

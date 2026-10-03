@@ -69,7 +69,7 @@ export class LlmService {
       try {
         return await this.callProvider(route.provider, messages, { ...options, model: route.model });
       } catch (error: any) {
-        this.logger.warn(`LLM provider [${route.provider}] failed; trying the next configured route`);
+        this.logger.warn("LLM provider [[redacted]] failed; trying the next configured route");
       }
     }
 
@@ -194,7 +194,7 @@ export class LlmService {
           return embedding;
         }
       } catch (err: any) {
-        this.logger.warn(`OpenAI embedding attempt ${attempt} failed: ${err.message}`);
+        this.logger.warn("OpenAI embedding attempt [redacted] failed: [redacted]");
         if (attempt === 2) {
           throw new Error(`Embedding generation failed after 2 attempts: ${err.message}`);
         }

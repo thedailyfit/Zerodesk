@@ -38,7 +38,7 @@ export class EvalProcessor extends WorkerHost {
 
   async process(job: Job<EvalJobData>): Promise<any> {
     const { traceId, tenantId, query, response, contextChunks, toolCalls, sessionGoal, goalAchieved } = job.data;
-    this.logger.log(`Evaluating AI trace ${traceId} (3-Tier Framework) for tenant ${tenantId}`);
+    this.logger.log("Evaluating AI trace [redacted] (3-Tier Framework) for tenant [redacted]");
 
     try {
       // 1. Price Consistency Audit: Check if response mentions Indian Rupee amount (₹ or Rs.)
@@ -101,7 +101,7 @@ export class EvalProcessor extends WorkerHost {
             400,
           );
         } catch (err: any) {
-          this.logger.warn(`TypeSafe observability evaluation fallback triggered: ${err.message}`);
+          this.logger.warn("TypeSafe observability evaluation fallback triggered: [redacted]");
         }
       }
 
@@ -151,7 +151,7 @@ export class EvalProcessor extends WorkerHost {
             suggestedFix: `Update service catalog or correct knowledge base chunk to reflect current treatment fees.`,
           },
         });
-        this.logger.warn(`CRITICAL: Automated PRICE_MUTATION flag raised for trace ${traceId}`);
+        this.logger.warn("CRITICAL: Automated PRICE_MUTATION flag raised for trace [redacted]");
       }
 
       // B. Clinical Safety Violation Flag
@@ -167,7 +167,7 @@ export class EvalProcessor extends WorkerHost {
             suggestedFix: `Reinforce strict system prompt boundaries to prohibit medical or financial guarantees.`,
           },
         });
-        this.logger.warn(`CRITICAL: Automated CLINICAL_SAFETY_VIOLATION flag raised for trace ${traceId}`);
+        this.logger.warn("CRITICAL: Automated CLINICAL_SAFETY_VIOLATION flag raised for trace [redacted]");
       }
 
       // C. Ungrounded Hallucination Audit
@@ -183,7 +183,7 @@ export class EvalProcessor extends WorkerHost {
             suggestedFix: `Review query against clinic knowledge base documents and add missing treatment guidelines.`,
           },
         });
-        this.logger.warn(`HIGH: Automated UNGROUNDED_FABRICATION flag raised for trace ${traceId}`);
+        this.logger.warn("HIGH: Automated UNGROUNDED_FABRICATION flag raised for trace [redacted]");
       }
 
       // C. Span / Tool Level: Tool Parameter Accuracy & Execution Audit (Mitigates Waterfall Cascade)
@@ -201,7 +201,7 @@ export class EvalProcessor extends WorkerHost {
                 suggestedFix: `Check backend API connectivity and parameter requirements for ${tool.toolName}.`,
               },
             });
-            this.logger.error(`CRITICAL: Automated TOOL_EXECUTION_FAILURE flag raised for tool ${tool.toolName}`);
+            this.logger.error("CRITICAL: Automated TOOL_EXECUTION_FAILURE flag raised for tool [redacted]");
           } else if (tool.toolName === 'book_appointment') {
             const p = tool.parameters || {};
             if (!p.serviceName || !p.preferredDate || !p.preferredTime) {
@@ -235,12 +235,12 @@ export class EvalProcessor extends WorkerHost {
             suggestedFix: `Optimize conversational funnel and reduce friction in multi-turn booking steps.`,
           },
         });
-        this.logger.log(`MEDIUM: Automated SESSION_GOAL_DROPPED flag raised for goal ${sessionGoal}`);
+        this.logger.log("MEDIUM: Automated SESSION_GOAL_DROPPED flag raised for goal [redacted]");
       }
 
       return { faithfulness, hallucinationScore, priceMismatch: priceMismatchFlag };
     } catch (err: any) {
-      this.logger.error(`Evaluation job failed for trace ${traceId}: ${err.message}`, err.stack);
+      this.logger.error("Evaluation job failed for trace [redacted]: [redacted]", "[redacted]");
       throw err;
     }
   }

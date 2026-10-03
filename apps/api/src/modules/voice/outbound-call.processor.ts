@@ -8,7 +8,7 @@ export interface OutboundCallJobData {
   tenantId: string;
   phoneNumber: string;
   purpose?: string;
-  customerName?: string;
+  followUpId?: string;
 }
 
 @Processor('outbound-calls')
@@ -23,8 +23,8 @@ export class OutboundCallProcessor extends WorkerHost {
   }
 
   async process(job: Job<OutboundCallJobData>): Promise<any> {
-    const { tenantId, phoneNumber, purpose, customerName } = job.data;
-    this.logger.log(`Processing outbound call job ${job.id} for tenant ${tenantId} to ${phoneNumber}`);
+    const { tenantId, phoneNumber, purpose, followUpId } = job.data;
+    this.logger.log("Processing outbound call job [redacted] for tenant [redacted]");
 
     // Fetch tenant to check timezone for TCPA compliance
     const tenant = await this.prisma.tenant.findUnique({
@@ -38,7 +38,7 @@ export class OutboundCallProcessor extends WorkerHost {
 
     if (!isAllowedHours) {
       this.logger.warn(
-        `Outside legal calling hours (8 AM - 9 PM in ${timezone}) for job ${job.id}. Delaying job to next 8 AM window.`,
+        "Outside legal calling hours (8 AM - 9 PM in [redacted]) for job [redacted]. Delaying job to next 8 AM window.",
       );
       const delayMs = this.calculateMsUntilNext8AM(timezone);
       
@@ -48,11 +48,11 @@ export class OutboundCallProcessor extends WorkerHost {
 
     // Call allowed -> execute call via VoiceService
     try {
-      const result = await this.voiceService.executeOutboundCall(tenantId, phoneNumber, purpose);
-      this.logger.log(`Outbound call executed successfully for job ${job.id}: ${JSON.stringify(result)}`);
+      const result = await this.voiceService.executeOutboundCall(tenantId, phoneNumber, purpose, followUpId);
+      this.logger.log("Outbound call executed successfully for job [redacted]");
       return result;
     } catch (error) {
-      this.logger.error(`Outbound call failed for job ${job.id}: ${error}`);
+      this.logger.error("Outbound call failed for job [redacted]");
       throw error;
     }
   }
@@ -71,7 +71,7 @@ export class OutboundCallProcessor extends WorkerHost {
       const hour = parseInt(formatter.format(now), 10);
       return hour >= 8 && hour < 21;
     } catch (error) {
-      this.logger.warn(`Failed to parse timezone ${timezone}; dispatch blocked: ${error}`);
+      this.logger.warn("Failed to parse timezone [redacted]; dispatch blocked");
       return false;
     }
   }

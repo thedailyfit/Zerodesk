@@ -60,12 +60,12 @@ export class TypeSafeService {
           apiKey,
         });
         this.isAvailable = true;
-        this.logger.log(`TypeSafe AI (Jev System One) client initialized with model ${this.defaultModel}`);
+        this.logger.log("TypeSafe AI (Jev System One) client initialized with model [redacted]");
       } catch (err: any) {
-        this.logger.warn(`Failed to initialize TypeSafeClient: ${err.message}. Running in fail-open mode.`);
+        this.logger.warn('TypeSafe client initialization failed; production protection checks reject unavailable evaluations.');
       }
     } else {
-      this.logger.warn('TYPESAFE_API_KEY not configured. Running in fail-open fallback mode.');
+      this.logger.warn('TYPESAFE_API_KEY not configured; production protection checks reject unavailable evaluations.');
     }
   }
 
@@ -122,7 +122,7 @@ export class TypeSafeService {
       }
       return null;
     } catch (err: any) {
-      this.logger.warn(`TypeSafe System One evaluation failed/timed out: ${err.message}. Failing open.`);
+      this.logger.warn('TypeSafe evaluation unavailable or timed out; caller must apply its unavailable-evaluation policy.');
       return null;
     }
   }

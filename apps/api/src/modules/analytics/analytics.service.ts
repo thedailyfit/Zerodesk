@@ -22,7 +22,7 @@ export class AnalyticsService {
       try {
         return JSON.parse(cachedData);
       } catch (e) {
-        this.logger.warn(`Failed to parse cached KPI data for tenant ${tenantId}`, e);
+        this.logger.warn("Failed to parse cached KPI data for tenant [redacted]", "[redacted]");
         // Cache parse error, fallback to DB
       }
     }
