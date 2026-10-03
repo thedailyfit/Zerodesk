@@ -45,7 +45,8 @@ export default function StaffDashboardPage() {
     }
 
     loadStaffData();
-  }, []);
+  }, [customerTerm]);
+
 
   const isMedicalNiche = nicheConfig?.id === 'skin' || nicheConfig?.id === 'dental';
   const staffPrefix = isMedicalNiche ? 'Dr. ' : '';

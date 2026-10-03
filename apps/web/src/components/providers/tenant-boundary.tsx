@@ -21,7 +21,7 @@ export function TenantBoundary({ children }: { children: React.ReactNode }) {
     configureApiClient({ tokenProvider: () => getToken(), tenantIdProvider: () => tenantId });
     setReady(identity);
     return () => { setStorageScope(null); };
-  }, [identity, tenantId, getToken]);
+  }, [identity, tenantId, getToken, userId]);
   if (!identity || ready !== identity) return null;
   return <Fragment key={identity}>{children}</Fragment>;
 }

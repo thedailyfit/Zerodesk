@@ -1,7 +1,7 @@
 'use client';
 
 import { tenantStorage } from '@/lib/tenant-storage';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import type { NicheId, ActiveNicheId } from '@/config/niches/types';
@@ -93,11 +93,12 @@ export default function OutboundCampaignsPage() {
   const [testRunningCampId, setTestRunningCampId] = useState<string | null>(null);
   const [testSuccessMessage, setTestSuccessMessage] = useState<string | null>(null);
 
-  const loadCampaigns = async () => {
+  const loadCampaigns = useCallback(async () => {
     const rows = await api.get<any[]>('/automations');
     setCampaigns(rows.filter(r => r.definition?.kind === 'campaign' && r.definition?.niche === currentNiche).map(r => ({ ...r.definition.campaign, id: r.id, status: r.isActive ? 'ACTIVE' : 'DRAFT', stats: { sent: null, delivered: null, replied: null } })));
-  };
-  useEffect(() => { void loadCampaigns().catch(() => toast.error('Campaigns could not be loaded.')); }, [currentNiche]);
+  }, [currentNiche]);
+  useEffect(() => { void loadCampaigns().catch(() => toast.error('Campaigns could not be loaded.')); }, [loadCampaigns]);
+
   const toggleCampaignStatus = async (id: string) => {
     const campaign = campaigns.find(c => c.id === id);
     if (!campaign) return;

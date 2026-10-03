@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic2, 
@@ -30,7 +30,7 @@ export default function SuperAdminVoiceFleetPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Sync with live database on load
-  const fetchLiveVoices = async () => {
+  const fetchLiveVoices = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await apiClient<AdminVoice[]>('/admin/voices');
@@ -42,11 +42,12 @@ export default function SuperAdminVoiceFleetPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setVoices]);
 
   useEffect(() => {
     fetchLiveVoices();
-  }, []);
+  }, [fetchLiveVoices]);
+
 
   const [newVoice, setNewVoice] = useState<Partial<AdminVoice>>({
     provider: 'elevenlabs',

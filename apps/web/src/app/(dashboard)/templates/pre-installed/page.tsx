@@ -1,7 +1,7 @@
 'use client';
 
 import { tenantStorage } from '@/lib/tenant-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import Link from 'next/link';
@@ -31,15 +31,15 @@ import type { NicheTemplate } from '@/config/niches/types';
 export default function PreinstalledTemplatesPage() {
   const { currentNiche, nicheConfig } = useNiche();
 
-  const getDefaultTemplates = () => {
+  const getDefaultTemplates = useCallback(() => {
     return (nicheConfig.templates || []).map((t, idx) => ({
       ...t,
       id: t.id || `pre-${idx}`,
       isActive: true, // "Use it" toggle default
     }));
-  };
+  }, [nicheConfig.templates]);
 
-  const [templates, setTemplates] = useState<any[]>(getDefaultTemplates());
+  const [templates, setTemplates] = useState<any[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<'ALL' | 'WHATSAPP' | 'EMAIL' | 'VOICE'>('ALL');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function PreinstalledTemplatesPage() {
       }
     }
     setTemplates(getDefaultTemplates());
-  }, [currentNiche, nicheConfig]);
+  }, [currentNiche, getDefaultTemplates]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

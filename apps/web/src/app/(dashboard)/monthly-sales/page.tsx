@@ -171,7 +171,8 @@ export default function MonthlySalesPage() {
     }
 
     loadSales();
-  }, [monthlyTarget]);
+  }, [monthlyTarget, nicheConfig.terminology?.service]);
+
 
   const progressPercent = monthlyTarget > 0 ? Math.min(100, Math.round((currentMonthRevenue / monthlyTarget) * 100)) : 0;
 

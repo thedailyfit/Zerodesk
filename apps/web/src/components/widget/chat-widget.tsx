@@ -143,6 +143,7 @@ export function ChatWidget({
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center border border-white/30 text-white font-bold shadow-inner">
                     {avatarUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={avatarUrl} alt={botName} className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <Bot size={22} />

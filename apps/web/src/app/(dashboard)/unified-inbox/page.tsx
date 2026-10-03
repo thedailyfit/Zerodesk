@@ -83,17 +83,21 @@ export default function UnifiedInboxPage() {
   const [selectedContactId, setSelectedContactId] = useState<string>('c1');
 
   // Load conversations and connect WebSocket stream
+  const fetchConversations = store.fetchConversations;
+  const initSocket = store.initSocket;
+
   React.useEffect(() => {
-    store.fetchConversations();
+    fetchConversations();
     let cleanup: (() => void) | undefined;
     async function init() {
       const token = await getToken();
       const tenantId = typeof window !== 'undefined' ? tenantStorage.getItem('zerodesk_tenant_id') || undefined : undefined;
-      cleanup = store.initSocket(token || undefined, tenantId);
+      cleanup = initSocket(token || undefined, tenantId);
     }
     init();
     return () => cleanup?.();
-  }, [getToken]);
+  }, [fetchConversations, initSocket, getToken]);
+
 
   const contacts = (store.contacts && store.contacts.length > 0) ? store.contacts : INITIAL_CONTACTS;
   const activeSelectedId = store.selectedContactId || selectedContactId;

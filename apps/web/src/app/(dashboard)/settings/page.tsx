@@ -403,6 +403,7 @@ export default function SettingsPage() {
                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-2">Clinic Logo *</label>
                     <label className="w-24 h-24 border-2 border-dashed border-blue-500/40 hover:border-blue-500 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all bg-[var(--color-bg)] overflow-hidden relative group">
                       {logoPreview ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <div className="flex flex-col items-center text-center p-2">

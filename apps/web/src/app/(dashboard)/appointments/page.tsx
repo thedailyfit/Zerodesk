@@ -125,7 +125,7 @@ export default function AppointmentsPage() {
     }).catch(() => {
       // Offline fallback
     });
-  }, [currentNiche]);
+  }, [currentNiche, nicheConfig.terminology?.customer, nicheConfig.terminology?.service, nicheConfig.terminology?.staff]);
 
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [calendarSubView, setCalendarSubView] = useState<'month' | 'day'>('month');

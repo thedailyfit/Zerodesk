@@ -144,6 +144,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
           {/* Clinic Cover Image Banner */}
           <div className="relative h-32 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 overflow-hidden">
             {config.coverImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img 
                 src={config.coverImage} 
                 alt="Clinic Cover" 

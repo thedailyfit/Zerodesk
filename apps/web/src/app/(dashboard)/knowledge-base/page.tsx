@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { apiClient } from '@/lib/api-client';
@@ -61,7 +61,7 @@ export default function KnowledgeBasePage() {
   const { currentNiche, nicheConfig } = useNiche();
   
   // Format niche default docs
-  const getDefaultDocs = (): DocumentItem[] => {
+  const getDefaultDocs = useCallback((): DocumentItem[] => {
     if (nicheConfig?.knowledgeBaseDocs && nicheConfig.knowledgeBaseDocs.length > 0) {
       return (nicheConfig.knowledgeBaseDocs as any[]).map((d, i) => ({
         id: d.id || `kb-${i}`,
@@ -74,9 +74,10 @@ export default function KnowledgeBasePage() {
       }));
     }
     return INITIAL_DOCUMENTS;
-  };
+  }, [nicheConfig?.knowledgeBaseDocs]);
 
-  const [documents, setDocuments] = useState<DocumentItem[]>(getDefaultDocs());
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   
@@ -129,7 +130,8 @@ export default function KnowledgeBasePage() {
     }
     loadDocs();
     return () => { isMounted = false; };
-  }, [currentNiche, nicheConfig]);
+  }, [currentNiche, getDefaultDocs]);
+
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

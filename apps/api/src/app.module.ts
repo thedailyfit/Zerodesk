@@ -31,9 +31,11 @@ import { SupportModule } from './modules/support/support.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { SecurityModule } from './common/security/security.module';
+import { TenantContextInterceptor } from './common/interceptors/tenant-context.interceptor';
+
 
 @Module({
   imports: [
@@ -106,6 +108,10 @@ import { SecurityModule } from './common/security/security.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantContextInterceptor,
     },
   ],
 })

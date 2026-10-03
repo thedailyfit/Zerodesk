@@ -1,7 +1,7 @@
 "use client";
 
 import { tenantStorage } from '@/lib/tenant-storage';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, Plus, Trash2, Edit2, Copy, Save, X, Search,
@@ -222,11 +222,12 @@ export default function AutomationsPage() {
     lastRun: row.lastRunAt ? new Date(row.lastRunAt).toLocaleString() : 'Never',
     runCount24h: 0, successRate: 0,
   });
-  const loadWorkflows = async () => {
+  const loadWorkflows = useCallback(async () => {
     const rows = await api.get<any[]>('/automations');
     setWorkflows(rows.filter(r => r.definition?.niche === currentNiche && r.definition?.kind === 'smart-action').map(mapWorkflow));
-  };
-  useEffect(() => { setWorkflows([]); void loadWorkflows().catch(() => setToastMessage('Unable to load workflows.')); }, [currentNiche]);
+  }, [currentNiche]);
+  useEffect(() => { setWorkflows([]); void loadWorkflows().catch(() => setToastMessage('Unable to load workflows.')); }, [loadWorkflows]);
+
   const saveWorkflow = async (wf: WorkflowItem, create = false) => {
     const body = { name: wf.name, category: wf.category, triggerType: 'MANUAL', definition: { kind: 'smart-action', niche: currentNiche, workflow: { ...wf, active: false, runCount24h: 0, successRate: 0, lastRun: 'Never' } } };
     if (create) await api.post('/automations', body);

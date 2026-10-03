@@ -109,7 +109,7 @@ export function usePatients() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentNiche, storageKey]);
+  }, [currentNiche]);
 
   useEffect(() => {
     loadPatients();

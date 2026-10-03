@@ -37,6 +37,7 @@ export interface VoicePersona {
   accent: string;
   sampleText: string;
   tags: string[];
+  previewUrl?: string;
   isDefault?: boolean;
 }
 
@@ -51,6 +52,7 @@ const DEFAULT_VOICES_LIBRARY: VoicePersona[] = [
     accent: 'Indian English & Hinglish',
     sampleText: 'Namaste! Welcome to our desk. How may I assist you with scheduling your appointment today?',
     tags: ['Warm & Clear', 'Warm & Empathetic', 'Bilingual Hinglish'],
+    previewUrl: '/voices/kavya.mp3',
     isDefault: true,
   },
   {
@@ -193,6 +195,7 @@ export default function VoiceAgentLibraryPage() {
   const micStreamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const recognitionRef = useRef<any>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -225,6 +228,10 @@ export default function VoiceAgentLibraryPage() {
     return () => { 
       isMounted = false; 
       stopLiveTestingSession();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
     };
   }, []);
 
@@ -248,6 +255,14 @@ export default function VoiceAgentLibraryPage() {
 
   const toggleAudio = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // Stop any existing playing HTML audio element
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+      audioPlayerRef.current = null;
+    }
+
     if (isPlayingAudio === id) {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -256,7 +271,34 @@ export default function VoiceAgentLibraryPage() {
     } else {
       setIsPlayingAudio(id);
       const voiceObj = voices.find(v => (v.voiceId === id || v.id === id));
-      if (voiceObj && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+
+      if (voiceObj?.previewUrl) {
+        const audio = new Audio(voiceObj.previewUrl);
+        audioPlayerRef.current = audio;
+        audio.onended = () => setIsPlayingAudio(null);
+        audio.onerror = () => {
+          // Graceful fallback to SpeechSynthesis if MP3 asset not yet loaded
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(voiceObj.sampleText);
+            utterance.onend = () => setIsPlayingAudio(null);
+            utterance.onerror = () => setIsPlayingAudio(null);
+            window.speechSynthesis.speak(utterance);
+          } else {
+            setIsPlayingAudio(null);
+          }
+        };
+        audio.play().catch(() => {
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(voiceObj.sampleText);
+            utterance.onend = () => setIsPlayingAudio(null);
+            utterance.onerror = () => setIsPlayingAudio(null);
+            window.speechSynthesis.speak(utterance);
+          } else {
+            setIsPlayingAudio(null);
+          }
+        });
+      } else if (voiceObj && typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(voiceObj.sampleText);
         utterance.onend = () => setIsPlayingAudio(null);
@@ -359,6 +401,14 @@ export default function VoiceAgentLibraryPage() {
       // 1. Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = stream;
+
+      // 1b. Initialize ephemeral LiveKit test session on backend
+      apiClient('/voice/test-token', {
+        method: 'POST',
+        body: JSON.stringify({ participantName: displayName }),
+      }).catch((err: any) => {
+        console.warn('LiveKit cloud test dispatch notice:', err?.message || err);
+      });
 
       // 2. Setup AudioContext and AnalyserNode for real audio metering
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;

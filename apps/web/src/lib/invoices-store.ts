@@ -131,7 +131,7 @@ export function useInvoices() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentNiche, storageKey]);
+  }, [currentNiche]);
 
   useEffect(() => {
     loadInvoices();

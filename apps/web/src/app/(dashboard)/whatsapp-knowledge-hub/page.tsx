@@ -1,7 +1,7 @@
 'use client';
 
 import { tenantStorage } from '@/lib/tenant-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { 
@@ -80,9 +80,9 @@ interface InputVar {
 export default function WhatsAppKnowledgeHubPage() {
   const { currentNiche, nicheConfig } = useNiche();
 
-  const getInitialPrompt = () => nicheConfig?.goldenPrompt || 'You are an intelligent, courteous AI WhatsApp assistant for {{business_name}}. Greet the user warmly, answer queries using the knowledge base, and assist with scheduling appointments via WhatsApp.';
+  const getInitialPrompt = useCallback(() => nicheConfig?.goldenPrompt || 'You are an intelligent, courteous AI WhatsApp assistant for {{business_name}}. Greet the user warmly, answer queries using the knowledge base, and assist with scheduling appointments via WhatsApp.', [nicheConfig?.goldenPrompt]);
 
-  const getInitialRules = () => {
+  const getInitialRules = useCallback(() => {
     if (nicheConfig?.aiRules && nicheConfig.aiRules.length > 0) {
       return (nicheConfig.aiRules as any[]).map((r, i) => ({
         id: r.id || `rule-${i}`,
@@ -92,9 +92,9 @@ export default function WhatsAppKnowledgeHubPage() {
       }));
     }
     return DEFAULT_RULES;
-  };
+  }, [nicheConfig?.aiRules]);
 
-  const getInitialVariables = (): InputVar[] => {
+  const getInitialVariables = useCallback((): InputVar[] => {
     if (nicheConfig?.inputVariables && nicheConfig.inputVariables.length > 0) {
       return (nicheConfig.inputVariables as any[]).map((v) => ({
         token: v.token || v.name || 'variable',
@@ -109,7 +109,8 @@ export default function WhatsAppKnowledgeHubPage() {
       { token: 'clinic_branch', label: 'Center Branch Location', fallback: 'Main Center', source: 'Tenant Config' },
       { token: 'last_interaction', label: 'Last Chat Date', fallback: 'Recently', source: 'Database' }
     ];
-  };
+  }, [nicheConfig?.inputVariables]);
+
 
   const [goldenPrompt, setGoldenPrompt] = useState(getInitialPrompt());
   const [rules, setRules] = useState(getInitialRules());
@@ -178,7 +179,8 @@ export default function WhatsAppKnowledgeHubPage() {
     }
 
     setTonesList(nicheConfig?.tones || DEFAULT_TONES);
-  }, [currentNiche, nicheConfig]);
+  }, [currentNiche, nicheConfig, getInitialPrompt, getInitialRules, getInitialVariables]);
+
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -240,7 +242,7 @@ export default function WhatsAppKnowledgeHubPage() {
   };
 
   const insertTokenIntoPrompt = (token: string) => {
-    setGoldenPrompt(prev => `${prev} {{${token}}}`);
+    setGoldenPrompt((prev: string) => `${prev} {{${token}}}`);
   };
 
   // Rule Handlers
@@ -265,7 +267,7 @@ export default function WhatsAppKnowledgeHubPage() {
     if (!ruleTitle.trim() || !ruleContent.trim()) return;
 
     if (editingRuleId) {
-      const updated = rules.map(r => r.id === editingRuleId ? { ...r, title: ruleTitle, rule: ruleContent, category: ruleCategory } : r);
+      const updated = rules.map((r: any) => r.id === editingRuleId ? { ...r, title: ruleTitle, rule: ruleContent, category: ruleCategory } : r);
       setRules(updated);
       showToast('AI Rule updated!');
     } else {
@@ -283,7 +285,7 @@ export default function WhatsAppKnowledgeHubPage() {
   };
 
   const handleDeleteRule = (id: string) => {
-    const updated = rules.filter(r => r.id !== id);
+    const updated = rules.filter((r: any) => r.id !== id);
     setRules(updated);
     showToast('Rule removed');
   };

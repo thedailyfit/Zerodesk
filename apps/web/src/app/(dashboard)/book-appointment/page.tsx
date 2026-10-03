@@ -90,7 +90,7 @@ export default function BookAppointmentPage() {
       return activeServices.filter(s => s.isPackage);
     }
     return activeServices.filter(s => !s.isPackage && !s.category?.toLowerCase().includes('consult') && !s.name?.toLowerCase().includes('consult'));
-  }, [activeServices, serviceTab, staffLabel]);
+  }, [activeServices, serviceTab]);
 
   // Appointment Details State
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');

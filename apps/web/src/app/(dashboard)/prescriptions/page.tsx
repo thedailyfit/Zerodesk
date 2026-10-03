@@ -568,12 +568,14 @@ export default function PrescriptionsPage() {
               {/* Prescription Header */}
               {letterhead.headerImage && letterhead.useHeaderPadOnly ? (
                 <div className="w-full overflow-hidden border-b border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={letterhead.headerImage} alt="Clinic Letterhead Header" className="w-full object-cover max-h-40" />
                 </div>
               ) : (
                 <div className="p-6 border-b-2 border-slate-800 bg-slate-50 flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     {letterhead.logoImage ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={letterhead.logoImage} alt="Clinic Logo" className="w-14 h-14 object-contain rounded-lg border border-slate-200 bg-white p-1" />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-sm">
@@ -678,6 +680,7 @@ export default function PrescriptionsPage() {
 
                   <div className="text-right">
                     {letterhead.signatureImage ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={letterhead.signatureImage} alt="Doctor Digital Signature" className="h-12 object-contain ml-auto mb-1" />
                     ) : (
                       <div className="h-10 border-b border-dashed border-slate-400 w-36 ml-auto mb-1" />
@@ -714,6 +717,7 @@ export default function PrescriptionsPage() {
               <p className="text-xs font-semibold text-[var(--color-text)]">Clinic Logo</p>
               {letterhead.logoImage ? (
                 <div className="relative w-20 h-20 mx-auto border rounded-xl overflow-hidden bg-white p-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={letterhead.logoImage} alt="Logo" className="w-full h-full object-contain" />
                   <button
                     onClick={() => setLetterhead(prev => ({ ...prev, logoImage: null }))}
@@ -741,6 +745,7 @@ export default function PrescriptionsPage() {
               <p className="text-xs font-semibold text-[var(--color-text)]">Doctor Signature</p>
               {letterhead.signatureImage ? (
                 <div className="relative w-32 h-20 mx-auto border rounded-xl overflow-hidden bg-white p-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={letterhead.signatureImage} alt="Signature" className="w-full h-full object-contain" />
                   <button
                     onClick={() => setLetterhead(prev => ({ ...prev, signatureImage: null }))}
@@ -768,6 +773,7 @@ export default function PrescriptionsPage() {
               <p className="text-xs font-semibold text-[var(--color-text)]">Custom Header Pad Graphic</p>
               {letterhead.headerImage ? (
                 <div className="relative w-full h-20 mx-auto border rounded-xl overflow-hidden bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={letterhead.headerImage} alt="Header" className="w-full h-full object-cover" />
                   <button
                     onClick={() => setLetterhead(prev => ({ ...prev, headerImage: null }))}

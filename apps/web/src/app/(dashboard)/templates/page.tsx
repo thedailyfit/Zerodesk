@@ -1,7 +1,7 @@
 'use client';
 
 import { tenantStorage } from '@/lib/tenant-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNiche } from '@/components/providers/niche-provider';
 import { 
@@ -157,7 +157,7 @@ const mediaBadge = {
 export default function TemplatesPage() {
   const { currentNiche, nicheConfig } = useNiche();
   
-  const getDefaultTemplates = (): TemplateItem[] => {
+  const getDefaultTemplates = useCallback((): TemplateItem[] => {
     if (nicheConfig?.templates && nicheConfig.templates.length > 0) {
       return nicheConfig.templates.map((t: any) => ({
         id: t.id,
@@ -172,9 +172,9 @@ export default function TemplatesPage() {
       }));
     }
     return INITIAL_TEMPLATES;
-  };
+  }, [nicheConfig?.templates]);
 
-  const [templates, setTemplates] = useState<TemplateItem[]>(getDefaultTemplates());
+  const [templates, setTemplates] = useState<TemplateItem[]>([]);
   const [channelFilter, setChannelFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -200,7 +200,7 @@ export default function TemplatesPage() {
       }
     }
     setTemplates(getDefaultTemplates());
-  }, [currentNiche, nicheConfig]);
+  }, [currentNiche, getDefaultTemplates]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

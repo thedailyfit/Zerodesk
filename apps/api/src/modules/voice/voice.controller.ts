@@ -253,6 +253,12 @@ export class VoiceController {
     return this.voiceService.provisionPhoneNumber(tenantId, body.phoneNumber);
   }
 
+  @Post('test-token')
+  @UseGuards(AuthGuard, TenantGuard)
+  async getTestToken(@TenantId() tenantId: string, @Body() body?: { participantName?: string }) {
+    return this.voiceService.generateTestToken(tenantId, body?.participantName);
+  }
+
   @Post('sarvam-stt-proxy')
   @UseGuards(InternalVoiceGuard)
   async sarvamSttProxy(@Body() body: any) {

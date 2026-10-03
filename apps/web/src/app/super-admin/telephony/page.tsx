@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PhoneCall,
@@ -56,7 +56,7 @@ export default function SuperAdminTelephonyPage() {
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [isProvisioning, setIsProvisioning] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [tenantsData, numbersData] = await Promise.allSettled([
@@ -75,11 +75,12 @@ export default function SuperAdminTelephonyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [numberType]);
 
   useEffect(() => {
     loadData();
-  }, [numberType]);
+  }, [loadData]);
+
 
   const handleSearchNumbers = async () => {
     setSearchingNumbers(true);

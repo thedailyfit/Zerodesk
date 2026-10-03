@@ -41,6 +41,7 @@ export class VoiceService {
   private livekitReceiver: WebhookReceiver | null = null;
   private sipClient: SipClient | null = null;
   private roomService: RoomServiceClient | null = null;
+  private agentDispatch: AgentDispatchClient | null = null;
 
   constructor(
     private prisma: PrismaService,
@@ -60,6 +61,7 @@ export class VoiceService {
       this.livekitReceiver = new WebhookReceiver(lkKey, lkSecret);
       this.sipClient = new SipClient(lkUrl, lkKey, lkSecret);
       this.roomService = new RoomServiceClient(lkUrl, lkKey, lkSecret);
+      this.agentDispatch = new AgentDispatchClient(lkUrl, lkKey, lkSecret);
     }
   }
 
@@ -1433,6 +1435,77 @@ RULES:
         documents: knowledgeDocs,
         totalChunks: knowledgeChunksCount,
       },
+    };
+  }
+
+  /**
+   * Generate an ephemeral LiveKit token for in-browser live testing.
+   * Dispatches the AI agent to the room and returns connection credentials.
+   */
+  async generateTestToken(tenantId: string, participantName?: string) {
+    const lkUrl = this.configService.get<string>('LIVEKIT_URL', 'wss://zerodesk-rpjledlb.livekit.cloud');
+    const lkKey = this.configService.get<string>('LIVEKIT_API_KEY');
+    const lkSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
+
+    if (!lkKey || !lkSecret) {
+      throw new BadRequestException('LiveKit API credentials are not configured on this server');
+    }
+
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const roomName = `test_${tenantId.slice(0, 8)}_${Date.now()}`;
+    const cleanName = (participantName || 'user').replace(/[^a-zA-Z0-9_-]/g, '');
+    const identity = `tester_${cleanName}_${Date.now()}`;
+
+    const metadata = JSON.stringify({
+      tenant_id: tenantId,
+      clinic_name: tenant?.name || 'ZeroDesk Sanctuary',
+      caller_phone: '+919999999999',
+      is_test_call: true,
+    });
+
+    if (this.roomService) {
+      try {
+        await this.roomService.createRoom({
+          name: roomName,
+          emptyTimeout: 300,
+          maxParticipants: 5,
+          metadata,
+        });
+      } catch {
+        this.logger.warn('Could not pre-create LiveKit test room: [redacted]');
+      }
+    }
+
+    if (this.agentDispatch) {
+      try {
+        const agentName = this.configService.get<string>('LIVEKIT_AGENT_NAME', 'zerodesk-receptionist');
+        await this.agentDispatch.createDispatch(roomName, agentName, { metadata });
+        this.logger.log('LiveKit agent dispatched to room: [redacted]');
+      } catch {
+        this.logger.warn('Could not dispatch agent to room: [redacted]');
+      }
+    }
+
+    const at = new AccessToken(lkKey, lkSecret, {
+      identity,
+      ttl: 900,
+      metadata,
+    });
+
+    at.addGrant({
+      room: roomName,
+      roomJoin: true,
+      canPublish: true,
+      canSubscribe: true,
+    });
+
+    const token = await at.toJwt();
+
+    return {
+      serverUrl: lkUrl,
+      roomName,
+      token,
+      identity,
     };
   }
 }
