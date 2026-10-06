@@ -14,6 +14,7 @@
     "db:generate": "pnpm --filter @zerodesk/api db:generate",
     "db:migrate": "pnpm --filter @zerodesk/api db:migrate",
     "db:migrate:prod": "node scripts/apply-production-migration.js",
+    "db:backup": "node scripts/backup-db.js",
     "db:push": "pnpm --filter @zerodesk/api db:push",
     "db:seed": "pnpm db:generate && pnpm --filter @zerodesk/api db:seed",
     "db:studio": "pnpm --filter @zerodesk/api db:studio",
